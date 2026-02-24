@@ -22,9 +22,10 @@ export const setExtensionIcon = (type: 'default' | 'locked') => {
   const icons = [16, 48, 96, 128].reduce((res: { [key: number]: string }, size: number) => {
     const sizeWithSuffix = `${size}${fileNameSuffix}`
     if (type === 'locked') {
-      res[size] = `assets/images/xicon_locked@${sizeWithSuffix}.png`
+      // Kohaku-branded extension icons instead of the Ambire ones (kohaku)
+      res[size] = `assets/images/xicon_kohaku_locked@${sizeWithSuffix}.png`
     } else {
-      res[size] = `assets/images/xicon@${sizeWithSuffix}.png`
+      res[size] = `assets/images/xicon_kohaku@${sizeWithSuffix}.png`
     }
 
     return res

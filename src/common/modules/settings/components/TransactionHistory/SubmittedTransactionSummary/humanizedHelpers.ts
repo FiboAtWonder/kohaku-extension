@@ -1,15 +1,27 @@
 import { Dapp } from '@ambire-common/interfaces/dapp'
 import { AccountOp } from '@ambire-common/libs/accountOp/accountOp'
+import { SubmittedAccountOp } from '@ambire-common/libs/accountOp/submittedAccountOp'
 import { humanizeAccountOp } from '@ambire-common/libs/humanizer'
 import { IrCall } from '@ambire-common/libs/humanizer/interfaces'
 import {
   flattenHumanizerVisualizations,
   hasErc7730Humanization
 } from '@ambire-common/libs/humanizer/utils'
+import { humanizePrivacyPoolsAccountOp } from '@ambire-common/libs/privacyPools/humanizer'
 
 import { DappInteraction, SubmittedAccountOpLike } from './types'
 
 export const getHumanizedCalls = (submittedAccountOp: SubmittedAccountOpLike): IrCall[] => {
+  // Privacy Pools relayer withdrawals and imported-account records carry an empty
+  // `calls` array, so the standard humanizer returns nothing and the row would be
+  // stuck rendering a skeleton. They need their own humanizer. (kohaku)
+  if (
+    submittedAccountOp.identifiedBy?.type === 'PrivacyPoolsRelayer' ||
+    submittedAccountOp.identifiedBy?.type === 'ImportedAccount'
+  ) {
+    return humanizePrivacyPoolsAccountOp(submittedAccountOp as SubmittedAccountOp)
+  }
+
   const clearSigningHum = submittedAccountOp.meta?.clearSigningHumanization
   const clearSign = hasErc7730Humanization(clearSigningHum) ? clearSigningHum : null
   if (clearSign) {

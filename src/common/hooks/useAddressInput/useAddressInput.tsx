@@ -28,6 +28,7 @@ interface Props {
   // together with react-hook-form. It is used to trigger the revalidation of the input.
   // !!! Must be memoized with useCallback
   handleRevalidate?: () => void
+  allowRailgunAddresses?: boolean
 }
 
 const useAddressInput = ({
@@ -36,7 +37,8 @@ const useAddressInput = ({
   overwriteValidation,
   isDomainVerifiedByColibri,
   overwriteValidationFieldValue,
-  handleRevalidate
+  handleRevalidate,
+  allowRailgunAddresses = false
 }: Props) => {
   // Used to prevent updating state when the field value has changed before the resolution promise is resolved
   const latestFieldValueRef = useRef(addressState.fieldValue)
@@ -65,7 +67,8 @@ const useAddressInput = ({
         isDomainVerifiedByColibri,
         hasDomainResolveFailed,
         domainResolveError,
-        overwriteValidation
+        overwriteValidation,
+        allowRailgunAddresses
       }),
     [
       overwriteValidationFieldValue,
@@ -75,7 +78,8 @@ const useAddressInput = ({
       isDomainVerifiedByColibri,
       hasDomainResolveFailed,
       domainResolveError,
-      overwriteValidation
+      overwriteValidation,
+      allowRailgunAddresses
     ]
   )
 

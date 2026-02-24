@@ -2,12 +2,13 @@ import React from 'react'
 import { Pressable, View } from 'react-native'
 
 import AddCircularIcon from '@common/assets/svg/AddCircularIcon'
-import AmbireLogoWithBackgroundAndLogotype from '@common/assets/svg/AmbireLogoWithBackgroundAndLogotype'
 import DownArrowIcon from '@common/assets/svg/DownArrowIcon'
 import ImportAccountIcon from '@common/assets/svg/ImportAccountIcon'
 import SettingsIcon from '@common/assets/svg/SettingsIcon'
 import ViewOnlyIcon from '@common/assets/svg/ViewOnlyIcon'
 import Button from '@common/components/Button'
+// (kohaku) Kohaku logo replaces the Ambire logo on the onboarding screen
+import KohakuLogo from '@common/components/HokahuLogo'
 import Panel from '@common/components/Panel'
 import Text from '@common/components/Text'
 import { useTranslation } from '@common/config/localization'
@@ -52,7 +53,7 @@ const GetStartedScreen = () => {
             <View
               style={[flexbox.justifyCenter, flexbox.alignCenter, flexbox.flex1, spacings.mb3Xl]}
             >
-              <AmbireLogoWithBackgroundAndLogotype />
+              <KohakuLogo width={180} height={80} />
               <Text style={[spacings.mtLg, text.center]} weight="medium" appearance="secondaryText">
                 {t('The Web3 wallet that makes self-custody easy and secure.')}
               </Text>

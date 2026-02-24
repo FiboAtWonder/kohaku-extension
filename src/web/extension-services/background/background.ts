@@ -34,10 +34,15 @@ import { storage } from '@common/services/storage'
 import { Action, MethodAction } from '@common/types/actions'
 import { LOG_LEVELS, logInfoWithPrefix } from '@common/utils/logger'
 import {
+  ALCHEMY_API_KEY,
   BROWSER_EXTENSION_LOG_UPDATED_CONTROLLER_STATE_ONLY,
   BROWSER_EXTENSION_MEMORY_INTENSIVE_LOGS,
   BUNGEE_API_KEY,
+  HYPERSYNC_API_KEY,
   LI_FI_API_KEY,
+  PRIVACY_POOLS_ASP_URL,
+  PRIVACY_POOLS_RELAYER_URL,
+  RAILGUN_RELAYER_URL,
   RELAYER_URL,
   SQUID_INTEGRATOR_ID,
   UNISWAP_API_KEY,
@@ -81,6 +86,7 @@ import {
 } from './CrashAnalytics'
 import { buildScrubFailureFallbackEvent } from './buildScrubFailureFallbackEvent'
 import { getReportableAction } from './getReportableAction'
+import { handleDappAccountSwitching } from './handlers/handleDappAccountSwitching'
 
 const debugLogs: {
   key: string
@@ -472,6 +478,9 @@ const init = async () => {
                 await mainCtrl.dapps.broadcastDappSessionEvent('lock')
               } else if (!backgroundState.isUnlocked && keystoreCtrl.isUnlocked) {
                 autoLockCtrl.setLastActiveTime()
+                // Note: the fork's mainCtrl.handleBroadcastUnlock() (per-dapp associated
+                // account on unlock) is superseded by upstream's dapps controller, which
+                // scopes broadcastDappSessionEvent per dapp session natively (kohaku)
                 await mainCtrl.dapps.broadcastDappSessionEvent('unlock', [
                   mainCtrl.selectedAccount.account?.addr
                 ])
@@ -527,6 +536,12 @@ const init = async () => {
     bungeeApiKey: BUNGEE_API_KEY,
     squidIntegratorId: SQUID_INTEGRATOR_ID,
     uniswapApiKey: UNISWAP_API_KEY,
+    // Config for the privacy features - privacy pools and railgun (kohaku)
+    privacyPoolsAspUrl: PRIVACY_POOLS_ASP_URL,
+    privacyPoolsRelayerUrl: PRIVACY_POOLS_RELAYER_URL,
+    railgunRelayerUrl: RAILGUN_RELAYER_URL,
+    alchemyApiKey: ALCHEMY_API_KEY,
+    hypersyncApiKey: HYPERSYNC_API_KEY,
     featureFlags: {},
     keystoreSigners: {
       internal: KeystoreSigner,
@@ -583,6 +598,8 @@ const init = async () => {
       }
     }
   })
+
+  handleDappAccountSwitching(mainCtrl)
 
   walletStateCtrl = new WalletStateController({
     eventEmitterRegistry,

@@ -520,3 +520,7 @@ webview-bundle-ota.json
 .claude/*.local.*
 .agents/*.local.*
 AGENTS.local.md
+.claude
+src/web/assets/circuits
+.direnv
+.envrc

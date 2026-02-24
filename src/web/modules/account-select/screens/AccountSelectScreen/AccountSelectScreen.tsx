@@ -26,6 +26,7 @@ import { ROUTES, WEB_ROUTES } from '@common/modules/router/constants/common'
 import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
 
+import { zeroAddress } from 'viem'
 import getStyles from './styles'
 
 const extractTriggerAddAccountSheetParam = (search: string | undefined): boolean | null => {
@@ -49,7 +50,7 @@ const extractTriggerAddAccountSheetParam = (search: string | undefined): boolean
 }
 
 const AccountSelectScreen = () => {
-  const { styles } = useTheme(getStyles)
+  const { styles, theme } = useTheme(getStyles)
   const flatlistRef = useRef(null)
   const {
     accounts,
@@ -106,6 +107,12 @@ const AccountSelectScreen = () => {
     // of the previously selected account.
     if (!account || !pendingToBeSetSelectedAccount) return
 
+    // (kohaku) the synthetic zero-address account opens the privacy pools dashboard
+    if (pendingToBeSetSelectedAccount === zeroAddress) {
+      navigate(ROUTES.pp1Home)
+      return
+    }
+
     if (account.addr === pendingToBeSetSelectedAccount) {
       navigate(ROUTES.dashboard)
     }
@@ -137,6 +144,24 @@ const AccountSelectScreen = () => {
           ListEmptyComponent={<Text>{t('No accounts found')}</Text>}
         />
         <FooterGlassView isSimpleBlur={false}>
+          {/* (kohaku) entry point for importing an existing privacy pools balance */}
+          <Button
+            testID="button-add-private-account"
+            text={t('Import private balance')}
+            size="smaller"
+            type="secondary"
+            hasBottomSpacing={false}
+            onPress={() => navigate(ROUTES.pp1Import)}
+            childrenPosition="left"
+            style={{ ...spacings.mrSm, flex: 1 }}
+          >
+            <AddCircularIcon
+              width={24}
+              height={24}
+              color={theme.primaryText}
+              style={spacings.mrTy}
+            />
+          </Button>
           <Button
             testID="button-add-account"
             text={t('Add account')}
@@ -144,7 +169,7 @@ const AccountSelectScreen = () => {
             hasBottomSpacing={false}
             onPress={openBottomSheet as any}
             childrenPosition="left"
-            style={{ ...flexbox.alignSelfCenter, width: '100%' }}
+            style={{ flex: 1 }}
           >
             <AddCircularIcon width={24} height={24} color="#fff" style={spacings.mrTy} />
           </Button>

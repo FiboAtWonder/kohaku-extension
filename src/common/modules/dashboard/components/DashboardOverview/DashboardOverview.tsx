@@ -3,6 +3,8 @@ import { Animated, Pressable, View } from 'react-native'
 
 import formatDecimals from '@ambire-common/utils/formatDecimals/formatDecimals'
 import SkeletonLoader from '@common/components/SkeletonLoader'
+// (kohaku)
+import Spinner from '@common/components/Spinner'
 import Text from '@common/components/Text'
 import { isiOS, isMobile, isWeb } from '@common/config/env'
 import { useTranslation } from '@common/config/localization'
@@ -36,6 +38,10 @@ interface Props {
     height: number
   }
   setDashboardOverviewSize: React.Dispatch<React.SetStateAction<{ width: number; height: number }>>
+  // (kohaku) private account (railgun/privacy) loading state
+  isPrivateAccountLoading?: boolean
+  privateAccountLoadingError?: string | null
+  onRetryLoadPrivateAccount?: () => void
 }
 
 // We create a reusable height constant for both the Balance amount height and the Balance skeleton.
@@ -45,7 +51,11 @@ const BALANCE_HEIGHT = 40
 const DashboardOverview: FC<Props> = ({
   openGasTankModal,
   animatedOverviewHeight,
-  setDashboardOverviewSize
+  setDashboardOverviewSize,
+  // (kohaku)
+  isPrivateAccountLoading,
+  privateAccountLoadingError,
+  onRetryLoadPrivateAccount
 }) => {
   const { t } = useTranslation()
   const { theme } = useTheme(getStyles)
@@ -249,11 +259,64 @@ const DashboardOverview: FC<Props> = ({
                 }
               </View>
               <View style={[flexbox.directionRow, flexbox.justifyCenter, flexbox.alignCenter]}>
-                <GasTankButton
-                  onPress={() => openGasTankModal?.()}
-                  portfolio={portfolio}
-                  account={account}
-                />
+                {/* (kohaku) private account loading / retry states */}
+                {isPrivateAccountLoading && !privateAccountLoadingError && (
+                  <>
+                    <Spinner
+                      variant="white"
+                      style={{
+                        width: 24,
+                        height: 24
+                      }}
+                    />
+                    <Text
+                      fontSize={16}
+                      shouldScale={false}
+                      weight="number_bold"
+                      color={theme.primaryBackground}
+                      style={spacings.mlTy}
+                    >
+                      {t('Loading Private Account')}
+                    </Text>
+                  </>
+                )}
+                {!!privateAccountLoadingError && !!onRetryLoadPrivateAccount && (
+                  <Pressable
+                    onPress={onRetryLoadPrivateAccount}
+                    testID="retry-load-private-account-button"
+                  >
+                    {({ hovered }: any) => (
+                      <View
+                        style={{
+                          height: 32,
+                          paddingHorizontal: 12,
+                          borderRadius: 6,
+                          backgroundColor: hovered ? theme.primaryLight : theme.primaryBackground,
+                          ...flexbox.directionRow,
+                          ...flexbox.alignCenter,
+                          ...flexbox.justifyCenter
+                        }}
+                      >
+                        <Text
+                          color={theme.primaryText}
+                          weight="regular"
+                          fontSize={12}
+                          style={{ marginRight: 6 }}
+                        >
+                          {t('Retry Loading Private Account')}
+                        </Text>
+                        <RefreshIcon color={theme.primaryText} width={16} height={16} />
+                      </View>
+                    )}
+                  </Pressable>
+                )}
+                {!isPrivateAccountLoading && !privateAccountLoadingError && (
+                  <GasTankButton
+                    onPress={() => openGasTankModal?.()}
+                    portfolio={portfolio}
+                    account={account}
+                  />
+                )}
                 {/* NOTE: this is commented out instead of deleted because we might wat to return it */}
                 {/* <RewardsButton /> */}
               </View>

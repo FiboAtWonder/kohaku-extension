@@ -17,7 +17,9 @@ import type { MainController } from '@ambire-common/controllers/main/main'
 import type { NetworksController } from '@ambire-common/controllers/networks/networks'
 import type { PhishingController } from '@ambire-common/controllers/phishing/phishing'
 import type { PortfolioController } from '@ambire-common/controllers/portfolio/portfolio'
+import type { PrivacyPoolsController } from '@ambire-common/controllers/privacyPools/privacyPools'
 import type { ProvidersController } from '@ambire-common/controllers/providers/providers'
+import type { RailgunController } from '@ambire-common/controllers/railgun/railgun'
 import type { RequestsController } from '@ambire-common/controllers/requests/requests'
 import type { SafeController } from '@ambire-common/controllers/safe/safe'
 import type { SelectedAccountController } from '@ambire-common/controllers/selectedAccount/selectedAccount'
@@ -50,6 +52,9 @@ export type ControllersNestedInMainMappingType = {
   EmailVaultController: EmailVaultController
   SignAccountOpController: SignAccountOpController
   TransferController: TransferController
+  // Privacy features, nested in main just like transfer/swap&bridge (kohaku)
+  PrivacyPoolsController: PrivacyPoolsController
+  RailgunController: RailgunController
   PhishingController: PhishingController
   DappsController: DappsController
   RequestsController: RequestsController
@@ -89,6 +94,9 @@ export const controllersNestedInMainMapping =
     'EmailVaultController',
     'SignAccountOpController',
     'TransferController',
+    // Privacy features, nested in main just like transfer/swap&bridge (kohaku)
+    'PrivacyPoolsController',
+    'RailgunController',
     'PhishingController',
     'DappsController',
     'RequestsController',

@@ -3,13 +3,14 @@ import { Controller } from 'react-hook-form'
 import { Image, TouchableOpacity, View } from 'react-native'
 
 import { isValidPassword } from '@ambire-common/services/validations'
-import AmbireLogoWithBackgroundAndLogotype from '@common/assets/svg/AmbireLogoWithBackgroundAndLogotype'
 import FingerprintIcon from '@common/assets/svg/FingerprintIcon'
 import InvisibilityIcon from '@common/assets/svg/InvisibilityIcon'
 import LockIcon from '@common/assets/svg/LockIcon'
 import VisibilityIcon from '@common/assets/svg/VisibilityIcon'
 import Button from '@common/components/Button'
 import FatToggle from '@common/components/FatToggle'
+// (kohaku) Kohaku logo replaces the Ambire logo on the unlock screen
+import KohakuLogo from '@common/components/HokahuLogo'
 import {
   createGlobalTooltipDataSet,
   GLOBAL_TOOLTIP_REFRESH_EVENT
@@ -241,7 +242,7 @@ const KeyStoreUnlockScreen = () => {
             </View>
             <View style={{ width: 44, height: 24 }} />
           </View>
-          <AmbireLogoWithBackgroundAndLogotype color="#fff" style={spacings.mbXl} />
+          <KohakuLogo width={180} height={80} style={spacings.mbXl} />
           <Text weight="medium" color="#B9BFC9" style={text.center}>
             {t('Easy and secure self-custody for the\nEthereum ecosystem')}
           </Text>

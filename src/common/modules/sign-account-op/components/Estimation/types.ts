@@ -19,7 +19,8 @@ type Props = {
   isViewOnly: boolean
   isSponsored: boolean
   sponsor: Sponsor | undefined
-  updateType: 'Requests' | 'Swap&Bridge' | 'Transfer&TopUp'
+  // (kohaku) 'PrivacyPools' and 'Railgun' added for the privacy flows
+  updateType: 'Requests' | 'Swap&Bridge' | 'Transfer&TopUp' | 'PrivacyPools' | 'Railgun'
   bundlerNonceDiscrepancy?: {
     id: string
     title: string

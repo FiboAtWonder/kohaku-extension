@@ -1,6 +1,6 @@
 import { getAddress } from 'ethers'
 
-import { isValidAddress } from '@ambire-common/services/address'
+import { isValidAddress, isValidRailgunAddress } from '@ambire-common/services/address'
 import {
   getNameService,
   NAME_SERVICE_LABELS,
@@ -16,6 +16,8 @@ type AddressInputValidation = {
   hasDomainResolveFailed: boolean
   domainResolveError?: string
   overwriteValidation?: Validation | null
+  // (kohaku) accept Railgun (0zk) addresses in the railgun flows
+  allowRailgunAddresses?: boolean
 }
 
 /**
@@ -34,7 +36,8 @@ const getAddressInputValidation = ({
   resolvedAddressType,
   domainResolveError,
   isDomainVerifiedByColibri,
-  overwriteValidation
+  overwriteValidation,
+  allowRailgunAddresses = false
 }: AddressInputValidation): Validation => {
   if (!address) {
     return {
@@ -60,6 +63,15 @@ const getAddressInputValidation = ({
         domainResolveError ||
         `Failed to resolve ${serviceLabel} domain. Please try again later or enter a hex address.`,
       severity: 'error'
+    }
+  }
+
+  // (kohaku) Railgun (0zk) addresses are neither hex addresses nor domains, so they
+  // return early - the checks below would reject them. Trim to tolerate whitespace.
+  if (allowRailgunAddresses && isValidRailgunAddress(address.trim())) {
+    return {
+      message: 'Valid Railgun address',
+      severity: 'success'
     }
   }
 

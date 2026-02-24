@@ -32,7 +32,9 @@ import {
   TabLayoutWrapperMainContent
 } from '@web/components/TabLayoutWrapper/TabLayoutWrapper'
 import { closeCurrentWindow } from '@web/extension-services/background/webapi/window'
+import useColibriSimulation from '@web/hooks/useColibriSimulation'
 import useDappVerificationHoldButtonType from '@web/hooks/useDappVerificationHoldButtonType'
+import ColibriSimulationResult from '@web/modules/sign-account-op/components/ColibriSimulationResult'
 import Modals from '@web/modules/sign-account-op/components/Modals/Modals'
 
 const isCloseToBottom = ({ layoutMeasurement, contentOffset, contentSize }: NativeScrollEvent) => {
@@ -126,6 +128,15 @@ const SignAccountOpScreen = () => {
     handleUpdate: updateController,
     hasReachedBottom
   })
+
+  // Colibri stateless-RPC transaction simulation (kohaku)
+  const {
+    isLoading: isSimulating,
+    result: simulationResult,
+    error: simulationError,
+    isColibriAvailable,
+    isSimulationEnabled
+  } = useColibriSimulation(network, signAccountOpState?.accountOp)
 
   const accountOpRequest = useMemo(() => {
     if (currentUserRequest?.kind !== 'calls') return undefined
@@ -245,6 +256,15 @@ const SignAccountOpScreen = () => {
                     />
                   </View>
                 ) : null}
+
+                {isSimulationEnabled && (
+                  <ColibriSimulationResult
+                    isLoading={isSimulating}
+                    result={simulationResult}
+                    error={simulationError}
+                    isColibriAvailable={isColibriAvailable}
+                  />
+                )}
 
                 {!isViewOnly &&
                   signAccountOpState &&

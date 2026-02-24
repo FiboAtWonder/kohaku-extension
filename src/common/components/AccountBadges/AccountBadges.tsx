@@ -9,6 +9,7 @@ import useController from '@common/hooks/useController'
 import useTheme from '@common/hooks/useTheme'
 import spacings from '@common/styles/spacings'
 
+import { zeroAddress } from 'viem'
 import BadgeWithPreset from '../BadgeWithPreset'
 
 interface Props {
@@ -36,7 +37,9 @@ const AccountBadges: FC<Props> = ({ accountData, withSpacing = true }) => {
   return (
     <>
       {keystoreCtrl.keys.every((k) => !accountData?.associatedKeys.includes(k.addr)) &&
-        !isSafeAccount && (
+        !isSafeAccount &&
+        // (kohaku) hide the view-only badge for the zero-address placeholder account
+        accountData?.addr !== zeroAddress && (
           <BadgeWithPreset
             preset="view-only"
             style={{

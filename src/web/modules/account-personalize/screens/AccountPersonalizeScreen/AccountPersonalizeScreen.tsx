@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Pressable, ScrollView, View } from 'react-native'
 
 import AddCircularIcon from '@common/assets/svg/AddCircularIcon'
@@ -9,6 +9,7 @@ import Panel from '@common/components/Panel'
 import SuccessAnimation from '@common/components/SuccessAnimation'
 import Text from '@common/components/Text'
 import { Trans, useTranslation } from '@common/config/localization'
+import useController from '@common/hooks/useController'
 import useTheme from '@common/hooks/useTheme'
 import AccountPersonalizeCard from '@common/modules/account-personalize/components/AccountPersonalizeCard'
 import AccountsLoadingAnimation from '@common/modules/account-personalize/components/AccountsLoadingAnimation'
@@ -45,6 +46,22 @@ const AccountPersonalizeScreen = () => {
     handleComplete,
     handleContactSupport
   } = useAccountPersonalize()
+  const { dispatch: dispatchPrivacyPools } = useController('PrivacyPoolsController')
+  const { dispatch: dispatchRailgun } = useController('RailgunController')
+
+  // (kohaku) derive the privacy pools v1 secrets and the railgun keys for the freshly added accounts
+  useEffect(() => {
+    if (isLoading || !accountsToPersonalize.length || completed) return
+
+    dispatchPrivacyPools({ type: 'method', params: { method: 'generatePPv1Keys', args: [] } })
+    dispatchRailgun({ type: 'method', params: { method: 'getDefaultRailgunKeys', args: [] } })
+  }, [
+    isLoading,
+    accountsToPersonalize.length,
+    completed,
+    dispatchPrivacyPools,
+    dispatchRailgun
+  ])
 
   return (
     <>

@@ -143,7 +143,7 @@ const useSign = ({
       if (!signAccountOpState?.isInitialized || !signAccountOpState?.gasPrices) {
         setSlowRequest(true)
       }
-    }, 5000)
+    }, 10000)
 
     if (signAccountOpState?.isInitialized && !!signAccountOpState?.gasPrices) {
       clearTimeout(timeout)

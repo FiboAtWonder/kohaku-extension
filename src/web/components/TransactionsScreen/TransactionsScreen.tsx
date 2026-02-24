@@ -55,7 +55,8 @@ const Wrapper: FC<WrapperProps> = ({ children }) => {
       {isPopup ? (
         <Header.Wrapper containerStyle={spacings.ptSm}>
           <Header.AccountData />
-          <Header.Logo withOG />
+          {/* (kohaku) Header.Logo is the Kohaku logo, which has no OG variant */}
+          <Header.Logo />
         </Header.Wrapper>
       ) : (
         <ActionHeader />

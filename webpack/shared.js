@@ -137,6 +137,14 @@ async function createBaseConfig(env, argv) {
 
   config.resolve.extensions = [...(config.resolve.extensions || []), '.scss']
 
+  // Treat symlinked/local "file:" deps as real paths, so the linked Kohaku SDK
+  // packages resolve without odd node_modules lookups. Also silences the
+  // "Managed item ... isn't a directory or doesn't contain a package.json" warnings. (kohaku)
+  config.resolve.symlinks = false
+  config.snapshot = config.snapshot || {}
+  config.snapshot.managedPaths = [/^(.+?[\\/]node_modules[\\/](?!\.pnpm))/]
+  config.snapshot.immutablePaths = [/^(.+?[\\/]node_modules[\\/]\.pnpm[\\/])/]
+
   config.resolve.alias = {
     ...(config.resolve.alias || {}),
     '@': path.resolve(ROOT_DIR, 'src/ambire-common/src'),
@@ -163,7 +171,39 @@ async function createBaseConfig(env, argv) {
 
   config.resolve.fallback = {
     stream: require.resolve('stream-browserify'),
-    crypto: require.resolve('crypto-browserify')
+    // NOTE (kohaku-resync): the fork set `crypto: false` here; upstream code still
+    // relies on the crypto polyfill, so upstream's crypto-browserify is kept.
+    crypto: require.resolve('crypto-browserify'),
+    // The privacy SDKs (railgun / privacy-pools) pull in Node-only modules and
+    // viem's test actions, none of which are used in the browser build. (kohaku)
+    fs: false,
+    module: false,
+    dotenv: false,
+    'dotenv/config': false,
+    '../../actions/test/dumpState.js': false,
+    '../../actions/test/dropTransaction.js': false,
+    '../../actions/test/getAutomine.js': false,
+    '../../actions/test/getTxpoolContent.js': false,
+    '../../actions/test/getTxpoolStatus.js': false,
+    '../../actions/test/impersonateAccount.js': false,
+    '../../actions/test/increaseTime.js': false,
+    '../../actions/test/inspectTxpool.js': false,
+    '../../actions/test/loadState.js': false,
+    '../../actions/test/mine.js': false,
+    '../../actions/test/removeBlockTimestampInterval.js': false,
+    '../../actions/test/reset.js': false,
+    '../../actions/test/revert.js': false,
+    '../../actions/test/sendUnsignedTransaction.js': false,
+    '../../actions/test/setIntervalMining.js': false,
+    '../../actions/test/setLoggingEnabled.js': false,
+    '../../actions/test/setMinGasPrice.js': false,
+    '../../actions/test/setNextBlockBaseFeePerGas.js': false,
+    '../../actions/test/setNextBlockTimestamp.js': false,
+    '../../actions/test/setNonce.js': false,
+    '../../actions/test/setRpcUrl.js': false,
+    '../../actions/test/setStorageAt.js': false,
+    '../../actions/test/snapshot.js': false,
+    '../../actions/test/stopImpersonatingAccount.js': false,
   }
 
   config.output = {
@@ -192,7 +232,12 @@ async function createBaseConfig(env, argv) {
   if (config.mode === 'production') {
     config.output.assetModuleFilename = '[name]-[hash:8][ext]'
     config.output.filename = '[name].js'
-    config.output.chunkFilename = '[id].js'
+    // Prefixed because Chrome rejects extension files whose names start with "_",
+    // which numeric chunk ids can produce. (kohaku)
+    config.output.chunkFilename = 'd[id].js'
+  } else {
+    // Same pattern in development, for the same reason. (kohaku)
+    config.output.chunkFilename = 'd[id].js'
   }
 
   return { config, defaultExpoConfigPlugins, enableLavaMoat }

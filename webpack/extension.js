@@ -301,6 +301,18 @@ module.exports = async function buildExtension(
       from: './node_modules/webextension-polyfill/dist/browser-polyfill.min.js',
       to: 'browser-polyfill.min.js'
     },
+    // Proving assets for the privacy features. Skipped automatically when the
+    // optional circuit/prover packages aren't installed. (kohaku)
+    {
+      from: './src/web/public/artifacts',
+      to: 'artifacts',
+      noErrorOnMissing: true
+    },
+    {
+      from: 'node_modules/snarkjs/dist/*.wasm',
+      to: 'assets/snarkjs/[name][ext]',
+      noErrorOnMissing: true
+    },
     // qr-scanner ships its decoder worker inlined inside a `new Worker(URL.createObjectURL(new Blob([...])))`
     // call. Firefox MV3 extension pages reject blob: workers under the default `script-src 'self'` CSP,
     // so we extract the worker source once at build time and serve it as a real same-origin file.
@@ -338,7 +350,9 @@ module.exports = async function buildExtension(
     // Gecko currently has a conflict with inlineLockdown because main.js and background.js are split into chunks there,
     // and ses lockdown is initialized multiple times in the same realm.
     ...(enableLavaMoat ? createLavaMoatPlugins() : []),
-    new NodePolyfillPlugin(),
+    // Excluded aliases match the disabled resolve.fallback entries in shared.js,
+    // so the polyfill plugin doesn't re-add them. (kohaku)
+    new NodePolyfillPlugin({ excludeAliases: ['module', 'fs'] }),
     new webpack.ProvidePlugin({ Buffer: ['buffer', 'Buffer'], process: 'process' }),
     new HtmlWebpackPlugin({
       template: './src/web/public/index.html',
@@ -358,7 +372,20 @@ module.exports = async function buildExtension(
       inject: 'body', // to auto inject the main.js bundle in the body
       chunks: ['runtime', 'rootTheme', 'main'] // include only chunks from the main entry
     }),
-    new CopyPlugin({ patterns: extensionCopyPatterns })
+    new CopyPlugin({ patterns: extensionCopyPatterns }),
+    // The privacy SDKs read these at runtime; define them so they don't need a
+    // global `process`. (kohaku)
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
+      'process.env.REACT_APP_PIMLICO_API_KEY': JSON.stringify(
+        process.env.REACT_APP_PIMLICO_API_KEY
+      ),
+      'process.env.ENABLE_COLIBRI_SIMULATION': JSON.stringify(
+        process.env.ENABLE_COLIBRI_SIMULATION || 'true'
+      )
+    }),
+    // dotenv is a build-time-only dependency of the privacy SDKs. (kohaku)
+    new webpack.IgnorePlugin({ resourceRegExp: /^dotenv(\/config)?$/ })
   ]
 
   // Provides a global variable to all files where globalIsAmbireNext is declared including

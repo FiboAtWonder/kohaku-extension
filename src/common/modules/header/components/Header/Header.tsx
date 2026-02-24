@@ -4,7 +4,8 @@ import { TextProps } from 'react-native-svg'
 
 import AccountData from '@common/components/AccountData'
 import AccountDataDetailed from '@common/components/AccountDataDetailed'
-import AmbireLogoHorizontalWithOG from '@common/components/AmbireLogoHorizontalWithOG'
+// (kohaku) Kohaku logo replaces the Ambire logo (incl. the OG variant) in headers
+import KohakuLogo from '@common/components/HokahuLogo'
 import Text from '@common/components/Text'
 import { isMobile, isWeb } from '@common/config/env'
 import { titleChangeEventStream } from '@common/hooks/useNavigation'
@@ -88,11 +89,11 @@ type CommonHeaderProps = {
   withOG?: boolean
 }
 
-const Header = ({ width, withOG }: CommonHeaderProps) => {
+const Header = ({ width }: CommonHeaderProps) => {
   return (
     <Wrapper width={width}>
       <AccountData />
-      <AmbireLogoHorizontalWithOG withOG={withOG} />
+      <KohakuLogo width={72} />
     </Wrapper>
   )
 }
@@ -117,7 +118,6 @@ const HeaderWithTitle = ({
   title: customTitle,
   displayBackButtonIn,
   children,
-  withOG,
   withBackButton = true,
   width
 }: {
@@ -147,17 +147,15 @@ const HeaderWithTitle = ({
         {withBackButton && <HeaderBackButton displayIn={displayBackButtonIn} />}
       </Container>
       <Title>{customTitle || title}</Title>
-      <Container side="right">
-        {children || <AmbireLogoHorizontalWithOG withOG={withOG} />}
-      </Container>
+      <Container side="right">{children || <KohakuLogo width={72} />}</Container>
     </Wrapper>
   )
 }
 
-const HeaderWithLogoOnly = ({ width, withOG }: CommonHeaderProps & { withOG?: boolean }) => {
+const HeaderWithLogoOnly = ({ width }: CommonHeaderProps & { withOG?: boolean }) => {
   return (
     <Wrapper style={flexbox.justifyEnd} width={width}>
-      <AmbireLogoHorizontalWithOG withOG={withOG} />
+      <KohakuLogo width={72} />
     </Wrapper>
   )
 }
@@ -170,7 +168,7 @@ Header.AccountDataDetailed = AccountDataDetailed
 Header.Title = Title
 Header.Container = Container
 Header.BackButton = HeaderBackButton
-Header.Logo = AmbireLogoHorizontalWithOG
+Header.Logo = KohakuLogo
 
 export default Header
 export { HeaderWithTitle, HeaderWithLogoOnly, HEADER_HEIGHT }

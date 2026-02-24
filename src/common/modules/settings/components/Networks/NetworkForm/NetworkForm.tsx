@@ -5,7 +5,7 @@ import { Image, ImageSourcePropType, Pressable, View, ViewStyle } from 'react-na
 
 import { isColibriProviderAvailable } from '@ambire-common/libs/networks/colibri'
 import { getFeatures } from '@ambire-common/libs/networks/networks'
-import { getRpcProvider } from '@ambire-common/services/provider'
+import { getRpcProvider, isColibriSupportedChain } from '@ambire-common/services/provider'
 import { isValidURL } from '@ambire-common/services/validations'
 import colibriLogo from '@common/assets/images/colibri-logo.png'
 import CopyIcon from '@common/assets/svg/CopyIcon'
@@ -49,6 +49,20 @@ type RpcSelectorItemType = {
   onPress: (url: string) => void
   onRemove?: (url: string) => void
   removeDisabledReason?: string
+}
+
+// (kohaku) the RPC verifier the network reads through - see getRpcProvider in ambire-common
+type RpcProviderOptionValue = 'rpc' | 'helios' | 'colibri'
+type RpcProviderSelectorItemType = {
+  index: number
+  value: RpcProviderOptionValue
+  label: string
+  isSelected: boolean
+  itemsLength: number
+  disabled?: boolean
+  onSelect: (value: RpcProviderOptionValue) => void
+  style?: ViewStyle
+  testID?: string
 }
 
 export const RpcSelectorItem = React.memo(
@@ -168,6 +182,56 @@ export const RpcSelectorItem = React.memo(
 
 RpcSelectorItem.displayName = 'RpcSelector'
 
+// (kohaku) radio row for picking the RPC verifier of a network
+export const RpcProviderSelectorItem = React.memo(
+  ({
+    index,
+    value,
+    label,
+    isSelected,
+    itemsLength,
+    disabled,
+    onSelect,
+    style,
+    testID
+  }: RpcProviderSelectorItemType) => {
+    const { styles, theme } = useTheme(getStyles)
+    const [hovered, setHovered] = useState(false)
+
+    return (
+      <Pressable
+        testID={testID}
+        style={[
+          styles.selectRpcItem,
+          index !== itemsLength - 1 && styles.selectRpcItemBorder,
+          style,
+          hovered && !disabled && { backgroundColor: theme.secondaryBackground },
+          !!disabled && { opacity: 0.5 }
+        ]}
+        onPress={() => {
+          if (disabled) return
+          if (!isSelected) onSelect(value)
+        }}
+        onHoverIn={() => setHovered(true)}
+        onHoverOut={() => setHovered(false)}
+      >
+        <View style={styles.radio}>
+          {(isSelected || (hovered && !disabled)) && <View style={styles.radioSelectedInner} />}
+        </View>
+        <Text
+          fontSize={14}
+          weight="medium"
+          appearance={isSelected ? 'primaryText' : 'secondaryText'}
+        >
+          {label}
+        </Text>
+      </Pressable>
+    )
+  }
+)
+
+RpcProviderSelectorItem.displayName = 'RpcProviderSelectorItem'
+
 // On mobile the RPC URLs list expands/collapses instead of scrolling
 const COLLAPSED_RPC_URLS_COUNT = 4
 
@@ -214,7 +278,12 @@ const NetworkForm = ({
       coingeckoPlatformId: '',
       coingeckoNativeAssetId: '',
       customBundlerUrl: '',
-      isColibriEnabled: false
+      isColibriEnabled: false,
+      // (kohaku) RPC verifier settings
+      rpcProvider: 'rpc' as RpcProviderOptionValue,
+      consensusRpcUrl: '',
+      heliosCheckpoint: '',
+      proverRpcUrl: ''
     },
     values: {
       name: selectedNetwork?.name || '',
@@ -226,13 +295,19 @@ const NetworkForm = ({
       coingeckoPlatformId: (selectedNetwork?.platformId as string) || '',
       coingeckoNativeAssetId: (selectedNetwork?.nativeAssetId as string) || '',
       customBundlerUrl: (selectedNetwork?.customBundlerUrl as string) || '',
-      isColibriEnabled: !!selectedNetwork?.isColibriEnabled
+      isColibriEnabled: !!selectedNetwork?.isColibriEnabled,
+      // (kohaku) RPC verifier settings
+      rpcProvider: (selectedNetwork?.rpcProvider as RpcProviderOptionValue) || 'rpc',
+      consensusRpcUrl: selectedNetwork?.consensusRpcUrl || '',
+      heliosCheckpoint: selectedNetwork?.heliosCheckpoint || '',
+      proverRpcUrl: selectedNetwork?.proverRpcUrl || ''
     }
   })
   const [rpcUrls, setRpcUrls] = useState(selectedNetwork?.rpcUrls || [])
   const [selectedRpcUrl, setSelectedRpcUrl] = useState(selectedNetwork?.selectedRpcUrl)
   const [showAllRpcUrls, setShowAllRpcUrls] = useState(false)
   const networkFormValues = watch()
+  const rpcProviderValue = watch('rpcProvider')
   const errorCount = Object.keys(errors).length
 
   const isSomethingUpdated = useMemo(() => {
@@ -259,6 +334,17 @@ const NetworkForm = ({
     }
   }, [networkFormValues.chainId])
   const shouldShowColibriSettings = isColibriAvailable
+  // (kohaku) Helios needs a consensus RPC, Colibri is limited to an allowlist of chains
+  const canUseHelios = !!selectedNetwork?.consensusRpcUrl
+  const canUseColibri = useMemo(() => {
+    try {
+      return isColibriSupportedChain(BigInt(networkFormValues.chainId))
+    } catch {
+      return false
+    }
+  }, [networkFormValues.chainId])
+  const shouldShowHeliosFields = rpcProviderValue === 'helios'
+  const shouldShowColibriFields = rpcProviderValue === 'colibri'
 
   useEffect(() => {
     networksDispatch({
@@ -393,7 +479,15 @@ const NetworkForm = ({
     // when resetting the form.
     const subscription = watch(async (value, { name }) => {
       if (name && !value[name]) {
-        if (name !== 'rpcUrl' && name !== 'customBundlerUrl' && name !== 'isColibriEnabled') {
+        // (kohaku) the RPC verifier fields are optional as well
+        if (
+          name !== 'rpcUrl' &&
+          name !== 'customBundlerUrl' &&
+          name !== 'isColibriEnabled' &&
+          name !== 'consensusRpcUrl' &&
+          name !== 'heliosCheckpoint' &&
+          name !== 'proverRpcUrl'
+        ) {
           setError(name, { type: 'custom-error', message: 'Field is required' })
           return
         }
@@ -461,6 +555,52 @@ const NetworkForm = ({
         clearErrors('explorerUrl')
       }
 
+      // (kohaku) Helios consensus RPC URL
+      if (name === 'consensusRpcUrl') {
+        if (!value.consensusRpcUrl) {
+          clearErrors('consensusRpcUrl')
+          return
+        }
+
+        try {
+          const url = new URL(value.consensusRpcUrl)
+          if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+            setError('consensusRpcUrl', {
+              type: 'custom-error',
+              message: 'URL must start with http:// or https://'
+            })
+            return
+          }
+        } catch {
+          setError('consensusRpcUrl', { type: 'custom-error', message: 'Invalid URL' })
+          return
+        }
+        clearErrors('consensusRpcUrl')
+      }
+
+      // (kohaku) the Helios weak subjectivity checkpoint is a 32 byte block hash
+      if (name === 'heliosCheckpoint') {
+        if (!value.heliosCheckpoint) {
+          clearErrors('heliosCheckpoint')
+          return
+        }
+
+        const isBlockHash =
+          value.heliosCheckpoint.startsWith('0x') &&
+          value.heliosCheckpoint.length === 66 &&
+          [...value.heliosCheckpoint.slice(2)].every((char) => '0123456789abcdefABCDEF'.includes(char))
+
+        if (!isBlockHash) {
+          setError('heliosCheckpoint', {
+            type: 'custom-error',
+            message: 'Must be a valid 32-byte hex string (0x followed by 64 hex characters)'
+          })
+          return
+        }
+
+        clearErrors('heliosCheckpoint')
+      }
+
       if (name === 'rpcUrl') {
         clearErrors('rpcUrl')
       }
@@ -507,7 +647,11 @@ const NetworkForm = ({
               'coingeckoPlatformId',
               'coingeckoNativeAssetId',
               'customBundlerUrl',
-              'isColibriEnabled'
+              'isColibriEnabled',
+              // (kohaku) RPC verifier settings are optional
+              'consensusRpcUrl',
+              'heliosCheckpoint',
+              'proverRpcUrl'
             ].includes(key) && !formFields[key].length
         )
       } else {
@@ -547,7 +691,11 @@ const NetworkForm = ({
                 chainId: BigInt(networkFormValues.chainId),
                 iconUrls: [],
                 customBundlerUrl: networkFormValues.customBundlerUrl,
-                isColibriEnabled
+                isColibriEnabled,
+                // (kohaku) consensusRpcUrl/proverRpcUrl are carried over by the spread above,
+                // because AddNetworkRequestParams doesn't declare them yet
+                rpcProvider: networkFormValues.rpcProvider,
+                heliosCheckpoint: networkFormValues.heliosCheckpoint
               }
             ]
           }
@@ -563,7 +711,12 @@ const NetworkForm = ({
                 selectedRpcUrl,
                 explorerUrl: networkFormValues.explorerUrl,
                 customBundlerUrl: networkFormValues.customBundlerUrl,
-                isColibriEnabled
+                isColibriEnabled,
+                // (kohaku) RPC verifier settings
+                rpcProvider: networkFormValues.rpcProvider,
+                consensusRpcUrl: networkFormValues.consensusRpcUrl,
+                heliosCheckpoint: networkFormValues.heliosCheckpoint,
+                proverRpcUrl: networkFormValues.proverRpcUrl
               },
               BigInt(networkFormValues.chainId)
             ]
@@ -945,6 +1098,96 @@ const NetworkForm = ({
                     </Checkbox>
                   )}
                   name="isColibriEnabled"
+                />
+              )}
+
+              {/* (kohaku) pick which client verifies the reads of this network */}
+              <Text appearance="secondaryText" fontSize={14} weight="regular" style={spacings.mbMi}>
+                {t('RPC verifier')}
+              </Text>
+              <View style={[styles.rpcUrlsContainer, { maxHeight: undefined }, spacings.mb]}>
+                <RpcProviderSelectorItem
+                  index={0}
+                  itemsLength={3}
+                  value="rpc"
+                  label={t('Unverified (not trustless)')}
+                  isSelected={rpcProviderValue === 'rpc'}
+                  onSelect={(v) => setValue('rpcProvider', v, { shouldDirty: true })}
+                  testID="rpc-provider-option-rpc"
+                />
+                <RpcProviderSelectorItem
+                  index={1}
+                  itemsLength={3}
+                  value="helios"
+                  label={t('Verified by Helios (light client)')}
+                  disabled={!canUseHelios}
+                  isSelected={rpcProviderValue === 'helios'}
+                  onSelect={(v) => setValue('rpcProvider', v, { shouldDirty: true })}
+                  testID="rpc-provider-option-helios"
+                />
+                <RpcProviderSelectorItem
+                  index={2}
+                  itemsLength={3}
+                  value="colibri"
+                  label={t('Verified by Colibri (stateless client)')}
+                  disabled={!canUseColibri}
+                  isSelected={rpcProviderValue === 'colibri'}
+                  onSelect={(v) => setValue('rpcProvider', v, { shouldDirty: true })}
+                  testID="rpc-provider-option-colibri"
+                />
+              </View>
+              {!!shouldShowHeliosFields && (
+                <>
+                  <Controller
+                    control={control}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <Input
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        inputWrapperStyle={{ height: 40 }}
+                        inputStyle={{ height: 40 }}
+                        containerStyle={{ ...spacings.mb, flex: 1 }}
+                        label={t('Consensus RPC URL')}
+                        error={handleErrors(errors.consensusRpcUrl)}
+                      />
+                    )}
+                    name="consensusRpcUrl"
+                  />
+                  <Controller
+                    control={control}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <Input
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        inputWrapperStyle={{ height: 40 }}
+                        inputStyle={{ height: 40 }}
+                        containerStyle={{ ...spacings.mb, flex: 1 }}
+                        label={t('Weak subjectivity checkpoint')}
+                        error={handleErrors(errors.heliosCheckpoint)}
+                      />
+                    )}
+                    name="heliosCheckpoint"
+                  />
+                </>
+              )}
+              {!!shouldShowColibriFields && (
+                <Controller
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <Input
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      inputWrapperStyle={{ height: 40 }}
+                      inputStyle={{ height: 40 }}
+                      containerStyle={{ ...spacings.mb, flex: 1 }}
+                      label={t('Prover RPC URL')}
+                      error={handleErrors(errors.proverRpcUrl)}
+                    />
+                  )}
+                  name="proverRpcUrl"
                 />
               )}
 

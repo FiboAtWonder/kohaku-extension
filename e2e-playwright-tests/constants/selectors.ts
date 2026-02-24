@@ -343,6 +343,10 @@ const selectors = {
   // TODO: change once we have IDs on FE
   disableNetworkButton: 'disable-network-btn',
   disableNetworkConfirmButton: 'disable-network-confirm-btn',
+  // (kohaku) RPC provider options in the edit-network modal
+  rpcProviderOptionRpc: 'rpc-provider-option-rpc',
+  rpcProviderOptionHelios: 'rpc-provider-option-helios',
+  rpcProviderOptionColibri: 'rpc-provider-option-colibri',
   addRPCURLButton: '//div[.//div[text()="Add RPC URL"]]//div[text()="Add"]',
   addNetworkButton: '//div[.//div[text()="Network details"]]//div[text()="Add network"]',
   connectWalletButton:

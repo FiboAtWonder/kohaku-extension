@@ -18,7 +18,8 @@ const { isRequestWindow } = getUiType()
 type TrackProgressProps = {
   handleClose: () => void
   onPrimaryButtonPress: () => void
-  secondaryButtonText: string
+  // Optional, because the privacy flows render progress without a secondary action (kohaku)
+  secondaryButtonText?: string
   children: React.ReactNode
   routeStatus?: SwapAndBridgeActiveRoute['routeStatus']
 }
@@ -42,7 +43,7 @@ const TrackProgressWrapper: FC<TrackProgressProps> = ({
         !isRequestWindow ? flexbox.justifySpaceBetween : flexbox.justifyCenter
       ]}
     >
-      {!isRequestWindow ? (
+      {!isRequestWindow && secondaryButtonText ? (
         <Button
           onPress={handleClose}
           hasBottomSpacing={false}

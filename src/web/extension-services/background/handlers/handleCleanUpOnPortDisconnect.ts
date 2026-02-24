@@ -42,6 +42,10 @@ export const handleCleanUpOnPortDisconnect = async ({
     mainCtrl.signMessage.reset()
   }
 
+  if (url.pathname.includes('privacy-pools')) {
+    mainCtrl.privacyPools.unloadScreen()
+  }
+
   if (url.pathname.includes('transfer') || url.pathname.includes('top-up-gas-tank')) {
     // Always unload the screen when the request window is closed
     const isRequestWindow = port.name === 'request-window'

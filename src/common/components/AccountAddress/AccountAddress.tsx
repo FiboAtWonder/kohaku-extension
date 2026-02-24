@@ -1,6 +1,7 @@
 import React, { FC, memo, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View, ViewStyle } from 'react-native'
+import { zeroAddress } from 'viem'
 
 import { getTimeAgo } from '@ambire-common/services/validations/validate'
 import EnsIcon from '@common/assets/svg/EnsIcon'
@@ -98,6 +99,9 @@ const AccountAddress: FC<Props> = ({
 
     return `${name} (${t('Updated {{timeAgo}}', { timeAgo: getTimeAgo(new Date(updatedAt)) })})`
   }, [name, updatedAt, t])
+
+  // (kohaku) the zero-address placeholder account has no real address to display
+  if (address === zeroAddress) return null
 
   return (
     <View

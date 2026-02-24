@@ -6,6 +6,8 @@ import {
 } from '@ambire-common/libs/banners/banners'
 import useController from '@common/hooks/useController'
 import useOtaUpdateBanner from '@common/modules/dashboard/hooks/useOtaUpdateBanner'
+// (kohaku) allows hiding banners that don't apply to the Kohaku build
+import { filterDisabledBanners } from '@web/config/disabledBanners'
 
 import type { Banner as BannerInterface } from '@ambire-common/interfaces/banner'
 const OFFLINE_BANNER: BannerInterface = {
@@ -51,7 +53,8 @@ export default function useBanners(): [BannerInterface[], BannerInterface[]] {
   }, [account?.addr, marketingBannersData.account, marketingBannersData.banners])
 
   const controllerBanners = useMemo(() => {
-    return [
+    // (kohaku) wrapped in filterDisabledBanners
+    return filterDisabledBanners([
       ...(deprecatedSmartAccountBanner || []),
       ...(requestBanners || []),
       ...(isOffline && portfolio.isAllReady ? [OFFLINE_BANNER] : []),
@@ -66,7 +69,7 @@ export default function useBanners(): [BannerInterface[], BannerInterface[]] {
       ),
       ...(extensionUpdateBanner || []),
       ...otaUpdateBanner
-    ]
+    ])
   }, [
     deprecatedSmartAccountBanner,
     requestBanners,
@@ -81,5 +84,5 @@ export default function useBanners(): [BannerInterface[], BannerInterface[]] {
     otaUpdateBanner
   ])
 
-  return [controllerBanners, marketingBanners]
+  return [controllerBanners, filterDisabledBanners(marketingBanners)]
 }

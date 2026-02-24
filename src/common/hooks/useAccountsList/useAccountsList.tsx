@@ -2,7 +2,7 @@ import Fuse from 'fuse.js'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { FlatList } from 'react-native'
-import { isAddress } from 'viem'
+import { isAddress, zeroAddress } from 'viem'
 
 import { Account as AccountType } from '@ambire-common/interfaces/account'
 import { isSmartAccount } from '@ambire-common/libs/account/account'
@@ -145,12 +145,29 @@ const useAccountsList = ({
     [accounts.length, flatlistRef, shouldDisplayAccounts, selectedAccountIndex]
   )
 
+  // (kohaku) synthetic zero-address "Private Account" appended to the accounts list
+  const privateAccount = {
+    addr: zeroAddress,
+    associatedKeys: [zeroAddress],
+    initialPrivileges: [],
+    creation: null,
+    newlyCreated: false,
+    newlyAdded: false,
+    preferences: {
+      label: 'Private Account',
+      pfp: ''
+    },
+    usedOnNetworks: []
+  }
+
+  const allAccounts = [...filteredAccounts, privateAccount]
+
   useEffect(() => {
     scrollToSelectedAccount()
   }, [scrollToSelectedAccount])
 
   return {
-    accounts: filteredAccounts,
+    accounts: allAccounts,
     selectedAccountIndex,
     control,
     search,

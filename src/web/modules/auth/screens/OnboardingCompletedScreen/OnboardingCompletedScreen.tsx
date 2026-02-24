@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect } from 'react'
 import { View } from 'react-native'
 
-import AmbireLogoWithBackgroundAndLogotype from '@common/assets/svg/AmbireLogoWithBackgroundAndLogotype'
 import Button from '@common/components/Button'
+// (kohaku) Kohaku logo replaces the Ambire logo
+import KohakuLogo from '@common/components/HokahuLogo'
 import Panel from '@common/components/Panel'
 import Text from '@common/components/Text'
 import { useTranslation } from '@common/config/localization'
@@ -66,7 +67,7 @@ const OnboardingCompletedScreen = () => {
                   autoPlay={false}
                   loop={false}
                 />
-                <AmbireLogoWithBackgroundAndLogotype />
+                <KohakuLogo width={96} height={80} />
               </View>
               <Text
                 style={[spacings.mtXl, spacings.mb, text.center]}
@@ -74,11 +75,11 @@ const OnboardingCompletedScreen = () => {
                 fontSize={20}
                 testID="wallet-ready-to-use-text"
               >
-                {t('Ambire Wallet is ready to use')}
+                {t('Kohaku is ready to use')}
               </Text>
               {!isPinned ? (
                 <Text appearance="secondaryText" weight="medium" style={[text.center]}>
-                  {t('Pin the Ambire Extension to your toolbar for easy access.')}
+                  {t('Pin the Kohaku Extension to your toolbar for easy access.')}
                 </Text>
               ) : (
                 <Text appearance="secondaryText" weight="medium" style={[text.center]}>

@@ -26,7 +26,8 @@ const KeyStoreSetupScreen = () => {
 
   const { goToPrevRoute } = useOnboardingNavigation()
   const { theme } = useTheme()
-  const [agreedWithTerms, setAgreedWithTerms] = useState(true)
+  // (kohaku) the ToS checkbox starts unchecked, so the user has to explicitly agree
+  const [agreedWithTerms, setAgreedWithTerms] = useState(false)
   const { ref: termsModalRef, open: openTermsModal, close: closeTermsModal } = useModalize()
   const animation = useRef(new Animated.Value(0)).current
 

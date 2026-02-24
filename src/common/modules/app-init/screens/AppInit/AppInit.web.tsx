@@ -21,6 +21,9 @@ import { PortalHost, PortalProvider } from '@gorhom/portal'
 import { isExtension } from '@web/constants/browserapi'
 import { ControllersMiddlewareProvider } from '@web/contexts/controllersMiddlewareContext'
 import { ControllersStateLoadedProvider } from '@web/contexts/controllersStateLoadedContext'
+// (kohaku) privacy features still rely on their own React contexts
+import { PrivacyPoolsControllerStateProvider } from '@web/contexts/privacyPoolsControllerStateContext'
+import { RailgunControllerStateProvider } from '@web/contexts/railgunControllerStateContext'
 
 const Router = isExtension ? HashRouter : BrowserRouter
 
@@ -49,17 +52,22 @@ const AppInit = () => {
                 <ControllersMiddlewareProvider>
                   <ThemeProvider>
                     <GestureHandler>
-                      <ControllersStateLoadedProvider>
-                        <NetInfoProvider>
-                          <AuthProvider>
-                            <BiometricsProvider>
-                              <OnboardingNavigationProvider>
-                                {appContent}
-                              </OnboardingNavigationProvider>
-                            </BiometricsProvider>
-                          </AuthProvider>
-                        </NetInfoProvider>
-                      </ControllersStateLoadedProvider>
+                      {/* (kohaku) privacy pools / railgun contexts wrap the app */}
+                      <PrivacyPoolsControllerStateProvider>
+                        <RailgunControllerStateProvider>
+                          <ControllersStateLoadedProvider>
+                            <NetInfoProvider>
+                              <AuthProvider>
+                                <BiometricsProvider>
+                                  <OnboardingNavigationProvider>
+                                    {appContent}
+                                  </OnboardingNavigationProvider>
+                                </BiometricsProvider>
+                              </AuthProvider>
+                            </NetInfoProvider>
+                          </ControllersStateLoadedProvider>
+                        </RailgunControllerStateProvider>
+                      </PrivacyPoolsControllerStateProvider>
                     </GestureHandler>
                   </ThemeProvider>
                 </ControllersMiddlewareProvider>

@@ -66,7 +66,10 @@
   "packageManager": "yarn@1.22.22",
   "dependencies": {
     "@ambire/signature-validator": "1.5.0",
+    "@0xbow/privacy-pools-core-sdk": "0.1.22",
+    "@a16z/helios": "0.10.2",
     "@corpus-core/colibri-stateless": "1.1.30",
+    "@kohaku-eth/railgun": "0.0.1-alpha.4",
     "@dnd-kit/core": "6.3.1",
     "@dnd-kit/modifiers": "9.0.0",
     "@dnd-kit/sortable": "10.0.0",
@@ -244,6 +247,8 @@
     "util": "0.10.4",
     "uuid": "9.0.0",
     "validator": "13.7.0",
+    "maci-crypto": "2.5.0",
+    "snarkjs": "^0.7.5",
     "viem": "2.45.2",
     "vm-browserify": "0.0.4",
     "webextension-polyfill": "0.10.0"

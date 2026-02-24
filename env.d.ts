@@ -20,6 +20,18 @@ declare module '@env' {
     SENTRY_DSN_BROWSER_EXTENSION?: string
     WEBVIEW_DEV_HOST?: string
     WALLETCONNECT_PROJECT_ID: string
+    ALCHEMY_API_KEY: string
+    SEPOLIA_RPC_URL: string
+    PRIVACY_POOLS_ASP_URL: string
+    PRIVACY_POOLS_RELAYER_URL: string
+    HYPERSYNC_API_KEY: string
+    RAILGUN_RELAYER_URL: string
+    RPC_PROVIDER: string
+    HELIOS_CHECKPOINT: string
+    USE_COLIBRI: string
+    COLIBRI_PROVER_URLS: string
+    COLIBRI_TRUSTED_CHECKPOINT: string
+    COLIBRI_DEBUG: string
   }
 
   /**
@@ -134,4 +146,32 @@ declare module '@env' {
    * WalletConnect Project ID for v2 connections.
    */
   export const WALLETCONNECT_PROJECT_ID: EnvTypes['WALLETCONNECT_PROJECT_ID']
+  /** The API key for Alchemy (kohaku) */
+  export const ALCHEMY_API_KEY: EnvTypes['ALCHEMY_API_KEY']
+  /** Sepolia RPC endpoint (kohaku) */
+  export const SEPOLIA_RPC_URL: EnvTypes['SEPOLIA_RPC_URL']
+  /** The PrivacyPools ASP API endpoint (kohaku) */
+  export const PRIVACY_POOLS_ASP_URL: EnvTypes['PRIVACY_POOLS_ASP_URL']
+  /** The PrivacyPools relayer endpoint (kohaku) */
+  export const PRIVACY_POOLS_RELAYER_URL: EnvTypes['PRIVACY_POOLS_RELAYER_URL']
+  /** The API key for sdk RPC (Hypersync from Envio) (kohaku) */
+  export const HYPERSYNC_API_KEY: EnvTypes['HYPERSYNC_API_KEY']
+  /** The Railgun Relayer URL (kohaku) */
+  export const RAILGUN_RELAYER_URL: EnvTypes['RAILGUN_RELAYER_URL']
+  /**
+   * Default verified RPC provider kind. Allowed values: "rpc", "helios", "colibri". (kohaku)
+   */
+  export const RPC_PROVIDER: EnvTypes['RPC_PROVIDER']
+  /** Custom Helios checkpoint (kohaku) */
+  export const HELIOS_CHECKPOINT: EnvTypes['HELIOS_CHECKPOINT']
+  /**
+   * Colibri (stateless) verified RPC provider feature gate. 'true' enables it. (kohaku)
+   */
+  export const USE_COLIBRI: string
+  /** Comma-separated list of Colibri prover URLs. (kohaku) */
+  export const COLIBRI_PROVER_URLS: string
+  /** Optional trusted checkpoint (beacon block root) for Colibri bootstrapping. (kohaku) */
+  export const COLIBRI_TRUSTED_CHECKPOINT: string
+  /** Enable Colibri debug logs ('true'). (kohaku) */
+  export const COLIBRI_DEBUG: string
 }
