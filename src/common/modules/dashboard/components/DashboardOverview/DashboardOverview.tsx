@@ -40,6 +40,7 @@ interface Props {
   setDashboardOverviewSize: React.Dispatch<React.SetStateAction<{ width: number; height: number }>>
   // (kohaku) private account (railgun/privacy) loading state
   isPrivateAccountLoading?: boolean
+  isRailgunAccountLoading?: boolean
   privateAccountLoadingError?: string | null
   onRetryLoadPrivateAccount?: () => void
 }
@@ -54,6 +55,7 @@ const DashboardOverview: FC<Props> = ({
   setDashboardOverviewSize,
   // (kohaku)
   isPrivateAccountLoading,
+  isRailgunAccountLoading,
   privateAccountLoadingError,
   onRetryLoadPrivateAccount
 }) => {
@@ -259,8 +261,10 @@ const DashboardOverview: FC<Props> = ({
                 }
               </View>
               <View style={[flexbox.directionRow, flexbox.justifyCenter, flexbox.alignCenter]}>
-                {/* (kohaku) private account loading / retry states */}
-                {isPrivateAccountLoading && !privateAccountLoadingError && (
+                {/* (kohaku) private account loading / retry states — the deposit banner
+                    also waits on the railgun balance */}
+                {(isPrivateAccountLoading || isRailgunAccountLoading) &&
+                  !privateAccountLoadingError && (
                   <>
                     <Spinner
                       variant="white"

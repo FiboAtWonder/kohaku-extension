@@ -18,6 +18,7 @@ import getStyles from '@common/modules/dashboard/screens/styles'
 import { ROUTES } from '@common/modules/router/constants/common'
 import { getUiType } from '@common/utils/uiType'
 import usePrivacyPoolsForm from '@web/modules/PPv1/hooks/usePrivacyPoolsForm'
+import useRailgunForm from '@web/modules/railgun/hooks/useRailgunForm'
 
 const { isPopup } = getUiType()
 
@@ -43,6 +44,8 @@ const DashboardScreen = () => {
   // Privacy Pools account is loaded lazily, once the wallet is ready for it (kohaku)
   const { loadPrivateAccount, refreshPrivateAccount, isAccountLoaded, isReadyToLoad, loadingError } =
     usePrivacyPoolsForm()
+  // The deposit banner also reflects the railgun ETH balance (kohaku)
+  const { isAccountLoaded: isAccountLoadedRailgun } = useRailgunForm()
 
   const handleRetryLoadPrivateAccount = useCallback(() => {
     // Refetching the leaves and roots is what usually fixes a failed load
@@ -132,6 +135,7 @@ const DashboardScreen = () => {
           dashboardOverviewSize={debouncedDashboardOverviewSize}
           setDashboardOverviewSize={setDashboardOverviewSize}
           isPrivateAccountLoading={!isAccountLoaded}
+          isRailgunAccountLoading={!isAccountLoadedRailgun}
           privateAccountLoadingError={loadingError}
           onRetryLoadPrivateAccount={handleRetryLoadPrivateAccount}
         />
