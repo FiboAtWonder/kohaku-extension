@@ -20,6 +20,7 @@ import flexbox from '@common/styles/utils/flexbox'
 import { privateValue } from '@common/utils/ui'
 import { isExtension } from '@web/constants/browserapi'
 
+import NetworkVerificationBadge from '@web/components/NetworkVerificationBadge'
 import BalanceAffectingErrors from './BalanceAffectingErrors'
 import ColibriVerificationBadge from './ColibriVerificationBadge'
 import GasTankButton from './GasTankButton'
@@ -259,6 +260,7 @@ const DashboardOverview: FC<Props> = ({
                     <View style={{ width: 28, height: 28 }} />
                   ) /* Placeholder to keep balance centered on mobile */
                 }
+                <NetworkVerificationBadge testID="rpc-verification-badge" />
               </View>
               <View style={[flexbox.directionRow, flexbox.justifyCenter, flexbox.alignCenter]}>
                 {/* (kohaku) private account loading / retry states — the deposit banner

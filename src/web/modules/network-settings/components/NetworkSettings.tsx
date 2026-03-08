@@ -52,6 +52,13 @@ const NetworksSettings = () => {
     return parsedSearchParams.has('addNetwork')
   }, [searchParams])
 
+  // Deep link into a network's edit form: ?chainId=..&openEditForm (kohaku)
+  const shouldAutoOpenEditForm = useMemo(() => {
+    const parsedSearchParams = new URLSearchParams(searchParams)
+
+    return parsedSearchParams.has('chainId') && parsedSearchParams.has('openEditForm')
+  }, [searchParams])
+
   const selectedNetwork = useMemo(
     () => allNetworks.find((n) => n.chainId === selectedChainId),
     [allNetworks, selectedChainId]
@@ -193,6 +200,7 @@ const NetworksSettings = () => {
                 explorerUrl={selectedNetwork?.explorerUrl || '-'}
                 batchMaxCount={selectedNetwork ? selectedNetworkProvider?.batchMaxCount : '-'}
                 allowRemoveNetwork
+                autoOpenEditForm={shouldAutoOpenEditForm}
               />
             </View>
             {!!selectedNetwork && !!selectedChainId && (

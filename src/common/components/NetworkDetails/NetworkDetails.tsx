@@ -39,6 +39,8 @@ type Props = {
   nativeAssetSymbol: string
   nativeAssetName: string
   allowRemoveNetwork?: boolean
+  // Opens the edit form immediately, for deep links like ?chainId=..&openEditForm (kohaku)
+  autoOpenEditForm?: boolean
   style?: ViewStyle
   type?: 'vertical' | 'horizontal'
   responsiveSizeMultiplier?: number
@@ -55,6 +57,7 @@ const NetworkDetails = ({
   nativeAssetSymbol,
   nativeAssetName,
   allowRemoveNetwork,
+  autoOpenEditForm,
   style,
   type = 'horizontal',
   responsiveSizeMultiplier = 1
@@ -495,6 +498,7 @@ const NetworkDetails = ({
         id="edit-network-bottom-sheet"
         sheetRef={sheetRef}
         closeBottomSheet={closeBottomSheet}
+        autoOpen={autoOpenEditForm}
         scrollViewProps={
           isWeb
             ? {
