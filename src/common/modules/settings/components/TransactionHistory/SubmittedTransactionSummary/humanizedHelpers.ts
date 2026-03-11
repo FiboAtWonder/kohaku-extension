@@ -8,6 +8,7 @@ import {
   hasErc7730Humanization
 } from '@ambire-common/libs/humanizer/utils'
 import { humanizePrivacyPoolsAccountOp } from '@ambire-common/libs/privacyPools/humanizer'
+import { humanizeRailgunAccountOp } from '@ambire-common/libs/railgun/humanizer'
 
 import { DappInteraction, SubmittedAccountOpLike } from './types'
 
@@ -20,6 +21,15 @@ export const getHumanizedCalls = (submittedAccountOp: SubmittedAccountOpLike): I
     submittedAccountOp.identifiedBy?.type === 'ImportedAccount'
   ) {
     return humanizePrivacyPoolsAccountOp(submittedAccountOp as SubmittedAccountOp)
+  }
+
+  // Railgun withdrawals and internal transfers are broadcasted directly by the
+  // Railgun broadcaster, so they also carry no `calls` the humanizer can read. (kohaku)
+  const railgunMeta = submittedAccountOp.meta as
+    | { isRailgunWithdrawal?: boolean; isRailgunInternalTransfer?: boolean }
+    | undefined
+  if (railgunMeta?.isRailgunWithdrawal || railgunMeta?.isRailgunInternalTransfer) {
+    return humanizeRailgunAccountOp(submittedAccountOp as SubmittedAccountOp)
   }
 
   const clearSigningHum = submittedAccountOp.meta?.clearSigningHumanization
