@@ -24,6 +24,7 @@ import { ControllersStateLoadedProvider } from '@web/contexts/controllersStateLo
 // (kohaku) privacy features still rely on their own React contexts
 import { PrivacyPoolsControllerStateProvider } from '@web/contexts/privacyPoolsControllerStateContext'
 import { RailgunControllerStateProvider } from '@web/contexts/railgunControllerStateContext'
+import { PrivacyPoolsV1ControllerStateProvider } from '@web/contexts/privacyPoolsV1ControllerStateContext/privacyPoolsV1ControllerStateContext'
 
 const Router = isExtension ? HashRouter : BrowserRouter
 
@@ -54,19 +55,21 @@ const AppInit = () => {
                     <GestureHandler>
                       {/* (kohaku) privacy pools / railgun contexts wrap the app */}
                       <PrivacyPoolsControllerStateProvider>
-                        <RailgunControllerStateProvider>
-                          <ControllersStateLoadedProvider>
-                            <NetInfoProvider>
-                              <AuthProvider>
-                                <BiometricsProvider>
-                                  <OnboardingNavigationProvider>
-                                    {appContent}
-                                  </OnboardingNavigationProvider>
-                                </BiometricsProvider>
-                              </AuthProvider>
-                            </NetInfoProvider>
-                          </ControllersStateLoadedProvider>
-                        </RailgunControllerStateProvider>
+                        <PrivacyPoolsV1ControllerStateProvider>
+                          <RailgunControllerStateProvider>
+                            <ControllersStateLoadedProvider>
+                              <NetInfoProvider>
+                                <AuthProvider>
+                                  <BiometricsProvider>
+                                    <OnboardingNavigationProvider>
+                                      {appContent}
+                                    </OnboardingNavigationProvider>
+                                  </BiometricsProvider>
+                                </AuthProvider>
+                              </NetInfoProvider>
+                            </ControllersStateLoadedProvider>
+                          </RailgunControllerStateProvider>
+                        </PrivacyPoolsV1ControllerStateProvider>
                       </PrivacyPoolsControllerStateProvider>
                     </GestureHandler>
                   </ThemeProvider>

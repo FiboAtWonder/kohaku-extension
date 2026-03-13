@@ -8,7 +8,6 @@ import useController from '@common/hooks/useController'
 import useDebounce from '@common/hooks/useDebounce'
 import useNavigation from '@common/hooks/useNavigation'
 import useTheme from '@common/hooks/useTheme'
-import useToast from '@common/hooks/useToast'
 import DashboardOverview from '@common/modules/dashboard/components/DashboardOverview'
 import { OVERVIEW_CONTENT_MAX_HEIGHT } from '@common/modules/dashboard/components/DashboardOverview/DashboardOverview'
 import DashboardPages from '@common/modules/dashboard/components/DashboardPages'
@@ -17,7 +16,7 @@ import PendingActionWindowModal from '@common/modules/dashboard/components/Pendi
 import getStyles from '@common/modules/dashboard/screens/styles'
 import { ROUTES } from '@common/modules/router/constants/common'
 import { getUiType } from '@common/utils/uiType'
-import usePrivacyPoolsForm from '@web/modules/PPv1/hooks/usePrivacyPoolsForm'
+import usePrivacyPools from '@web/hooks/usePrivacyPools/usePrivacyPools'
 import useRailgunForm from '@web/modules/railgun/hooks/useRailgunForm'
 
 const { isPopup } = getUiType()
@@ -25,7 +24,6 @@ const { isPopup } = getUiType()
 const DashboardScreen = () => {
   const { styles } = useTheme(getStyles)
   const { navigate } = useNavigation()
-  const { addToast } = useToast()
   const { ref: gasTankModalRef, open: openGasTankModal, close: closeGasTankModal } = useModalize()
   const lastOffsetY = useRef(0)
   const scrollUpStartedAt = useRef(0)
@@ -41,20 +39,13 @@ const DashboardScreen = () => {
     state: { account, portfolio }
   } = useController('SelectedAccountController')
 
-  // Privacy Pools account is loaded lazily, once the wallet is ready for it (kohaku)
-  const { loadPrivateAccount, refreshPrivateAccount, isAccountLoaded, isReadyToLoad, loadingError } =
-    usePrivacyPoolsForm()
+  // The Privacy Pools V1 account is synced lazily, once the controller is ready (kohaku)
+  const { isReady, isSynced, sync } = usePrivacyPools()
   // The deposit banner also reflects the railgun ETH balance (kohaku)
   const { isAccountLoaded: isAccountLoadedRailgun } = useRailgunForm()
 
-  const handleRetryLoadPrivateAccount = useCallback(() => {
-    // Refetching the leaves and roots is what usually fixes a failed load
-    refreshPrivateAccount(true).catch((error) => {
-      // eslint-disable-next-line no-console
-      console.error('Failed to reload the privacy account:', error)
-      addToast('Failed to load your privacy account. Please try again.', { type: 'error' })
-    })
-  }, [refreshPrivateAccount, addToast])
+  // The V1 controller retries the sync on its own, so there is nothing to do here (kohaku)
+  const handleRetryLoadPrivateAccount = useCallback(() => {}, [])
 
   const onWithdrawBack = useCallback(() => {
     navigate(ROUTES.pp1Ragequit)
@@ -65,14 +56,10 @@ const DashboardScreen = () => {
   }, [navigate])
 
   useEffect(() => {
-    if (isAccountLoaded || !isReadyToLoad) return
+    if (isSynced || !isReady) return
 
-    loadPrivateAccount().catch((error) => {
-      // eslint-disable-next-line no-console
-      console.error('Failed to load the privacy account:', error)
-      addToast('Failed to load your privacy account. Please try again.', { type: 'error' })
-    })
-  }, [loadPrivateAccount, isAccountLoaded, isReadyToLoad, addToast])
+    sync()
+  }, [sync, isSynced, isReady])
 
   const onScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -134,9 +121,8 @@ const DashboardScreen = () => {
           animatedOverviewHeight={animatedOverviewHeight}
           dashboardOverviewSize={debouncedDashboardOverviewSize}
           setDashboardOverviewSize={setDashboardOverviewSize}
-          isPrivateAccountLoading={!isAccountLoaded}
+          isPrivateAccountLoading={!isSynced}
           isRailgunAccountLoading={!isAccountLoadedRailgun}
-          privateAccountLoadingError={loadingError}
           onRetryLoadPrivateAccount={handleRetryLoadPrivateAccount}
         />
         <DepositStatusBanner onWithdrawBack={onWithdrawBack} onDeposit={onDeposit} />

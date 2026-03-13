@@ -18,6 +18,7 @@ import type { NetworksController } from '@ambire-common/controllers/networks/net
 import type { PhishingController } from '@ambire-common/controllers/phishing/phishing'
 import type { PortfolioController } from '@ambire-common/controllers/portfolio/portfolio'
 import type { PrivacyPoolsController } from '@ambire-common/controllers/privacyPools/privacyPools'
+import type { PrivacyPoolsV1Controller } from '@ambire-common/controllers/privacyPools/privacyPoolsV1'
 import type { ProvidersController } from '@ambire-common/controllers/providers/providers'
 import type { RailgunController } from '@ambire-common/controllers/railgun/railgun'
 import type { RequestsController } from '@ambire-common/controllers/requests/requests'
@@ -54,6 +55,7 @@ export type ControllersNestedInMainMappingType = {
   TransferController: TransferController
   // Privacy features, nested in main just like transfer/swap&bridge (kohaku)
   PrivacyPoolsController: PrivacyPoolsController
+  PrivacyPoolsV1Controller: PrivacyPoolsV1Controller
   RailgunController: RailgunController
   PhishingController: PhishingController
   DappsController: DappsController
@@ -96,6 +98,7 @@ export const controllersNestedInMainMapping =
     'TransferController',
     // Privacy features, nested in main just like transfer/swap&bridge (kohaku)
     'PrivacyPoolsController',
+    'PrivacyPoolsV1Controller',
     'RailgunController',
     'PhishingController',
     'DappsController',

@@ -542,7 +542,9 @@ const init = async () => {
     railgunRelayerUrl: RAILGUN_RELAYER_URL,
     alchemyApiKey: ALCHEMY_API_KEY,
     hypersyncApiKey: HYPERSYNC_API_KEY,
-    featureFlags: {},
+    featureFlags: {
+      testnetMode: true
+    },
     keystoreSigners: {
       internal: KeystoreSigner,
       // TODO: there is a mismatch in hw signer types, it's not a big deal

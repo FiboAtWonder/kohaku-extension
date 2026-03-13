@@ -452,6 +452,17 @@ module.exports = async function buildExtension(
     type: 'asset'
   })
 
+  // Turns out ffjavascript (used by snarkjs) does not work in service workers.
+  // This workaround makes it work (kohaku)
+  config.module.rules.push({
+    test: /ffjavascript\/build\/browser\.esm\.js$/,
+    loader: 'string-replace-loader',
+    options: {
+      search: 'globalThis?.Blob',
+      replace: 'undefined'
+    }
+  })
+
   config.experiments = {
     asyncWebAssembly: true,
     topLevelAwait: true
