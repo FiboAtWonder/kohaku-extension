@@ -459,7 +459,7 @@ module.exports = async function buildExtension(
     loader: 'string-replace-loader',
     options: {
       search: 'globalThis?.Blob',
-      replace: 'undefined'
+      replace: 'globalThis?.Blob && URL?.createObjectURL'
     }
   })
 
