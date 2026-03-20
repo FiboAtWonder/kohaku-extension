@@ -1,7 +1,8 @@
 import { uniqBy } from 'lodash'
 import groupBy from 'lodash/groupBy'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { NativeScrollEvent, View } from 'react-native'
+import { createPublicClient, http } from 'viem'
 
 import {
   Account as AccountInterface,
@@ -31,6 +32,11 @@ import text from '@common/styles/utils/text'
 
 import getStyles from './styles'
 
+// Kohaku's onboarding imports basic (EOA) accounts only, so the smart/linked accounts
+// section stays hidden and the used-account scan below drives the selection instead. The
+// upstream markup is kept intact behind this flag so it can be re-enabled. (kohaku)
+const ARE_SMART_ACCOUNTS_SUPPORTED = false
+
 const isCloseToBottom = ({ layoutMeasurement, contentOffset, contentSize }: NativeScrollEvent) => {
   const paddingToBottom = 40
   return layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom
@@ -42,6 +48,11 @@ type Props = {
   subType: IAccountPickerController['subType']
   isLoading: boolean
   lookingForLinkedAccounts: boolean
+  // The used-account scan runs inside this component, so the parent is told when it
+  // is over and in turn keeps the import button and the pagination disabled. Screens that
+  // do not pass `onScanComplete` (the mobile app) opt out of the scan entirely. (kohaku)
+  isScanComplete?: boolean
+  onScanComplete?: () => void
   children?: any
 }
 
@@ -51,6 +62,8 @@ const AccountsOnPageList = ({
   subType,
   isLoading,
   lookingForLinkedAccounts,
+  isScanComplete = true,
+  onScanComplete,
   children
 }: Props) => {
   const { t } = useTranslation()
@@ -63,6 +76,13 @@ const AccountsOnPageList = ({
   const { styles, theme } = useTheme(getStyles)
 
   const slots = useMemo(() => {
+    if (!ARE_SMART_ACCOUNTS_SUPPORTED)
+      // Basic accounts only (kohaku)
+      return groupBy(
+        state.accountsOnPage.filter((a) => !a.isLinked && !a.account.creation),
+        'slot'
+      )
+
     return groupBy(
       [
         ...state.accountsOnPage.filter((a) => !a.isLinked),
@@ -83,6 +103,83 @@ const AccountsOnPageList = ({
     () => state.accountsOnPage.some((a) => a.isLinked),
     [state.accountsOnPage]
   )
+
+  // The onboarding scan looks up every derived address on every network and pre-selects
+  // the ones that were already used, so the user does not have to hunt for them. (kohaku)
+  const [accountUsageMap, setAccountUsageMap] = useState<Record<string, boolean>>({})
+  const [usageCheckComplete, setUsageCheckComplete] = useState(false)
+
+  const scanStateRef = useRef<{
+    phase: 'scanning' | 'at-target' | 'done'
+    lastUsedPage: number | null
+    pageAdvanceInitiated: boolean
+  }>({ phase: 'scanning', lastUsedPage: null, pageAdvanceInitiated: false })
+
+  const finishScan = useCallback(() => {
+    scanStateRef.current.phase = 'done'
+    onScanComplete?.()
+  }, [onScanComplete])
+
+  useEffect(() => {
+    // There is a single address to import when the sub type is a private key, so
+    // there is nothing to scan for (kohaku)
+    if (subType === 'private-key') onScanComplete?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (!onScanComplete) return
+
+    scanStateRef.current.pageAdvanceInitiated = false
+    setUsageCheckComplete(false)
+
+    if (!allNetworks.length || !state.accountsOnPage.length) return
+
+    let cancelled = false
+
+    const checkUsage = async () => {
+      const results: Record<string, boolean> = {}
+
+      await Promise.all(
+        state.accountsOnPage.map(async (acc) => {
+          const address = acc.account.addr as `0x${string}`
+
+          const isUsed = await allNetworks.reduce(async (prevPromise, network) => {
+            const alreadyUsed = await prevPromise
+            if (alreadyUsed) return true
+
+            try {
+              const client = createPublicClient({ transport: http(network.selectedRpcUrl) })
+              const [nonce, balance] = await Promise.all([
+                client.getTransactionCount({ address }),
+                client.getBalance({ address })
+              ])
+
+              return nonce > 0 || balance > 0n
+            } catch {
+              // A single unreachable RPC must not fail the whole scan (kohaku)
+              return false
+            }
+          }, Promise.resolve(false))
+
+          if (isUsed) results[address] = true
+        })
+      )
+
+      if (cancelled) return
+
+      setAccountUsageMap(results)
+      setUsageCheckComplete(true)
+    }
+
+    checkUsage().catch(() => {
+      if (!cancelled) setUsageCheckComplete(true)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [state.accountsOnPage, allNetworks, onScanComplete])
 
   const handleSelectAccount = useCallback(
     (account: AccountInterface) => {
@@ -114,6 +211,70 @@ const AccountsOnPageList = ({
     })
   }, [accountPickerDispatch])
 
+  // Walks the pages forward while any address on the page was used, then comes back to the
+  // last page that had one and selects everything up to the last used slot. (kohaku)
+  useEffect(() => {
+    if (!onScanComplete) return
+    if (!usageCheckComplete || state.accountsLoading || isLoading) return
+    if (subType === 'private-key') return
+
+    const scan = scanStateRef.current
+    if (scan.phase === 'done') return
+
+    const sortedAccounts = [...state.accountsOnPage]
+      .filter((a) => !a.isLinked && !a.account.creation)
+      .sort((a, b) => a.slot - b.slot)
+
+    if (scan.phase === 'scanning') {
+      if (scan.pageAdvanceInitiated) return
+
+      const hasUsed = sortedAccounts.some((a) => accountUsageMap[a.account.addr])
+
+      if (hasUsed) {
+        sortedAccounts.forEach((acc) => {
+          const alreadySelected = state.selectedAccounts.some(
+            (s) => s.account.addr === acc.account.addr
+          )
+          if (!alreadySelected) handleSelectAccount(acc.account)
+        })
+        scan.lastUsedPage = state.page
+        scan.pageAdvanceInitiated = true
+        setPage(state.page + 1)
+      } else if (scan.lastUsedPage !== null) {
+        scan.phase = 'at-target'
+        scan.pageAdvanceInitiated = true
+        setPage(scan.lastUsedPage)
+      } else {
+        finishScan()
+      }
+
+      return
+    }
+
+    // Find the last used account by slot order and select everything up to it
+    const lastUsedIdx = sortedAccounts.reduce(
+      (lastIdx, acc, i) => (accountUsageMap[acc.account.addr] ? i : lastIdx),
+      -1
+    )
+
+    if (lastUsedIdx === -1) {
+      finishScan()
+      return
+    }
+
+    sortedAccounts.forEach((acc, i) => {
+      const isSelected = state.selectedAccounts.some((s) => s.account.addr === acc.account.addr)
+      if (i <= lastUsedIdx && !isSelected) {
+        handleSelectAccount(acc.account)
+      } else if (i > lastUsedIdx && isSelected) {
+        handleDeselectAccount(acc.account)
+      }
+    })
+
+    finishScan()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usageCheckComplete, state.accountsLoading, isLoading])
+
   const getType = useCallback((acc: any) => {
     if (!acc.account.creation) return 'basic'
     if (acc.isLinked) return 'linked'
@@ -138,8 +299,10 @@ const AccountsOnPageList = ({
 
       return filteredAccounts.map((acc, i: number) => {
         const hasBottomSpacing = !(isLastSlot && i === filteredAccounts.length - 1)
-        const isUnused =
-          Array.isArray(acc.account.usedOnNetworks) && !acc.account.usedOnNetworks.length
+        // The scan is the source of truth for "used" during onboarding, when it runs (kohaku)
+        const isUnused = onScanComplete
+          ? !accountUsageMap[acc.account.addr]
+          : Array.isArray(acc.account.usedOnNetworks) && !acc.account.usedOnNetworks.length
         const isSelected = state.selectedAccounts.some(
           (selectedAcc) => selectedAcc.account.addr === acc.account.addr
         )
@@ -170,7 +333,14 @@ const AccountsOnPageList = ({
         )
       })
     },
-    [getType, state.selectedAccounts, handleSelectAccount, handleDeselectAccount]
+    [
+      getType,
+      state.selectedAccounts,
+      handleSelectAccount,
+      handleDeselectAccount,
+      accountUsageMap,
+      onScanComplete
+    ]
   )
 
   const networkNamesWithAccountStateError = useMemo(() => {
@@ -261,7 +431,7 @@ const AccountsOnPageList = ({
               setPage={setPage}
             />
           )}
-          {state.accountsLoading || !!isLoading ? (
+          {state.accountsLoading || !!isLoading || !isScanComplete ? (
             <View style={[flexbox.flex1, flexbox.center, spacings.mt2Xl]}>
               <Spinner style={styles.spinner} />
             </View>
@@ -281,7 +451,7 @@ const AccountsOnPageList = ({
                   )
                 })}
               </View>
-              {hasSmartAccounts && (
+              {ARE_SMART_ACCOUNTS_SUPPORTED && hasSmartAccounts && (
                 <View style={[styles.smartAccountWrapper, isMobile && spacings.ptSm]}>
                   <View style={[flexbox.directionRow, flexbox.alignCenter, spacings.mbSm]}>
                     <Text fontSize={16} weight="medium" style={[text.center, spacings.mrTy]}>
@@ -388,7 +558,7 @@ const AccountsOnPageList = ({
                       page={state.page}
                       maxPages={1000}
                       setPage={setPage}
-                      isDisabled={state.accountsLoading}
+                      isDisabled={state.accountsLoading || !isScanComplete}
                       hideLastPage
                     />
                   )}
@@ -406,7 +576,7 @@ const AccountsOnPageList = ({
               page={state.page}
               maxPages={1000}
               setPage={setPage}
-              isDisabled={state.accountsLoading}
+              isDisabled={state.accountsLoading || !isScanComplete}
               hideLastPage
             />
           )}

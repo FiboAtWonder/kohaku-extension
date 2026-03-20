@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 
@@ -35,6 +35,10 @@ const AccountPickerScreen = () => {
   } = useAccountPicker()
 
   const { goToPrevRoute } = useOnboardingNavigation()
+  // The used-account scan runs inside `AccountsOnPageList` (kohaku)
+  const [isScanComplete, setIsScanComplete] = useState(false)
+
+  const handleScanComplete = useCallback(() => setIsScanComplete(true), [])
 
   return (
     <TabLayoutContainer backgroundColor={theme.secondaryBackground} width="lg">
@@ -67,16 +71,18 @@ const AccountPickerScreen = () => {
             subType={accountPickerState.subType}
             isLoading={isLoading}
             lookingForLinkedAccounts={accountPickerState.linkedAccountsLoading}
+            isScanComplete={isScanComplete}
+            onScanComplete={handleScanComplete}
           >
             <Button
               testID="button-import-account"
               hasBottomSpacing={false}
               onPress={onImportReady}
               size="large"
-              disabled={isImportDisabled}
+              disabled={isImportDisabled || !isScanComplete}
               style={flexbox.alignSelfCenter}
               text={
-                isLoading
+                isLoading || !isScanComplete
                   ? t('Importing...')
                   : !accountPickerState.selectedAccounts.length
                     ? t('Continue')

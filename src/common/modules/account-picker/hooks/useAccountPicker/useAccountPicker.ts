@@ -30,7 +30,6 @@ const useAccountPicker = () => {
       subType,
       isInitialized,
       initParams,
-      selectedAccountsFromCurrentSession,
       addAccountsStatus,
       accountsLoading,
       selectedAccounts,
@@ -43,7 +42,6 @@ const useAccountPicker = () => {
   const prevIsInitialized = usePrevious(isInitialized)
   const shouldResetAccountsSelectionOnUnmount = useRef(true)
   const [isReady, setIsReady] = useState(false)
-  const [onImportPressed, setOnImportPressed] = useState(false)
 
   const ACCOUNT_PICKER_PAGE_SIZE = useMemo(() => {
     return subType === 'private-key' ? 1 : 5
@@ -106,16 +104,11 @@ const useAccountPicker = () => {
     }
   }, [pageSize, isReady, ACCOUNT_PICKER_PAGE_SIZE])
 
-  // it will enter here only if onImportReady is called with selectedAccountsFromCurrentSession.length = 0
-  useEffect(() => {
-    if (onImportPressed && addAccountsStatus === 'SUCCESS') {
-      goToNextRoute(WEB_ROUTES.accountPersonalize)
-    }
-  }, [addAccountsStatus, goToNextRoute, onImportPressed])
-
+  // The account picker now always continues to the personalize step, because the
+  // onboarding scan may have pre-selected the accounts for the user, meaning there is
+  // nothing left to wait for after `addAccounts` is dispatched. (kohaku)
   const onImportReady = useCallback(() => {
     shouldResetAccountsSelectionOnUnmount.current = false
-    setOnImportPressed(true)
     accountPickerDispatch({
       type: 'method',
       params: {
@@ -123,10 +116,8 @@ const useAccountPicker = () => {
         args: []
       }
     })
-    if (selectedAccountsFromCurrentSession.length) {
-      goToNextRoute(WEB_ROUTES.accountPersonalize)
-    }
-  }, [goToNextRoute, accountPickerDispatch, selectedAccountsFromCurrentSession])
+    goToNextRoute(WEB_ROUTES.accountPersonalize)
+  }, [goToNextRoute, accountPickerDispatch])
 
   useEffect(() => {
     return () => {
