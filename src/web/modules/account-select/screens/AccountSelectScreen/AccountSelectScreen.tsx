@@ -8,6 +8,7 @@ import AddCircularIcon from '@common/assets/svg/AddCircularIcon'
 import SettingsIcon from '@common/assets/svg/SettingsIcon'
 import Button from '@common/components/Button'
 import FooterGlassView from '@common/components/FooterGlassView'
+import { createGlobalTooltipDataSet } from '@common/components/GlobalTooltip'
 import HoverablePressable from '@common/components/HoverablePressable'
 import LayoutWrapper from '@common/components/LayoutWrapper'
 import ScrollableWrapper, { WRAPPER_TYPES } from '@common/components/ScrollableWrapper'
@@ -69,6 +70,8 @@ const AccountSelectScreen = () => {
   const { t } = useTranslation()
   const accountsContainerRef = useRef(null)
   const [pendingToBeSetSelectedAccount, setPendingToBeSetSelectedAccount] = useState('')
+
+  const importPrivateBalanceTooltipId = 'import-private-balance-not-supported'
 
   const shouldTriggerAddAccountSheetFromSearch = useMemo(
     () => extractTriggerAddAccountSheetParam(routeParams),
@@ -144,24 +147,34 @@ const AccountSelectScreen = () => {
           ListEmptyComponent={<Text>{t('No accounts found')}</Text>}
         />
         <FooterGlassView isSimpleBlur={false}>
-          {/* (kohaku) entry point for importing an existing privacy pools balance */}
-          <Button
-            testID="button-add-private-account"
-            text={t('Import private balance')}
-            size="smaller"
-            type="secondary"
-            hasBottomSpacing={false}
-            onPress={() => navigate(ROUTES.pp1Import)}
-            childrenPosition="left"
+          {/* (kohaku) entry point for importing an existing privacy pools balance.
+              Disabled until imports are supported. */}
+          <View
             style={{ ...spacings.mrSm, flex: 1 }}
+            dataSet={createGlobalTooltipDataSet({
+              id: importPrivateBalanceTooltipId,
+              content: t('Imports not yet supported')
+            })}
           >
-            <AddCircularIcon
-              width={24}
-              height={24}
-              color={theme.primaryText}
-              style={spacings.mrTy}
-            />
-          </Button>
+            <Button
+              testID="button-add-private-account"
+              text={t('Import private balance')}
+              size="smaller"
+              type="secondary"
+              hasBottomSpacing={false}
+              onPress={() => navigate(ROUTES.pp1Import)}
+              disabled
+              childrenPosition="left"
+              style={{ flex: 1 }}
+            >
+              <AddCircularIcon
+                width={24}
+                height={24}
+                color={theme.primaryText}
+                style={spacings.mrTy}
+              />
+            </Button>
+          </View>
           <Button
             testID="button-add-account"
             text={t('Add account')}
