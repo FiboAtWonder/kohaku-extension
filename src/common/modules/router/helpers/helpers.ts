@@ -56,7 +56,7 @@ const getInitialRoute = ({
       return ROUTES.signMessage
     }
 
-    if (currentUserRequest.kind === 'swapAndBridge') return ROUTES.swapAndBridge
+    // (kohaku) Swap & Bridge is disabled in this build
 
     if (currentUserRequest.kind === 'transfer') {
       if (transferState.isTopUp) {
@@ -82,13 +82,6 @@ const getInitialRoute = ({
   } else if (!isRequestWindow) {
     // TODO: Always redirects to Dashboard, which for initial extension load is okay, but
     // for other scenarios, ideally, it should be the last route before the keystore got locked.
-    const hasSwapAndBridgePersistentSession = swapAndBridgeState.sessionIds.some(
-      (id) => id === 'popup' || id === 'request-window'
-    )
-
-    if (hasSwapAndBridgePersistentSession) {
-      return ROUTES.swapAndBridge
-    }
     if (transferState?.hasPersistedState) {
       if (transferState.isTopUp) {
         return ROUTES.topUpGasTank

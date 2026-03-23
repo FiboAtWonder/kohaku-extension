@@ -24,7 +24,6 @@ import {
 } from '@web/modules/router/route-bundles/groupScreens'
 import { SettingsRoutesProvider } from '@web/modules/settings/contexts/SettingsRoutesContext'
 import SurveyScreen from '@web/modules/survey/screens/SurveyScreen/SurveyScreen'
-import SwapAndBridgeScreen from '@web/modules/swap-and-bridge/screens/SwapAndBridgeScreen'
 import TokenDetailsScreen from '@web/modules/token-details/screens/TokenDetailsScreen'
 import TransferScreen from '@web/modules/transfer/screens/TransferScreen'
 
@@ -249,7 +248,7 @@ const MainRoutes = () => {
               path={WEB_ROUTES.signAccountOp}
               element={<RequestWindowGroupScreen pick={(m) => m.SignAccountOpScreen} />}
             />
-            <Route path={WEB_ROUTES.swapAndBridge} element={<SwapAndBridgeScreen />} />
+            {/* (kohaku) Swap & Bridge is disabled in this build */}
             <Route
               path={WEB_ROUTES.signMessage}
               element={<RequestWindowGroupScreen pick={(m) => m.SignMessageScreen} />}

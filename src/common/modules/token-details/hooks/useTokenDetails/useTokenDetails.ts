@@ -6,7 +6,6 @@ import { useModalize } from 'react-native-modalize'
 import { getTokenAmount } from '@ambire-common/libs/portfolio/helpers'
 import InvisibilityIcon from '@common/assets/svg/InvisibilityIcon'
 import SendIcon from '@common/assets/svg/SendIcon'
-import SwapAndBridgeIcon from '@common/assets/svg/SwapAndBridgeIcon'
 import TopUpIcon from '@common/assets/svg/TopUpIcon'
 import VisibilityIcon from '@common/assets/svg/VisibilityIcon'
 import useController from '@common/hooks/useController'
@@ -178,28 +177,7 @@ const useTokenDetails = () => {
           strokeWidth: 1.5,
           testID: 'token-send'
         },
-        {
-          id: 'swap-or-bridge',
-          text: t('Swap or Bridge'),
-          icon: SwapAndBridgeIcon,
-          iconWidth: 86,
-          onPress: ({ chainId, address }: TokenResult) =>
-            navigate(ROUTES.swapAndBridge, {
-              state: {
-                preselectedFromToken: {
-                  address,
-                  chainId
-                }
-              }
-            }),
-          isDisabled: shouldDisableSwapAndBridge,
-          tooltipText: isGasTankOrRewardsToken
-            ? unavailableBecauseGasTankOrRewardsTokenTooltipText
-            : network?.isNotSupported
-              ? network?.notSupportedReason
-              : '',
-          strokeWidth: 1.5
-        },
+        // (kohaku) Swap & Bridge is disabled in this build
         // TODO: Temporarily hidden as of v4.49.0, because displaying it disabled
         // causes confusion. It's planned to be displayed again when the feature is implemented.
         // {

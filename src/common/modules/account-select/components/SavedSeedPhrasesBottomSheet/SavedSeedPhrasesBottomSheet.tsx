@@ -15,7 +15,6 @@ import useControllersMiddleware from '@common/hooks/useControllersMiddleware'
 import useNavigation from '@common/hooks/useNavigation'
 import useTheme from '@common/hooks/useTheme'
 import Account from '@common/modules/account-select/components/Account'
-import useOnboardingNavigation from '@common/modules/auth/hooks/useOnboardingNavigation'
 import { WEB_ROUTES } from '@common/modules/router/constants/common'
 import alert from '@common/services/alert'
 import spacings from '@common/styles/spacings'
@@ -42,15 +41,15 @@ const SavedSeedPhrasesBottomSheet = ({
   const { dispatch } = useControllersMiddleware()
   const { subType, initParams } = useController('AccountPickerController').state
   const [addAccountButtonPressed, setAddAccountButtonPressed] = useState(false)
-  const { goToNextRoute } = useOnboardingNavigation()
   const { navigate } = useNavigation()
 
   useEffect(() => {
     if (addAccountButtonPressed && initParams && subType === 'seed') {
       setAddAccountButtonPressed(false)
-      goToNextRoute(WEB_ROUTES.accountPersonalize)
+      // The account picker runs the used-account scan, so it must not be skipped (kohaku)
+      navigate(WEB_ROUTES.accountPicker)
     }
-  }, [addAccountButtonPressed, goToNextRoute, initParams, subType])
+  }, [addAccountButtonPressed, navigate, initParams, subType])
 
   const getAccountsForSeed = useCallback(
     (seedId: string) => {

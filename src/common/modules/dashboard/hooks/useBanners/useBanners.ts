@@ -37,7 +37,6 @@ export default function useBanners(): [BannerInterface[], BannerInterface[]] {
 
   const { banners: emailVaultBanners = [] } = useController('EmailVaultController').state
   const { banners: requestBanners = [] } = useController('RequestsController').state
-  const { banners: swapAndBridgeBanners = [] } = useController('SwapAndBridgeController').state
   const { extensionUpdateBanner } = useController('ExtensionUpdateController').state
   const { hasFundedHotAccount } = useController('PortfolioController').state
   const otaUpdateBanner = useOtaUpdateBanner()
@@ -58,7 +57,7 @@ export default function useBanners(): [BannerInterface[], BannerInterface[]] {
       ...(deprecatedSmartAccountBanner || []),
       ...(requestBanners || []),
       ...(isOffline && portfolio.isAllReady ? [OFFLINE_BANNER] : []),
-      ...(isOffline ? [] : [...(swapAndBridgeBanners || [])]),
+      // (kohaku) Swap & Bridge is disabled, so its banners are never shown
       ...getCurrentAccountBanners(
         hasFundedHotAccount ? emailVaultBanners || [] : [],
         account?.addr
@@ -75,7 +74,6 @@ export default function useBanners(): [BannerInterface[], BannerInterface[]] {
     requestBanners,
     isOffline,
     portfolio.isAllReady,
-    swapAndBridgeBanners,
     hasFundedHotAccount,
     emailVaultBanners,
     selectedAccountBanners,
