@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-native'
 import { Subject } from 'rxjs'
 
+import { ROUTES } from '@common/modules/router/constants/common'
 import { TitleChangeEventStreamType, UseNavigationReturnType } from './types'
 
 // Event stream that gets triggered when the title changes
@@ -63,13 +64,26 @@ const useNavigation = (): UseNavigationReturnType => {
     return (currentRoute.state as any).prevRoute
   }, [currentRoute])
 
+  // A separate helper so the existing `goBack` behavior stays untouched (kohaku)
+  const dashGoBack = useCallback(
+    (routes = ROUTES) => {
+      if (prevRoute) {
+        goBack()
+      } else {
+        navigate(routes.mainDashboard)
+      }
+    },
+    [goBack, navigate, prevRoute]
+  )
+
   return {
     navigate,
     setOptions,
     setSearchParams,
     goBack,
     searchParams,
-    canGoBack: !!prevRoute
+    canGoBack: !!prevRoute,
+    dashGoBack
   }
 }
 

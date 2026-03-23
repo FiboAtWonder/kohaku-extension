@@ -2,6 +2,8 @@
 const COMMON_ROUTES = {
   keyStoreUnlock: 'unlock',
   dashboard: 'dashboard',
+  // (kohaku) the privacy dashboard is the landing screen; `dashboard` is the public one
+  mainDashboard: 'main-dashboard',
   getStarted: 'get-started',
   networksConfiguration: 'networks-configuration',
   privacyOptOutsConfiguration: 'privacy-opt-outs-configuration',
@@ -79,6 +81,8 @@ const WEB_ROUTES = {
   qrPermission: 'qr-permission',
   // INTERNAL ROUTES
   internalLogs: 'internal/logs',
+
+  public: 'public',
 
   // (kohaku) Privacy Pools V1 routes
   pp1Home: 'PPv1Home',

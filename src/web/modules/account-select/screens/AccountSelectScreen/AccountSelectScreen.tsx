@@ -7,6 +7,7 @@ import { Account as AccountType } from '@ambire-common/interfaces/account'
 import AddCircularIcon from '@common/assets/svg/AddCircularIcon'
 import SettingsIcon from '@common/assets/svg/SettingsIcon'
 import Button from '@common/components/Button'
+import DownArrowIcon from '@common/assets/svg/DownArrowIcon'
 import FooterGlassView from '@common/components/FooterGlassView'
 import { createGlobalTooltipDataSet } from '@common/components/GlobalTooltip'
 import HoverablePressable from '@common/components/HoverablePressable'
@@ -25,6 +26,7 @@ import DashboardSkeleton from '@common/modules/dashboard/components/Skeleton'
 import { HeaderWithTitle } from '@common/modules/header/components/Header/Header'
 import { ROUTES, WEB_ROUTES } from '@common/modules/router/constants/common'
 import spacings from '@common/styles/spacings'
+import common from '@common/styles/utils/common'
 import flexbox from '@common/styles/utils/flexbox'
 
 import { zeroAddress } from 'viem'
@@ -60,7 +62,8 @@ const AccountSelectScreen = () => {
     getItemLayout,
     selectedAccountIndex,
     shouldDisplayAccounts
-  } = useAccountsList({ flatlistRef })
+    // The private account is listed first (kohaku)
+  } = useAccountsList({ flatlistRef, privateFirst: true })
   const { search: routeParams } = useRoute()
   const { navigate } = useNavigation()
   const {
@@ -130,6 +133,25 @@ const AccountSelectScreen = () => {
       </HeaderWithTitle>
       <View style={[spacings.pt, spacings.phSm, flexbox.flex1]} ref={accountsContainerRef}>
         <Search autoFocus control={control} style={styles.searchBar} />
+        {/* (kohaku) shortcut back to the private dashboard */}
+        <HoverablePressable
+          onPress={() => navigate(ROUTES.mainDashboard)}
+          style={[
+            flexbox.directionRow,
+            flexbox.alignCenter,
+            flexbox.justifySpaceBetween,
+            spacings.phSm,
+            spacings.pvSm,
+            spacings.mtSm,
+            common.borderRadiusPrimary,
+            { backgroundColor: theme.secondaryBackground }
+          ]}
+        >
+          <Text fontSize={16} weight="semiBold">
+            {t('Back to Dashboard')}
+          </Text>
+          <DownArrowIcon color={theme.primary} style={{ transform: [{ rotate: '90deg' }] }} />
+        </HoverablePressable>
         <ScrollableWrapper
           type={WRAPPER_TYPES.FLAT_LIST}
           style={[

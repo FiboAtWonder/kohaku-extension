@@ -62,7 +62,13 @@ const TabsAndSearch: FC<Props> = ({ openTab, setOpenTab, currentTab, sessionId }
       ]}
     >
       <Tabs
-        handleChangeQuery={(tab) => setSearchParams({ tab, sessionId })}
+        handleChangeQuery={(tab) =>
+          setSearchParams((prev) => {
+            prev.set('tab', tab)
+            prev.set('sessionId', sessionId)
+            return prev
+          })
+        }
         setOpenTab={setOpenTab}
         openTab={openTab}
       />

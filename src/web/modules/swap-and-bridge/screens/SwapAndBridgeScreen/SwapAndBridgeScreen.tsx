@@ -133,7 +133,7 @@ const SwapAndBridgeScreen = () => {
         args: []
       }
     })
-    navigate(WEB_ROUTES.dashboard)
+    navigate(WEB_ROUTES.mainDashboard)
   }, [swapAndBridgeDispatch, navigate])
   const onBatchAddedSecondaryButtonPress = useCallback(() => {
     setShowAddedToBatch(false)
@@ -155,7 +155,7 @@ const SwapAndBridgeScreen = () => {
         }
       })
     } else {
-      navigate(ROUTES.dashboard)
+      navigate(ROUTES.mainDashboard)
     }
   }, [requestsCtrlDispatch, account, navigate, sessionId, swapAndBridgeDispatch])
 

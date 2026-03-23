@@ -21,6 +21,7 @@ import useCurrentActionSideEffects from '@web/hooks/useCurrentActionSideEffects'
 import DashboardScreen from '@web/modules/dashboard/screens/DashboardScreen'
 import KeyStoreUnlockScreen from '@web/modules/keystore/screens/KeyStoreUnlockScreen'
 
+import KohakuDashboardScreen from '@web/modules/PPv1/screens/dashboard/screens/KohakuDashboardScreen'
 import getStyles from './styles'
 
 const AsyncMainRoute = lazy(() => import('@web/modules/router/components/MainRoutes'))
@@ -95,6 +96,7 @@ const Router = () => {
         <Route element={<KeystoreUnlockedRoute />}>
           <Route element={<AuthenticatedRoute />}>
             <Route path={WEB_ROUTES.dashboard} element={<DashboardScreen />} />
+            <Route path={WEB_ROUTES.mainDashboard} element={<KohakuDashboardScreen />} />
           </Route>
         </Route>
         <Route path={WEB_ROUTES.keyStoreUnlock} element={<KeyStoreUnlockScreen />} />

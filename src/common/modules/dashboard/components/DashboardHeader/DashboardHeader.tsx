@@ -4,7 +4,9 @@ import { useModalize } from 'react-native-modalize'
 
 import BurgerIcon from '@common/assets/svg/BurgerIcon'
 import NetworkStatusesIcon from '@common/assets/svg/NetworkStatusIcon'
+import Text from '@common/components/Text'
 import { isAmbireNext, isDev, isMobile } from '@common/config/env'
+import { useTranslation } from '@common/config/localization'
 import useController from '@common/hooks/useController'
 import useHover from '@common/hooks/useHover'
 import useNavigation from '@common/hooks/useNavigation'
@@ -24,7 +26,10 @@ const DashboardHeader = () => {
   const {
     state: { account }
   } = useController('SelectedAccountController')
+  const { t } = useTranslation()
   const [bindBurgerAnim, burgerAnimStyle] = useHover({ preset: 'opacityInverted', duration: 50 })
+  // Takes the user back to the private dashboard, which is the landing screen (kohaku)
+  const [bindDashboardAnim, dashboardAnimStyle] = useHover({ preset: 'opacity' })
   const [bindNetworkStatusesAnim, networkStatusesAnimStyle] = useHover({
     preset: 'opacityInverted',
     duration: 50
@@ -50,6 +55,19 @@ const DashboardHeader = () => {
       <View style={[flexbox.directionRow, flexbox.flex1, flexbox.justifySpaceBetween]}>
         <AccountButton />
         <View style={[flexbox.directionRow, flexbox.alignStart]}>
+          <Pressable
+            testID="dashboard-home-btn"
+            style={[spacings.ml, spacings.phTy, spacings.pvTy, flexbox.alignSelfCenter]}
+            onPress={() => navigate(WEB_ROUTES.mainDashboard)}
+            {...bindDashboardAnim}
+          >
+            <Animated.View style={dashboardAnimStyle}>
+              <Text fontSize={14} weight="medium" appearance="secondaryText">
+                {t('Back To Dashboard')}
+              </Text>
+            </Animated.View>
+          </Pressable>
+
           {SHOULD_DISPLAY_NETWORK_STATUSES && (
             <Pressable
               style={[flexbox.justifyCenter, flexbox.alignCenter, { width: 40, height: 40 }]}

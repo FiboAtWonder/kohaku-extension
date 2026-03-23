@@ -96,7 +96,8 @@ const getInitialRoute = ({
       return ROUTES.transfer
     }
     if (surveyState && surveyState.hasPersistentState) return ROUTES.survey
-    return ROUTES.dashboard
+    // The private dashboard is the landing screen (kohaku)
+    return ROUTES.mainDashboard
   }
 
   return null

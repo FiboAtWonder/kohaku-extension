@@ -27,7 +27,8 @@ export default function useGetStarted() {
 
   useEffect(() => {
     if (authStatus === AUTH_STATUS.AUTHENTICATED) {
-      navigate(ROUTES.dashboard)
+      // The private dashboard is the landing screen (kohaku)
+      navigate(ROUTES.mainDashboard)
       return
     }
 

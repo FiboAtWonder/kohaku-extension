@@ -174,7 +174,7 @@ const useSwapAndBridgeForm = () => {
             args: [[`${account.addr}-swap-and-bridge-sign`]]
           }
         })
-        navigate(ROUTES.dashboard)
+        navigate(ROUTES.mainDashboard)
 
         return
       }

@@ -2,6 +2,7 @@ import React, { Suspense, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Route, Routes, useLocation } from 'react-router-dom'
 
+import DashboardScreen from '@web/modules/dashboard/screens/DashboardScreen'
 import NoConnectionScreen from '@common/modules/no-connection/screens/NoConnectionScreen'
 import AuthenticatedRoute from '@common/modules/router/components/AuthenticatedRoute'
 import KeystoreUnlockedRoute from '@common/modules/router/components/KeystoreUnlockedRoute'
@@ -230,6 +231,8 @@ const MainRoutes = () => {
 
         <Route element={<KeystoreUnlockedRoute />}>
           <Route element={<AuthenticatedRoute />}>
+            {/* The public (non-private) dashboard is reachable under its own route (kohaku) */}
+            <Route path={WEB_ROUTES.public} element={<DashboardScreen />} />
             <Route path={WEB_ROUTES.transfer} element={<TransferScreen />} />
 
             {/* Privacy Pools V1 (kohaku) */}

@@ -15,9 +15,12 @@ import {
 
 const ITEM_HEIGHT = ACCOUNT_SELECT_ACCOUNT_HEIGHT + ACCOUNT_SELECT_ACCOUNT_MB
 const useAccountsList = ({
-  flatlistRef
+  flatlistRef,
+  privateFirst = false
 }: {
   flatlistRef?: React.RefObject<FlatList<AccountType> | null>
+  // Lists the private account before the public ones (kohaku)
+  privateFirst?: boolean
 } = {}) => {
   const { control, watch } = useForm({
     mode: 'all',
@@ -160,7 +163,9 @@ const useAccountsList = ({
     usedOnNetworks: []
   }
 
-  const allAccounts = [...filteredAccounts, privateAccount]
+  const allAccounts = privateFirst
+    ? [privateAccount, ...filteredAccounts]
+    : [...filteredAccounts, privateAccount]
 
   useEffect(() => {
     scrollToSelectedAccount()

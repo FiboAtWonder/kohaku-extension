@@ -80,7 +80,7 @@ const TransferScreen = ({ isTopUpScreen }: { isTopUpScreen?: boolean }) => {
     }
   }, [amountInFiat])
 
-  const { navigate } = useNavigation()
+  const { navigate, dashGoBack } = useNavigation()
   const { t } = useTranslation()
   const { visibleUserRequests } = useController('RequestsController').state
   const {
@@ -175,7 +175,7 @@ const TransferScreen = ({ isTopUpScreen }: { isTopUpScreen?: boolean }) => {
         }
       })
     } else {
-      navigate(WEB_ROUTES.dashboard)
+      navigate(WEB_ROUTES.mainDashboard)
     }
   }, [requestsDispatch, navigate, account])
 
@@ -498,7 +498,8 @@ const TransferScreen = ({ isTopUpScreen }: { isTopUpScreen?: boolean }) => {
 
   const handleGoBackPress = useCallback(() => {
     if (!isRequestWindow) {
-      navigate(ROUTES.dashboard)
+      // Falls back to the private dashboard when there is nowhere to go back to (kohaku)
+      dashGoBack()
     } else {
       if (!account) return
 
@@ -510,7 +511,7 @@ const TransferScreen = ({ isTopUpScreen }: { isTopUpScreen?: boolean }) => {
         }
       })
     }
-  }, [navigate, requestsDispatch, account])
+  }, [dashGoBack, isRequestWindow, requestsDispatch, account])
 
   const onBatchAddedPrimaryButtonPress = useCallback(() => {
     transferDispatch({
@@ -520,7 +521,7 @@ const TransferScreen = ({ isTopUpScreen }: { isTopUpScreen?: boolean }) => {
         args: []
       }
     })
-    navigate(WEB_ROUTES.dashboard)
+    navigate(WEB_ROUTES.mainDashboard)
   }, [transferDispatch, navigate])
   const onBatchAddedSecondaryButtonPress = useCallback(() => {
     transferDispatch({
