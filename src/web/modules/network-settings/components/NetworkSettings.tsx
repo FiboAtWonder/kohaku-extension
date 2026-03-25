@@ -16,10 +16,12 @@ import { useTranslation } from '@common/config/localization'
 import { isAmbireNext, isDev } from '@common/config/env'
 import useController from '@common/hooks/useController'
 import useRoute from '@common/hooks/useRoute'
+import useTheme from '@common/hooks/useTheme'
 import { ROUTES } from '@common/modules/router/constants/common'
 import Network from '@common/modules/settings/components/Networks/Network'
 import NetworkForm from '@common/modules/settings/components/Networks/NetworkForm'
 import spacings from '@common/styles/spacings'
+import common from '@common/styles/utils/common'
 import flexbox from '@common/styles/utils/flexbox'
 import text from '@common/styles/utils/text'
 import { openInTab } from '@common/utils/links'
@@ -27,8 +29,14 @@ import { SettingsRoutesContext } from '@web/modules/settings/contexts/SettingsRo
 
 import BatchingControlOption from './BatchingControlOption'
 
+// Kohaku's PoC runs on Sepolia only, so adding networks is turned off and a notice takes
+// the place of the "Add network" buttons. The upstream markup is kept behind this flag so
+// it can be re-enabled. (kohaku)
+const IS_ADDING_NETWORKS_SUPPORTED = false
+
 const NetworksSettings = () => {
   const { t } = useTranslation()
+  const { theme } = useTheme()
   const { search: searchParams, pathname } = useRoute()
   const { control, watch } = useForm({ defaultValues: { search: '' } })
   const { ref: sheetRef, open: openBottomSheet, close: closeBottomSheet } = useModalize()
@@ -159,31 +167,56 @@ const NetworksSettings = () => {
             )}
           </ScrollableWrapper>
           <View style={spacings.pt}>
-            {!isInitialConfig && (
-              <Button
-                type="primary"
-                size="small"
-                text={t('Add network from Chainlist')}
-                testID="add-network-from-chainlist"
-                onPress={navigateToChainlist}
-                style={{ height: 48, ...spacings.mbTy }}
-                childrenPosition="left"
+            {IS_ADDING_NETWORKS_SUPPORTED ? (
+              <>
+                {!isInitialConfig && (
+                  <Button
+                    type="primary"
+                    size="small"
+                    text={t('Add network from Chainlist')}
+                    testID="add-network-from-chainlist"
+                    onPress={navigateToChainlist}
+                    style={{ height: 48, ...spacings.mbTy }}
+                    childrenPosition="left"
+                  >
+                    <ChainlistIcon width={24} height={24} style={spacings.mrTy} />
+                  </Button>
+                )}
+                <Button
+                  type="secondary"
+                  size="small"
+                  text={t('Add network manually')}
+                  testID="add-network-manually"
+                  onPress={openBottomSheet as any}
+                  hasBottomSpacing={false}
+                  style={{ height: 48 }}
+                  childrenPosition="left"
+                >
+                  <AddIcon style={spacings.mrTy} />
+                </Button>
+              </>
+            ) : (
+              <View
+                style={[
+                  spacings.pvTy,
+                  spacings.phSm,
+                  common.borderRadiusPrimary,
+                  {
+                    borderWidth: 1,
+                    borderColor: theme.warningDecorative,
+                    backgroundColor: theme.warningBackground
+                  }
+                ]}
               >
-                <ChainlistIcon width={24} height={24} style={spacings.mrTy} />
-              </Button>
+                <Text
+                  weight="medium"
+                  fontSize={14}
+                  style={[text.center, { color: theme.warningText }]}
+                >
+                  {t('sepolia testnet ONLY, ethereum mainnet support coming soon')}
+                </Text>
+              </View>
             )}
-            <Button
-              type="secondary"
-              size="small"
-              text={t('Add network manually')}
-              testID="add-network-manually"
-              onPress={openBottomSheet as any}
-              hasBottomSpacing={false}
-              style={{ height: 48 }}
-              childrenPosition="left"
-            >
-              <AddIcon style={spacings.mrTy} />
-            </Button>
           </View>
         </View>
 
