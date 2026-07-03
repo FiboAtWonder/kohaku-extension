@@ -1,36 +1,32 @@
-/* eslint-disable no-console */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { formatUnits, parseUnits, getAddress } from 'viem'
-import { RAILGUN_CONFIG_BY_CHAIN_ID } from '@kohaku-eth/railgun'
+import { parseUnits } from 'viem'
 import { AccountOpStatus } from '@ambire-common/libs/accountOp/types'
 
 import { AddressStateOptional } from '@ambire-common/interfaces/domains'
 import { ZERO_ADDRESS } from '@ambire-common/services/socket/constants'
-import { SigningStatus } from '@ambire-common/controllers/signAccountOp/signAccountOp'
-import { Key } from '@ambire-common/interfaces/keystore'
 
 import BackButton from '@common/components/BackButton'
 import Banner from '@common/components/Banner'
-import Text from '@common/components/Text'
+// import Text from '@common/components/Text'
 import { SelectValue } from '@common/components/Select/types'
 import useAddressInput from '@common/hooks/useAddressInput'
 import useNavigation from '@common/hooks/useNavigation'
 import useToast from '@common/hooks/useToast'
 import { ROUTES } from '@common/modules/router/constants/common'
+import spacings from '@common/styles/spacings'
+// import Button from '@common/components/Button'
 
 import useActivityControllerState from '@web/hooks/useActivityControllerState'
 import useBackgroundService from '@web/hooks/useBackgroundService'
 import useSyncedState from '@web/hooks/useSyncedState'
-import useRailgunControllerState from '@web/hooks/useRailgunControllerState'
 import useRailgunForm from '@web/modules/railgun/hooks/useRailgunForm'
 import Buttons from '@web/modules/PPv1/deposit/components/Buttons'
-import TrackProgress from '@web/modules/sign-account-op/components/OneClick/TrackProgress'
+// import TrackProgress from '@web/modules/sign-account-op/components/OneClick/TrackProgress'
 import Completed from '@web/modules/sign-account-op/components/OneClick/TrackProgress/ByStatus/Completed'
 import Failed from '@web/modules/sign-account-op/components/OneClick/TrackProgress/ByStatus/Failed'
-import InProgress from '@web/modules/sign-account-op/components/OneClick/TrackProgress/ByStatus/InProgress'
+// import InProgress from '@web/modules/sign-account-op/components/OneClick/TrackProgress/ByStatus/InProgress'
 import useTrackAccountOp from '@web/modules/sign-account-op/hooks/OneClick/useTrackAccountOp'
-import Estimation from '@web/modules/sign-account-op/components/OneClick/Estimation'
 import { getUiType } from '@web/utils/uiType'
 
 import { View } from 'react-native'
@@ -100,10 +96,9 @@ const TransferScreen = () => {
   const { accountsOps } = useActivityControllerState()
   const { addToast } = useToast()
 
-  // Railgun state
+  const railgunForm = useRailgunForm()
   const {
     chainId: railgunChainId,
-    validationFormMsgs: railgunValidationFormMsgs,
     addressState: railgunAddressState,
     isRecipientAddressUnknown: railgunIsRecipientAddressUnknown,
     selectedToken: railgunSelectedToken,
@@ -113,11 +108,14 @@ const TransferScreen = () => {
     programmaticUpdateCounter: railgunProgrammaticUpdateCounter,
     isRecipientAddressUnknownAgreed: railgunIsRecipientAddressUnknownAgreed,
     maxAmount: railgunMaxAmount,
-    withdrawAsWETH: railgunWithdrawAsWETH,
-    railgunAccountsState,
     latestBroadcastedAccountOp: railgunLatestBroadcastedAccountOp,
-    latestBroadcastedToken: railgunLatestBroadcastedToken
-  } = useRailgunControllerState()
+    latestBroadcastedToken: railgunLatestBroadcastedToken,
+    totalApprovedBalance: railgunTotalApprovedBalance,
+    totalPrivateBalancesFormatted: railgunTotalPrivateBalancesFormatted,
+    handleUpdateForm: handleRailgunUpdateForm,
+    setAddressState: setRailgunAddressState,
+    privateOpInFlight: railgunPrivateOpInFlight
+  } = railgunForm
 
   const changeProtocol = (protocol: SelectValue) => {
     const newProtocol = (protocol.value || 'railgun') as TransferTabType
@@ -126,7 +124,7 @@ const TransferScreen = () => {
 
     if (newProtocol === 'railgun') {
       dispatch({
-        type: 'RAILGUN_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP'
+        type: 'RAILGUN_V2_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP'
       })
     }
 
@@ -135,7 +133,7 @@ const TransferScreen = () => {
 
   const cleanUp = useCallback(() => {
     // Clean up state before navigating - use the appropriate controller based on active protocol
-    dispatch({ type: 'RAILGUN_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP' })
+    dispatch({ type: 'RAILGUN_V2_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP' })
     dispatch({ type: 'PRIVACY_POOLS_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP' })
 
     // Reset hasProceeded for both controllers
@@ -145,40 +143,15 @@ const TransferScreen = () => {
       params: { proceeded: false }
     })
     dispatch({
-      type: 'RAILGUN_CONTROLLER_HAS_USER_PROCEEDED',
+      type: 'RAILGUN_V2_CONTROLLER_HAS_USER_PROCEEDED',
       params: { proceeded: false }
     })
 
-    dispatch({
-      type: 'RAILGUN_CONTROLLER_RESET_FORM'
-    })
+    railgunForm.resetForm()
     dispatch({
       type: 'PRIVACY_POOLS_CONTROLLER_RESET_FORM'
     })
-  }, [dispatch])
-
-  const railgunTotalApprovedBalance = useMemo(() => {
-    if (railgunAccountsState.balances.length > 0) {
-      let balance = BigInt(0)
-      for (const bal of railgunAccountsState.balances) {
-        if (bal.tokenAddress.toLowerCase() === ZERO_ADDRESS.toLowerCase()) {
-          balance += BigInt(bal.amount)
-        }
-      }
-      return { total: balance, accounts: [] as [] }
-    }
-    return { total: 0n, accounts: [] as [] }
-  }, [railgunAccountsState])
-
-  const handleRailgunUpdateForm = useCallback(
-    (params: { [key: string]: any }) => {
-      dispatch({
-        type: 'RAILGUN_CONTROLLER_UPDATE_FORM',
-        params: { ...params }
-      })
-    },
-    [dispatch]
-  )
+  }, [dispatch, railgunForm])
 
   const hasInitializedAddressRef = useRef(false)
   if (!hasInitializedAddressRef.current && addressFromParams && !addressState.fieldValue) {
@@ -299,7 +272,6 @@ const TransferScreen = () => {
     }
   }, [dispatch, navigate, activeProtocol])
 
-  // Determine which latestBroadcastedAccountOp to use based on active protocol
   const currentLatestBroadcastedAccountOp = useMemo(() => {
     return activeProtocol === 'railgun'
       ? railgunLatestBroadcastedAccountOp
@@ -334,6 +306,10 @@ const TransferScreen = () => {
 
   const explorerLink = useMemo(() => {
     if (!submittedAccountOp || !isMatchingWithdrawal) return
+
+    // Railgun's broadcast returns no tx hash, so the op's txnId is a placeholder —
+    // never build a (dead) explorer link from it.
+    if ((submittedAccountOp.meta as any)?.isRailgunOperation) return
 
     const { chainId: submittedChainId, identifiedBy, txnId } = submittedAccountOp
 
@@ -387,9 +363,6 @@ const TransferScreen = () => {
       dispatch({
         type: 'PRIVACY_POOLS_CONTROLLER_UNLOAD_SCREEN'
       })
-      dispatch({
-        type: 'RAILGUN_CONTROLLER_UNLOAD_SCREEN'
-      })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -433,16 +406,6 @@ const TransferScreen = () => {
   })
 
   // Railgun address state handlers
-  const setRailgunAddressState = useCallback(
-    (newPartialAddressState: AddressStateOptional) => {
-      dispatch({
-        type: 'RAILGUN_CONTROLLER_UPDATE_FORM',
-        params: { addressState: newPartialAddressState }
-      })
-    },
-    [dispatch]
-  )
-
   const handleRailgunCacheResolvedDomain = useCallback(
     (address: string, domain: string, type: 'ens') => {
       dispatch({
@@ -478,18 +441,6 @@ const TransferScreen = () => {
     // Allow Railgun 0zk addresses on the Railgun protocol
     allowRailgunAddresses: true
   })
-
-  // Debug: Log validation messages
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Railgun Address Validation State:', {
-      addressFieldValue: railgunAddressStateFieldValue,
-      controllerAddressFieldValue: railgunAddressState.fieldValue,
-      mergedAddressFieldValue: mergedRailgunAddressState.fieldValue,
-      validationMsgs: railgunValidationFormMsgs.recipientAddress,
-      addressInputValidation: railgunAddressInputState.validation,
-      addressState: railgunAddressState
-    })
-  }
 
   const amountErrorMessage = useMemo(() => {
     if (!withdrawalAmount || withdrawalAmount.trim() === '' || !selectedToken) return ''
@@ -543,9 +494,6 @@ const TransferScreen = () => {
   ])
 
   // Get totalPrivateBalancesFormatted from useRailgunForm
-  const railgunForm = useRailgunForm()
-  const railgunTotalPrivateBalancesFormatted = railgunForm.totalPrivateBalancesFormatted
-
   // Railgun amount error message
   const railgunAmountErrorMessage = useMemo(() => {
     if (!railgunWithdrawalAmount || railgunWithdrawalAmount.trim() === '') return ''
@@ -592,25 +540,6 @@ const TransferScreen = () => {
       !railgunAddressInputState.validation.isError ||
       (hasAddress && !railgunAddressInputState.validation.message)
     const noAmountError = !railgunAmountErrorMessage
-
-    // Debug logging (can be removed later)
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Railgun Form Validation:', {
-        hasAmount,
-        hasToken,
-        hasAddress,
-        addressIsValid,
-        noAmountError,
-        amountFieldValue: railgunAmountFieldValue,
-        addressFieldValue: addressValue,
-        syncedAddressFieldValue: railgunAddressStateFieldValue,
-        controllerAddressFieldValue: railgunAddressState.fieldValue,
-        selectedToken: railgunSelectedToken?.symbol,
-        addressError: railgunAddressInputState.validation.isError,
-        addressValidationMessage: railgunAddressInputState.validation.message,
-        amountError: railgunAmountErrorMessage
-      })
-    }
 
     return !!(hasAmount && hasToken && hasAddress && addressIsValid && noAmountError)
   }, [
@@ -675,7 +604,7 @@ const TransferScreen = () => {
     ) {
       // Error states: clean up and navigate directly (no banner to hide)
       dispatch({
-        type: 'RAILGUN_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP'
+        type: 'RAILGUN_V2_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP'
       })
       dispatch({
         type: 'PRIVACY_POOLS_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP'
@@ -687,7 +616,7 @@ const TransferScreen = () => {
         }
       })
       dispatch({
-        type: 'RAILGUN_CONTROLLER_HAS_USER_PROCEEDED',
+        type: 'RAILGUN_V2_CONTROLLER_HAS_USER_PROCEEDED',
         params: {
           proceeded: false
         }
@@ -705,267 +634,76 @@ const TransferScreen = () => {
 
   const handleRailgunWithdrawal = useCallback(async () => {
     setIsSubmittingState(true)
-    let isInternalTransfer = false
     try {
-      // Use synced state values (current input values) instead of controller state
-      // Controller state may be debounced and not updated yet
-      const amount = railgunAmountFieldValue || railgunWithdrawalAmount
-      // Prioritize synced state field value, then ENS resolved address, then addressInputState.address
-      const address =
-        railgunAddressStateFieldValue ||
-        railgunAddressState.ensAddress ||
-        railgunAddressInputState.address
-
-      // Debug logging
-      console.log('handleRailgunWithdrawal - Input values:', {
-        amount,
-        address,
-        amountFieldValue: railgunAmountFieldValue,
-        withdrawalAmount: railgunWithdrawalAmount,
-        addressStateFieldValue: railgunAddressStateFieldValue,
-        addressInputStateAddress: railgunAddressInputState.address,
-        addressStateEnsAddress: railgunAddressState.ensAddress,
-        selectedToken: railgunSelectedToken
-      })
-
-      // Validate form inputs
-      if (!railgunSelectedToken || !amount || !address) {
-        console.error('Missing required form inputs:', {
-          token: railgunSelectedToken,
-          amount,
-          address,
-          amountFieldValue: railgunAmountFieldValue,
-          withdrawalAmount: railgunWithdrawalAmount,
-          addressInputState: railgunAddressInputState.address,
-          addressStateFieldValue: railgunAddressStateFieldValue,
-          addressStateEnsAddress: railgunAddressState.ensAddress
-        })
-        setIsSubmittingState(false)
-        return
-      }
-
-      // Get the synced default Railgun account instance directly from state
-      console.log('Getting synced Railgun account from state...')
-      const accountData = railgunForm.syncedDefaultRailgunAccount()
-      if (!accountData) {
-        console.error(
-          'Failed to get synced Railgun account. Ensure loadPrivateAccount has been called.'
-        )
-        setIsSubmittingState(false)
-        return
-      }
-
-      // Clear any old transaction state before submitting a new transaction
-      // This ensures old "Private Transfer Done!" states don't persist when starting a new withdrawal
-      dispatch({
-        type: 'RAILGUN_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP'
-      })
-
-      const { account, indexer } = accountData
-      console.log('Railgun account instance ready:', { account, indexer })
-
-      // Parse amount to BigInt using token decimals
-      const tokenDecimals = railgunSelectedToken.decimals || 18
-      const amountBigInt = parseUnits(amount, tokenDecimals)
-
-      // Check if address is a 0zk Railgun address (starts with "0zk")
-      const isRailgunAddress = address.toLowerCase().startsWith('0zk')
-
-      // For 0zk addresses, use the address as-is (no checksumming needed)
-      // For 0x addresses, ensure address is properly formatted (checksummed)
-      const receiver = isRailgunAddress ? address : getAddress(address)
-
-      // Check if this is native ETH and user wants WETH instead
-      // TODO: Get from checkbox state when WETH checkbox is implemented
-      const withdrawAsWETH = false
-      const isNativeETH = railgunSelectedToken.address?.toLowerCase() === ZERO_ADDRESS.toLowerCase()
-      let txData
-
-      try {
-        if (isRailgunAddress) {
-          // This is a Private Internal Railgun Transfer (0zk address)
-          // Use transfer/transferNative instead of unshield/unshieldNative
-          isInternalTransfer = true
-          let tokenAddress = railgunSelectedToken.address
-          if (isNativeETH) {
-            const networkConfig =
-              RAILGUN_CONFIG_BY_CHAIN_ID[
-                railgunChainId?.toString() as keyof typeof RAILGUN_CONFIG_BY_CHAIN_ID
-              ]
-            if (!networkConfig?.WETH) {
-              console.error('WETH address not found for chainId:', railgunChainId)
-              setIsSubmittingState(false)
-              return
-            }
-            tokenAddress = networkConfig.WETH
-          }
-
-          console.log('Calling account.transfer for internal transfer with:', {
-            tokenAddress,
-            amount: amountBigInt.toString(),
-            receiver
-          })
-
-          // TODO: Verify that account.transfer exists and has the correct signature
-          // The receiver should be the 0zk address
-          txData = await account.transfer(tokenAddress, amountBigInt, receiver)
-
-          console.log('Internal transfer txData:', txData)
-        } else {
-          // This is a regular withdrawal (0x address) - use unshield
-          if (isNativeETH && !withdrawAsWETH) {
-            // Use native ETH unshield
-            console.log('Calling account.unshieldNative with:', {
-              amount: amountBigInt.toString(),
-              receiver
-            })
-            txData = await account.unshieldNative(amountBigInt, receiver)
-          } else {
-            let tokenAddress = railgunSelectedToken.address
-
-            // If native ETH but user wants WETH, use WETH address
-            if (isNativeETH && withdrawAsWETH) {
-              const networkConfig =
-                RAILGUN_CONFIG_BY_CHAIN_ID[
-                  railgunChainId?.toString() as keyof typeof RAILGUN_CONFIG_BY_CHAIN_ID
-                ]
-              if (!networkConfig?.WETH) {
-                console.error('WETH address not found for chainId:', railgunChainId)
-                setIsSubmittingState(false)
-                return
-              }
-              tokenAddress = networkConfig.WETH
-            }
-
-            console.log('Calling account.unshield with:', {
-              tokenAddress,
-              amount: amountBigInt.toString(),
-              receiver
-            })
-            txData = await account.unshield(tokenAddress, amountBigInt, receiver)
-          }
-
-          console.log('Unshield txData:', txData)
-        }
-      } catch (error) {
-        console.error('Error generating transaction:', error)
-        setIsSubmittingState(false)
-        const errorMessage = isInternalTransfer
-          ? 'Unable to generate internal transfer transaction. Please try again.'
-          : 'Unable to generate withdrawal transaction. Please try again.'
-        addToast(errorMessage, {
-          type: 'error',
-          timeout: 8000
-        })
-        return
-      }
-
-      // Submit transaction directly to relayer (no estimation modal)
-      // The controller will set latestBroadcastedAccountOp immediately, causing UI to show track screen
-      console.log(
-        isInternalTransfer
-          ? 'Submitting internal transfer to relayer...'
-          : 'Submitting withdrawal to relayer...'
-      )
-
-      // 0.25% fee for unshields, none for internal transfers
-      const feeFormatted = isInternalTransfer
-        ? '0'
-        : `${formatUnits((amountBigInt * 25n) / 10000n, tokenDecimals)} ${
-            railgunSelectedToken.symbol || 'ETH'
-          }`
-
-      await railgunForm.directBroadcastWithdrawal({
-        to: txData.to,
-        data: txData.data,
-        value:
-          isNativeETH && !withdrawAsWETH
-            ? typeof txData.value === 'string'
-              ? txData.value
-              : txData.value.toString()
-            : '0',
-        chainId: railgunChainId || 11155111,
-        isInternalTransfer,
-        tokenAddress: railgunSelectedToken.address,
-        amount: amountBigInt.toString(),
-        recipient: receiver,
-        feeFormatted
-      })
-      console.log(
-        isInternalTransfer
-          ? 'Internal transfer submitted successfully'
-          : 'Withdrawal submitted successfully'
-      )
-      // Note: isSubmitting will be reset when the transaction completes or fails
-      // The UI will show the track screen immediately after directBroadcastWithdrawal is called
-    } catch (error) {
-      console.error('Error submitting transaction:', error)
+      await railgunForm.handleMultipleWithdrawal()
+    } catch {
       setIsSubmittingState(false)
-      const errorMessage = isInternalTransfer
-        ? 'Unable to submit internal transfer. Please try again.'
-        : 'Unable to submit withdrawal. Please try again.'
-      addToast(errorMessage, {
-        type: 'error',
-        timeout: 8000
-      })
+    }
+  }, [railgunForm])
+
+  // Hand the local submitting flag off to the controller once it picks up the op
+  // (railgunPrivateOpInFlight then drives "Sending…" and clears on EVERY exit path,
+  // incl. a prepare failure — so the button can't get stuck). Also clear on a
+  // broadcasted op or a form error as fallbacks if the controller never picks up.
+  useEffect(() => {
+    if (
+      isSubmittingState &&
+      (railgunPrivateOpInFlight || currentLatestBroadcastedAccountOp || railgunForm.message)
+    ) {
+      setIsSubmittingState(false)
     }
   }, [
-    railgunAmountFieldValue,
-    railgunWithdrawalAmount,
-    railgunAddressStateFieldValue,
-    railgunAddressState.ensAddress,
-    railgunAddressInputState.address,
-    railgunSelectedToken,
-    railgunForm,
-    dispatch,
-    railgunChainId,
-    addToast
+    isSubmittingState,
+    railgunPrivateOpInFlight,
+    currentLatestBroadcastedAccountOp,
+    railgunForm.message
   ])
 
-  // Handler functions for Estimation component
-  const handleBroadcastAccountOp = useCallback(() => {
-    dispatch({
-      type: 'MAIN_CONTROLLER_HANDLE_SIGN_AND_BROADCAST_ACCOUNT_OP',
-      params: {
-        updateType: 'Railgun'
-      }
-    })
-  }, [dispatch])
+  const isPendingBroadcast = !!currentLatestBroadcastedAccountOp && !submittedAccountOp?.status
 
-  const handleUpdateStatus = useCallback(
-    (status: SigningStatus) => {
-      dispatch({
-        type: 'RAILGUN_CONTROLLER_SIGN_ACCOUNT_OP_UPDATE_STATUS',
-        params: {
-          status
-        }
-      })
-    },
-    [dispatch]
-  )
+  const isResultPending =
+    isPendingBroadcast ||
+    submittedAccountOp?.status === AccountOpStatus.BroadcastedButNotConfirmed ||
+    ((submittedAccountOp?.status === AccountOpStatus.Success ||
+      submittedAccountOp?.status === AccountOpStatus.UnknownButPastNonce) &&
+      !isMatchingWithdrawal)
 
-  const updateController = useCallback(
-    (params: { signingKeyAddr?: Key['addr']; signingKeyType?: Key['type'] }) => {
-      dispatch({
-        type: 'RAILGUN_CONTROLLER_SIGN_ACCOUNT_OP_UPDATE',
-        params
-      })
-    },
-    [dispatch]
-  )
+  const hasResult =
+    ((submittedAccountOp?.status === AccountOpStatus.Success ||
+      submittedAccountOp?.status === AccountOpStatus.UnknownButPastNonce) &&
+      isMatchingWithdrawal) ||
+    submittedAccountOp?.status === AccountOpStatus.Failure ||
+    submittedAccountOp?.status === AccountOpStatus.Rejected ||
+    submittedAccountOp?.status === AccountOpStatus.BroadcastButStuck
 
   const buttons = useMemo(() => {
     if (activeProtocol === 'railgun') {
       return (
         <View style={[flexbox.directionRow, flexbox.alignCenter, flexbox.justifySpaceBetween]}>
-          <BackButton onPress={dashGoBack} />
+          <BackButton
+            onPress={hasResult ? navigateOut : dashGoBack}
+            withIcon={false}
+            text={hasResult ? t('Close') : undefined}
+          />
           <Buttons
-            handleSubmitForm={handleRailgunWithdrawal}
-            proceedBtnText={t('Send')}
-            isNotReadyToProceed={!isRailgunTransferFormValid}
+            handleSubmitForm={hasResult ? handlePrimaryButtonPress : handleRailgunWithdrawal}
+            proceedBtnText={
+              isResultPending || isSubmitting || railgunPrivateOpInFlight
+                ? t('Sending...')
+                : hasResult
+                ? t('Send new transaction')
+                : t('Send')
+            }
+            isNotReadyToProceed={
+              isResultPending || isSubmitting || railgunPrivateOpInFlight
+                ? true
+                : hasResult
+                ? false
+                : !isRailgunTransferFormValid
+            }
             signAccountOpErrors={[]}
             networkUserRequests={[]}
-            isLoading={false}
+            isLoading={isResultPending || isSubmitting || railgunPrivateOpInFlight}
           />
         </View>
       )
@@ -973,24 +711,42 @@ const TransferScreen = () => {
 
     return (
       <View style={[flexbox.directionRow, flexbox.alignCenter, flexbox.justifySpaceBetween]}>
-        <BackButton onPress={dashGoBack} />
+        <BackButton
+          onPress={hasResult ? navigateOut : dashGoBack}
+          text={hasResult ? t('Close') : undefined}
+        />
         <Buttons
-          handleSubmitForm={handleWithdrawal}
-          proceedBtnText={isRefreshing ? t('Updating...') : t('Send')}
-          isNotReadyToProceed={!isTransferFormValid || isRefreshing}
+          handleSubmitForm={hasResult ? handlePrimaryButtonPress : handleWithdrawal}
+          proceedBtnText={
+            isResultPending
+              ? t('Sending...')
+              : hasResult
+              ? t('Send new transaction')
+              : isRefreshing
+              ? t('Updating...')
+              : t('Send')
+          }
+          isNotReadyToProceed={
+            isResultPending ? true : hasResult ? false : !isTransferFormValid || isRefreshing
+          }
           signAccountOpErrors={[]}
           networkUserRequests={[]}
-          isLoading={isSubmitting || isRefreshing}
+          isLoading={isResultPending || (!hasResult && (isSubmitting || isRefreshing))}
         />
       </View>
     )
   }, [
     dashGoBack,
+    navigateOut,
+    handlePrimaryButtonPress,
     isTransferFormValid,
     isRailgunTransferFormValid,
     t,
     isSubmitting,
+    railgunPrivateOpInFlight,
     isRefreshing,
+    isResultPending,
+    hasResult,
     handleWithdrawal,
     handleRailgunWithdrawal,
     activeProtocol
@@ -1034,70 +790,13 @@ const TransferScreen = () => {
     }
   }, [submittedAccountOp?.status, refreshPrivateAccount, railgunForm, addToast, activeProtocol])
 
-  if (displayedView === 'track') {
-    return (
-      <TrackProgress
-        onPrimaryButtonPress={handlePrimaryButtonPress}
-        handleClose={() => {
-          cleanUp()
-
-          navigateOut()
-        }}
-      >
-        {(submittedAccountOp?.status === AccountOpStatus.BroadcastedButNotConfirmed ||
-          (!submittedAccountOp?.status && currentLatestBroadcastedAccountOp) ||
-          ((submittedAccountOp?.status === AccountOpStatus.Success ||
-            submittedAccountOp?.status === AccountOpStatus.UnknownButPastNonce) &&
-            !isMatchingWithdrawal)) && (
-          <InProgress
-            title={
-              activeProtocol === 'railgun'
-                ? (submittedAccountOp?.meta as any)?.isRailgunInternalTransfer ||
-                  (currentLatestBroadcastedAccountOp as any)?.meta?.isRailgunInternalTransfer
-                  ? t('Relaying internal transfer')
-                  : t('Relaying withdrawal')
-                : t('Confirming your transfer')
-            }
-          >
-            <Text fontSize={16} weight="medium" appearance="secondaryText">
-              {t('Almost there!')}
-            </Text>
-          </InProgress>
-        )}
-        {(submittedAccountOp?.status === AccountOpStatus.Success ||
-          submittedAccountOp?.status === AccountOpStatus.UnknownButPastNonce) &&
-          isMatchingWithdrawal && (
-            <Completed
-              title={
-                activeProtocol === 'railgun' &&
-                ((submittedAccountOp?.meta as any)?.isRailgunInternalTransfer ||
-                  (currentLatestBroadcastedAccountOp as any)?.meta?.isRailgunInternalTransfer)
-                  ? t('Private Internal Transfer done!')
-                  : t('Private Transfer done!')
-              }
-              titleSecondary={t('{{symbol}} sent!', {
-                symbol: currentLatestBroadcastedToken?.symbol || 'Token'
-              })}
-              explorerLink={explorerLink}
-              openExplorerText="View Transfer"
-            />
-          )}
-        {(submittedAccountOp?.status === AccountOpStatus.Failure ||
-          submittedAccountOp?.status === AccountOpStatus.Rejected ||
-          submittedAccountOp?.status === AccountOpStatus.BroadcastButStuck) && (
-          <Failed
-            title={t('Something went wrong!')}
-            errorMessage={t(
-              "We couldn't complete your transfer. Please try again later or contact Kohaku support."
-            )}
-          />
-        )}
-      </TrackProgress>
-    )
-  }
-
   return (
-    <Wrapper title={headerTitle} buttons={buttons}>
+    <Wrapper
+      title={headerTitle}
+      description={t('Move tokens from your private pool to a public address')}
+      // buttons={buttons}
+      buttons={null}
+    >
       <Content buttons={buttons}>
         {showFundFreshAccountBanner && (
           <Banner
@@ -1107,70 +806,99 @@ const TransferScreen = () => {
           />
         )}
         <Form>
-          <PrivacyProtocolSelector
-            selectedProtocol={selectedPrivacyProtocol}
-            changeProtocol={changeProtocol}
-          />
+          {!hasResult && (
+            <>
+              <PrivacyProtocolSelector
+                selectedProtocol={selectedPrivacyProtocol}
+                changeProtocol={changeProtocol}
+                containerStyle={[spacings.mb]}
+                disabled={isResultPending}
+              />
 
-          {activeProtocol === 'privacy-pools' ? (
-            <TransferForm
-              addressInputState={addressInputState}
-              amountErrorMessage={amountErrorMessage}
-              isRecipientAddressUnknown={isRecipientAddressUnknown}
-              formTitle=""
-              amountFieldValue={amountFieldValue}
-              setAmountFieldValue={setAmountFieldValue}
-              addressStateFieldValue={addressStateFieldValue}
-              setAddressStateFieldValue={setAddressStateFieldValue}
-              handleUpdateForm={handleUpdateForm}
-              selectedToken={selectedToken}
-              maxAmount={maxAmount || '0'}
-              quoteFee={relayerQuote?.estimatedFee || '0'}
-              amountFieldMode={amountFieldMode}
-              amountInFiat={amountInFiat}
-              isRecipientAddressUnknownAgreed={isRecipientAddressUnknownAgreed || false}
-              addressState={addressState}
-              controllerAmount={withdrawalAmount}
-              totalApprovedBalance={totalApprovedBalance}
-              updateQuoteStatus={updateQuoteStatus}
-            />
-          ) : (
-            <RailgunTransferForm
-              addressInputState={railgunAddressInputState}
-              amountErrorMessage={railgunAmountErrorMessage}
-              isRecipientAddressUnknown={railgunIsRecipientAddressUnknown}
-              formTitle=""
-              amountFieldValue={railgunAmountFieldValue}
-              setAmountFieldValue={setRailgunAmountFieldValue}
-              addressStateFieldValue={railgunAddressStateFieldValue}
-              setAddressStateFieldValue={setRailgunAddressStateFieldValue}
-              handleUpdateForm={handleRailgunUpdateForm}
-              selectedToken={railgunSelectedToken}
-              maxAmount={railgunMaxAmount || '0'}
-              amountFieldMode={railgunAmountFieldMode}
-              amountInFiat={railgunAmountInFiat}
-              isRecipientAddressUnknownAgreed={railgunIsRecipientAddressUnknownAgreed || false}
-              addressState={railgunAddressState}
-              controllerAmount={railgunWithdrawalAmount}
-              totalApprovedBalance={railgunTotalApprovedBalance}
-              totalPrivateBalancesFormatted={railgunTotalPrivateBalancesFormatted}
-              chainId={railgunChainId || 11155111}
-              defaultTokenToEth={tokenFromParams === 'eth'}
+              {activeProtocol === 'privacy-pools' ? (
+                <TransferForm
+                  addressInputState={addressInputState}
+                  amountErrorMessage={amountErrorMessage}
+                  isRecipientAddressUnknown={isRecipientAddressUnknown}
+                  formTitle={t('Amount')}
+                  amountFieldValue={amountFieldValue}
+                  setAmountFieldValue={setAmountFieldValue}
+                  addressStateFieldValue={addressStateFieldValue}
+                  setAddressStateFieldValue={setAddressStateFieldValue}
+                  handleUpdateForm={handleUpdateForm}
+                  selectedToken={selectedToken}
+                  maxAmount={maxAmount || '0'}
+                  quoteFee={relayerQuote?.estimatedFee || '0'}
+                  amountFieldMode={amountFieldMode}
+                  amountInFiat={amountInFiat}
+                  isRecipientAddressUnknownAgreed={isRecipientAddressUnknownAgreed || false}
+                  addressState={addressState}
+                  controllerAmount={withdrawalAmount}
+                  totalApprovedBalance={totalApprovedBalance}
+                  updateQuoteStatus={updateQuoteStatus}
+                  disabled={isResultPending}
+                />
+              ) : (
+                <RailgunTransferForm
+                  addressInputState={railgunAddressInputState}
+                  amountErrorMessage={railgunAmountErrorMessage}
+                  isRecipientAddressUnknown={railgunIsRecipientAddressUnknown}
+                  formTitle={t('Amount')}
+                  amountFieldValue={railgunAmountFieldValue}
+                  setAmountFieldValue={setRailgunAmountFieldValue}
+                  addressStateFieldValue={railgunAddressStateFieldValue}
+                  setAddressStateFieldValue={setRailgunAddressStateFieldValue}
+                  handleUpdateForm={handleRailgunUpdateForm}
+                  selectedToken={railgunSelectedToken}
+                  maxAmount={railgunMaxAmount || '0'}
+                  amountFieldMode={railgunAmountFieldMode}
+                  amountInFiat={railgunAmountInFiat}
+                  isRecipientAddressUnknownAgreed={railgunIsRecipientAddressUnknownAgreed || false}
+                  addressState={railgunAddressState}
+                  controllerAmount={railgunWithdrawalAmount}
+                  totalApprovedBalance={railgunTotalApprovedBalance}
+                  totalPrivateBalancesFormatted={railgunTotalPrivateBalancesFormatted}
+                  chainId={railgunChainId || 11155111}
+                  defaultTokenToEth={tokenFromParams === 'eth'}
+                  disabled={isResultPending}
+                />
+              )}
+            </>
+          )}
+
+          {/* Completed result — shown when the op has settled and matches this withdrawal */}
+          {(submittedAccountOp?.status === AccountOpStatus.Success ||
+            submittedAccountOp?.status === AccountOpStatus.UnknownButPastNonce) &&
+            isMatchingWithdrawal && (
+              <Completed
+                title={
+                  activeProtocol === 'railgun' &&
+                  ((submittedAccountOp?.meta as any)?.isRailgunInternalTransfer ||
+                    (currentLatestBroadcastedAccountOp as any)?.meta?.isRailgunInternalTransfer)
+                    ? t('Private Internal Transfer done!')
+                    : t('Private Transfer done!')
+                }
+                titleSecondary={t('{{symbol}} sent!', {
+                  symbol: currentLatestBroadcastedToken?.symbol || 'Token'
+                })}
+                explorerLink={explorerLink}
+                openExplorerText="View Transfer"
+              />
+            )}
+
+          {/* Failed result */}
+          {(submittedAccountOp?.status === AccountOpStatus.Failure ||
+            submittedAccountOp?.status === AccountOpStatus.Rejected ||
+            submittedAccountOp?.status === AccountOpStatus.BroadcastButStuck) && (
+            <Failed
+              title={t('Something went wrong!')}
+              errorMessage={t(
+                "We couldn't complete your transfer. Please try again later or contact Kohaku support."
+              )}
             />
           )}
         </Form>
       </Content>
-
-      <Estimation
-        updateType="Railgun"
-        estimationModalRef={railgunForm.estimationModalRef}
-        closeEstimationModal={railgunForm.closeEstimationModal}
-        updateController={updateController}
-        handleUpdateStatus={handleUpdateStatus}
-        handleBroadcastAccountOp={handleBroadcastAccountOp}
-        hasProceeded={!!railgunForm.hasProceeded}
-        signAccountOpController={railgunForm.signAccountOpController || null}
-      />
     </Wrapper>
   )
 }
