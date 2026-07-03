@@ -12,7 +12,8 @@ import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
 import useAccountsControllerState from '@web/hooks/useAccountsControllerState'
 import useKeystoreControllerState from '@web/hooks/useKeystoreControllerState'
-import Account from '@web/modules/account-select/components/Account'
+import Account from '@common/modules/account-select/components/Account'
+import LeftArrowIcon from '@common/assets/svg/LeftArrowIcon'
 import { ScreenMode } from './interface'
 
 interface Props {
@@ -43,6 +44,9 @@ const AccountOption: FC<{
       withKeyType={false}
       onSelect={() => onSelect()}
       maxAccountAddrLength={30}
+      // The fork passed an explicit `selectedBackgroundColor`; upstream's Account expresses
+      // the same "sits on a lighter surface" intent through this flag. (kohaku)
+      inverseInteractionColors
     />
   )
 }
@@ -125,17 +129,17 @@ const AccountSelector: FC<{
 
   if (viewMode === 'buttons') {
     return (
-      <View style={{ flex: 1 }}>
+      <View style={[spacings.phLg, { flex: 1, backgroundColor: theme.primaryBackground }]}>
         <Button
           text={t(`View Existing Dapp Accounts (${dappAccounts.length})`)}
-          type="gray"
+          type="tertiary"
           size="small"
           onPress={handleViewDappAccounts}
-          style={spacings.mbTy}
+          style={[spacings.mvMi, { padding: 0 }]}
           disabled={dappAccounts.length === 0}
         />
         <Button
-          text={t(`View All Accounts (${accounts.length})`)}
+          text={t(`View all public accounts (${accounts.length})`)}
           type="secondary"
           size="small"
           onPress={handleViewAllAccounts}
@@ -145,7 +149,9 @@ const AccountSelector: FC<{
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View
+      style={[spacings.phLg, spacings.pt, { flex: 1, backgroundColor: theme.primaryBackground }]}
+    >
       <View
         style={[
           flexbox.directionRow,
@@ -157,11 +163,26 @@ const AccountSelector: FC<{
         <Text fontSize={16} weight="semiBold" appearance="primaryText">
           {viewMode === 'dapp-accounts' ? t('Dapp Accounts') : t('All Accounts')}
         </Text>
-        <Button text={t('Back')} size="small" onPress={handleBack} />
+        <Button
+          text={t('Back')}
+          size="small"
+          onPress={handleBack}
+          childrenPosition="left"
+          style={{
+            backgroundColor: '#F9F6E912',
+            paddingHorizontal: 14,
+            paddingVertical: 6,
+            height: 'auto'
+          }}
+          childrenContainerStyle={{ marginRight: 4 }}
+        >
+          <LeftArrowIcon />
+        </Button>
       </View>
 
       {viewMode === 'dapp-accounts' && (
         <ScrollView style={{ flex: 1 }}>
+          {/* <ScrollView style={{}}> */}
           {dappAccounts.length === 0 ? (
             <View style={[spacings.pv, spacings.ph]}>
               <Text appearance="secondaryText" style={{ textAlign: 'center' }}>
@@ -177,7 +198,13 @@ const AccountSelector: FC<{
                   { backgroundColor: theme.secondaryBackground, borderRadius: 8 }
                 ]}
               >
-                <Text fontSize={13} appearance="secondaryText">
+                <Text
+                  weight="medium"
+                  appearance="muted"
+                  numberOfLines={1}
+                  style={{ marginBottom: 10 }}
+                  fontSize={12}
+                >
                   {t('Previously connected to this dapp')}
                 </Text>
               </View>
@@ -201,9 +228,10 @@ const AccountSelector: FC<{
             <View key={group.label} style={spacings.mbTy}>
               <Text
                 weight="medium"
-                appearance="secondaryText"
+                appearance="muted"
                 numberOfLines={1}
-                style={spacings.mbSm}
+                style={{ marginBottom: 10 }}
+                fontSize={12}
               >
                 {group.label}
               </Text>

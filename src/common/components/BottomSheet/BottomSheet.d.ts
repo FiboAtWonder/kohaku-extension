@@ -24,7 +24,8 @@ export interface BottomSheetProps {
   scrollViewProps?: ModalizeProps['scrollViewProps']
   customRenderer?: ModalizeProps['customRenderer']
   HeaderComponent?: ModalizeProps['HeaderComponent']
-  backgroundColor?: 'primaryBackground' | 'secondaryBackground'
+  // 'transparent' lets the sheet content provide its own surface (kohaku)
+  backgroundColor?: 'primaryBackground' | 'secondaryBackground' | 'transparent'
   autoWidth?: boolean
   autoOpen?: boolean
   shouldBeClosableOnDrag?: boolean

@@ -21,6 +21,7 @@ import type { PrivacyPoolsController } from '@ambire-common/controllers/privacyP
 import type { PrivacyPoolsV1Controller } from '@ambire-common/controllers/privacyPools/privacyPoolsV1'
 import type { ProvidersController } from '@ambire-common/controllers/providers/providers'
 import type { RailgunController } from '@ambire-common/controllers/railgun/railgun'
+import type { RailgunV2Controller } from '@ambire-common/controllers/railgun/railgunV2'
 import type { RequestsController } from '@ambire-common/controllers/requests/requests'
 import type { SafeController } from '@ambire-common/controllers/safe/safe'
 import type { SelectedAccountController } from '@ambire-common/controllers/selectedAccount/selectedAccount'
@@ -57,6 +58,7 @@ export type ControllersNestedInMainMappingType = {
   PrivacyPoolsController: PrivacyPoolsController
   PrivacyPoolsV1Controller: PrivacyPoolsV1Controller
   RailgunController: RailgunController
+  RailgunV2Controller: RailgunV2Controller
   PhishingController: PhishingController
   DappsController: DappsController
   RequestsController: RequestsController
@@ -100,6 +102,7 @@ export const controllersNestedInMainMapping =
     'PrivacyPoolsController',
     'PrivacyPoolsV1Controller',
     'RailgunController',
+    'RailgunV2Controller',
     'PhishingController',
     'DappsController',
     'RequestsController',

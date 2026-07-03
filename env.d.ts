@@ -26,6 +26,7 @@ declare module '@env' {
     PRIVACY_POOLS_RELAYER_URL: string
     HYPERSYNC_API_KEY: string
     RAILGUN_RELAYER_URL: string
+    RAILGUN_DELEGATING_SIGNER_PK: string
     RPC_PROVIDER: string
     HELIOS_CHECKPOINT: string
     USE_COLIBRI: string
@@ -158,6 +159,8 @@ declare module '@env' {
   export const HYPERSYNC_API_KEY: EnvTypes['HYPERSYNC_API_KEY']
   /** The Railgun Relayer URL (kohaku) */
   export const RAILGUN_RELAYER_URL: EnvTypes['RAILGUN_RELAYER_URL']
+  /** Private key of the throwaway signer that submits Railgun proofs via the relayer (kohaku) */
+  export const RAILGUN_DELEGATING_SIGNER_PK: EnvTypes['RAILGUN_DELEGATING_SIGNER_PK']
   /**
    * Default verified RPC provider kind. Allowed values: "rpc", "helios", "colibri". (kohaku)
    */

@@ -171,7 +171,8 @@ const BottomSheet: React.FC<BottomSheetProps> = (props: BottomSheetProps) => {
 
               {
                 paddingHorizontal: isWeb ? (isModal ? SPACING_MD : SPACING_SM) : SPACING,
-                backgroundColor: theme[backgroundColor]
+                backgroundColor:
+                  backgroundColor === 'transparent' ? 'transparent' : theme[backgroundColor]
               },
               style
             ]}

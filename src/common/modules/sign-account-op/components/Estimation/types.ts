@@ -19,7 +19,8 @@ type Props = {
   isViewOnly: boolean
   isSponsored: boolean
   sponsor: Sponsor | undefined
-  // (kohaku) 'PrivacyPools', 'PrivacyPoolsV1' and 'Railgun' added for the privacy flows
+  // (kohaku) 'PrivacyPools', 'PrivacyPoolsV1', 'Railgun' and 'RailgunV2' added for the
+  // privacy flows
   updateType:
     | 'Requests'
     | 'Swap&Bridge'
@@ -27,6 +28,7 @@ type Props = {
     | 'PrivacyPools'
     | 'PrivacyPoolsV1'
     | 'Railgun'
+    | 'RailgunV2'
   bundlerNonceDiscrepancy?: {
     id: string
     title: string

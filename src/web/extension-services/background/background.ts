@@ -42,12 +42,21 @@ import {
   LI_FI_API_KEY,
   PRIVACY_POOLS_ASP_URL,
   PRIVACY_POOLS_RELAYER_URL,
+  RAILGUN_DELEGATING_SIGNER_PK,
   RAILGUN_RELAYER_URL,
   RELAYER_URL,
   SQUID_INTEGRATOR_ID,
   UNISWAP_API_KEY,
   VELCRO_URL
 } from '@env'
+// TODO(kohaku resync): the root `@kohaku-eth/railgun` dep is still pinned to the pre-SDK
+// 0.0.1-alpha.4 package (which has no `ensureInitialized`), while ambire-common depends on
+// 0.0.1-alpha.27 - the one the RailgunV2Controller actually drives. The root dep can only be
+// aligned once src/web/contexts/railgunControllerStateContext is migrated off alpha.4, so the
+// call below is a no-op (caught below) until then. Once the dep is aligned, the
+// `@ts-expect-error` starts failing the build - that is the signal to drop it. (kohaku)
+// @ts-expect-error - `ensureInitialized` only exists from 0.0.1-alpha.27 onwards
+import { ensureInitialized as ensureRailgunInitialized } from '@kohaku-eth/railgun'
 import * as Sentry from '@sentry/browser'
 import { browser, platform } from '@web/constants/browserapi'
 import { BadgesController } from '@web/extension-services/background/controllers/badges'
@@ -524,6 +533,16 @@ const init = async () => {
 
   const qrCtrl = new QrHardwareController(new UrQrProtocolAdapter(), eventEmitterRegistry)
 
+  // The Railgun SDK's default WASM loader goes through node:fs, which is dead code in
+  // the extension. Feed it the bundled asset (copied by webpack/extension.js) explicitly
+  // before any controller touches the SDK. (kohaku)
+  try {
+    const railgunWasm = await fetch(browser.runtime.getURL('assets/railgun/index_bg.wasm'))
+    await ensureRailgunInitialized(railgunWasm)
+  } catch (error) {
+    captureBackgroundException(error, { extra: { message: 'Railgun WASM init failed' } })
+  }
+
   mainCtrl = new MainController({
     eventEmitterRegistry,
     appVersion: APP_VERSION,
@@ -540,6 +559,7 @@ const init = async () => {
     privacyPoolsAspUrl: PRIVACY_POOLS_ASP_URL,
     privacyPoolsRelayerUrl: PRIVACY_POOLS_RELAYER_URL,
     railgunRelayerUrl: RAILGUN_RELAYER_URL,
+    railgunDelegatingSignerPk: RAILGUN_DELEGATING_SIGNER_PK,
     alchemyApiKey: ALCHEMY_API_KEY,
     hypersyncApiKey: HYPERSYNC_API_KEY,
     featureFlags: {

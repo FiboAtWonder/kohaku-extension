@@ -1,6 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Animated, FlatListProps, Pressable, View } from 'react-native'
+import {
+  Animated,
+  FlatListProps,
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewStyle
+} from 'react-native'
 
 import { PINNED_TOKENS } from '@ambire-common/consts/pinnedTokens'
 import { Network } from '@ambire-common/interfaces/network'
@@ -43,6 +51,9 @@ interface Props {
   isSearchHidden: boolean
   refreshing?: boolean
   onRefresh?: () => void
+  // Overrides the tab header background so the Kohaku dashboard can render the
+  // token list over its own background. Token rows are already transparent. (kohaku)
+  style?: StyleProp<ViewStyle>
 }
 
 // if any of the post amount (during simulation) or the current state
@@ -115,7 +126,8 @@ const Tokens = ({
   dashboardNetworkFilterName,
   isSearchHidden,
   refreshing,
-  onRefresh
+  onRefresh,
+  style
 }: Props) => {
   const { t } = useTranslation()
   const { navigate } = useNavigation()
@@ -336,7 +348,7 @@ const Tokens = ({
     ({ item, index }: any) => {
       if (item === 'header') {
         return (
-          <View style={{ backgroundColor: theme.primaryBackground }}>
+          <View style={{ backgroundColor: theme.primaryBackground, ...StyleSheet.flatten(style) }}>
             <TabsAndSearch
               openTab={openTab}
               setOpenTab={setOpenTab}
@@ -455,7 +467,8 @@ const Tokens = ({
       dashboardNetworkFilter,
       navigate,
       dustTokens.length,
-      dustTotalUSD
+      dustTotalUSD,
+      style
     ]
   )
 

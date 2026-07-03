@@ -191,8 +191,8 @@ const ThemeColors = {
     [THEME_TYPES.LIGHT]: '#D01C15'
   },
   depositRejectedNotificationBackground: {
-    [THEME_TYPES.DARK]: '#FEF2F2',
-    [THEME_TYPES.LIGHT]: '#FEF2F2'
+    [THEME_TYPES.DARK]: '#FF4D4D',
+    [THEME_TYPES.LIGHT]: '#FF4D4D'
   },
   depositRejectedBackground: {
     [THEME_TYPES.DARK]: '#FECACA',
@@ -203,8 +203,8 @@ const ThemeColors = {
     [THEME_TYPES.LIGHT]: '#9b2c2c'
   },
   depositPendingNotificationBackground: {
-    [THEME_TYPES.DARK]: '#EFF6FF',
-    [THEME_TYPES.LIGHT]: '#EFF6FF'
+    [THEME_TYPES.DARK]: '#097db2',
+    [THEME_TYPES.LIGHT]: '#097db2'
   },
   depositPendingBackground: {
     [THEME_TYPES.DARK]: '#bee3f8',
@@ -221,6 +221,35 @@ const ThemeColors = {
   depositInactiveText: {
     [THEME_TYPES.DARK]: '#4a5568',
     [THEME_TYPES.LIGHT]: '#4a5568'
+  },
+  // --- Tokens consumed by the privacy / railgun UI (kohaku) ---
+  muted: {
+    [THEME_TYPES.DARK]: '#7F7F7F',
+    [THEME_TYPES.LIGHT]: '#6b7280'
+  },
+  surfaceInput: {
+    [THEME_TYPES.DARK]: '#021B26',
+    [THEME_TYPES.LIGHT]: '#f5f9fc'
+  },
+  accent: {
+    [THEME_TYPES.DARK]: '#097db2',
+    [THEME_TYPES.LIGHT]: '#097db2'
+  },
+  textPrimary: {
+    [THEME_TYPES.DARK]: '#F9F6E9',
+    [THEME_TYPES.LIGHT]: '#021b26'
+  },
+  warning: {
+    [THEME_TYPES.DARK]: '#ffa500',
+    [THEME_TYPES.LIGHT]: '#ffa500'
+  },
+  success: {
+    [THEME_TYPES.DARK]: '#00C853',
+    [THEME_TYPES.LIGHT]: '#00C853'
+  },
+  danger: {
+    [THEME_TYPES.DARK]: '#FF4D4D',
+    [THEME_TYPES.LIGHT]: '#FF4D4D'
   }
 } as const
 

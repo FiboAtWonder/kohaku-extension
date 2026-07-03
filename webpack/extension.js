@@ -313,6 +313,13 @@ module.exports = async function buildExtension(
       to: 'assets/snarkjs/[name][ext]',
       noErrorOnMissing: true
     },
+    // Railgun SDK WASM — copied to a stable asset path and loaded explicitly at
+    // runtime (see background.ts) so the SDK's Node fs loader is bypassed. (kohaku)
+    {
+      from: 'src/ambire-common/node_modules/@kohaku-eth/railgun/dist/pkg/index_bg.wasm',
+      to: 'assets/railgun/index_bg.wasm',
+      noErrorOnMissing: true
+    },
     // qr-scanner ships its decoder worker inlined inside a `new Worker(URL.createObjectURL(new Blob([...])))`
     // call. Firefox MV3 extension pages reject blob: workers under the default `script-src 'self'` CSP,
     // so we extract the worker source once at build time and serve it as a real same-origin file.
@@ -385,7 +392,13 @@ module.exports = async function buildExtension(
       )
     }),
     // dotenv is a build-time-only dependency of the privacy SDKs. (kohaku)
-    new webpack.IgnorePlugin({ resourceRegExp: /^dotenv(\/config)?$/ })
+    new webpack.IgnorePlugin({ resourceRegExp: /^dotenv(\/config)?$/ }),
+    // Strip the "node:" scheme so webpack can resolve (and fallback/polyfill)
+    // these imports — the railgun SDK's wasm loader uses node:fs/promises etc.
+    // in a code path that is dead in the browser. (kohaku)
+    new webpack.NormalModuleReplacementPlugin(/^node:/, (resource) => {
+      resource.request = resource.request.replace(/^node:/, '')
+    })
   ]
 
   // Provides a global variable to all files where globalIsAmbireNext is declared including

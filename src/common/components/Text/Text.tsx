@@ -33,6 +33,7 @@ export type TextAppearance =
   | 'errorText'
   | 'infoText'
   | 'linkText'
+  | 'muted'
 
 export interface Props extends TextProps {
   underline?: boolean
@@ -89,7 +90,8 @@ const Text: React.FC<Props> = ({
     warningText: theme.warningText,
     errorText: theme.errorText,
     infoText: theme.infoText,
-    linkText: theme.linkText
+    linkText: theme.linkText,
+    muted: theme.muted
   }
 
   return (

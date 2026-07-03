@@ -21,7 +21,7 @@ import useCurrentActionSideEffects from '@web/hooks/useCurrentActionSideEffects'
 import DashboardScreen from '@web/modules/dashboard/screens/DashboardScreen'
 import KeyStoreUnlockScreen from '@web/modules/keystore/screens/KeyStoreUnlockScreen'
 
-import KohakuDashboardScreen from '@web/modules/PPv1/screens/dashboard/screens/KohakuDashboardScreen'
+import KohakuDashboardScreen from '@web/modules/PPv1/screens/dashboard/screens'
 import getStyles from './styles'
 
 const AsyncMainRoute = lazy(() => import('@web/modules/router/components/MainRoutes'))

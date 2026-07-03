@@ -186,7 +186,9 @@ const Sidebar = ({ activeLink }: { activeLink?: string }) => {
             <Pressable
               style={{ width: 56, height: 56, ...flexbox.center }}
               onPress={() => {
-                navigate(WEB_ROUTES.dashboard)
+                // The private dashboard is the landing screen, so the shortcut out of
+                // settings goes there instead of the public one (kohaku)
+                navigate(WEB_ROUTES.mainDashboard)
               }}
             >
               {({ hovered }: any) => (

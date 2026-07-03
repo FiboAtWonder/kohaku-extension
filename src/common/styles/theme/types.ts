@@ -4,7 +4,8 @@ enum THEME_TYPES {
   SYSTEM = 'system'
 }
 
-const DEFAULT_THEME = THEME_TYPES.LIGHT
+// Kohaku's palette is dark-first, so the wallet defaults to the dark theme (kohaku)
+const DEFAULT_THEME = THEME_TYPES.DARK
 
 type ThemeType = THEME_TYPES.LIGHT | THEME_TYPES.DARK | THEME_TYPES.SYSTEM
 

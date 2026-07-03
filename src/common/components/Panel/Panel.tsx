@@ -23,6 +23,9 @@ export interface PanelProps extends ViewProps {
   totalSteps?: number
   panelWidth?: number
   panelRef?: React.MutableRefObject<any>
+  // Onboarding panels that are part of a flow but shouldn't advertise progress
+  // (e.g. the privacy/railgun screens) can opt out of the step indicator (kohaku)
+  showProgress?: boolean
   innerStyle?: ViewStyle
 }
 
@@ -90,6 +93,7 @@ const Panel: React.FC<PanelProps> = ({
   totalSteps = 2,
   panelWidth = 400,
   panelRef,
+  showProgress = true,
   innerStyle,
   ...rest
 }) => {
@@ -129,7 +133,7 @@ const Panel: React.FC<PanelProps> = ({
           style
         ]}
       >
-        {step > 0 && renderProgress()}
+        {step > 0 && showProgress && renderProgress()}
         <View
           style={[
             styles.innerContainer,

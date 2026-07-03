@@ -1,7 +1,14 @@
 import { nanoid } from 'nanoid'
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Animated, NativeScrollEvent, NativeSyntheticEvent, View } from 'react-native'
+import {
+  Animated,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  StyleProp,
+  View,
+  ViewStyle
+} from 'react-native'
 import { useSearchParams } from 'react-router-dom'
 
 import useController from '@common/hooks/useController'
@@ -21,6 +28,8 @@ interface Props {
   isSearchHidden: boolean
   refreshing?: boolean
   onRefresh?: () => void
+  // Lets the Kohaku dashboard render the public token list over its own background (kohaku)
+  generalViewStyle?: StyleProp<ViewStyle>
 }
 
 const DashboardPages = ({
@@ -28,7 +37,8 @@ const DashboardPages = ({
   isSearchHidden,
   animatedOverviewHeight,
   refreshing,
-  onRefresh
+  onRefresh,
+  generalViewStyle
 }: Props) => {
   const { t } = useTranslation()
   const route = useRoute()
@@ -116,6 +126,7 @@ const DashboardPages = ({
         isSearchHidden={isSearchHidden}
         onRefresh={onRefresh}
         refreshing={refreshing}
+        style={generalViewStyle}
       />
       {(openTab === 'collectibles' || initTab?.collectibles) && (
         <Collections

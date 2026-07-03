@@ -166,7 +166,14 @@ async function createBaseConfig(env, argv) {
       : {}),
     // There will be 2 instances of React if node_modules are installed in src/ambire-common.
     // That's why we need to alias the React package to the one in the root node_modules.
-    react: path.resolve(ROOT_DIR, 'node_modules/react')
+    react: path.resolve(ROOT_DIR, 'node_modules/react'),
+    // Pin @kohaku-eth/railgun to a single copy so the WASM module-level init
+    // promise is shared between the background pre-init and the controller's
+    // createRailgunPlugin call (otherwise they get separate module instances). (kohaku)
+    '@kohaku-eth/railgun$': path.resolve(
+      ROOT_DIR,
+      'src/ambire-common/node_modules/@kohaku-eth/railgun'
+    )
   }
 
   config.resolve.fallback = {
@@ -178,6 +185,10 @@ async function createBaseConfig(env, argv) {
     // viem's test actions, none of which are used in the browser build. (kohaku)
     fs: false,
     module: false,
+    // The railgun SDK's WASM loader references these only in its Node code path
+    // (skipped in the browser since we pass an explicit wasm input). (kohaku)
+    'fs/promises': false,
+    path: require.resolve('path-browserify'),
     dotenv: false,
     'dotenv/config': false,
     '../../actions/test/dumpState.js': false,

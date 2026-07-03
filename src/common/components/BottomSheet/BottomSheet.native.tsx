@@ -159,7 +159,8 @@ const BottomSheet: React.FC<BottomSheetProps> = (props: BottomSheetProps) => {
                 : {},
 
               {
-                backgroundColor: theme[backgroundColor]
+                backgroundColor:
+                  backgroundColor === 'transparent' ? 'transparent' : theme[backgroundColor]
               },
               style
             ]}
