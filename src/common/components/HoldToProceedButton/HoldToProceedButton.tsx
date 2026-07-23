@@ -207,7 +207,7 @@ const HoldToProceedButton: FC<Props> = ({
     >
       <Button
         onLayout={(e) => {
-          setButtonWidth(e.nativeEvent.layout.width)
+          setButtonWidth(Math.max(e.nativeEvent.layout.width, buttonWidth || 0))
         }}
         style={[
           {
