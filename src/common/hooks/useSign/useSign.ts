@@ -4,9 +4,8 @@ import { useModalize } from 'react-native-modalize'
 
 import { EstimationStatus } from '@ambire-common/controllers/estimation/types'
 import { SignAccountOpType } from '@ambire-common/controllers/signAccountOp/helper'
-import { SigningStatus } from '@ambire-common/interfaces/signAccountOp'
 import { Key } from '@ambire-common/interfaces/keystore'
-import { ISignAccountOpController } from '@ambire-common/interfaces/signAccountOp'
+import { ISignAccountOpController, SigningStatus } from '@ambire-common/interfaces/signAccountOp'
 import useController from '@common/hooks/useController'
 import useExtremeGasFeeWarning from '@common/hooks/useExtremeGasFeeWarning'
 import usePrevious from '@common/hooks/usePrevious'
@@ -77,6 +76,7 @@ const useSign = ({
   const [isChooseFeePayerKeyShown, setIsChooseFeePayerKeyShown] = useState(false)
   const [shouldDisplayLedgerConnectModal, setShouldDisplayLedgerConnectModal] = useState(false)
   const [shouldDisplayQrSigningModal, setShouldDisplayQrSigningModal] = useState(false)
+  const [hasHoldToProceedFinished, setHasHoldToProceedFinished] = useState(false)
   const prevIsChooseSignerShown = usePrevious(isChooseSignerShown)
   const { isLedgerConnected } = useLedger()
   const {
@@ -379,6 +379,8 @@ const useSign = ({
   const onSignButtonClick = useCallback(() => {
     if (!signAccountOpState) return
 
+    setHasHoldToProceedFinished(true)
+
     if (!!signAccountOpState.account.safeCreation && !signAccountOpState.canBroadcast) {
       setShowSafeSigners((prev) => !prev)
       return
@@ -608,6 +610,10 @@ const useSign = ({
     }
   }, [signAccountOpState?.gasFeeChangedConfirmationRequired, openGasFeeUpdatedModal])
 
+  const shouldHoldToProceed = useMemo(() => {
+    return !!signAccountOpState?.banners?.length && !hasHoldToProceedFinished
+  }, [signAccountOpState?.banners?.length, hasHoldToProceedFinished])
+
   return {
     renderedButNotNecessarilyVisibleModal,
     isViewOnly,
@@ -641,7 +647,7 @@ const useSign = ({
     bundlerNonceDiscrepancy,
     isChooseFeePayerKeyShown,
     setIsChooseFeePayerKeyShown,
-    shouldHoldToProceed: !!signAccountOpState?.banners?.length,
+    shouldHoldToProceed,
     shouldDisplayQrSigningModal,
     handleQrSigningFlowOnContinuePressed,
     handleQrSigningFlowSubmitSignatureResponse,
