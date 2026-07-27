@@ -76,7 +76,7 @@ const useSign = ({
   const [isChooseFeePayerKeyShown, setIsChooseFeePayerKeyShown] = useState(false)
   const [shouldDisplayLedgerConnectModal, setShouldDisplayLedgerConnectModal] = useState(false)
   const [shouldDisplayQrSigningModal, setShouldDisplayQrSigningModal] = useState(false)
-  const [hasHoldToProceedFinished, setHasHoldToProceedFinished] = useState(false)
+  const [acknowledgedBannersKey, setAcknowledgedBannersKey] = useState<string | null>(null)
   const prevIsChooseSignerShown = usePrevious(isChooseSignerShown)
   const { isLedgerConnected } = useLedger()
   const {
@@ -87,6 +87,14 @@ const useSign = ({
     submitSignatureResponse,
     signingCleanup
   } = useQrSigningFlow()
+
+  const currentBannersKey = useMemo(
+    () => JSON.stringify(signAccountOpState?.banners || []),
+    [signAccountOpState?.banners]
+  )
+  const shouldHoldToProceed =
+    !!signAccountOpState?.banners.length && acknowledgedBannersKey !== currentBannersKey
+  const shouldShowSafeSigners = showSafeSigners && !shouldHoldToProceed
 
   const [slowRequest, setSlowRequest] = useState<boolean>(false)
   const [slowPaymasterRequest, setSlowPaymasterRequest] = useState<boolean>(true)
@@ -379,10 +387,10 @@ const useSign = ({
   const onSignButtonClick = useCallback(() => {
     if (!signAccountOpState) return
 
-    setHasHoldToProceedFinished(true)
+    setAcknowledgedBannersKey(currentBannersKey)
 
     if (!!signAccountOpState.account.safeCreation && !signAccountOpState.canBroadcast) {
-      setShowSafeSigners((prev) => !prev)
+      setShowSafeSigners((prev) => (shouldHoldToProceed ? true : !prev))
       return
     }
 
@@ -395,7 +403,7 @@ const useSign = ({
     }
 
     setIsChooseSignerShown(true)
-  }, [signAccountOpState, handleSign])
+  }, [currentBannersKey, handleSign, shouldHoldToProceed, signAccountOpState])
 
   const acknowledgeWarning = useCallback(() => {
     if (!warningToPromptBeforeSign) return
@@ -500,7 +508,7 @@ const useSign = ({
       }
 
       // always use the default state of Safes
-      return !showSafeSigners
+      return !shouldShowSafeSigners
         ? PRIMARY_BUTTON_LABELS['Safe'].default
         : PRIMARY_BUTTON_LABELS['Safe'].isLoading
     }
@@ -518,7 +526,7 @@ const useSign = ({
     signAccountOpState?.account.safeCreation,
     signAccountOpState?.accountOp.signed?.length,
     signAccountOpState?.threshold,
-    showSafeSigners,
+    shouldShowSafeSigners,
     signAccountOpState?.accountKeyStoreKeys.length
   ])
 
@@ -610,10 +618,6 @@ const useSign = ({
     }
   }, [signAccountOpState?.gasFeeChangedConfirmationRequired, openGasFeeUpdatedModal])
 
-  const shouldHoldToProceed = useMemo(() => {
-    return !!signAccountOpState?.banners?.length && !hasHoldToProceedFinished
-  }, [signAccountOpState?.banners?.length, hasHoldToProceedFinished])
-
   return {
     renderedButNotNecessarilyVisibleModal,
     isViewOnly,
@@ -657,7 +661,7 @@ const useSign = ({
     currentRequest,
     signingStep,
     disabledReason,
-    showSafeSigners
+    showSafeSigners: shouldShowSafeSigners
   }
 }
 
