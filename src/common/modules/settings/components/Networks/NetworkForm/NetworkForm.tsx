@@ -401,7 +401,10 @@ const NetworkForm = ({
       try {
         if (!rpcUrl) throw new Error('No RPC URL provided')
         // no need to call the global provider from ambire-common
-        const rpc = getRpcProvider([rpcUrl], chainId ? Number(chainId) : undefined)
+        const rpc = getRpcProvider({
+          rpcUrls: [rpcUrl],
+          chainId: chainId ? Number(chainId) : undefined
+        })
         const network = await rpc.getNetwork()
         rpc.destroy()
 
