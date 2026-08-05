@@ -16,8 +16,7 @@ import spacings from '@common/styles/spacings'
 import { THEME_TYPES } from '@common/styles/themeConfig'
 import flexbox from '@common/styles/utils/flexbox'
 import text from '@common/styles/utils/text'
-import useAccountsControllerState from '@web/hooks/useAccountsControllerState'
-import useBackgroundService from '@web/hooks/useBackgroundService'
+import useController from '@common/hooks/useController'
 
 interface Props {
     sheetRef: React.RefObject<Modalize>
@@ -26,10 +25,12 @@ interface Props {
 }
 
 const AccountDappAssociationBottomSheet: FC<Props> = ({ sheetRef, closeBottomSheet, account }) => {
-    const { accounts } = useAccountsControllerState();
+    const {
+        state: { accounts },
+        dispatch
+    } = useController('AccountsController')
     const { theme, themeType } = useTheme()
     const { t } = useTranslation()
-    const { dispatch } = useBackgroundService()
     const [dappUrl, setDappUrl] = React.useState('')
     const [dappUrlError, setDappUrlError] = React.useState<string | undefined>(undefined)
 
@@ -53,27 +54,29 @@ const AccountDappAssociationBottomSheet: FC<Props> = ({ sheetRef, closeBottomShe
             return
         }
 
-        let dappUrls = currentAccount?.associatedDappIDs || []
-        dappUrls.push(dappUrl)
+        if (!account?.addr) return
+
+        const dappUrls = [...(currentAccount?.associatedDappIDs || []), dappUrl]
         setDappUrl('')
         dispatch({
-            type: "ACCOUNTS_CONTROLLER_SET_ASSOCIATED_DAPPS",
+            type: 'method',
             params: {
-                addr: account?.addr,
-                dappUrls
+                method: 'setAssociatedDapps',
+                args: [account.addr, dappUrls]
             }
         })
     }
 
     const removeDappUrl = (url: string) => {
-        let dappUrls = currentAccount?.associatedDappIDs || []
-        dappUrls = dappUrls.filter(dapp => dapp !== url)
+        if (!account?.addr) return
+
+        const dappUrls = (currentAccount?.associatedDappIDs || []).filter(dapp => dapp !== url)
 
         dispatch({
-            type: "ACCOUNTS_CONTROLLER_SET_ASSOCIATED_DAPPS",
+            type: 'method',
             params: {
-                addr: account?.addr,
-                dappUrls
+                method: 'setAssociatedDapps',
+                args: [account.addr, dappUrls]
             }
         })
     }

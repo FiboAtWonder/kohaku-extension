@@ -15,12 +15,12 @@ interface Props {
   style?: StyleProp<ViewStyle>
 }
 
-const horizontalStyle = {
+const horizontalStyle: ViewStyle = {
   width: '100%',
   height: 1
 }
 
-const verticalStyle = {
+const verticalStyle: ViewStyle = {
   width: 1,
   height: '100%'
 }

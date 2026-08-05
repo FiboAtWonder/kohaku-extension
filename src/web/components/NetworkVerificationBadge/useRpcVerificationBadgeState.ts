@@ -2,13 +2,15 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { WEB_ROUTES } from '@common/modules/router/constants/common'
-import useNetworksControllerState from '@web/hooks/useNetworksControllerState'
+import useController from '@common/hooks/useController'
 
 import type { VerificationBadgeKind, VerificationBadgeState } from './types'
 
 export default function useRpcVerificationBadgeState(): VerificationBadgeState {
   const { t } = useTranslation()
-  const { networks } = useNetworksControllerState()
+  const {
+    state: { networks }
+  } = useController('NetworksController')
 
   return useMemo(() => {
     const hidden: VerificationBadgeState = {
@@ -31,7 +33,7 @@ export default function useRpcVerificationBadgeState(): VerificationBadgeState {
     let tooltip: string
     const targetUrl =
       networksToConsider.length === 1
-        ? `${WEB_ROUTES.networksSettings}?chainId=${networksToConsider[0].chainId}&openEditForm=true`
+        ? `${WEB_ROUTES.networksSettings}?chainId=${networksToConsider[0]!.chainId}&openEditForm=true`
         : WEB_ROUTES.networksSettings
 
     if (hasVerified && hasUnverified) {

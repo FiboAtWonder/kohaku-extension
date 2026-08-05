@@ -12,7 +12,7 @@ import spacings from '@common/styles/spacings'
 import Tooltip from '@common/components/Tooltip'
 
 import usePrivacyPools from '@web/hooks/usePrivacyPools/usePrivacyPools'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
+import useController from '@common/hooks/useController'
 import { ZERO_ADDRESS } from '@ambire-common/services/socket/constants'
 import CloseIconWithCircle from './CloseIconWithCircle'
 import getStyles from './styles'
@@ -28,7 +28,9 @@ const DepositStatusBanner = ({ onWithdrawBack, onDeposit }: DepositStatusBannerP
   const { theme } = useTheme()
   const styles = getStyles(theme)
   const { isSynced, pendingNotes, approvedNotes } = usePrivacyPools()
-  const { portfolio } = useSelectedAccountControllerState()
+  const {
+    state: { portfolio }
+  } = useController('SelectedAccountController')
   const {
     totalApprovedBalance: totalApprovedBalanceRailgun,
     isAccountLoaded: isAccountLoadedRailgun

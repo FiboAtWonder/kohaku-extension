@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback, useState } from 'react'
 import { Pressable, View, ViewStyle } from 'react-native'
 
 import Text from '@common/components/Text'
@@ -20,6 +20,9 @@ const NetworkVerificationBadge = ({ style, testID }: Props) => {
   const { navigate } = useNavigation()
 
   const tooltipId = 'rpc-verification-badge-global'
+  const [isHovered, setIsHovered] = useState(false)
+  const handleHoverIn = useCallback(() => setIsHovered(true), [])
+  const handleHoverOut = useCallback(() => setIsHovered(false), [])
 
   if (badge.kind === 'hidden') return null
 
@@ -43,21 +46,19 @@ const NetworkVerificationBadge = ({ style, testID }: Props) => {
         testID={testID}
         style={[containerStyle, style]}
         onPress={() => navigate(badge.targetUrl)}
+        onHoverIn={handleHoverIn}
+        onHoverOut={handleHoverOut}
         // @ts-ignore missing type, but prop is valid
         dataSet={{ tooltipId }}
       >
-        {({ hovered }: { hovered?: boolean }) => (
-          <>
-            <View style={dotStyle} />
-            <Text
-              fontSize={12}
-              weight="medium"
-              style={[styles.label, hovered && styles.labelHovered]}
-            >
-              {badge.label}
-            </Text>
-          </>
-        )}
+        <View style={dotStyle} />
+        <Text
+          fontSize={12}
+          weight="medium"
+          style={[styles.label, isHovered && styles.labelHovered]}
+        >
+          {badge.label}
+        </Text>
       </Pressable>
       <Tooltip id={tooltipId} content={badge.tooltip} />
     </>
