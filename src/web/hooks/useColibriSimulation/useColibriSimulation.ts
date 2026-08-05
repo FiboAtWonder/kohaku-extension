@@ -1,15 +1,19 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
-import { AbiCoder, Contract, formatUnits, Interface } from 'ethers'
+import { AbiCoder, formatUnits, Interface } from 'ethers'
 
 import { AmbireAccount as AmbireAccountABI } from '@ambire-common/libs/humanizer/const/abis/AmbireAccount'
 import { Network } from '@ambire-common/interfaces/network'
 import { AccountOp, callToTuple, toSingletonCall } from '@ambire-common/libs/accountOp/accountOp'
-import { getEoaSimulationStateOverride } from '@ambire-common/utils/simulationStateOverride'
-import { Contact } from '@ambire-common/controllers/addressBook/addressBook'
-import useAddressBookControllerState from '@web/hooks/useAddressBookControllerState'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import { getRpcProviderForUI } from '@web/services/provider/getRpcProviderForUI'
+import { getNotAmbireStateOverride } from '@ambire-common/utils/simulationStateOverride'
+import { Contact } from '@ambire-common/interfaces/addressBook'
+import useController from '@common/hooks/useController'
+
+/**
+ * Performs a single JSON-RPC call against the background's ProvidersController
+ * (the UI has no provider of its own).
+ */
+type RpcSend = (method: string, params: unknown[]) => Promise<any>
 
 export interface SimulationLogInput {
   name: string
@@ -112,6 +116,8 @@ const ERC20_METADATA_ABI = [
   'function decimals() view returns(uint8)'
 ]
 
+const erc20MetadataInterface = new Interface(ERC20_METADATA_ABI)
+
 function resolveAddressBookName(address: string, contacts: Contact[]): string | undefined {
   return contacts.find((c) => c.address.toLowerCase() === address.toLowerCase())?.name
 }
@@ -153,22 +159,33 @@ function formatInputValue(input: SimulationLogInput, contacts: Contact[]): Enric
 
 async function fetchTokenMetadata(
   contractAddress: string,
-  provider: any
+  send: RpcSend
 ): Promise<{ tokenName: string | null; tokenSymbol: string | null; tokenDecimals: number | null }> {
-  try {
-    const contract = new Contract(contractAddress, ERC20_METADATA_ABI, provider)
-    const [tokenName, tokenSymbol, tokenDecimals] = await Promise.all([
-      contract.name().catch(() => null),
-      contract.symbol().catch(() => null),
-      contract.decimals().catch(() => null)
-    ])
-    return {
-      tokenName: tokenName ?? null,
-      tokenSymbol: tokenSymbol ?? null,
-      tokenDecimals: tokenDecimals != null ? Number(tokenDecimals) : null
+  const read = async (fn: 'name' | 'symbol' | 'decimals') => {
+    try {
+      const raw = await send('eth_call', [
+        { to: contractAddress, data: erc20MetadataInterface.encodeFunctionData(fn) },
+        'latest'
+      ])
+
+      return erc20MetadataInterface.decodeFunctionResult(fn, raw)[0]
+    } catch {
+      // A non-ERC20 contract (or one without the optional metadata methods) is
+      // expected here - fall back to "unknown" instead of failing the simulation.
+      return null
     }
-  } catch {
-    return { tokenName: null, tokenSymbol: null, tokenDecimals: null }
+  }
+
+  const [tokenName, tokenSymbol, tokenDecimals] = await Promise.all([
+    read('name'),
+    read('symbol'),
+    read('decimals')
+  ])
+
+  return {
+    tokenName: tokenName ?? null,
+    tokenSymbol: tokenSymbol ?? null,
+    tokenDecimals: tokenDecimals != null ? Number(tokenDecimals) : null
   }
 }
 
@@ -180,7 +197,10 @@ function formatTokenAmount(
   if (decimals == null || symbol == null) return inputs
 
   return inputs.map((input) => {
-    if (/^u?int\d*$/.test(input.type) && ['wad', 'amount', 'value', 'tokens'].includes(input.name.toLowerCase())) {
+    if (
+      /^u?int\d*$/.test(input.type) &&
+      ['wad', 'amount', 'value', 'tokens'].includes(input.name.toLowerCase())
+    ) {
       try {
         const formatted = formatUnits(BigInt(input.rawValue), decimals)
         return { ...input, displayValue: `${formatted} ${symbol}` }
@@ -192,12 +212,11 @@ function formatTokenAmount(
   })
 }
 
-function buildSummarySegments(
-  eventName: string,
-  inputs: EnrichedLogInput[]
-): SummarySegment[] {
+function buildSummarySegments(eventName: string, inputs: EnrichedLogInput[]): SummarySegment[] {
   const amountInput = inputs.find(
-    (i) => /^u?int\d*$/.test(i.type) && ['wad', 'amount', 'value', 'tokens'].includes(i.name.toLowerCase())
+    (i) =>
+      /^u?int\d*$/.test(i.type) &&
+      ['wad', 'amount', 'value', 'tokens'].includes(i.name.toLowerCase())
   )
   const segments: SummarySegment[] = [{ kind: 'event', text: eventName }]
 
@@ -239,8 +258,9 @@ export default function useColibriSimulation(
   network: Network | undefined,
   accountOp: AccountOp | undefined
 ) {
-  const { dispatch } = useBackgroundService()
-  const { contacts } = useAddressBookControllerState()
+  const { dispatchAndWait } = useController('ProvidersController')
+  const { state: addressBookState } = useController('AddressBookController')
+  const { contacts } = addressBookState
   const [state, setState] = useState<ColibriSimulationState>({
     isLoading: false,
     result: null,
@@ -248,15 +268,13 @@ export default function useColibriSimulation(
     isColibriAvailable: false
   })
 
-  const providerRef = useRef<any>(null)
-
   const isColibriAvailable = useMemo(
     () => network?.rpcProvider === 'colibri',
     [network?.rpcProvider]
   )
 
   const enrichLogs = useCallback(
-    async (logs: SimulationLog[], provider: any): Promise<EnrichedLog[]> => {
+    async (logs: SimulationLog[], send: RpcSend): Promise<EnrichedLog[]> => {
       const tokenMetadataCache = new Map<
         string,
         { tokenName: string | null; tokenSymbol: string | null; tokenDecimals: number | null }
@@ -275,15 +293,18 @@ export default function useColibriSimulation(
 
         if (isTokenEvent) {
           const isNativeEth = /^0x0+$/.test(contractAddr)
-          let meta: { tokenName: string | null; tokenSymbol: string | null; tokenDecimals: number | null }
+          let meta: {
+            tokenName: string | null
+            tokenSymbol: string | null
+            tokenDecimals: number | null
+          }
 
           if (isNativeEth) {
             meta = { tokenName: 'ETH', tokenSymbol: 'ETH', tokenDecimals: 18 }
           } else {
             meta = tokenMetadataCache.get(contractAddr.toLowerCase()) ?? null!
             if (!meta) {
-              // eslint-disable-next-line no-await-in-loop
-              meta = await fetchTokenMetadata(contractAddr, provider)
+              meta = await fetchTokenMetadata(contractAddr, send)
               tokenMetadataCache.set(contractAddr.toLowerCase(), meta)
             }
           }
@@ -330,28 +351,33 @@ export default function useColibriSimulation(
     if (!isColibriAvailable) {
       setState((prev) => ({
         ...prev,
-        error: 'Simulation is only available when Colibri is selected as the RPC provider. You can change this in the network settings.'
+        error:
+          'Simulation is only available when Colibri is selected as the RPC provider. You can change this in the network settings.'
       }))
       return
     }
 
     setState({ isLoading: true, result: null, error: null, isColibriAvailable: true })
 
-    try {
-      if (!providerRef.current) {
-        providerRef.current = getRpcProviderForUI(network, dispatch)
-      }
-      const provider = providerRef.current
+    const send: RpcSend = (method, params) =>
+      dispatchAndWait({
+        type: 'method',
+        params: {
+          method: 'callProviderAndSendResToUi',
+          args: [{ chainId: network.chainId, method: 'send', args: [method, params] }]
+        }
+      })
 
+    try {
       let txParams: { from: string; to: string; data: string; value: string }
       let stateOverride: Record<string, unknown> | undefined
-      if (accountOp.calls.length === 1) {
-        const call = accountOp.calls[0]
+      const singleCall = accountOp.calls.length === 1 ? accountOp.calls[0] : undefined
+      if (singleCall) {
         txParams = {
           from: accountOp.accountAddr,
-          to: call.to,
-          data: call.data || '0x',
-          value: call.value ? `0x${call.value.toString(16)}` : '0x0'
+          to: singleCall.to ?? '',
+          data: singleCall.data || '0x',
+          value: singleCall.value ? `0x${singleCall.value.toString(16)}` : '0x0'
         }
       } else {
         const ambireAccountIface = new Interface(AmbireAccountABI)
@@ -362,18 +388,18 @@ export default function useColibriSimulation(
           data: ambireAccountIface.encodeFunctionData('executeBySender', [callTuples]),
           value: '0x0'
         }
-        stateOverride = getEoaSimulationStateOverride(accountOp.accountAddr)
+        stateOverride = getNotAmbireStateOverride(accountOp.accountAddr, network)
       }
 
       const simulateParams: unknown[] = [txParams, 'latest']
       if (stateOverride) simulateParams.push(stateOverride)
 
-      const rawResult: SimulationRawResult = await provider.send(
+      const rawResult: SimulationRawResult = await send(
         'colibri_simulateTransaction',
         simulateParams
       )
 
-      const enrichedLogs = await enrichLogs(rawResult.logs || [], provider)
+      const enrichedLogs = await enrichLogs(rawResult.logs || [], send)
 
       const gasUsedDecimal = BigInt(rawResult.gasUsed).toString()
 
@@ -388,7 +414,7 @@ export default function useColibriSimulation(
         statusLabel: isReverted ? 'reverted' : 'success',
         returnValue: rawResult.returnValue,
         decodedError,
-        explorerUrl: network.explorerUrl,
+        explorerUrl: network.explorerUrl ?? '',
         batchCallCount: accountOp.calls.length
       }
 
@@ -401,7 +427,7 @@ export default function useColibriSimulation(
         isColibriAvailable: true
       })
     }
-  }, [network, accountOp, isColibriAvailable, dispatch, enrichLogs])
+  }, [network, accountOp, isColibriAvailable, dispatchAndWait, enrichLogs])
 
   const clear = useCallback(() => {
     setState({ isLoading: false, result: null, error: null, isColibriAvailable })

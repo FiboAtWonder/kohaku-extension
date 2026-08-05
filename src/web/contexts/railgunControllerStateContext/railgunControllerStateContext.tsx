@@ -1,9 +1,7 @@
 import React, { createContext, useCallback, useEffect, useMemo } from 'react'
 
 import useDeepMemo from '@common/hooks/useDeepMemo'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useControllerState from '@web/hooks/useControllerState'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
+import useController from '@common/hooks/useController'
 
 import { ZERO_ADDRESS } from '@ambire-common/services/socket/constants'
 
@@ -21,44 +19,36 @@ function mapSdkBalances(balances: SdkRailgunBalance[] | undefined): RailgunBalan
 
   return balances.map((b) => {
     const asset = b.asset as { __type: string; contract?: string }
-    const tokenAddress = asset.__type === 'native' ? ZERO_ADDRESS : asset.contract ?? ZERO_ADDRESS
+    const tokenAddress = asset.__type === 'native' ? ZERO_ADDRESS : (asset.contract ?? ZERO_ADDRESS)
     return { tokenAddress, amount: b.amount.toString() }
   })
 }
 
 const RailgunControllerStateProvider: React.FC<any> = ({ children }) => {
-  const { dispatch } = useBackgroundService()
-  const { account: selectedAccount } = useSelectedAccountControllerState()
+  const { state: selectedAccountState } = useController('SelectedAccountController')
+  const selectedAccount = selectedAccountState.account
 
-  const keystoreState = useControllerState('keystore')
+  const { state: keystoreState } = useController('KeystoreController')
   const isUnlocked = !!keystoreState?.isUnlocked
 
-  const railgunV2State = useControllerState('railgunV2')
-  const memoizedV2State = useDeepMemo(railgunV2State, 'railgunV2')
+  const { state: railgunV2State, dispatch } = useController('RailgunV2Controller')
+  const memoizedV2State = useDeepMemo(railgunV2State, 'RailgunV2Controller')
 
   const syncState: string = memoizedV2State.syncState ?? 'unsynced'
   const isInitialized = !!memoizedV2State.isInitialized
   const initializationError: string | undefined = memoizedV2State.initializationError ?? undefined
   const zkAddress: string | null = memoizedV2State.zkAddress ?? null
 
-  useEffect(() => {
-    if (!Object.keys(railgunV2State).length) {
-      dispatch?.({ type: 'INIT_CONTROLLER_STATE', params: { controller: 'railgunV2' } })
-    }
-  }, [dispatch, railgunV2State])
-
   const loadPrivateAccount = useCallback(async () => {
-    if (!isUnlocked || !selectedAccount || !dispatch) return
+    if (!isUnlocked || !selectedAccount) return
 
-    if (!isInitialized) dispatch({ type: 'RAILGUN_V2_CONTROLLER_INIT' })
+    if (!isInitialized) dispatch({ type: 'method', params: { method: 'init', args: [] } })
 
-    dispatch({ type: 'RAILGUN_V2_CONTROLLER_SYNC' })
+    dispatch({ type: 'method', params: { method: 'sync', args: [] } })
   }, [dispatch, isUnlocked, selectedAccount, isInitialized])
 
   const refreshPrivateAccount = useCallback(async () => {
-    if (!dispatch) return
-
-    dispatch({ type: 'RAILGUN_V2_CONTROLLER_SYNC' })
+    dispatch({ type: 'method', params: { method: 'sync', args: [] } })
   }, [dispatch])
 
   useEffect(() => {

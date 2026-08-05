@@ -23,16 +23,6 @@ export type RailgunReactState = {
   lastSyncedBlock: number
 }
 
-export type Checkpoint = {
-  merkleTrees: { tree: string[][]; nullifiers: string[] }[]
-  logs: any[] // Using any to match original
-  endBlock: number
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// TYPES (simplified state machine)
-// ─────────────────────────────────────────────────────────────────────────────
-
 export type EnhancedRailgunControllerState = {
   railgunAccountsState: RailgunReactState
 
@@ -47,12 +37,4 @@ export type EnhancedRailgunControllerState = {
   refreshPrivateAccount: () => Promise<void>
 
   zkAddress: string | null
-}
-
-// not exported from railgun package, copied from kohaku/packages/provider => TxLog
-export interface RailgunLog {
-  blockNumber: number
-  topics: string[]
-  data: string
-  address: string
 }
