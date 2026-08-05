@@ -94,7 +94,10 @@ const TransferScreen = () => {
     [activeProtocol, isSubmittingState, isUnshielding]
   )
 
-  const { accountsOps } = useController('ActivityController').state
+  const {
+    state: { accountsOps },
+    dispatch: activityDispatch
+  } = useController('ActivityController')
   const { account } = useController('SelectedAccountController').state
   const { addToast } = useToast()
 
@@ -556,10 +559,25 @@ const TransferScreen = () => {
       (submittedAccountOp.status === AccountOpStatus.Success ||
         submittedAccountOp.status === AccountOpStatus.UnknownButPastNonce)
     ) {
-      // @TODO (kohaku-resync) The completed withdrawal's dashboard banner used to be hidden here
-      // via `ACTIVITY_CONTROLLER_HIDE_BANNER`. Upstream removed `ActivityController.hideBanner` in
-      // favour of `setDashboardBannersSeen(sessionId, accountAddr)`, which only applies to
-      // `dashboard*` sessions, so it cannot hide this screen's banner. Needs a new API.
+      // Hide the completed withdrawal's banner. This screen runs its own activity session, so it
+      // has to opt in explicitly, otherwise the activity controller ignores non-dashboard sessions.
+      activityDispatch({
+        type: 'method',
+        params: {
+          method: 'setDashboardBannersSeen',
+          args: [
+            sessionId,
+            submittedAccountOp.accountAddr,
+            {
+              accountOpIds: [submittedAccountOp.id],
+              emitUpdate: true,
+              hideImmediately: true,
+              allowNonDashboardSession: true
+            }
+          ]
+        }
+      })
+
       cleanUp()
 
       // Navigate immediately instead of waiting for the flag
@@ -587,7 +605,15 @@ const TransferScreen = () => {
     } else {
       navigateOut()
     }
-  }, [submittedAccountOp, cleanUp, privacyPoolsDispatch, railgunV2Dispatch, navigateOut])
+  }, [
+    submittedAccountOp,
+    activityDispatch,
+    sessionId,
+    cleanUp,
+    privacyPoolsDispatch,
+    railgunV2Dispatch,
+    navigateOut
+  ])
 
   const handleWithdrawal = useCallback(() => {
     unshield()

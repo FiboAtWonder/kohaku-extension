@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import { useModalize } from 'react-native-modalize'
 
-import { TransferController } from '@ambire-common/controllers/transfer/transfer'
 import { TokenResult } from '@ambire-common/libs/portfolio'
 import { getSearchableNames } from '@ambire-common/services/nameResolvers'
 import { Validation } from '@ambire-common/services/validations'
@@ -44,17 +43,8 @@ interface Props extends InputProps {
   addressValidationMsg: string
   isRecipientHumanizerKnownTokenOrSmartContract: boolean
   isRecipientAddressUnknown: boolean
-  isRecipientAddressUnknownAgreed: TransferController['isRecipientAddressUnknownAgreed']
-  onRecipientCheckboxClick: () => void
   validation: Validation
   isRecipientDomainResolving: boolean
-  /**
-   * @TODO (kohaku-resync) Upstream dropped the explicit "I understand" checkbox for unknown
-   * recipients (ConfirmAddress) in favour of the AddToAddressBook prompt, so these three props
-   * are currently inert. Decide whether the confirmation should come back.
-   */
-  isSWWarningVisible: boolean
-  isSWWarningAgreed: boolean
   recipientMenuClosedAutomaticallyRef: React.MutableRefObject<boolean>
   selectedTokenSymbol?: TokenResult['symbol']
   menuPosition?: 'top' | 'bottom'

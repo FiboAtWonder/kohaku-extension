@@ -45,7 +45,7 @@ export class AuthPage extends BasePage {
     await this.click(selectors.getStarted.saveAndContinueBtn)
     await this.compareText(
       selectors.getStarted.confirmationMessageAmbireWallet,
-      'Ambire Wallet is ready to use'
+      'Kohaku is ready to use'
     )
     await this.click(selectors.getStarted.openDashboardButton)
     // assertion on Dashboard after login
@@ -101,7 +101,7 @@ export class AuthPage extends BasePage {
     await this.click(selectors.getStarted.saveAndContinueBtn)
     await this.compareText(
       selectors.getStarted.confirmationMessageAmbireWallet,
-      'Ambire Wallet is ready to use'
+      'Kohaku is ready to use'
     )
     await this.click(selectors.getStarted.openDashboardButton)
 
@@ -125,7 +125,7 @@ export class AuthPage extends BasePage {
     await this.click(selectors.getStarted.saveAndContinueBtn)
     await this.compareText(
       selectors.getStarted.confirmationMessageAmbireWallet,
-      'Ambire Wallet is ready to use'
+      'Kohaku is ready to use'
     )
     await this.click(selectors.getStarted.openDashboardButton)
   }
@@ -151,7 +151,7 @@ export class AuthPage extends BasePage {
     await this.click(selectors.getStarted.saveAndContinueBtn)
     await this.compareText(
       selectors.getStarted.confirmationMessageAmbireWallet,
-      'Ambire Wallet is ready to use'
+      'Kohaku is ready to use'
     )
     await this.click(selectors.getStarted.openDashboardButton)
   }
@@ -185,7 +185,7 @@ export class AuthPage extends BasePage {
     await this.click(selectors.getStarted.saveAndContinueBtn)
     await this.compareText(
       selectors.getStarted.confirmationMessageAmbireWallet,
-      'Ambire Wallet is ready to use'
+      'Kohaku is ready to use'
     )
     await this.click(selectors.getStarted.openDashboardButton)
   }
@@ -212,7 +212,7 @@ export class AuthPage extends BasePage {
     await this.click(selectors.getStarted.saveAndContinueBtn)
     await this.compareText(
       selectors.getStarted.confirmationMessageAmbireWallet,
-      'Ambire Wallet is ready to use'
+      'Kohaku is ready to use'
     )
     await this.click(selectors.getStarted.openDashboardButton)
   }
@@ -263,7 +263,7 @@ export class AuthPage extends BasePage {
     await this.click(selectors.getStarted.saveAndContinueBtn)
     await this.compareText(
       selectors.getStarted.confirmationMessageAmbireWallet,
-      'Ambire Wallet is ready to use'
+      'Kohaku is ready to use'
     )
     await this.click(selectors.getStarted.openDashboardButton)
   }
@@ -289,7 +289,7 @@ export class AuthPage extends BasePage {
     await this.click(selectors.getStarted.saveAndContinueBtn)
     await this.compareText(
       selectors.getStarted.confirmationMessageAmbireWallet,
-      'Ambire Wallet is ready to use'
+      'Kohaku is ready to use'
     )
     await this.click(selectors.getStarted.openDashboardButton)
   }

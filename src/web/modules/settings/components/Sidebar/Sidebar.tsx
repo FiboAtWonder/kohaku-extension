@@ -5,10 +5,8 @@ import { Pressable, View, ViewStyle } from 'react-native'
 import AccountsIcon from '@common/assets/svg/AccountsIcon'
 import AddressBookIcon from '@common/assets/svg/AddressBookIcon'
 import AmbireLogoSquare from '@common/assets/svg/AmbireLogoSquare'
-import BugIcon from '@common/assets/svg/BugIcon'
 import CustomTokensIcon from '@common/assets/svg/CustomTokensIcon'
 import DashboardIcon from '@common/assets/svg/DashboardIcon'
-import HelpIcon from '@common/assets/svg/HelpIcon'
 import KeyStoreSettingsIcon from '@common/assets/svg/KeyStoreSettingsIcon'
 import NetworksIcon from '@common/assets/svg/NetworksIcon'
 import PasswordRecoverySettingsIcon from '@common/assets/svg/PasswordRecoverySettingsIcon'
@@ -110,26 +108,15 @@ export const SETTINGS_LINKS = [
   }
 ]
 
+// @TODO (kohaku) The upstream "Help center" and "Report an issue" links pointed at
+// help.ambire.com and were removed with the rebrand. Add the Kohaku equivalents here
+// once they exist.
 const OTHER_LINKS = [
   {
     key: 'about',
     Icon: AmbireLogoSquare,
     label: 'About Ambire',
     path: ROUTES.settingsAbout
-  },
-  {
-    key: 'help-center',
-    Icon: HelpIcon,
-    label: 'Help center',
-    path: 'https://help.ambire.com/en',
-    isExternal: true
-  },
-  {
-    key: 'report-issue',
-    Icon: BugIcon,
-    label: 'Report an issue',
-    path: 'https://help.ambire.com/en',
-    isExternal: true
   }
 ]
 

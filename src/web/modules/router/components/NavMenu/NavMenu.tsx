@@ -3,20 +3,14 @@ import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 
 import AmbireLogoSquare from '@common/assets/svg/AmbireLogoSquare'
-import BugIcon from '@common/assets/svg/BugIcon'
-import DiscordIcon from '@common/assets/svg/DiscordIcon'
-import HelpIcon from '@common/assets/svg/HelpIcon'
 import LockIcon from '@common/assets/svg/LockIcon'
 import MaximizeIcon from '@common/assets/svg/MaximizeIcon'
 import SettingsIcon from '@common/assets/svg/SettingsIcon'
-import TelegramIcon from '@common/assets/svg/TelegramIcon'
-import TwitterIcon from '@common/assets/svg/TwitterIcon'
 import BackButton from '@common/components/BackButton'
 import Button from '@common/components/Button'
 import { createGlobalTooltipDataSet } from '@common/components/GlobalTooltip'
 import Text from '@common/components/Text'
 import { AUTO_LOCK_OPTIONS } from '@common/constants/autoLock'
-import { DISCORD_URL, TELEGRAM_URL, TWITTER_URL } from '@common/constants/social'
 import useController from '@common/hooks/useController'
 import { AnimatedPressable, useCustomHover } from '@common/hooks/useHover'
 import useNavigation from '@common/hooks/useNavigation'
@@ -40,26 +34,10 @@ import { SKIP_AUTO_BIOMETRICS_PROMPT_ONCE } from '@web/modules/keystore/constant
 
 import getStyles from './styles'
 
-export const SOCIAL = [
-  { Icon: TwitterIcon, url: TWITTER_URL, label: 'X' },
-  { Icon: TelegramIcon, url: TELEGRAM_URL, label: 'Telegram' },
-  { Icon: DiscordIcon, url: DISCORD_URL, label: 'Discord' }
-]
+// @TODO (kohaku) The upstream "Help center" and "Report an issue" links pointed at
+// help.ambire.com, and a `SOCIAL` section linked Ambire's X/Telegram/Discord. Both were
+// removed with the rebrand. Add the Kohaku equivalents here once they exist.
 const OTHER_LINKS = [
-  {
-    key: 'help-center',
-    Icon: React.memo(HelpIcon),
-    label: 'Help center',
-    path: 'https://help.ambire.com/en',
-    isExternal: true
-  },
-  {
-    key: 'report-issue',
-    Icon: React.memo(BugIcon),
-    label: 'Report an issue',
-    path: 'https://help.ambire.com/en',
-    isExternal: true
-  },
   {
     key: 'about',
     Icon: AmbireLogoSquare,
@@ -181,27 +159,6 @@ const NavMenu = () => {
             >
               {OTHER_LINKS.map(({ Icon, ...link }) => (
                 <SettingsLink {...link} Icon={Icon} key={link.key} isActive={false} />
-              ))}
-            </View>
-            <View
-              style={[
-                spacings.pvSm,
-                spacings.phSm,
-                {
-                  borderBottomWidth: 1,
-                  borderBottomColor: theme.primaryBorder
-                }
-              ]}
-            >
-              {SOCIAL.map(({ Icon, ...link }) => (
-                <SettingsLink
-                  {...link}
-                  Icon={Icon}
-                  key={link.url}
-                  path={link.url}
-                  isActive={false}
-                  isExternal
-                />
               ))}
             </View>
 

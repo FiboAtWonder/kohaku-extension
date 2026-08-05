@@ -53,7 +53,10 @@ function TransferScreen() {
   const { addToast } = useToast()
   const defaultToken = ((location.state as any)?.token as TokenResult) ?? null
 
-  const { accountsOps } = useController('ActivityController').state
+  const {
+    state: { accountsOps },
+    dispatch: activityDispatch
+  } = useController('ActivityController')
   const { account } = useController('SelectedAccountController').state
 
   const {
@@ -336,10 +339,26 @@ function TransferScreen() {
   ])
 
   const resetScreen = useCallback(() => {
-    // @TODO (kohaku-resync) The completed shield's dashboard banner used to be hidden here via
-    // `ACTIVITY_CONTROLLER_HIDE_BANNER`. Upstream removed `ActivityController.hideBanner` in
-    // favour of `setDashboardBannersSeen(sessionId, accountAddr)`, which only applies to
-    // `dashboard*` sessions, so it cannot hide this screen's banner. Needs a new API.
+    // Hide the completed shield's banner. This screen runs its own activity session, so it has
+    // to opt in explicitly, otherwise the activity controller ignores non-dashboard sessions.
+    if (submittedAccountOp) {
+      activityDispatch({
+        type: 'method',
+        params: {
+          method: 'setDashboardBannersSeen',
+          args: [
+            sessionId,
+            submittedAccountOp.accountAddr,
+            {
+              accountOpIds: [submittedAccountOp.id],
+              emitUpdate: true,
+              hideImmediately: true,
+              allowNonDashboardSession: true
+            }
+          ]
+        }
+      })
+    }
 
     railgunV2Dispatch({
       type: 'method',
@@ -361,7 +380,14 @@ function TransferScreen() {
     privacyPoolsDispatch({ type: 'method', params: { method: 'setUserProceeded', args: [false] } })
     railgunV2Dispatch({ type: 'method', params: { method: 'setUserProceeded', args: [false] } })
     resetForm()
-  }, [privacyPoolsDispatch, railgunV2Dispatch, resetForm])
+  }, [
+    activityDispatch,
+    privacyPoolsDispatch,
+    railgunV2Dispatch,
+    resetForm,
+    sessionId,
+    submittedAccountOp
+  ])
 
   const buttons = useMemo(() => {
     return (
