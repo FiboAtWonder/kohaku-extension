@@ -6,7 +6,7 @@ import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
 const getStyles = (theme: ThemeProps) =>
   StyleSheet.create({
     divider: {
-      backgroundColor: theme.accent
+      backgroundColor: theme.primaryAccent
     }
   })
 

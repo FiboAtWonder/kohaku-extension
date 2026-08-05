@@ -22,7 +22,7 @@ const getStyles = (theme: ThemeProps) =>
       borderColor: '#FFA50066'
     },
     disclaimerText: {
-      color: theme.warning
+      color: theme.warningText
     }
   })
 

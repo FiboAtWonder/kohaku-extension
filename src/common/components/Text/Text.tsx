@@ -91,7 +91,7 @@ const Text: React.FC<Props> = ({
     errorText: theme.errorText,
     infoText: theme.infoText,
     linkText: theme.linkText,
-    muted: theme.muted
+    muted: theme.tertiaryText
   }
 
   return (

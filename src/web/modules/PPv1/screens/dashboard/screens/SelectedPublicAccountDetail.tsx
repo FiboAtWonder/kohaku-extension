@@ -72,9 +72,9 @@ const NewSelectedPublicAccountDetail = ({ openReceiveModal }: Props) => {
             width: 32,
             height: 32,
             borderWidth: 1.6,
-            borderColor: theme.accent,
+            borderColor: theme.primaryAccent,
             borderRadius: 999,
-            backgroundColor: theme.warning,
+            backgroundColor: theme.warningText,
             textAlign: 'center'
           }
         ]}
@@ -93,13 +93,13 @@ const NewSelectedPublicAccountDetail = ({ openReceiveModal }: Props) => {
         {/* <Text color="#000000">{account?.preferences.label || ''}</Text> */}
         <Text color="#F9F6E9">{account?.preferences.label || ''}</Text>
         <View style={[flexbox.directionRow, flexbox.alignCenter]}>
-          <Text fontSize={11} appearance="muted">
+          <Text fontSize={11} appearance="tertiaryText">
             ({shortenAddress(account?.addr || '', 13)})
           </Text>
           {true && (
             <CopyText
               text={account?.addr || ''}
-              iconColor={theme.muted}
+              iconColor={theme.tertiaryText}
               style={{
                 ...spacings.mlMi
               }}
@@ -122,7 +122,7 @@ const NewSelectedPublicAccountDetail = ({ openReceiveModal }: Props) => {
             fontSize={16}
             weight="number_bold"
             shouldScale={false}
-            appearance="muted"
+            appearance="tertiaryText"
             color="#7F7F7F"
           >
             .{totalPortfolioAmountDecimal}

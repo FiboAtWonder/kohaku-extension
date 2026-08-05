@@ -67,7 +67,7 @@ const SendToken: FC<Props> = ({
   return (
     <View style={[spacings.mbLg]}>
       {Boolean(heading) && (
-        <Text appearance="muted" fontSize={13} weight="light" style={spacings.mbTy}>
+        <Text appearance="tertiaryText" fontSize={13} weight="light" style={spacings.mbTy}>
           {heading}
         </Text>
       )}
@@ -82,7 +82,7 @@ const SendToken: FC<Props> = ({
             styles.container,
             validateFromAmount?.message ? styles.containerWarning : {},
             {
-              backgroundColor: theme.surfaceInput
+              backgroundColor: theme.secondaryBackground
             }
           ]}
         >

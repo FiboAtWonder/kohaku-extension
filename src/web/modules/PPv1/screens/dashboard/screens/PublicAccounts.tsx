@@ -138,7 +138,7 @@ function PublicAccountsListModal({
         <Text
           fontSize={15}
           weight="semiBold"
-          color={isLoadingPublicBalances ? '#7F7F7F' : theme.textPrimary}
+          color={isLoadingPublicBalances ? '#7F7F7F' : theme.primaryText}
           style={[spacings.mrTy]}
         >
           {isLoadingPublicBalances
@@ -263,7 +263,7 @@ const NewPublicAccounts = ({ selectedAccount, ...modalProps }: PublicAccountsPro
 
   return (
     <View>
-      <Text appearance="muted">Public Accounts</Text>
+      <Text appearance="tertiaryText">Public Accounts</Text>
       <View style={[flexbox.directionRow, flexbox.alignCenter, spacings.mtTy]}>
         {/* {listedAccounts.map((account, index) => (
           <Pressable

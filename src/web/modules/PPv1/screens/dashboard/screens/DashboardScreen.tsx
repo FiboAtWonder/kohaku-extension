@@ -206,7 +206,7 @@ const PrivateDashboardView: FC<Props> = ({ dashboardMode, onDashboardModeChange 
                   <Text
                     fontSize={16}
                     weight="number_regular"
-                    style={{ letterSpacing: 1, color: theme.muted }}
+                    style={{ letterSpacing: 1, color: theme.tertiaryText }}
                   >
                     Total funds
                   </Text>

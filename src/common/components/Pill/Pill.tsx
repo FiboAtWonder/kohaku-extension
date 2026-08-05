@@ -22,15 +22,15 @@ const getStyles = (theme: ThemeProps) =>
     container: {
       borderStyle: 'solid',
       borderWidth: 1,
-      borderColor: `${theme.accent.toString()}99`,
+      borderColor: `${theme.primaryAccent.toString()}99`,
       borderRadius: 14,
       paddingHorizontal: 10,
       paddingVertical: 6,
       backgroundColor: 'transparent'
     },
-    text: { color: theme.accent },
+    text: { color: theme.primaryAccent },
     indicator: {
-      backgroundColor: theme.accent,
+      backgroundColor: theme.primaryAccent,
       width: 8,
       height: 8,
       borderRadius: 999,
@@ -39,10 +39,10 @@ const getStyles = (theme: ThemeProps) =>
   })
 
 const VARIANT_COLOR_MAP = (theme: ThemeProps): Record<string, string> => ({
-  success: theme.success.toString(),
-  pending: theme.warning.toString(),
-  error: theme.danger.toString(),
-  accent: theme.accent.toString()
+  success: theme.successText.toString(),
+  pending: theme.warningText.toString(),
+  error: theme.errorText.toString(),
+  accent: theme.primaryAccent.toString()
 })
 
 const Pill = ({ text, variant, textStyle, withIndicator, style }: Props) => {

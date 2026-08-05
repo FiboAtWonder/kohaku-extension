@@ -91,7 +91,7 @@ const Wrapper: FC<WrapperProps> = ({ children, title, description, buttons, hand
               <View>
                 <KohakuLogo width={72} />
               </View>
-              <Text fontSize={16} style={{ color: theme.textPrimary }}>
+              <Text fontSize={16} style={{ color: theme.primaryText }}>
                 How does Kohaku work?
               </Text>
               {/* {account && (
@@ -139,7 +139,7 @@ const Wrapper: FC<WrapperProps> = ({ children, title, description, buttons, hand
                 {title}
               </Text>
               {description && (
-                <Text fontSize={14} color={theme.muted} style={{textAlign: "center"}}>
+                <Text fontSize={14} color={theme.tertiaryText} style={{textAlign: "center"}}>
                   {description}
                 </Text>
               )}
@@ -157,7 +157,7 @@ const Wrapper: FC<WrapperProps> = ({ children, title, description, buttons, hand
               {title}
             </Text>
             {description && (
-              <Text fontSize={14} color={theme.muted} style={{ textAlign: 'center' }}>
+              <Text fontSize={14} color={theme.tertiaryText} style={{ textAlign: 'center' }}>
                 {description}
               </Text>
             )}
