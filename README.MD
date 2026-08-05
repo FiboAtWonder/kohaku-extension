@@ -40,13 +40,13 @@ Here are the steps to build and run the kohaku extension yourself:
    | **BROWSER_EXTENSION_PUBLIC_KEY** | For development, generate `key.pem` as explained [here](https://stackoverflow.com/a/46739698/1333836).  |
    | **REACT_APP_PIMLICO_API_KEY**    | You can generate your API Key [here](https://dashboard.pimlico.io).           |
 
-4. **Install dependencies**: Run `yarn setup` (never `yarn install` directly — `setup` also runs `allow-scripts` and `patch-package`). Then install the submodule deps with `cd src/ambire-common && npm install && cd ../..`.
+4. **Install dependencies**: Run `yarn setup` (never `yarn install` directly — `setup` also runs `allow-scripts` and `patch-package`). This requires Node >= 24.13.0 and yarn >= 1.22.22, as pinned in `.nvmrc` and `package.json` engines.
 
-5. **Install submodule dependencies**: Run `cd src/ambire-common && npm install && ../..` to install the submodule deps.
+   Do **not** run `npm install` inside `src/ambire-common`. The extension bundles the submodule's sources and resolves their dependencies from the root `node_modules`, so a nested install is unnecessary — and it breaks the production build, because LavaMoat cannot attribute files under `src/ambire-common/node_modules` to a package. Install there only when running ambire-common's own test suite, and remove it again before building. If a submodule dependency is missing at build time, add it to the root `package.json` instead.
 
-6. **Build the extension**: Execute `yarn web:webkit` to build the kohaku-extension. Once you see the two “web compiled successfully” logs, you can stop the process (or keep it running if you prefer). Just open a new terminal tab for the next step.
+5. **Build the extension**: Execute `yarn web:webkit` to build the kohaku-extension. Once you see the two “web compiled successfully” logs, you can stop the process (or keep it running if you prefer). Just open a new terminal tab for the next step.
 
-7. **Load the unpacked extension**: Load the unpacked extension in Chrome (from inside the `build/webkit-dev` folder), and you’re good to go!
+6. **Load the unpacked extension**: Load the unpacked extension in Chrome (from inside the `build/webkit-dev` folder), and you’re good to go!
 
 ## Troubleshooting
 
