@@ -14,7 +14,6 @@ import useNavigation from '@common/hooks/useNavigation'
 import { WEB_ROUTES } from '@common/modules/router/constants/common'
 import useTheme from '@common/hooks/useTheme'
 import Avatar from '@common/components/Avatar'
-import { isSmartAccount } from '@ambire-common/libs/account/account'
 import useController from '@common/hooks/useController'
 
 const buttons = [

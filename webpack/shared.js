@@ -170,10 +170,7 @@ async function createBaseConfig(env, argv) {
     // Pin @kohaku-eth/railgun to a single copy so the WASM module-level init
     // promise is shared between the background pre-init and the controller's
     // createRailgunPlugin call (otherwise they get separate module instances). (kohaku)
-    '@kohaku-eth/railgun$': path.resolve(
-      ROOT_DIR,
-      'src/ambire-common/node_modules/@kohaku-eth/railgun'
-    )
+    '@kohaku-eth/railgun$': path.resolve(ROOT_DIR, 'node_modules/@kohaku-eth/railgun')
   }
 
   config.resolve.fallback = {

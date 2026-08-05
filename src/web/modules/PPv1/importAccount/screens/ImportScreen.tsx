@@ -33,16 +33,7 @@ const ImportScreen = () => {
   const { navigate } = useNavigation()
   const { t } = useTranslation()
 
-  const { accountsOps } = useController('ActivityController').state
   const { account } = useController('SelectedAccountController').state
-
-  const submittedAccountOp = useMemo(() => {
-    if (!accountsOps.transfer || !latestBroadcastedAccountOp?.signature) return
-
-    return accountsOps.transfer.result.items.find(
-      (accOp) => accOp.signature === latestBroadcastedAccountOp.signature
-    )
-  }, [accountsOps.transfer, latestBroadcastedAccountOp?.signature])
 
   const navigateOut = useCallback(() => {
     if (isRequestWindow) {

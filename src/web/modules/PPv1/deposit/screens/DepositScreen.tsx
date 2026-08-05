@@ -47,7 +47,7 @@ function TransferScreen() {
   const { dispatch: requestsDispatch } = useController('RequestsController')
   const { dispatch: privacyPoolsDispatch } = useController('PrivacyPoolsController')
   const { dispatch: railgunV2Dispatch } = useController('RailgunV2Controller')
-  const { navigate, dashGoBack } = useNavigation()
+  const { dashGoBack } = useNavigation()
   const location = useLocation()
   const { t } = useTranslation()
   const { addToast } = useToast()

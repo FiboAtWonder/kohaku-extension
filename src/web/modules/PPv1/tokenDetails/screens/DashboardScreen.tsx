@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react'
-import { Animated, NativeScrollEvent, NativeSyntheticEvent, View, ViewStyle } from 'react-native'
+import { Animated, NativeScrollEvent, NativeSyntheticEvent, View } from 'react-native'
 import Button from '@common/components/Button'
 import { isWeb } from '@common/config/env'
 import useDebounce from '@common/hooks/useDebounce'

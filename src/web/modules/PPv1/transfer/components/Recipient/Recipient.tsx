@@ -158,16 +158,11 @@ const Recipient: React.FC<Props> = ({
   address,
   ensAddress,
   addressValidationMsg,
-  isRecipientAddressUnknownAgreed,
-  onRecipientCheckboxClick,
   isRecipientHumanizerKnownTokenOrSmartContract,
   isRecipientAddressUnknown,
   validation,
   isRecipientDomainResolving,
   disabled,
-  isSWWarningVisible,
-  isSWWarningAgreed,
-  selectedTokenSymbol,
   recipientMenuClosedAutomaticallyRef
 }) => {
   const { account } = useController('SelectedAccountController').state

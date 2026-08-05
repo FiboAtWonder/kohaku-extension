@@ -84,7 +84,6 @@ const TransferScreen = () => {
     isRecipientAddressUnknownAgreed,
     maxAmount,
     relayerQuote,
-    updateQuoteStatus,
     isRefreshing,
     unshield,
     isUnshielding

@@ -1,7 +1,6 @@
 import React, { FC, useMemo } from 'react'
 import { View } from 'react-native'
 
-import { isSmartAccount } from '@ambire-common/libs/account/account'
 import Avatar from '@common/components/Avatar'
 import Text from '@common/components/Text'
 import useTheme from '@common/hooks/useTheme'

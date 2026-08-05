@@ -26,7 +26,6 @@ import { getUiType } from '@common/utils/uiType'
 import KohakuLogo from '@common/components/HokahuLogo'
 import HeaderBackButton from '@common/modules/header/components/HeaderBackButton'
 import getStyles from './styles'
-import useController from '@common/hooks/useController'
 
 const { isTab } = getUiType()
 

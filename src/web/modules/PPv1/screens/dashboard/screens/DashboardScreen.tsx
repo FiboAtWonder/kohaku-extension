@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import { ScrollView, View, Pressable } from 'react-native'
-import { useModalize } from 'react-native-modalize'
 
 import formatDecimals from '@ambire-common/utils/formatDecimals/formatDecimals'
 import Text from '@common/components/Text/Text'

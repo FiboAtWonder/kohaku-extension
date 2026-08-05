@@ -12,7 +12,6 @@ import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
 import useTheme from '@common/hooks/useTheme'
 
-import { PoolAccount } from '@web/contexts/privacyPoolsControllerStateContext'
 import { getTokenId } from '@common/utils/token'
 import { SelectedAccountPortfolioTokenResult } from '@ambire-common/interfaces/selectedAccount'
 import Recipient from '../Recipient'

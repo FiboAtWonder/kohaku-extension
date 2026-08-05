@@ -316,7 +316,7 @@ module.exports = async function buildExtension(
     // Railgun SDK WASM — copied to a stable asset path and loaded explicitly at
     // runtime (see background.ts) so the SDK's Node fs loader is bypassed. (kohaku)
     {
-      from: 'src/ambire-common/node_modules/@kohaku-eth/railgun/dist/pkg/index_bg.wasm',
+      from: 'node_modules/@kohaku-eth/railgun/dist/pkg/index_bg.wasm',
       to: 'assets/railgun/index_bg.wasm',
       noErrorOnMissing: true
     },

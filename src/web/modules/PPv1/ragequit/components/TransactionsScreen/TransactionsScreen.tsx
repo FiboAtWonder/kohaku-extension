@@ -1,7 +1,6 @@
 import React, { FC, useMemo } from 'react'
 import { View } from 'react-native'
 
-import { isSmartAccount } from '@ambire-common/libs/account/account'
 import shortenAddress from '@ambire-common/utils/shortenAddress'
 import CopyIcon from '@common/assets/svg/CopyIcon'
 import Avatar from '@common/components/Avatar'

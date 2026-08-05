@@ -1,7 +1,6 @@
 import React from 'react'
 import { Animated, View } from 'react-native'
 
-import { isSmartAccount } from '@ambire-common/libs/account/account'
 import RightArrowIcon from '@common/assets/svg/RightArrowIcon'
 import Avatar from '@common/components/Avatar'
 import Text from '@common/components/Text'
