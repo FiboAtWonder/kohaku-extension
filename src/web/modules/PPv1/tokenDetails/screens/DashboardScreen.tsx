@@ -1,14 +1,12 @@
 import React, { useCallback, useRef, useState } from 'react'
 import { Animated, NativeScrollEvent, NativeSyntheticEvent, View, ViewStyle } from 'react-native'
-import { useModalize } from 'react-native-modalize'
 import Button from '@common/components/Button'
 import { isWeb } from '@common/config/env'
 import useDebounce from '@common/hooks/useDebounce'
 import useTheme from '@common/hooks/useTheme'
 import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
-import ReceiveModal from '@web/components/ReceiveModal'
-import { getUiType } from '@web/utils/uiType'
+import { getUiType } from '@common/utils/uiType'
 
 import useNavigation from '@common/hooks/useNavigation'
 import { WEB_ROUTES } from '@common/modules/router/constants/common'
@@ -22,7 +20,6 @@ export const OVERVIEW_CONTENT_MAX_HEIGHT = 120
 
 const PPv1TokenDetailsScreen = () => {
   const { styles } = useTheme(getStyles)
-  const { ref: receiveModalRef, open: openReceiveModal, close: closeReceiveModal } = useModalize()
   const lastOffsetY = useRef(0)
   const scrollUpStartedAt = useRef(0)
   const [dashboardOverviewSize, setDashboardOverviewSize] = useState({
@@ -32,6 +29,11 @@ const PPv1TokenDetailsScreen = () => {
   const debouncedDashboardOverviewSize = useDebounce({ value: dashboardOverviewSize, delay: 100 })
   const animatedOverviewHeight = useRef(new Animated.Value(OVERVIEW_CONTENT_MAX_HEIGHT)).current
   const { navigate } = useNavigation()
+
+  // The receive modal became a standalone route upstream (kohaku)
+  const openReceiveModal = useCallback(() => {
+    navigate(WEB_ROUTES.receive)
+  }, [navigate])
 
   const handleDeposit = useCallback(() => {
     navigate(WEB_ROUTES.pp1Deposit)
@@ -80,7 +82,6 @@ const PPv1TokenDetailsScreen = () => {
 
   return (
     <>
-      <ReceiveModal modalRef={receiveModalRef} handleClose={closeReceiveModal} />
       <View style={styles.container}>
         <View style={[flexbox.flex1, spacings.ptSm]}>
           <DashboardOverview
@@ -90,13 +91,7 @@ const PPv1TokenDetailsScreen = () => {
             setDashboardOverviewSize={setDashboardOverviewSize}
             onGasTankButtonPosition={() => {}}
           />
-          <View
-            style={[
-              flexbox.directionRow,
-              spacings.mtSm,
-              { paddingHorizontal: '12px', gap: '6px' } as ViewStyle
-            ]}
-          >
+          <View style={[flexbox.directionRow, spacings.mtSm, { paddingHorizontal: 12, gap: 6 }]}>
             <View style={[flexbox.flex1, spacings.mrXs]}>
               <Button
                 type="secondary"

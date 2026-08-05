@@ -45,7 +45,7 @@ export function computeThresholds(
   if (allSizes.length === 0) return { unhealthy: 500, healthy: 10000 }
   const u = allSizes[Math.floor(allSizes.length * unhealthyPercentile)]
   const h = allSizes[Math.floor(allSizes.length * healthyPercentile)]
-  return { unhealthy: u, healthy: h }
+  return { unhealthy: u ?? 500, healthy: h ?? 10000 }
 }
 
 /**
@@ -213,7 +213,7 @@ function f7SpendAnonymityCost(ctx: Ctx, plan: ExecutionPlan): number {
  */
 function f8PreserveHealthyNotes(ctx: Ctx, plan: ExecutionPlan): number {
   let healthySpent = 0
-  // eslint-disable-next-line no-restricted-syntax
+
   for (const a of plan.keys())
     if (getAnonymitySetSize(ctx, getAccountValue(a)) >= ctx.healthyThreshold) healthySpent++
   return healthySpent

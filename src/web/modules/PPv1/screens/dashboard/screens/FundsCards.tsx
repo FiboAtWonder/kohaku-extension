@@ -16,8 +16,8 @@ import { Account } from '@ambire-common/interfaces/account'
 import useRailgunControllerState from '@web/hooks/useRailgunControllerState'
 import { useModalize } from 'react-native-modalize'
 import BottomSheet from '@common/components/BottomSheet'
-import { getUiType } from '@web/utils/uiType'
-import AddAccount from '@web/modules/account-select/components/AddAccount'
+import { getUiType } from '@common/utils/uiType'
+import AddAccount from '@common/modules/account-select/components/AddAccount'
 import RefreshIcon from '@common/modules/dashboard/components/DashboardOverview/RefreshIcon'
 import NewDisplayBalance from './DisplayBalance'
 import { ActiveView } from './types'
@@ -51,7 +51,7 @@ function AddPublicAccount({ activeView }: { activeView: ActiveView }) {
         closeBottomSheet={closeBottomSheet}
         scrollViewProps={{ showsVerticalScrollIndicator: false }}
       >
-        <AddAccount handleClose={closeBottomSheet as any} />
+        <AddAccount sheetRef={sheetRef} closeBottomSheet={closeBottomSheet} />
       </BottomSheet>
     </>
   )
@@ -278,7 +278,12 @@ const NewFundsCards = ({
                   marginLeft: index === 0 ? 0 : -15
                 }}
               >
-                <Avatar pfp={acc.preferences.pfp} size={30} isSmart={isSmartAccount(acc)} />
+                <Avatar
+                  address={acc.addr}
+                  pfp={acc.preferences.pfp}
+                  size={30}
+                  smartAccountType={(acc.creation && 'Ambire') || (acc.safeCreation && 'Safe')}
+                />
               </View>
             )
           })}

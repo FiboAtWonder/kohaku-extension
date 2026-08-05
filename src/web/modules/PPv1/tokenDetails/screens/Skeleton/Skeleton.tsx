@@ -9,7 +9,7 @@ import TabsAndSearchSkeleton from '@web/modules/PPv1/tokenDetails/components/Tab
 import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
 import commonWebStyles from '@web/styles/utils/common'
-import { getUiType } from '@web/utils/uiType'
+import { getUiType } from '@common/utils/uiType'
 
 import useBanners from '../../hooks/useBanners'
 import getStyles from '../styles'

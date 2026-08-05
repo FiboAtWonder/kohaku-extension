@@ -9,34 +9,35 @@ import Text from '@common/components/Text'
 import useNavigation from '@common/hooks/useNavigation'
 import useToast from '@common/hooks/useToast'
 import { ROUTES } from '@common/modules/router/constants/common'
-import useActivityControllerState from '@web/hooks/useActivityControllerState'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import Estimation from '@web/modules/sign-account-op/components/OneClick/Estimation'
-import TrackProgress from '@web/modules/sign-account-op/components/OneClick/TrackProgress'
-import Completed from '@web/modules/sign-account-op/components/OneClick/TrackProgress/ByStatus/Completed'
-import Failed from '@web/modules/sign-account-op/components/OneClick/TrackProgress/ByStatus/Failed'
-import InProgress from '@web/modules/sign-account-op/components/OneClick/TrackProgress/ByStatus/InProgress'
-import useTrackAccountOp from '@web/modules/sign-account-op/hooks/OneClick/useTrackAccountOp'
+import Estimation from '@common/modules/sign-account-op/components/OneClick/Estimation'
+import TrackProgress from '@common/components/TrackProgress'
+import Completed from '@common/components/TrackProgress/ByStatus/Completed'
+import Failed from '@common/components/TrackProgress/ByStatus/Failed'
+import InProgress from '@common/components/TrackProgress/ByStatus/InProgress'
+import useTrackAccountOp from '@common/modules/sign-account-op/hooks/OneClick/useTrackAccountOp'
 import RagequitForm from '@web/modules/PPv1/ragequit/components/RagequitForm'
 import Buttons from '@web/modules/PPv1/ragequit/components/Buttons'
 import usePrivacyPoolsForm from '@web/modules/PPv1/hooks/usePrivacyPoolsForm'
-import { getUiType } from '@web/utils/uiType'
+import { getUiType } from '@common/utils/uiType'
 import { View } from 'react-native'
 import flexbox from '@common/styles/utils/flexbox'
-import { usePrivacyPoolsDepositForm } from '@web/hooks/useDepositForm';
-import { Content, Form } from '@web/components/TransactionsScreen'
-import { Wrapper } from '../components/TransactionsScreen'
+import { usePrivacyPoolsDepositForm } from '@web/hooks/useDepositForm'
+import Modals from '@web/modules/sign-account-op/components/Modals'
+import { Content, Form, Wrapper } from '../components/TransactionsScreen'
+import useController from '@common/hooks/useController'
 
-const { isActionWindow } = getUiType()
+const { isRequestWindow } = getUiType()
 
 function RagequitScreen() {
   const hasRefreshedAccountRef = useRef(false)
-  const { dispatch } = useBackgroundService()
+  const { dispatch: requestsDispatch } = useController('RequestsController')
+  const { dispatch: privacyPoolsDispatch } = useController('PrivacyPoolsController')
   const { navigate } = useNavigation()
   const { t } = useTranslation()
   const { addToast } = useToast()
 
-  const { accountsOps } = useActivityControllerState()
+  const { accountsOps } = useController('ActivityController').state
+  const { account } = useController('SelectedAccountController').state
 
   const {
     chainId,
@@ -74,33 +75,29 @@ function RagequitScreen() {
   }, [accountsOps.privacyPools, latestBroadcastedAccountOp?.signature])
 
   const navigateOut = useCallback(async () => {
-    if (isActionWindow) {
-      dispatch({
-        type: 'CLOSE_SIGNING_ACTION_WINDOW',
-        params: {
-          type: 'transfer'
-        }
-      })
+    if (isRequestWindow) {
+      if (account) {
+        requestsDispatch({
+          type: 'method',
+          params: { method: 'removeUserRequests', args: [[`${account.addr}-transfer-sign`]] }
+        })
+      }
     } else {
       navigate(ROUTES.mainDashboard)
     }
 
-    dispatch({
-      type: 'PRIVACY_POOLS_CONTROLLER_UNLOAD_SCREEN'
-    })
+    privacyPoolsDispatch({ type: 'method', params: { method: 'unloadScreen', args: [] } })
 
     refreshPrivateAccount().catch((error) => {
       console.error('Failed to refresh private account:', error)
       addToast('Failed to refresh your privacy account. Please try again.', { type: 'error' })
     })
-  }, [dispatch, navigate, refreshPrivateAccount, addToast])
+  }, [account, requestsDispatch, privacyPoolsDispatch, navigate, refreshPrivateAccount, addToast])
 
-  const { sessionHandler, onPrimaryButtonPress } = useTrackAccountOp({
+  const { sessionHandler } = useTrackAccountOp({
     address: latestBroadcastedAccountOp?.accountAddr,
     chainId: latestBroadcastedAccountOp?.chainId,
-    sessionId: 'privacyPools',
-    submittedAccountOp,
-    navigateOut
+    sessionId: 'privacyPools'
   })
 
   const explorerLink = useMemo(() => {
@@ -132,39 +129,28 @@ function RagequitScreen() {
 
   useEffect(() => {
     return () => {
-      dispatch({ type: 'PRIVACY_POOLS_CONTROLLER_UNLOAD_SCREEN' })
+      privacyPoolsDispatch({ type: 'method', params: { method: 'unloadScreen', args: [] } })
     }
-  }, [dispatch])
-
-  const handleBroadcastAccountOp = useCallback(() => {
-    dispatch({
-      type: 'MAIN_CONTROLLER_HANDLE_SIGN_AND_BROADCAST_ACCOUNT_OP',
-      params: {
-        updateType: 'PrivacyPools'
-      }
-    })
-  }, [dispatch])
+  }, [privacyPoolsDispatch])
 
   const handleUpdateStatus = useCallback(
     (status: SigningStatus) => {
-      dispatch({
-        type: 'PRIVACY_POOLS_CONTROLLER_SIGN_ACCOUNT_OP_UPDATE_STATUS',
-        params: {
-          status
-        }
+      privacyPoolsDispatch({
+        type: 'method',
+        params: { method: 'callSignAccountOpMethod', args: ['updateStatus', [status]] }
       })
     },
-    [dispatch]
+    [privacyPoolsDispatch]
   )
 
   const updateController = useCallback(
     (params: { signingKeyAddr?: Key['addr']; signingKeyType?: Key['type'] }) => {
-      dispatch({
-        type: 'PRIVACY_POOLS_CONTROLLER_SIGN_ACCOUNT_OP_UPDATE',
-        params
+      privacyPoolsDispatch({
+        type: 'method',
+        params: { method: 'callSignAccountOpMethod', args: ['update', [params]] }
       })
     },
-    [dispatch]
+    [privacyPoolsDispatch]
   )
 
   const isRagequitFormValid = useMemo(() => {
@@ -202,7 +188,6 @@ function RagequitScreen() {
     ) {
       hasRefreshedAccountRef.current = true
       refreshPrivateAccount().catch((error) => {
-        // eslint-disable-next-line no-console
         console.error('Failed to refresh private account after deposit:', error)
         addToast('Failed to refresh your privacy account. Please try again.', { type: 'error' })
       })
@@ -212,10 +197,11 @@ function RagequitScreen() {
   if (displayedView === 'track') {
     return (
       <TrackProgress
-        onPrimaryButtonPress={onPrimaryButtonPress}
+        onPrimaryButtonPress={navigateOut}
         handleClose={() => {
-          dispatch({
-            type: 'PRIVACY_POOLS_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP'
+          privacyPoolsDispatch({
+            type: 'method',
+            params: { method: 'destroyLatestBroadcastedAccountOp', args: [] }
           })
         }}
       >
@@ -254,7 +240,7 @@ function RagequitScreen() {
       <Content buttons={buttons}>
         <Form>
           <RagequitForm
-            poolInfo={poolInfo}
+            poolInfo={poolInfo ?? undefined}
             // totalPendingBalance={totalPendingBalance}
             totalDeclinedBalance={totalDeclinedBalance}
             ethPrice={ethPrice || 0}
@@ -269,9 +255,9 @@ function RagequitScreen() {
         closeEstimationModal={closeEstimationModal}
         updateController={updateController}
         handleUpdateStatus={handleUpdateStatus}
-        handleBroadcastAccountOp={handleBroadcastAccountOp}
         hasProceeded={!!hasProceeded}
         signAccountOpController={signAccountOpController || null}
+        Modals={Modals}
       />
     </Wrapper>
   )

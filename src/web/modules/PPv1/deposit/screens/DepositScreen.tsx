@@ -12,27 +12,27 @@ import KohakuLogo from '@common/components/HokahuLogo'
 import useNavigation from '@common/hooks/useNavigation'
 import useToast from '@common/hooks/useToast'
 // import { ROUTES } from '@common/modules/router/constants/common'
-import useActivityControllerState from '@web/hooks/useActivityControllerState'
-import useBackgroundService from '@web/hooks/useBackgroundService'
 import useRailgunControllerState from '@web/hooks/useRailgunControllerState'
-import Estimation from '@web/modules/sign-account-op/components/OneClick/Estimation'
-// import TrackProgress from '@web/modules/sign-account-op/components/OneClick/TrackProgress'
-import Completed from '@web/modules/sign-account-op/components/OneClick/TrackProgress/ByStatus/Completed'
-import Failed from '@web/modules/sign-account-op/components/OneClick/TrackProgress/ByStatus/Failed'
-// import InProgress from '@web/modules/sign-account-op/components/OneClick/TrackProgress/ByStatus/InProgress'
-import useTrackAccountOp from '@web/modules/sign-account-op/hooks/OneClick/useTrackAccountOp'
+import Estimation from '@common/modules/sign-account-op/components/OneClick/Estimation'
+// import TrackProgress from '@common/components/TrackProgress'
+import Completed from '@common/components/TrackProgress/ByStatus/Completed'
+import Failed from '@common/components/TrackProgress/ByStatus/Failed'
+// import InProgress from '@common/components/TrackProgress/ByStatus/InProgress'
+import useTrackAccountOp from '@common/modules/sign-account-op/hooks/OneClick/useTrackAccountOp'
 import DepositForm from '@web/modules/PPv1/deposit/components/DepositForm/DepositForm'
 import Buttons from '@web/modules/PPv1/deposit/components/Buttons'
 import useDepositForm from '@web/hooks/useDepositForm'
-import { getUiType } from '@web/utils/uiType'
+import { getUiType } from '@common/utils/uiType'
 import flexbox from '@common/styles/utils/flexbox'
 import { Content } from '@web/components/TransactionsScreen'
 import { TokenResult } from '@ambire-common/libs/portfolio'
+import Modals from '@web/modules/sign-account-op/components/Modals'
 import { Form, Wrapper } from '../components/TransactionsScreen'
+import useController from '@common/hooks/useController'
 // import Button from '@common/components/Button'
 // import { SubmittedAccountOp } from '@ambire-common/libs/accountOp/submittedAccountOp'
 
-const { isActionWindow } = getUiType()
+const { isRequestWindow } = getUiType()
 
 const TERMINAL_STATUSES = [
   AccountOpStatus.Success,
@@ -44,14 +44,17 @@ const TERMINAL_STATUSES = [
 
 function TransferScreen() {
   const hasRefreshedAccountRef = useRef(false)
-  const { dispatch } = useBackgroundService()
+  const { dispatch: requestsDispatch } = useController('RequestsController')
+  const { dispatch: privacyPoolsDispatch } = useController('PrivacyPoolsController')
+  const { dispatch: railgunV2Dispatch } = useController('RailgunV2Controller')
   const { navigate, dashGoBack } = useNavigation()
   const location = useLocation()
   const { t } = useTranslation()
   const { addToast } = useToast()
   const defaultToken = ((location.state as any)?.token as TokenResult) ?? null
 
-  const { accountsOps } = useActivityControllerState()
+  const { accountsOps } = useController('ActivityController').state
+  const { account } = useController('SelectedAccountController').state
 
   const {
     chainId,
@@ -112,24 +115,23 @@ function TransferScreen() {
   ])
 
   const navigateOut = useCallback(async () => {
-    if (isActionWindow) {
-      dispatch({
-        type: 'CLOSE_SIGNING_ACTION_WINDOW',
-        params: {
-          type: 'transfer'
-        }
-      })
+    if (isRequestWindow) {
+      if (account) {
+        requestsDispatch({
+          type: 'method',
+          params: { method: 'removeUserRequests', args: [[`${account.addr}-transfer-sign`]] }
+        })
+      }
     } else {
       dashGoBack()
     }
 
-    dispatch({
-      type: 'RAILGUN_V2_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP'
+    railgunV2Dispatch({
+      type: 'method',
+      params: { method: 'destroyLatestBroadcastedAccountOp', args: [] }
     })
-    dispatch({
-      type: 'PRIVACY_POOLS_CONTROLLER_UNLOAD_SCREEN'
-    })
-  }, [dispatch, navigate, privacyProvider])
+    privacyPoolsDispatch({ type: 'method', params: { method: 'unloadScreen', args: [] } })
+  }, [account, dashGoBack, privacyPoolsDispatch, railgunV2Dispatch, requestsDispatch])
 
   // Use 'transfer' sessionId for Railgun, 'privacyPools' for Privacy Pools
   const sessionId = useMemo(() => {
@@ -139,9 +141,7 @@ function TransferScreen() {
   const { sessionHandler } = useTrackAccountOp({
     address: latestBroadcastedAccountOp?.accountAddr,
     chainId: latestBroadcastedAccountOp?.chainId,
-    sessionId,
-    submittedAccountOp,
-    navigateOut
+    sessionId
   })
 
   // Helper to check if the submittedAccountOp matches a deposit (not a withdrawal)
@@ -187,7 +187,6 @@ function TransferScreen() {
     ) {
       hasRefreshedAccountRef.current = true
       refreshPrivateAccount().catch((error) => {
-        // eslint-disable-next-line no-console
         console.error('Failed to refresh private account after deposit:', error)
         addToast('Failed to refresh your privacy account. Please try again.', { type: 'error' })
       })
@@ -213,7 +212,10 @@ function TransferScreen() {
       latestBroadcastedAccountOp?.status &&
       TERMINAL_STATUSES.includes(latestBroadcastedAccountOp.status)
     ) {
-      dispatch({ type: 'RAILGUN_V2_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP' })
+      railgunV2Dispatch({
+        type: 'method',
+        params: { method: 'destroyLatestBroadcastedAccountOp', args: [] }
+      })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -228,7 +230,6 @@ function TransferScreen() {
   useEffect(() => {
     if (!isAccountLoaded) {
       loadPrivateAccount().catch((error) => {
-        // eslint-disable-next-line no-console
         console.error('Failed to load private account:', error)
         addToast('Failed to load your privacy account. Please try again.', { type: 'error' })
       })
@@ -237,72 +238,41 @@ function TransferScreen() {
 
   useEffect(() => {
     return () => {
-      dispatch({ type: 'PRIVACY_POOLS_CONTROLLER_UNLOAD_SCREEN' })
+      privacyPoolsDispatch({ type: 'method', params: { method: 'unloadScreen', args: [] } })
 
-      dispatch({
-        type: 'PRIVACY_POOLS_CONTROLLER_RESET_FORM'
-      })
+      privacyPoolsDispatch({ type: 'method', params: { method: 'resetForm', args: [] } })
 
       // Reset hasProceeded for the currently selected controller when navigating back
-      dispatch({
-        type: 'PRIVACY_POOLS_CONTROLLER_HAS_USER_PROCEEDED',
-        params: {
-          proceeded: false
-        }
+      privacyPoolsDispatch({
+        type: 'method',
+        params: { method: 'setUserProceeded', args: [false] }
       })
-      dispatch({
-        type: 'RAILGUN_V2_CONTROLLER_HAS_USER_PROCEEDED',
-        params: {
-          proceeded: false
-        }
-      })
+      railgunV2Dispatch({ type: 'method', params: { method: 'setUserProceeded', args: [false] } })
     }
-  }, [dispatch])
+  }, [privacyPoolsDispatch, railgunV2Dispatch])
 
-  const handleBroadcastAccountOp = useCallback(() => {
-    const updateType = privacyProvider === 'railgun' ? 'RailgunV2' : 'PrivacyPoolsV1'
-    dispatch({
-      type: 'MAIN_CONTROLLER_HANDLE_SIGN_AND_BROADCAST_ACCOUNT_OP',
-      params: {
-        updateType
-      }
-    })
-  }, [dispatch, privacyProvider])
+  // The active privacy controller owns the nested sign-account-op controller (kohaku)
+  const signAccountOpDispatch =
+    privacyProvider === 'railgun' ? railgunV2Dispatch : privacyPoolsDispatch
 
   const handleUpdateStatus = useCallback(
     (status: SigningStatus) => {
-      const actionType =
-        privacyProvider === 'railgun'
-          ? 'RAILGUN_V2_CONTROLLER_SIGN_ACCOUNT_OP_UPDATE_STATUS'
-          : 'PRIVACY_POOLS_CONTROLLER_SIGN_ACCOUNT_OP_UPDATE_STATUS'
-      dispatch({
-        type: actionType,
-        params: {
-          status
-        }
+      signAccountOpDispatch({
+        type: 'method',
+        params: { method: 'callSignAccountOpMethod', args: ['updateStatus', [status]] }
       })
     },
-    [dispatch, privacyProvider]
+    [signAccountOpDispatch]
   )
 
   const updateController = useCallback(
     (params: { signingKeyAddr?: Key['addr']; signingKeyType?: Key['type'] }) => {
-      console.log(
-        'DEBUG: updateController called with params:',
-        params,
-        'privacyProvider:',
-        privacyProvider
-      )
-      const actionType =
-        privacyProvider === 'railgun'
-          ? 'RAILGUN_V2_CONTROLLER_SIGN_ACCOUNT_OP_UPDATE'
-          : 'PRIVACY_POOLS_CONTROLLER_SIGN_ACCOUNT_OP_UPDATE'
-      dispatch({
-        type: actionType,
-        params
+      signAccountOpDispatch({
+        type: 'method',
+        params: { method: 'callSignAccountOpMethod', args: ['update', [params]] }
       })
     },
-    [dispatch, privacyProvider]
+    [signAccountOpDispatch]
   )
 
   const isTransferFormValid = useMemo(() => {
@@ -328,7 +298,7 @@ function TransferScreen() {
 
   const onBack = useCallback(() => {
     dashGoBack()
-  }, [navigate, dispatch])
+  }, [dashGoBack])
 
   const headerTitle = t('Shield Funds')
 
@@ -366,45 +336,32 @@ function TransferScreen() {
   ])
 
   const resetScreen = useCallback(() => {
-    if (
-      submittedAccountOp &&
-      (submittedAccountOp.status === AccountOpStatus.Success ||
-        submittedAccountOp.status === AccountOpStatus.UnknownButPastNonce)
-    ) {
-      dispatch({
-        type: 'ACTIVITY_CONTROLLER_HIDE_BANNER',
-        params: { ...submittedAccountOp, addr: submittedAccountOp.accountAddr }
-      })
-    }
+    // @TODO (kohaku-resync) The completed shield's dashboard banner used to be hidden here via
+    // `ACTIVITY_CONTROLLER_HIDE_BANNER`. Upstream removed `ActivityController.hideBanner` in
+    // favour of `setDashboardBannersSeen(sessionId, accountAddr)`, which only applies to
+    // `dashboard*` sessions, so it cannot hide this screen's banner. Needs a new API.
 
-    dispatch({
-      type: 'RAILGUN_V2_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP'
+    railgunV2Dispatch({
+      type: 'method',
+      params: { method: 'destroyLatestBroadcastedAccountOp', args: [] }
     })
     // Tear down the previous shield's sign-account-op so the next shield's
     // syncSignAccountOp doesn't early-return on a stale controller.
-    dispatch({ type: 'RAILGUN_V2_CONTROLLER_DESTROY_SIGN_ACCOUNT_OP' })
+    railgunV2Dispatch({ type: 'method', params: { method: 'destroySignAccountOp', args: [] } })
 
-    dispatch({ type: 'PRIVACY_POOLS_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP' })
-    dispatch({ type: 'PRIVACY_POOLS_CONTROLLER_UNLOAD_SCREEN' })
-    dispatch({ type: 'PRIVACY_POOLS_CONTROLLER_RESET_FORM' })
+    privacyPoolsDispatch({
+      type: 'method',
+      params: { method: 'destroyLatestBroadcastedAccountOp', args: [] }
+    })
+    privacyPoolsDispatch({ type: 'method', params: { method: 'unloadScreen', args: [] } })
+    privacyPoolsDispatch({ type: 'method', params: { method: 'resetForm', args: [] } })
 
     // Reset hasProceeded for the currently selected controller
     // to prevent double-click issue when depositing again
-    dispatch({
-      type: 'PRIVACY_POOLS_CONTROLLER_HAS_USER_PROCEEDED',
-      params: {
-        proceeded: false
-      }
-    })
-    dispatch({
-      type: 'RAILGUN_V2_CONTROLLER_HAS_USER_PROCEEDED',
-      params: {
-        proceeded: false
-      }
-    })
+    privacyPoolsDispatch({ type: 'method', params: { method: 'setUserProceeded', args: [false] } })
+    railgunV2Dispatch({ type: 'method', params: { method: 'setUserProceeded', args: [false] } })
     resetForm()
-  }, [submittedAccountOp, dispatch, resetForm])
-
+  }, [privacyPoolsDispatch, railgunV2Dispatch, resetForm])
 
   const buttons = useMemo(() => {
     return (
@@ -499,9 +456,9 @@ function TransferScreen() {
           closeEstimationModal={closeEstimationModal}
           updateController={updateController}
           handleUpdateStatus={handleUpdateStatus}
-          handleBroadcastAccountOp={handleBroadcastAccountOp}
           hasProceeded={!!hasProceeded}
           signAccountOpController={signAccountOpController || null}
+          Modals={Modals}
         />
       )}
     </Wrapper>

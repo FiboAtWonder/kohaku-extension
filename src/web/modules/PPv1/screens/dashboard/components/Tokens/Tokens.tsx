@@ -11,20 +11,20 @@ import useToast from '@common/hooks/useToast'
 import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
 import { setStringAsync } from '@common/utils/clipboard'
-import { getUiType } from '@web/utils/uiType'
+import { getUiType } from '@common/utils/uiType'
 import useRailgunControllerState from '@web/hooks/useRailgunControllerState'
 import useRailgunForm from '@web/modules/railgun/hooks/useRailgunForm'
-import { useCustomHover, AnimatedPressable } from '@web/hooks/useHover'
+import { useCustomHover, AnimatedPressable } from '@common/hooks/useHover'
 import { ZERO_ADDRESS } from '@ambire-common/services/socket/constants'
 import { PrivacyProtocolType } from '@web/modules/PPv1/types/privacy'
 import { toHex } from 'viem'
 
 import { usePrivacyPoolsDepositForm } from '@web/hooks/useDepositForm'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
 import DashboardPageScrollContainer from '../DashboardPageScrollContainer'
 import TabsAndSearch from '../TabsAndSearch'
 import { TabType } from '../TabsAndSearch/Tabs/Tab/Tab'
 import TokenItem from './TokenItem'
+import useController from '@common/hooks/useController'
 
 interface Props {
   openTab: TabType
@@ -74,7 +74,7 @@ const Tokens = ({
 
   const { ethPrice, totalApprovedBalance, isAccountLoaded, isReadyToLoad } =
     usePrivacyPoolsDepositForm()
-  const { portfolio } = useSelectedAccountControllerState()
+  const { portfolio } = useController('SelectedAccountController').state
   const { isAccountLoaded: railgunIsAccountLoaded } = useRailgunForm()
 
   const { zkAddress: railgunAddress, railgunAccountsState } = useRailgunControllerState()
@@ -159,12 +159,12 @@ const Tokens = ({
         const isEthLike = address === ZERO_ADDRESS.toLowerCase() || WETH_ADDRESSES.has(address)
         tokens.push({
           id: `approved-railgun-${address}`,
-          name: isEthLike ? 'Ethereum' : portfolioToken?.name ?? address,
-          symbol: `${isEthLike ? 'ETH' : portfolioToken?.symbol ?? address} (Railgun)`,
+          name: isEthLike ? 'Ethereum' : (portfolioToken?.name ?? address),
+          symbol: `${isEthLike ? 'ETH' : (portfolioToken?.symbol ?? address)} (Railgun)`,
           amount: bal.amount,
           address,
           chainId: portfolioToken?.chainId ?? 11155111,
-          decimals: isEthLike ? 18 : portfolioToken?.decimals ?? 18,
+          decimals: isEthLike ? 18 : (portfolioToken?.decimals ?? 18),
           priceIn: [
             {
               baseCurrency: 'usd',

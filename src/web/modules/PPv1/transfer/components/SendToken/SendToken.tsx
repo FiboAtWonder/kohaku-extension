@@ -13,9 +13,9 @@ import useTheme from '@common/hooks/useTheme'
 import spacings from '@common/styles/spacings'
 import { THEME_TYPES } from '@common/styles/themeConfig'
 import flexbox from '@common/styles/utils/flexbox'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
-import MaxAmount from '@web/modules/swap-and-bridge/components/MaxAmount'
+import MaxAmount from '@common/modules/swap-and-bridge/components/MaxAmount'
 import getStyles from './styles'
+import useController from '@common/hooks/useController'
 
 type Props = {
   fromTokenOptions: SelectValue[]
@@ -58,7 +58,7 @@ const SendToken: FC<Props> = ({
   maxAmountDisabled,
   disabled
 }) => {
-  const { portfolio } = useSelectedAccountControllerState()
+  const { portfolio } = useController('SelectedAccountController').state
   const { theme, styles, themeType } = useTheme(getStyles)
   const { t } = useTranslation()
   const heading = title ?? t('Send')
@@ -116,7 +116,7 @@ const SendToken: FC<Props> = ({
               }}
               disabled={disabled || fromTokenAmountSelectDisabled}
               containerStyle={[
-                spacings.mb0,
+                { ...spacings.mb0 },
                 flexbox.flex1,
                 {
                   overflow: 'hidden'

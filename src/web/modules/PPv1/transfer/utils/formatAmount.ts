@@ -37,8 +37,8 @@ export const formatAmount = (value: string | number): string => {
     absValue < VERY_SMALL_THRESHOLD
       ? DECIMALS_FOR_VERY_SMALL
       : absValue < LARGE_THRESHOLD
-      ? DECIMALS_FOR_MEDIUM
-      : DECIMALS_FOR_LARGE
+        ? DECIMALS_FOR_MEDIUM
+        : DECIMALS_FOR_LARGE
 
   const multiplier = 10 ** decimals
   const rounded =

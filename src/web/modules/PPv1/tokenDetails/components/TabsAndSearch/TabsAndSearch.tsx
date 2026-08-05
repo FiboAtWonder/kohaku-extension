@@ -13,9 +13,9 @@ import useBanners from '@web/modules/PPv1/tokenDetails/hooks/useBanners'
 import spacings from '@common/styles/spacings'
 import { THEME_TYPES } from '@common/styles/themeConfig'
 import flexbox from '@common/styles/utils/flexbox'
-import { AnimatedPressable, useMultiHover } from '@web/hooks/useHover'
-import DURATIONS from '@web/hooks/useHover/durations'
-import { getUiType } from '@web/utils/uiType'
+import { AnimatedPressable, useMultiHover } from '@common/hooks/useHover'
+import DURATIONS from '@common/hooks/useHover/durations'
+import { getUiType } from '@common/utils/uiType'
 
 import SelectNetwork from './SelectNetwork'
 import getStyles from './styles'
@@ -133,7 +133,6 @@ const TabsAndSearch: FC<Props> = ({ openTab, setOpenTab, searchControl, sessionI
             <View style={[styles.searchContainer]} ref={searchRef}>
               <Search
                 autoFocus
-                borderWrapperStyle={styles.borderWrapper}
                 inputWrapperStyle={styles.searchInputWrapper}
                 control={searchControl}
                 height={32}

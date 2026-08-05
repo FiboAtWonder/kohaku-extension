@@ -17,7 +17,7 @@ const styles = StyleSheet.create<Style>({
     maxWidth: '100%',
     width: '100%'
   },
-  tokenSelect: spacings.mbLg
+  tokenSelect: { ...spacings.mbLg }
 })
 
 export default styles

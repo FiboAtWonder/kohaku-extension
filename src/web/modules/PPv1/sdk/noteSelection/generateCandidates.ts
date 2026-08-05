@@ -59,11 +59,13 @@ function generateSanitizationCandidates(ctx: Ctx, wAmount: bigint): ExecutionPla
       const unhealthyCount = unhealthy.length
 
       // Use traditional for loop to avoid closure issues
-      // eslint-disable-next-line no-plusplus
+
       for (let i = 0; i < unhealthyCount; i++) {
         if (remain <= 0n) break
 
         const account = unhealthy[i]
+        if (!account) continue
+
         const accountValue = getAccountValue(account)
         const alreadyUsed = bites.get(account) ?? 0n
         const available = accountValue - alreadyUsed

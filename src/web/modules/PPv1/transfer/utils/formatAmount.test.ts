@@ -101,8 +101,8 @@ describe('formatAmount', () => {
     it('should remove trailing zeros', () => {
       expect(formatAmount(1.0)).toBe('1')
       expect(formatAmount(1.1)).toBe('1.1')
-      expect(formatAmount(1.10)).toBe('1.1')
-      expect(formatAmount(1.1000)).toBe('1.1')
+      expect(formatAmount(1.1)).toBe('1.1')
+      expect(formatAmount(1.1)).toBe('1.1')
       expect(formatAmount(10.0)).toBe('10')
     })
   })
@@ -137,7 +137,7 @@ describe('formatAmount', () => {
     it('should remove trailing zeros', () => {
       expect(formatAmount(100.0)).toBe('100')
       expect(formatAmount(100.1)).toBe('100.1')
-      expect(formatAmount(100.10)).toBe('100.1')
+      expect(formatAmount(100.1)).toBe('100.1')
     })
   })
 
@@ -179,4 +179,3 @@ describe('formatAmount', () => {
     })
   })
 })
-

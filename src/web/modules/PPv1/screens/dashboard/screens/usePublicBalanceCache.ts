@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import eventBus from '@web/extension-services/event/eventBus'
+import useController from '@common/hooks/useController'
+import eventBus from '@common/services/event/eventBus'
 
 const usePublicBalanceCache = ({
   accounts,
@@ -14,7 +14,7 @@ const usePublicBalanceCache = ({
   portfolioIsAllReady: boolean | undefined
   portfolioTotalBalance: number | null | undefined
 }) => {
-  const { dispatch } = useBackgroundService()
+  const { dispatch: portfolioDispatch } = useController('PortfolioController')
   const [balanceCache, setBalanceCache] = useState<{ [addr: string]: number }>({})
   const [isLoadingPublicBalances, setIsLoadingPublicBalances] = useState(true)
   const hasRequestedRef = useRef(false)
@@ -29,6 +29,26 @@ const usePublicBalanceCache = ({
     }
   }, [accountAddr, portfolioIsAllReady, portfolioTotalBalance])
 
+  /**
+   * @TODO (kohaku-resync) The `PORTFOLIO_LOAD_ACCOUNTS_TOTAL_BALANCES` background handler that
+   * aggregated the per-account totals and emitted the `accountTotalBalances` event was removed
+   * when upstream replaced the typed action switch with the generic controller-method dispatcher.
+   * Refreshing each account's portfolio still works, but the aggregated event never arrives, so
+   * the listener below stays idle. The aggregation has to be reimplemented (e.g. as a
+   * `PortfolioController` method) before the public balances list can render again.
+   */
+  const loadTotalBalancesFor = useCallback(
+    (addrs: string[]) => {
+      addrs.forEach((addr) => {
+        portfolioDispatch({
+          type: 'method',
+          params: { method: 'updateSelectedAccount', args: [addr] }
+        })
+      })
+    },
+    [portfolioDispatch]
+  )
+
   // On mount, request all account balances in parallel
   useEffect(() => {
     if (!accounts.length || !accountAddr || hasRequestedRef.current) return
@@ -41,11 +61,8 @@ const usePublicBalanceCache = ({
       return
     }
 
-    dispatch({
-      type: 'PORTFOLIO_LOAD_ACCOUNTS_TOTAL_BALANCES',
-      params: { accountAddrs: otherAddrs }
-    })
-  }, [accounts, accountAddr, dispatch])
+    loadTotalBalancesFor(otherAddrs)
+  }, [accounts, accountAddr, loadTotalBalancesFor])
 
   // Listen for the parallel-loaded results from the background
   useEffect(() => {
@@ -60,7 +77,7 @@ const usePublicBalanceCache = ({
 
   const refreshPublicBalances = useCallback(() => {
     if (!accounts.length || !accountAddr) return
-    setBalanceCache((prev) => ({ [accountAddr]: prev[accountAddr] }))
+    setBalanceCache((prev) => ({ [accountAddr]: prev[accountAddr] ?? 0 }))
     setIsLoadingPublicBalances(true)
     hasRequestedRef.current = false
 
@@ -70,11 +87,8 @@ const usePublicBalanceCache = ({
       return
     }
 
-    dispatch({
-      type: 'PORTFOLIO_LOAD_ACCOUNTS_TOTAL_BALANCES',
-      params: { accountAddrs: otherAddrs }
-    })
-  }, [accounts, accountAddr, dispatch])
+    loadTotalBalancesFor(otherAddrs)
+  }, [accounts, accountAddr, loadTotalBalancesFor])
 
   return { balanceCache, isLoadingPublicBalances, refreshPublicBalances }
 }

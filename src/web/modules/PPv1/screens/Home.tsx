@@ -1,12 +1,11 @@
-/* eslint-disable no-console */
 import React, { useEffect, useRef } from 'react'
-import useBackgroundService from '@web/hooks/useBackgroundService'
+import useController from '@common/hooks/useController'
 import useToast from '@common/hooks/useToast'
 import DashboardScreen from './dashboard/screens/DashboardScreen'
 import usePrivacyPoolsForm from '../hooks/usePrivacyPoolsForm'
 
 const HomeScreen = () => {
-  const { dispatch } = useBackgroundService()
+  const { dispatch: privacyPoolsDispatch } = useController('PrivacyPoolsController')
   const { addToast } = useToast()
   // const { isAccountLoaded, isReadyToLoad, loadPrivateAccount } = usePrivacyPoolsForm()
   const hasLoadedRef = useRef(false)
@@ -23,9 +22,9 @@ const HomeScreen = () => {
 
   useEffect(() => {
     return () => {
-      dispatch({ type: 'PRIVACY_POOLS_CONTROLLER_UNLOAD_SCREEN' })
+      privacyPoolsDispatch({ type: 'method', params: { method: 'unloadScreen', args: [] } })
     }
-  }, [dispatch])
+  }, [privacyPoolsDispatch])
 
   return <DashboardScreen />
 }

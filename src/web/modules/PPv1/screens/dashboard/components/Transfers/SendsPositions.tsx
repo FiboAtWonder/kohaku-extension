@@ -12,13 +12,11 @@ import TabsAndSearch from '@web/modules/PPv1/screens/dashboard/components/TabsAn
 import { TabType } from '@web/modules/PPv1/screens/dashboard/components/TabsAndSearch/Tabs/Tab/Tab'
 import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
-import useActivityControllerState from '@web/hooks/useActivityControllerState'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
-import SubmittedTransactionSummary from '@web/modules/settings/components/TransactionHistory/SubmittedTransactionSummary'
-import { getUiType } from '@web/utils/uiType'
+import SubmittedTransactionSummary from '@common/modules/settings/components/TransactionHistory/SubmittedTransactionSummary'
+import { getUiType } from '@common/utils/uiType'
 
 import styles from '../Activity/styles'
+import useController from '@common/hooks/useController'
 
 interface Props {
   openTab: TabType
@@ -46,31 +44,36 @@ const SendsPositions: FC<Props> = ({
   const { t } = useTranslation()
   const { theme } = useTheme()
 
-  const { dispatch } = useBackgroundService()
-  const { accountsOps } = useActivityControllerState()
-  const { account, dashboardNetworkFilter } = useSelectedAccountControllerState()
+  const {
+    state: { accountsOps },
+    dispatch: activityDispatch
+  } = useController('ActivityController')
+  const { account, dashboardNetworkFilter } = useController('SelectedAccountController').state
 
   useEffect(() => {
     // Optimization: Don't apply filtration if we are not on Transfers tab
     if (!account?.addr || openTab !== 'sends') return
 
-    dispatch({
-      type: 'MAIN_CONTROLLER_ACTIVITY_SET_ACC_OPS_FILTERS',
+    activityDispatch({
+      type: 'method',
       params: {
-        sessionId,
-        filters: {
-          account: account.addr,
-          ...(dashboardNetworkFilter && {
-            chainId: dashboardNetworkFilter ? BigInt(dashboardNetworkFilter) : undefined
-          })
-        },
-        pagination: {
-          itemsPerPage: ITEMS_PER_PAGE,
-          fromPage: 0
-        }
+        method: 'filterAccountsOps',
+        args: [
+          sessionId,
+          {
+            account: account.addr,
+            ...(dashboardNetworkFilter && {
+              chainId: dashboardNetworkFilter ? BigInt(dashboardNetworkFilter) : undefined
+            })
+          },
+          {
+            itemsPerPage: ITEMS_PER_PAGE,
+            fromPage: 0
+          }
+        ]
       }
     })
-  }, [openTab, account?.addr, dispatch, dashboardNetworkFilter, sessionId])
+  }, [openTab, account?.addr, activityDispatch, dashboardNetworkFilter, sessionId])
 
   const renderItem = useCallback(
     ({ item }: any) => {
@@ -121,20 +124,26 @@ const SendsPositions: FC<Props> = ({
               size="small"
               style={[flexbox.alignSelfCenter, spacings.mbSm]}
               onPress={() => {
-                dispatch({
-                  type: 'MAIN_CONTROLLER_ACTIVITY_SET_ACC_OPS_FILTERS',
+                activityDispatch({
+                  type: 'method',
                   params: {
-                    sessionId,
-                    filters: {
-                      account: account!.addr,
-                      ...(dashboardNetworkFilter && {
-                        chainId: dashboardNetworkFilter ? BigInt(dashboardNetworkFilter) : undefined
-                      })
-                    },
-                    pagination: {
-                      itemsPerPage: accountsOps[sessionId].pagination.itemsPerPage + ITEMS_PER_PAGE,
-                      fromPage: 0
-                    }
+                    method: 'filterAccountsOps',
+                    args: [
+                      sessionId,
+                      {
+                        account: account!.addr,
+                        ...(dashboardNetworkFilter && {
+                          chainId: dashboardNetworkFilter
+                            ? BigInt(dashboardNetworkFilter)
+                            : undefined
+                        })
+                      },
+                      {
+                        itemsPerPage:
+                          (accountsOps[sessionId]?.pagination.itemsPerPage ?? 0) + ITEMS_PER_PAGE,
+                        fromPage: 0
+                      }
+                    ]
                   }
                 })
               }}
@@ -165,7 +174,7 @@ const SendsPositions: FC<Props> = ({
       dashboardNetworkFilter,
       dashboardNetworkFilterName,
       accountsOps,
-      dispatch
+      activityDispatch
     ]
   )
 

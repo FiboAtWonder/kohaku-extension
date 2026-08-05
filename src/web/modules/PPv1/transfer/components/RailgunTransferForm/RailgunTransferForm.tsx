@@ -14,11 +14,10 @@ import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
 import useTheme from '@common/hooks/useTheme'
 import formatDecimals from '@ambire-common/utils/formatDecimals/formatDecimals'
-import { getTokenId } from '@web/utils/token'
+import { getTokenId } from '@common/utils/token'
 import { ZERO_ADDRESS } from '@ambire-common/services/socket/constants'
 import { TokenResult } from '@ambire-common/libs/portfolio'
 
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
 import Recipient from '../Recipient'
 
 import SendToken from '../SendToken'
@@ -26,6 +25,7 @@ import { formatAmount } from '../../utils/formatAmount'
 import getStyles from '../TransferForm/styles'
 import Disclaimer from '../Disclaimer'
 import PrivacyNotice from '../PrivacyNotice'
+import useController from '@common/hooks/useController'
 
 const defaultEthToken: TokenResult = {
   address: ZERO_ADDRESS,
@@ -40,7 +40,8 @@ const defaultEthToken: TokenResult = {
     canTopUpGasTank: false,
     isFeeToken: false
   },
-  priceIn: []
+  priceIn: [],
+  marketDataIn: []
 }
 
 const RailgunTransferForm = ({
@@ -82,7 +83,7 @@ const RailgunTransferForm = ({
   isRecipientAddressUnknownAgreed: boolean
   addressState: any
   controllerAmount: string
-  totalApprovedBalance: { total: bigint; accounts: [] }
+  totalApprovedBalance: { total: bigint; accounts: unknown[] }
   totalPrivateBalancesFormatted: Record<
     string,
     { amount: string; decimals: number; symbol: string; name: string }
@@ -92,7 +93,7 @@ const RailgunTransferForm = ({
   disabled?: boolean
 }) => {
   const { validation } = addressInputState
-  const { account, portfolio } = useSelectedAccountControllerState()
+  const { account, portfolio } = useController('SelectedAccountController').state
   const { t } = useTranslation()
   const { styles } = useTheme(getStyles)
 
@@ -142,6 +143,8 @@ const RailgunTransferForm = ({
       if (addedAddresses.has(tokenAddressLower)) return
 
       const balanceInfo = totalPrivateBalancesFormatted[tokenAddressLower]
+      if (!balanceInfo) return
+
       // Create a basic token object from the balance info
       const token: any = {
         address: tokenAddressLower, // Use lowercase for consistency

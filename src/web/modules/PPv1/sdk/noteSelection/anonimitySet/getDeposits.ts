@@ -15,9 +15,13 @@ const chainDataConfig = PPv1ChainData[sepolia.id]
  * @throws {DataError} If client is not configured, network error occurs, or event data is invalid
  */
 export async function getDeposits(
-  // eslint-disable-next-line @typescript-eslint/no-shadow
   chainData: typeof chainDataConfig = chainDataConfig
 ): Promise<DepositEvent[]> {
+  if (!chainData) throw new Error('getDeposits: no chain data configured for Sepolia')
+
+  const pool = chainData.poolInfo[0]
+  if (!pool) throw new Error('getDeposits: no privacy pool configured for Sepolia')
+
   const HYPERSYNC_RPC_URL = `${chainData.sdkRpcUrl}${HYPERSYNC_API_KEY}`
   const client = createPublicClient({
     chain: sepolia,
@@ -29,9 +33,9 @@ export async function getDeposits(
   )
 
   const logs = await client.getLogs({
-    address: chainData.poolInfo[0].address,
+    address: pool.address,
     event: DEPOSIT_EVENT,
-    fromBlock: chainData.poolInfo[0].deploymentBlock ?? 0
+    fromBlock: pool.deploymentBlock ?? 0
   })
 
   return logs.map((log) => {

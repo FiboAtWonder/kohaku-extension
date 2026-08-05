@@ -31,7 +31,7 @@ const Buttons: FC<Props> = ({
 
   const oneClickDisabledReason = useMemo(() => {
     if (signAccountOpErrors.length > 0) {
-      return signAccountOpErrors[0].title
+      return signAccountOpErrors[0]?.title ?? ''
     }
 
     return ''

@@ -12,9 +12,8 @@ import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
 import useTheme from '@common/hooks/useTheme'
 
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
 import { PoolAccount } from '@web/contexts/privacyPoolsControllerStateContext'
-import { getTokenId } from '@web/utils/token'
+import { getTokenId } from '@common/utils/token'
 import { SelectedAccountPortfolioTokenResult } from '@ambire-common/interfaces/selectedAccount'
 import Recipient from '../Recipient'
 
@@ -23,6 +22,7 @@ import { formatAmount } from '../../utils/formatAmount'
 import getStyles from './styles'
 import Disclaimer from '../Disclaimer'
 import PrivacyNotice from '../PrivacyNotice'
+import useController from '@common/hooks/useController'
 
 const TransferForm = ({
   addressInputState,
@@ -63,12 +63,17 @@ const TransferForm = ({
   addressState: any
   controllerAmount: string
   quoteFee: string
-  updateQuoteStatus: 'INITIAL' | 'LOADING' | undefined
-    totalApprovedBalance: { total: bigint; accounts: PoolAccount[] }
+  /**
+   * @TODO (kohaku-resync) `useDepositForm.updateQuoteStatus` is now a refetch callback rather than
+   * a status string, so nothing feeds this prop and the quote spinner never shows. The loading
+   * state needs a new source on the PrivacyPoolsV1 controller.
+   */
+  updateQuoteStatus?: 'INITIAL' | 'LOADING'
+  totalApprovedBalance: { total: bigint; accounts: unknown[] }
   disabled?: boolean
 }) => {
   const { validation } = addressInputState
-  const { account, portfolio } = useSelectedAccountControllerState()
+  const { account, portfolio } = useController('SelectedAccountController').state
   const { t } = useTranslation()
   const { styles } = useTheme(getStyles)
 
@@ -178,6 +183,8 @@ const TransferForm = ({
     if (!selectedToken && portfolio?.isReadyToVisualize && availableTokens.length > 0) {
       const defaultToken =
         availableTokens.find((token) => token.address === zeroAddress) ?? availableTokens[0]
+      if (!defaultToken) return
+
       const tokenBal = balanceByAsset[defaultToken.address.toLowerCase()] ?? 0n
       handleUpdateForm({
         selectedToken: defaultToken,

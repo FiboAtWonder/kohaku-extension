@@ -1,4 +1,4 @@
-import { StyleSheet, ViewStyle } from 'react-native'
+import { StyleSheet, TextStyle, ViewStyle } from 'react-native'
 
 import { ThemeProps } from '@common/styles/themeConfig'
 import { BORDER_RADIUS_PRIMARY } from '@common/styles/utils/common'
@@ -7,7 +7,7 @@ interface Style {
   wrapper: ViewStyle
   pillsContainer: ViewStyle & { gap: number }
   pill: ViewStyle
-  pillActive: ViewStyle
+  pillActive: TextStyle
 }
 
 const getStyles = (theme: ThemeProps) =>

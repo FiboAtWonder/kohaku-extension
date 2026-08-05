@@ -130,7 +130,7 @@ export function selectNotesForWithdrawal({
   const results = scored.map((c) => {
     let privacy = 0
     const normalized: Record<string, number> = {}
-    // eslint-disable-next-line no-restricted-syntax
+
     for (const [k, raw] of Object.entries(c.scores) as Array<[ScoreKey, number]>) {
       const r = ranges[k]
       let norm = 0
@@ -142,6 +142,6 @@ export function selectNotesForWithdrawal({
   })
 
   results.sort((a, b) => a.privacyScore - b.privacyScore)
-  if (results.length) results[0].isChosen = true
+  if (results[0]) results[0].isChosen = true
   return results
 }

@@ -1,6 +1,6 @@
 import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
-import { StyleSheet, View, ViewStyle } from 'react-native'
+import { StyleSheet, TextStyle, View, ViewStyle } from 'react-native'
 import { ThemeProps } from '@common/styles/themeConfig'
 import useTheme from '@common/hooks/useTheme'
 import Text from '@common/components/Text'
@@ -8,7 +8,7 @@ import { useTranslation } from '@common/config/localization'
 
 type Style = {
   disclaimer: ViewStyle
-  disclaimerText: ViewStyle
+  disclaimerText: TextStyle
 }
 
 const getStyles = (theme: ThemeProps) =>

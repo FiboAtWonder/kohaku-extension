@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Image, ImageProps, View, ViewStyle } from 'react-native'
 
-import useNetworksControllerState from '@web/hooks/useNetworksControllerState'
 import PrivacyIcon from '@common/assets/svg/PrivacyIcon'
 import RailgunIcon from '@common/assets/svg/RailgunIcon'
 
@@ -15,6 +14,7 @@ import { SkeletonLoaderProps } from '@common/components/SkeletonLoader/types'
 import { PrivacyProtocolType } from '@web/modules/PPv1/types/privacy'
 
 import getStyles from './styles'
+import useController from '@common/hooks/useController'
 
 interface Props extends Partial<ImageProps> {
   /* supports network id or chain id */
@@ -60,7 +60,7 @@ const TokenIcon: React.FC<Props> = ({
   const { styles } = useTheme(getStyles)
   const [uriStatus, setUriStatus] = useState<UriStatus>(UriStatus.UNKNOWN)
   const [imageUrl, setImageUrl] = useState<string | undefined>()
-  const { networks: controllerNetworks } = useNetworksControllerState()
+  const { networks: controllerNetworks } = useController('NetworksController').state
   const { benzinNetworks } = useBenzinNetworksContext()
   // Component used across Benzin and Extension, make sure to always set networks
   const networks = controllerNetworks ?? benzinNetworks

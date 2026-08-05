@@ -3,13 +3,13 @@ import { ImageStyle, StyleSheet, ViewStyle } from 'react-native'
 import spacings from '@common/styles/spacings'
 import common from '@common/styles/utils/common'
 import flexbox from '@common/styles/utils/flexbox'
-import { getUiType } from '@web/utils/uiType'
+import { getUiType } from '@common/utils/uiType'
 
 interface Styles {
   accountButton: ViewStyle
   accountButtonRightIcon: ViewStyle
   accountButtonInfo: ViewStyle
-  accountButtonInfoIcon: ImageStyle
+  accountButtonInfoIcon: ViewStyle
   accountCopyIcon: ViewStyle
 }
 

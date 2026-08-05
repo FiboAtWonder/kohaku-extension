@@ -15,10 +15,10 @@ import useBalanceAffectingErrors from '@web/modules/PPv1/screens/dashboard/hooks
 import spacings from '@common/styles/spacings'
 import { THEME_TYPES } from '@common/styles/themeConfig'
 import flexbox from '@common/styles/utils/flexbox'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
 
 import BalanceAffectingErrorActions from './BalanceAffectingErrorActions'
 import Header from './Header'
+import useController from '@common/hooks/useController'
 
 type Props = {
   networksWithErrors: string[]
@@ -36,7 +36,7 @@ const BalanceAffectingErrors: FC<Props> = ({
 }) => {
   const { t } = useTranslation()
   const { theme, themeType } = useTheme()
-  const { balanceAffectingErrors, portfolio } = useSelectedAccountControllerState()
+  const { balanceAffectingErrors, portfolio } = useController('SelectedAccountController').state
 
   const areErrorsOutdatedAndPortfolioIsReady = useMemo(() => {
     return (

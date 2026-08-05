@@ -1,11 +1,12 @@
 import React from 'react'
-import { Image, ImageStyle, StyleProp } from 'react-native'
+import { Image, ImageStyle, StyleProp, ViewStyle} from 'react-native'
 import kohakuLogoHorizontal from '../../../web/assets/kohaku-horizontal.png'
 
 type AmbireLogoHorizontalProps = {
   width?: number
   height?: number
-  style?: StyleProp<ImageStyle>
+  // Accepts the shared `spacings` entries, which are typed as a broad style union
+  style?: StyleProp<ImageStyle | ViewStyle>
 }
 
 const AmbireLogoHorizontal: React.FC<AmbireLogoHorizontalProps> = ({
@@ -16,7 +17,7 @@ const AmbireLogoHorizontal: React.FC<AmbireLogoHorizontalProps> = ({
   return (
     <Image
       source={{ uri: kohakuLogoHorizontal }}
-      style={[{ width, height }, style]}
+      style={[{ width, height }, style as StyleProp<ImageStyle>]}
       resizeMode="contain"
     />
   )

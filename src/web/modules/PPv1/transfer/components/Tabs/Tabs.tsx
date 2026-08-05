@@ -12,9 +12,9 @@ import { THEME_TYPES } from '@common/styles/themeConfig'
 import { DASHBOARD_OVERVIEW_BACKGROUND } from '@web/modules/PPv1/screens/dashboard/screens/styles'
 import { getAvatarColors } from '@common/utils/avatars'
 import mixHexColors from '@common/utils/mixHexColors'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
 
 import getStyles from './styles'
+import useController from '@common/hooks/useController'
 
 export type TransferTabType = 'privacy-pools' | 'railgun'
 
@@ -42,8 +42,9 @@ const TABS: {
 
 const Tabs: React.FC<Props> = ({ activeTab, onTabChange }) => {
   const { styles, theme, themeType } = useTheme(getStyles)
-  const { account } = useSelectedAccountControllerState()
-  const avatarColors = getAvatarColors(account?.addr || '')
+  const { account } = useController('SelectedAccountController').state
+  const { avatarType } = useController('WalletStateController').state
+  const avatarColors = getAvatarColors(avatarType, account?.addr || '')
   const { t } = useTranslation()
 
   return (
@@ -55,10 +56,7 @@ const Tabs: React.FC<Props> = ({ activeTab, onTabChange }) => {
 
         return (
           <View key={type} style={[flexbox.directionRow, flexbox.alignCenter]}>
-            <Pressable
-              testID={testID}
-              onPress={() => onTabChange(type)}
-            >
+            <Pressable testID={testID} onPress={() => onTabChange(type)}>
               {({ hovered }: any) => (
                 <LinearGradient
                   colors={
@@ -94,8 +92,8 @@ const Tabs: React.FC<Props> = ({ activeTab, onTabChange }) => {
                           ? theme.primary
                           : theme.primaryBackground
                         : hovered
-                        ? theme.primaryText
-                        : theme.secondaryText
+                          ? theme.primaryText
+                          : theme.secondaryText
                     }
                     fontSize={16}
                   >
@@ -122,4 +120,3 @@ const Tabs: React.FC<Props> = ({ activeTab, onTabChange }) => {
 }
 
 export default React.memo(Tabs)
-

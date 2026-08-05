@@ -1,6 +1,3 @@
-/* eslint-disable no-restricted-syntax */
-/* eslint-disable no-await-in-loop */
-
 'use client'
 
 import {
@@ -48,12 +45,14 @@ export const getPoolAccountsFromAccount = async (account: PrivacyPoolAccount, ch
           : poolAccount.deposit
 
       const paChainId = Object.keys(chainData).find((key) =>
-        chainData[Number(key)].poolInfo.some((pool) => pool.scope === scope)
+        chainData[Number(key)]?.poolInfo.some((pool) => pool.scope === scope)
       )
 
-      const updatedPoolAccount = {
+      if (!lastCommitment) continue
+
+      const updatedPoolAccount: PoolAccount = {
         ...(poolAccount as PoolAccount),
-        balance: lastCommitment!.value,
+        balance: lastCommitment.value,
         lastCommitment,
         reviewStatus: ReviewStatus.PENDING,
         isValid: false,
@@ -66,7 +65,6 @@ export const getPoolAccountsFromAccount = async (account: PrivacyPoolAccount, ch
 
       if (updatedPoolAccount.children.length > 0) {
         updatedPoolAccount.children.forEach(async (child) => {
-          // eslint-disable-next-line no-param-reassign
           child.timestamp = child.blockNumber
         })
       }
@@ -85,10 +83,13 @@ export const getPoolAccountsFromAccount = async (account: PrivacyPoolAccount, ch
     }
   }
 
-  const poolAccountsByChainScope = poolAccounts.reduce((acc, curr) => {
-    acc[`${curr.chainId}-${curr.scope}`] = [...(acc[`${curr.chainId}-${curr.scope}`] || []), curr]
-    return acc
-  }, {} as Record<string, PoolAccount[]>)
+  const poolAccountsByChainScope = poolAccounts.reduce(
+    (acc, curr) => {
+      acc[`${curr.chainId}-${curr.scope}`] = [...(acc[`${curr.chainId}-${curr.scope}`] || []), curr]
+      return acc
+    },
+    {} as Record<string, PoolAccount[]>
+  )
   const poolAccountsByCurrentChain = poolAccounts.filter((pa) => pa.chainId === chainId)
 
   return { poolAccounts: poolAccountsByCurrentChain, poolAccountsByChainScope }

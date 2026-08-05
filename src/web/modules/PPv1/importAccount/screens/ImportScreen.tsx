@@ -5,34 +5,36 @@ import { AccountOpStatus } from '@ambire-common/libs/accountOp/types'
 import Text from '@common/components/Text'
 import useNavigation from '@common/hooks/useNavigation'
 import { ROUTES, WEB_ROUTES } from '@common/modules/router/constants/common'
-import { Content, Wrapper } from '@web/components/TransactionsScreen'
-import useActivityControllerState from '@web/hooks/useActivityControllerState'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useTransferControllerState from '@web/hooks/useTransferControllerState'
+import { Content, Wrapper } from '@web/modules/PPv1/deposit/components/TransactionsScreen'
 import { SelectValue } from '@common/components/Select/types'
-import TrackProgress from '@web/modules/sign-account-op/components/OneClick/TrackProgress'
-import Completed from '@web/modules/sign-account-op/components/OneClick/TrackProgress/ByStatus/Completed'
-import Failed from '@web/modules/sign-account-op/components/OneClick/TrackProgress/ByStatus/Failed'
-import InProgress from '@web/modules/sign-account-op/components/OneClick/TrackProgress/ByStatus/InProgress'
-import useTrackAccountOp from '@web/modules/sign-account-op/hooks/OneClick/useTrackAccountOp'
-import { getUiType } from '@web/utils/uiType'
+import TrackProgress from '@common/components/TrackProgress'
+import Completed from '@common/components/TrackProgress/ByStatus/Completed'
+import Failed from '@common/components/TrackProgress/ByStatus/Failed'
+import InProgress from '@common/components/TrackProgress/ByStatus/InProgress'
+import useTrackAccountOp from '@common/modules/sign-account-op/hooks/OneClick/useTrackAccountOp'
+import { getUiType } from '@common/utils/uiType'
 import usePrivacyPoolsControllerState from '@web/hooks/usePrivacyPoolsControllerState'
 import { getPPv1Accounts } from '@web/modules/PPv1/sdk/misc'
 import { getPrivacyProtocolOptions } from '@web/components/PrivacyProtocols'
 import AddChainScreen from '../components/ImportForm'
+import useController from '@common/hooks/useController'
 
-const { isActionWindow } = getUiType()
+const { isRequestWindow } = getUiType()
 
 const ImportScreen = () => {
-  const { dispatch } = useBackgroundService()
-  const { state } = useTransferControllerState()
-  const { latestBroadcastedAccountOp } = state
+  const { dispatch: requestsDispatch } = useController('RequestsController')
+  const {
+    state: { latestBroadcastedAccountOp },
+    dispatch: transferDispatch
+  } = useController('TransferController')
+  const { dispatch: privacyPoolsDispatch } = useController('PrivacyPoolsController')
   const { addImportedPrivateAccount, seedPhrase, importedPrivateAccounts } =
     usePrivacyPoolsControllerState()
   const { navigate } = useNavigation()
   const { t } = useTranslation()
 
-  const { accountsOps } = useActivityControllerState()
+  const { accountsOps } = useController('ActivityController').state
+  const { account } = useController('SelectedAccountController').state
 
   const submittedAccountOp = useMemo(() => {
     if (!accountsOps.transfer || !latestBroadcastedAccountOp?.signature) return
@@ -43,28 +45,24 @@ const ImportScreen = () => {
   }, [accountsOps.transfer, latestBroadcastedAccountOp?.signature])
 
   const navigateOut = useCallback(() => {
-    if (isActionWindow) {
-      dispatch({
-        type: 'CLOSE_SIGNING_ACTION_WINDOW',
-        params: {
-          type: 'transfer'
-        }
-      })
+    if (isRequestWindow) {
+      if (account) {
+        requestsDispatch({
+          type: 'method',
+          params: { method: 'removeUserRequests', args: [[`${account.addr}-transfer-sign`]] }
+        })
+      }
     } else {
       navigate(WEB_ROUTES.pp1Home)
     }
 
-    dispatch({
-      type: 'TRANSFER_CONTROLLER_RESET_FORM'
-    })
-  }, [dispatch, navigate])
+    transferDispatch({ type: 'method', params: { method: 'resetForm', args: [] } })
+  }, [account, requestsDispatch, transferDispatch, navigate])
 
-  const { onPrimaryButtonPress } = useTrackAccountOp({
+  useTrackAccountOp({
     address: latestBroadcastedAccountOp?.accountAddr,
     chainId: latestBroadcastedAccountOp?.chainId,
-    sessionId: 'transfer',
-    submittedAccountOp,
-    navigateOut
+    sessionId: 'transfer'
   })
 
   const [displayedView, setDisplayedView] = useState<'transfer' | 'track'>('transfer')
@@ -72,7 +70,7 @@ const ImportScreen = () => {
   const [isDuplicate, setIsDuplicate] = useState(false)
   const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false)
   const [selectedProtocol, setSelectedProtocol] = useState<SelectValue>(
-    getPrivacyProtocolOptions(t)[1]
+    getPrivacyProtocolOptions(t)[1] as SelectValue
   )
   const selectedProtocolLabel = selectedProtocol.value === 'railgun' ? 'Railgun' : 'Privacy Pool'
 
@@ -127,13 +125,16 @@ const ImportScreen = () => {
     setDisplayedView('track')
     await addImportedPrivateAccount({ mnemonic: seedPhrase, name: accountName.trim() })
 
-    dispatch({
-      type: 'PRIVACY_POOLS_CONTROLLER_ADD_IMPORTED_ACCOUNT_TO_ACTIVITY_CONTROLLER',
-      params: { accountName: accountName.trim() }
+    privacyPoolsDispatch({
+      type: 'method',
+      params: {
+        method: 'addImportedAccountToActivityController',
+        args: [accountName.trim()]
+      }
     })
 
     setTrackProgress(AccountOpStatus.Success)
-  }, [isDuplicate, accountName, addImportedPrivateAccount, seedPhrase, dispatch])
+  }, [isDuplicate, accountName, addImportedPrivateAccount, seedPhrase, privacyPoolsDispatch])
 
   const headerTitle = 'Import Private Acct'
 
@@ -144,10 +145,11 @@ const ImportScreen = () => {
   if (displayedView === 'track') {
     return (
       <TrackProgress
-        onPrimaryButtonPress={onPrimaryButtonPress}
+        onPrimaryButtonPress={navigateOut}
         handleClose={() => {
-          dispatch({
-            type: 'TRANSFER_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP'
+          transferDispatch({
+            type: 'method',
+            params: { method: 'destroyLatestBroadcastedAccountOp', args: [] }
           })
         }}
       >

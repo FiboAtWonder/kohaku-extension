@@ -9,9 +9,9 @@ import spacings from '@common/styles/spacings'
 import { THEME_TYPES } from '@common/styles/themeConfig'
 import { getAvatarColors } from '@common/utils/avatars'
 import mixHexColors from '@common/utils/mixHexColors'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
 
 import getStyles from './styles'
+import useController from '@common/hooks/useController'
 
 export type TabType = 'activity'
 
@@ -36,8 +36,9 @@ const Tab = ({
 }: Props) => {
   const { t } = useTranslation()
   const { styles, theme, themeType } = useTheme(getStyles)
-  const { account } = useSelectedAccountControllerState()
-  const avatarColors = getAvatarColors(account?.addr || '')
+  const { account } = useController('SelectedAccountController').state
+  const { avatarType } = useController('WalletStateController').state
+  const avatarColors = getAvatarColors(avatarType, account?.addr || '')
 
   const isActive = openTab === tab
 
@@ -70,10 +71,10 @@ const Tab = ({
           locations={[0.4, 1]}
           style={[
             styles.toggleItem,
-            spacings.phLg,
+            { ...spacings.phLg },
+            // @ts-ignore cursor is web only
             {
               opacity: disabled ? 0.4 : 1,
-              // @ts-ignore cursor is web only
               cursor: disabled ? 'not-allowed' : 'pointer'
             }
           ]}
@@ -86,8 +87,8 @@ const Tab = ({
                   ? theme.primary
                   : theme.primaryBackground
                 : hovered
-                ? theme.primaryText
-                : theme.secondaryText
+                  ? theme.primaryText
+                  : theme.secondaryText
             }
             fontSize={16}
           >

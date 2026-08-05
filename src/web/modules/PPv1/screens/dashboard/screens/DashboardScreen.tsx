@@ -8,12 +8,9 @@ import useNavigation from '@common/hooks/useNavigation'
 import useTheme from '@common/hooks/useTheme'
 import { WEB_ROUTES } from '@common/modules/router/constants/common'
 import spacings from '@common/styles/spacings'
-import ReceiveModal from '@web/components/ReceiveModal'
-import useAccountsControllerState from '@web/hooks/useAccountsControllerState'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
 import { usePrivacyPoolsDepositForm } from '@web/hooks/useDepositForm'
 import useRailgunForm from '@web/modules/railgun/hooks/useRailgunForm'
-import { getUiType } from '@web/utils/uiType'
+import { getUiType } from '@common/utils/uiType'
 
 import RefreshIcon from '@common/modules/dashboard/components/DashboardOverview/RefreshIcon'
 import flexbox from '@common/styles/utils/flexbox'
@@ -29,6 +26,7 @@ import { ActiveView } from './types'
 import NewSelectedPublicAccountDetail from './SelectedPublicAccountDetail'
 import NewPublicAccounts from './PublicAccounts'
 import NewDisplayBalance from './DisplayBalance'
+import useController from '@common/hooks/useController'
 
 const { isPopup } = getUiType()
 
@@ -38,10 +36,13 @@ const NewDashboardScreen = () => {
   const { addToast } = useToast()
   const { theme } = useTheme()
   const { navigate, setSearchParams, searchParams } = useNavigation()
-  const { ref: receiveModalRef, open: openReceiveModal, close: closeReceiveModal } = useModalize()
+  // The receive modal became a standalone route upstream (kohaku)
+  const openReceiveModal = useCallback(() => {
+    navigate(WEB_ROUTES.receive)
+  }, [navigate])
 
-  const { account, portfolio } = useSelectedAccountControllerState()
-  const { accounts } = useAccountsControllerState()
+  const { account, portfolio } = useController('SelectedAccountController').state
+  const { accounts } = useController('AccountsController').state
   const scrollViewRef = useRef<ScrollView>(null)
   const cachedPrivateBalanceRef = useRef<number>(0)
   const activeView = (searchParams.get('view') ?? 'private') as ActiveView
@@ -69,17 +70,17 @@ const NewDashboardScreen = () => {
   const privateBalance = cachedPrivateBalanceRef.current
   const totalHoldings = totalPublicBalance + privateBalance
 
-  const [displayedInteger, displayedDecimal] = useMemo(
+  const [displayedInteger = '', displayedDecimal = ''] = useMemo(
     () => formatDecimals(totalHoldings, 'value').split('.'),
     [totalHoldings]
   )
 
-  const [privateInteger, privateDecimal] = useMemo(
+  const [privateInteger = '', privateDecimal = ''] = useMemo(
     () => formatDecimals(privateBalance, 'value').split('.'),
     [privateBalance]
   )
 
-  const [publicInteger, publicDecimal] = useMemo(
+  const [publicInteger = '', publicDecimal = ''] = useMemo(
     () => formatDecimals(totalPublicBalance, 'value').split('.'),
     [totalPublicBalance]
   )
@@ -111,7 +112,6 @@ const NewDashboardScreen = () => {
     // safe not to check sync state because the base function (sync) checks this
     if (privacyPoolsForm.isReady && !privacyPoolsForm.isLoading) {
       privacyPoolsForm.loadPrivateAccount().catch((error) => {
-        // eslint-disable-next-line no-console
         console.error('Failed to load private account:', error)
         addToast('Failed to load your privacy account. Please try again.', { type: 'error' })
       })
@@ -126,7 +126,6 @@ const NewDashboardScreen = () => {
 
   return (
     <>
-      <ReceiveModal modalRef={receiveModalRef} handleClose={closeReceiveModal} />
       <PendingActionWindowModal />
       <View
         style={{
