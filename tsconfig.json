@@ -14,7 +14,10 @@
       "@mobile/*": ["src/mobile/*"],
       "@web/*": ["src/web/*"],
       "@benzin/*": ["src/benzin/*"],
-      "@legends/*": ["src/legends/*"]
+      "@legends/*": ["src/legends/*"],
+      // Resolve the Railgun SDK to the single copy in the submodule, matching the
+      // webpack alias, so the extension and ambire-common share one WASM instance.
+      "@kohaku-eth/railgun": ["src/ambire-common/node_modules/@kohaku-eth/railgun"]
     }
   },
   "exclude": [
