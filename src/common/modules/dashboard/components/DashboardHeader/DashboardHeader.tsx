@@ -7,6 +7,7 @@ import NetworkStatusesIcon from '@common/assets/svg/NetworkStatusIcon'
 import Text from '@common/components/Text'
 import { isAmbireNext, isDev, isMobile } from '@common/config/env'
 import { useTranslation } from '@common/config/localization'
+import { DashboardMode } from '@common/controllers/wallet-state'
 import useController from '@common/hooks/useController'
 import useHover from '@common/hooks/useHover'
 import useNavigation from '@common/hooks/useNavigation'
@@ -15,6 +16,7 @@ import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
 import { getUiType } from '@common/utils/uiType'
 
+import DashboardModeToggle from '../DashboardModeToggle'
 import NetworkStatusesBottomSheet from '../NetworkStatusesBottomSheet'
 import AccountButton from './AccountButton'
 
@@ -22,7 +24,14 @@ const { isPopup } = getUiType()
 
 const SHOULD_DISPLAY_NETWORK_STATUSES = isAmbireNext || isDev
 
-const DashboardHeader = () => {
+type Props = {
+  // (kohaku) only the merged (web) dashboard passes these - it renders the
+  // private/public toggle in place of the "Back To Dashboard" shortcut
+  dashboardMode?: DashboardMode
+  onDashboardModeChange?: (mode: DashboardMode) => void
+}
+
+const DashboardHeader = ({ dashboardMode, onDashboardModeChange }: Props) => {
   const {
     state: { account }
   } = useController('SelectedAccountController')
@@ -55,18 +64,27 @@ const DashboardHeader = () => {
       <View style={[flexbox.directionRow, flexbox.flex1, flexbox.justifySpaceBetween]}>
         <AccountButton />
         <View style={[flexbox.directionRow, flexbox.alignStart]}>
-          <Pressable
-            testID="dashboard-home-btn"
-            style={[spacings.ml, spacings.phTy, spacings.pvTy, flexbox.alignSelfCenter]}
-            onPress={() => navigate(WEB_ROUTES.mainDashboard)}
-            {...bindDashboardAnim}
-          >
-            <Animated.View style={dashboardAnimStyle}>
-              <Text fontSize={14} weight="medium" appearance="secondaryText">
-                {t('Back To Dashboard')}
-              </Text>
-            </Animated.View>
-          </Pressable>
+          {dashboardMode && onDashboardModeChange ? (
+            <DashboardModeToggle
+              mode={dashboardMode}
+              onChange={onDashboardModeChange}
+              style={{ ...spacings.ml, ...flexbox.alignSelfCenter }}
+              testID="dashboard-mode-toggle"
+            />
+          ) : (
+            <Pressable
+              testID="dashboard-home-btn"
+              style={[spacings.ml, spacings.phTy, spacings.pvTy, flexbox.alignSelfCenter]}
+              onPress={() => navigate(WEB_ROUTES.mainDashboard)}
+              {...bindDashboardAnim}
+            >
+              <Animated.View style={dashboardAnimStyle}>
+                <Text fontSize={14} weight="medium" appearance="secondaryText">
+                  {t('Back To Dashboard')}
+                </Text>
+              </Animated.View>
+            </Pressable>
+          )}
 
           {SHOULD_DISPLAY_NETWORK_STATUSES && (
             <Pressable

@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react'
+import React, { FC, useCallback, useEffect, useMemo, useRef } from 'react'
 import { ScrollView, View, Pressable } from 'react-native'
 
 import formatDecimals from '@ambire-common/utils/formatDecimals/formatDecimals'
 import Text from '@common/components/Text/Text'
+import { DashboardMode } from '@common/controllers/wallet-state'
 import useNavigation from '@common/hooks/useNavigation'
 import useTheme from '@common/hooks/useTheme'
 import { WEB_ROUTES } from '@common/modules/router/constants/common'
@@ -31,10 +32,16 @@ const { isPopup } = getUiType()
 
 export const OVERVIEW_CONTENT_MAX_HEIGHT = 120
 
-const NewDashboardScreen = () => {
+type Props = {
+  // (kohaku) the merged dashboard owns the mode; the toggle lives in the header
+  dashboardMode: DashboardMode
+  onDashboardModeChange: (mode: DashboardMode) => void
+}
+
+const PrivateDashboardView: FC<Props> = ({ dashboardMode, onDashboardModeChange }) => {
   const { addToast } = useToast()
   const { theme } = useTheme()
-  const { navigate, setSearchParams, searchParams } = useNavigation()
+  const { navigate } = useNavigation()
   // The receive modal became a standalone route upstream (kohaku)
   const openReceiveModal = useCallback(() => {
     navigate(WEB_ROUTES.receive)
@@ -44,7 +51,9 @@ const NewDashboardScreen = () => {
   const { accounts } = useController('AccountsController').state
   const scrollViewRef = useRef<ScrollView>(null)
   const cachedPrivateBalanceRef = useRef<number>(0)
-  const activeView = (searchParams.get('view') ?? 'private') as ActiveView
+  // (kohaku) the in-screen view switch and the header toggle are now the same
+  // control - the public mode renders the public dashboard instead of this screen
+  const activeView: ActiveView = dashboardMode
 
   const privacyPoolsForm = usePrivacyPoolsDepositForm()
   const railgunForm = useRailgunForm()
@@ -87,9 +96,9 @@ const NewDashboardScreen = () => {
   const handleAddMoney = useCallback(() => navigate(WEB_ROUTES.pp1Deposit), [navigate])
   const changeView = useCallback(
     (view: ActiveView) => {
-      setSearchParams({ view })
+      onDashboardModeChange(view)
     },
-    [setSearchParams]
+    [onDashboardModeChange]
   )
 
   const handleRefreshAll = useCallback(() => {
@@ -161,7 +170,10 @@ const NewDashboardScreen = () => {
               }
             ]}
           >
-            <NewDashboardHeader activeView={activeView} />
+            <NewDashboardHeader
+              activeView={activeView}
+              onDashboardModeChange={onDashboardModeChange}
+            />
 
             <View
               style={{
@@ -255,4 +267,4 @@ const NewDashboardScreen = () => {
   )
 }
 
-export default React.memo(NewDashboardScreen)
+export default React.memo(PrivateDashboardView)

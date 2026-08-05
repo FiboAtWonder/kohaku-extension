@@ -159,6 +159,14 @@ const routesConfig: RouteConfig = {
     }),
     name: Platform.select({ default: i18n.t('Dashboard') })
   },
+  // (kohaku) the landing route of the merged dashboard
+  [ROUTES.mainDashboard]: {
+    route: ROUTES.mainDashboard,
+    title: Platform.select({
+      default: i18n.t('Dashboard')
+    }),
+    name: Platform.select({ default: i18n.t('Dashboard') })
+  },
   [ROUTES.signAccountOp]: {
     route: ROUTES.signAccountOp,
     title: Platform.select({

@@ -21,7 +21,6 @@ import useCurrentActionSideEffects from '@web/hooks/useCurrentActionSideEffects'
 import DashboardScreen from '@web/modules/dashboard/screens/DashboardScreen'
 import KeyStoreUnlockScreen from '@web/modules/keystore/screens/KeyStoreUnlockScreen'
 
-import KohakuDashboardScreen from '@web/modules/PPv1/screens/dashboard/screens'
 import getStyles from './styles'
 
 const AsyncMainRoute = lazy(() => import('@web/modules/router/components/MainRoutes'))
@@ -95,8 +94,11 @@ const Router = () => {
       <Routes>
         <Route element={<KeystoreUnlockedRoute />}>
           <Route element={<AuthenticatedRoute />}>
-            <Route path={WEB_ROUTES.dashboard} element={<DashboardScreen />} />
-            <Route path={WEB_ROUTES.mainDashboard} element={<KohakuDashboardScreen />} />
+            {/* (kohaku) One dashboard, two modes. `mainDashboard` is the landing
+            route and opens in the persisted mode; `dashboard` is kept as a deep
+            link into the public view */}
+            <Route path={WEB_ROUTES.dashboard} element={<DashboardScreen mode="public" />} />
+            <Route path={WEB_ROUTES.mainDashboard} element={<DashboardScreen />} />
           </Route>
         </Route>
         <Route path={WEB_ROUTES.keyStoreUnlock} element={<KeyStoreUnlockScreen />} />

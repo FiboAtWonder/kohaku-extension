@@ -58,7 +58,6 @@ const RailgunTransferForm = ({
   maxAmount,
   amountFieldMode,
   amountInFiat,
-  isRecipientAddressUnknownAgreed,
   addressState,
   controllerAmount,
   totalApprovedBalance,
@@ -80,7 +79,12 @@ const RailgunTransferForm = ({
   maxAmount: string
   amountFieldMode: 'token' | 'fiat'
   amountInFiat: string
-  isRecipientAddressUnknownAgreed: boolean
+  /**
+   * @TODO (kohaku-resync) No longer read - the "I understand this is an unknown address"
+   * checkbox it backed is gone. Kept optional only so TransferScreen can stop passing it
+   * independently; delete once that call site drops it.
+   */
+  isRecipientAddressUnknownAgreed?: boolean
   addressState: any
   controllerAmount: string
   totalApprovedBalance: { total: bigint; accounts: unknown[] }
@@ -277,10 +281,6 @@ const RailgunTransferForm = ({
     handleUpdateForm
   ])
 
-  const onRecipientCheckboxClick = useCallback(() => {
-    handleUpdateForm({ isRecipientAddressUnknownAgreed: true })
-  }, [handleUpdateForm])
-
   // TODO: Add WETH checkbox UI later
   // For now, always use native ETH (withdrawAsWETH = false)
   const withdrawAsWETH = false
@@ -380,11 +380,7 @@ const RailgunTransferForm = ({
           addressValidationMsg={validation.message}
           isRecipientAddressUnknown={isRecipientAddressUnknown}
           isRecipientDomainResolving={addressState.isDomainResolving}
-          isRecipientAddressUnknownAgreed={isRecipientAddressUnknownAgreed}
-          onRecipientCheckboxClick={onRecipientCheckboxClick}
           isRecipientHumanizerKnownTokenOrSmartContract={false}
-          isSWWarningVisible={false}
-          isSWWarningAgreed={false}
           recipientMenuClosedAutomaticallyRef={{ current: false }}
           selectedTokenSymbol={selectedToken?.symbol}
         />
@@ -446,11 +442,7 @@ const RailgunTransferForm = ({
           addressValidationMsg={validation.message}
           isRecipientAddressUnknown={isRecipientAddressUnknown}
           isRecipientDomainResolving={addressState.isDomainResolving}
-          isRecipientAddressUnknownAgreed={isRecipientAddressUnknownAgreed}
-          onRecipientCheckboxClick={onRecipientCheckboxClick}
           isRecipientHumanizerKnownTokenOrSmartContract={false}
-          isSWWarningVisible={false}
-          isSWWarningAgreed={false}
           recipientMenuClosedAutomaticallyRef={{ current: false }}
           selectedTokenSymbol={selectedToken?.symbol}
         />

@@ -6,12 +6,19 @@ import { LOG_LEVELS } from '@common/utils/logger'
 
 export type AvatarType = 'blockies' | 'jazzicons' | 'polycons' | 'ens'
 
+// (kohaku) which of the two dashboard views the merged dashboard renders
+export type DashboardMode = 'private' | 'public'
+
+export declare const DEFAULT_DASHBOARD_MODE: DashboardMode
+
 export declare class WalletStateController extends EventEmitter {
   isReady: boolean
 
   isPinned: boolean
 
   isPrivacyModeEnabled: boolean
+
+  dashboardMode: DashboardMode
 
   themeType: ThemeType
 
@@ -48,6 +55,8 @@ export declare class WalletStateController extends EventEmitter {
   setCrashAnalytics(enabled: boolean): Promise<void>
 
   togglePrivacyMode(): Promise<void>
+
+  setDashboardMode(mode: DashboardMode): Promise<void>
 
   toJSON(): any
 }

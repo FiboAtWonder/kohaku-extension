@@ -1,19 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Image, ImageSourcePropType, Pressable, View, ViewStyle } from 'react-native'
+import { Pressable, View, ViewStyle } from 'react-native'
 
-import { isColibriProviderAvailable } from '@ambire-common/libs/networks/colibri'
 import { getFeatures } from '@ambire-common/libs/networks/networks'
 import { getRpcProvider, isColibriSupportedChain } from '@ambire-common/services/provider'
 import { isValidURL } from '@ambire-common/services/validations'
-import colibriLogo from '@common/assets/images/colibri-logo.png'
 import CopyIcon from '@common/assets/svg/CopyIcon'
 import DownArrowIcon from '@common/assets/svg/DownArrowIcon'
 import UpArrowIcon from '@common/assets/svg/UpArrowIcon'
 import WarningIcon from '@common/assets/svg/WarningIcon'
 import Button from '@common/components/Button'
-import Checkbox from '@common/components/Checkbox'
 import { createGlobalTooltipDataSet } from '@common/components/GlobalTooltip'
 import Input from '@common/components/Input'
 import NetworkAvailableFeatures from '@common/components/NetworkAvailableFeatures'
@@ -324,16 +321,6 @@ const NetworkForm = ({
           : selectedNetwork?.features || getFeatures(undefined, selectedNetwork),
     [errors.chainId, networkToAddOrUpdate?.info, selectedNetwork]
   )
-  const isColibriAvailable = useMemo(() => {
-    try {
-      return (
-        !!networkFormValues.chainId && isColibriProviderAvailable(BigInt(networkFormValues.chainId))
-      )
-    } catch {
-      return false
-    }
-  }, [networkFormValues.chainId])
-  const shouldShowColibriSettings = isColibriAvailable
   // (kohaku) Helios needs a consensus RPC, Colibri is limited to an allowlist of chains
   const canUseHelios = !!selectedNetwork?.consensusRpcUrl
   const canUseColibri = useMemo(() => {
@@ -675,7 +662,10 @@ const NetworkForm = ({
 
       if (emptyFields.length || !rpcUrls.length || !selectedRpcUrl) return
 
-      const isColibriEnabled = !!networkFormValues.isColibriEnabled && shouldShowColibriSettings
+      // (kohaku) no longer user-editable (the RPC verifier radio replaced the checkbox),
+      // but still submitted so that saving a network preserves the value the
+      // VerificationController and the portfolio verification read
+      const isColibriEnabled = !!networkFormValues.isColibriEnabled
 
       if (selectedChainId === 'add-custom-network') {
         networksDispatch({
@@ -1080,31 +1070,10 @@ const NetworkForm = ({
                   />
                 </View>
               )}
-              {shouldShowColibriSettings && (
-                <Controller
-                  control={control}
-                  render={({ field: { onChange, value } }) => (
-                    <Checkbox value={!!value} style={flexbox.alignCenter} onValueChange={onChange}>
-                      <Pressable
-                        style={[flexbox.directionRow, flexbox.alignCenter]}
-                        onPress={() => onChange(!value)}
-                      >
-                        <Image
-                          source={colibriLogo as ImageSourcePropType}
-                          style={{ width: 22, height: 22, marginRight: 8 }}
-                          resizeMode="contain"
-                        />
-                        <Text appearance="secondaryText" fontSize={12} shouldScale={false}>
-                          {t('Enable Colibri for RPC verification')}
-                        </Text>
-                      </Pressable>
-                    </Checkbox>
-                  )}
-                  name="isColibriEnabled"
-                />
-              )}
-
-              {/* (kohaku) pick which client verifies the reads of this network */}
+              {/* (kohaku) pick which client verifies the reads of this network.
+              This radio replaces the upstream "Enable Colibri for RPC verification"
+              checkbox - it is a superset of it, because it also covers Helios and
+              the plain (unverified) RPC. */}
               <Text appearance="secondaryText" fontSize={14} weight="regular" style={spacings.mbMi}>
                 {t('RPC verifier')}
               </Text>

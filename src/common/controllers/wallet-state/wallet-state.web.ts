@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 import EventEmitter from '@ambire-common/controllers/eventEmitter/eventEmitter'
 import { IEventEmitterRegistryController } from '@ambire-common/interfaces/eventEmitter'
-import { Storage } from '@ambire-common/interfaces/storage'
+import { Storage, StorageProps } from '@ambire-common/interfaces/storage'
 import {
   CRASH_ANALYTICS_ENABLED_DEFAULT,
   CRASH_ANALYTICS_ENABLED_STORAGE_KEY
@@ -16,6 +16,12 @@ import { WalletStateController as IWalletStateController } from './wallet-state'
 
 export type AvatarType = 'blockies' | 'jazzicons' | 'polycons' | 'ens'
 
+// (kohaku) which of the two dashboard views the merged dashboard renders
+export type DashboardMode = 'private' | 'public'
+
+export const DEFAULT_DASHBOARD_MODE: DashboardMode = 'private'
+
+
 export class WalletStateController extends EventEmitter implements IWalletStateController {
   isReady: boolean = false
 
@@ -26,6 +32,9 @@ export class WalletStateController extends EventEmitter implements IWalletStateC
   #isSetupComplete: boolean = false
 
   isPrivacyModeEnabled: boolean = false
+
+  // (kohaku) the privacy dashboard is the default, the public one is opt-in
+  dashboardMode: DashboardMode = DEFAULT_DASHBOARD_MODE
 
   themeType: ThemeType = DEFAULT_THEME
 
@@ -78,6 +87,7 @@ export class WalletStateController extends EventEmitter implements IWalletStateC
       'isPrivacyModeEnabled',
       this.isPrivacyModeEnabled
     )
+    this.dashboardMode = await this.#storage.get('dashboardMode', this.dashboardMode)
     this.isPinned = await this.#checkIsPinned()
     if (!this.isPinned) this.#initContinuousCheckIsPinned()
 
@@ -155,6 +165,16 @@ export class WalletStateController extends EventEmitter implements IWalletStateC
   async togglePrivacyMode() {
     this.isPrivacyModeEnabled = !this.isPrivacyModeEnabled
     await this.#storage.set('isPrivacyModeEnabled', this.isPrivacyModeEnabled)
+    this.emitUpdate()
+  }
+
+  // (kohaku) persisted so that the dashboard opens in the same mode
+  // after the popup is closed and reopened
+  async setDashboardMode(mode: DashboardMode) {
+    if (this.dashboardMode === mode) return
+
+    this.dashboardMode = mode
+    await this.#storage.set('dashboardMode', mode)
     this.emitUpdate()
   }
 

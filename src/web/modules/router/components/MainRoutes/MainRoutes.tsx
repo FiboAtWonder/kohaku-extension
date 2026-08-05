@@ -231,7 +231,7 @@ const MainRoutes = () => {
         <Route element={<KeystoreUnlockedRoute />}>
           <Route element={<AuthenticatedRoute />}>
             {/* The public (non-private) dashboard is reachable under its own route (kohaku) */}
-            <Route path={WEB_ROUTES.public} element={<DashboardScreen />} />
+            <Route path={WEB_ROUTES.public} element={<DashboardScreen mode="public" />} />
             <Route path={WEB_ROUTES.transfer} element={<TransferScreen />} />
 
             {/* Privacy Pools V1 (kohaku) */}

@@ -15,6 +15,8 @@ import { openInTab } from '@web/extension-services/background/webapi/tab'
 import MaximizeIcon from '@common/assets/svg/MaximizeIcon'
 import Tooltip from '@common/components/Tooltip'
 import { useTranslation } from 'react-i18next'
+import { DashboardMode } from '@common/controllers/wallet-state'
+import DashboardModeToggle from '@common/modules/dashboard/components/DashboardModeToggle'
 import { ActiveView } from './types'
 
 const { isPopup } = getUiType()
@@ -52,7 +54,13 @@ const ExpandView = () => {
   )
 }
 
-const NewDashboardHeader = ({ activeView }: { activeView: ActiveView }) => {
+const NewDashboardHeader = ({
+  activeView,
+  onDashboardModeChange
+}: {
+  activeView: ActiveView
+  onDashboardModeChange: (mode: DashboardMode) => void
+}) => {
   const { theme } = useTheme()
   const { navigate } = useNavigation()
 
@@ -80,6 +88,13 @@ const NewDashboardHeader = ({ activeView }: { activeView: ActiveView }) => {
       <KohakuLogo width={40} height={40} />
 
       <View style={[flexbox.directionRow, flexbox.alignCenter]}>
+        <DashboardModeToggle
+          mode={activeView}
+          onChange={onDashboardModeChange}
+          style={spacings.mrSm}
+          testID="dashboard-mode-toggle"
+        />
+
         <Text
           fontSize={12}
           weight="medium"

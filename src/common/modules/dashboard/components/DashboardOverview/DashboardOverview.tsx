@@ -8,6 +8,7 @@ import Spinner from '@common/components/Spinner'
 import Text from '@common/components/Text'
 import { isiOS, isMobile, isWeb } from '@common/config/env'
 import { useTranslation } from '@common/config/localization'
+import { DashboardMode } from '@common/controllers/wallet-state'
 import useController from '@common/hooks/useController'
 import useTheme from '@common/hooks/useTheme'
 import DashboardHeader from '@common/modules/dashboard/components/DashboardHeader'
@@ -22,7 +23,6 @@ import { isExtension } from '@web/constants/browserapi'
 
 import NetworkVerificationBadge from '@web/components/NetworkVerificationBadge'
 import BalanceAffectingErrors from './BalanceAffectingErrors'
-import ColibriVerificationBadge from './ColibriVerificationBadge'
 import GasTankButton from './GasTankButton'
 import { OverviewBackground } from './OverviewBackground'
 import RefreshIcon from './RefreshIcon'
@@ -44,6 +44,9 @@ interface Props {
   isRailgunAccountLoading?: boolean
   privateAccountLoadingError?: string | null
   onRetryLoadPrivateAccount?: () => void
+  // (kohaku) only the merged (web) dashboard renders the private/public toggle
+  dashboardMode?: DashboardMode
+  onDashboardModeChange?: (mode: DashboardMode) => void
 }
 
 // We create a reusable height constant for both the Balance amount height and the Balance skeleton.
@@ -58,7 +61,9 @@ const DashboardOverview: FC<Props> = ({
   isPrivateAccountLoading,
   isRailgunAccountLoading,
   privateAccountLoadingError,
-  onRetryLoadPrivateAccount
+  onRetryLoadPrivateAccount,
+  dashboardMode,
+  onDashboardModeChange
 }) => {
   const { t } = useTranslation()
   const { theme } = useTheme(getStyles)
@@ -134,7 +139,10 @@ const DashboardOverview: FC<Props> = ({
       >
         <OverviewBackground address={account?.addr || ''} />
         <View style={{ zIndex: 2 }}>
-          <DashboardHeader />
+          <DashboardHeader
+            dashboardMode={dashboardMode}
+            onDashboardModeChange={onDashboardModeChange}
+          />
           <Animated.View
             style={{
               ...flexbox.alignCenter,
@@ -191,12 +199,9 @@ const DashboardOverview: FC<Props> = ({
                     />
                   ) : (
                     <View style={[flexbox.directionRow, flexbox.alignCenter]}>
-                      {!warningMessage && (
-                        <ColibriVerificationBadge
-                          color={totalPortfolioAmountColor}
-                          isVisible={shouldShowRefreshButton}
-                        />
-                      )}
+                      {/* (kohaku) the RPC verification state is surfaced by
+                      NetworkVerificationBadge below, which covers all verifier
+                      kinds (rpc/helios/colibri) */}
                       <Pressable
                         testID="full-balance"
                         onPress={togglePrivacyMode}

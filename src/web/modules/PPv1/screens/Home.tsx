@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react'
 import useController from '@common/hooks/useController'
 import useToast from '@common/hooks/useToast'
-import DashboardScreen from './dashboard/screens/DashboardScreen'
+// The merged dashboard entry - this route is a deep link into the private view (kohaku)
+import DashboardScreen from '@web/modules/dashboard/screens/DashboardScreen'
 import usePrivacyPoolsForm from '../hooks/usePrivacyPoolsForm'
 
 const HomeScreen = () => {
@@ -26,7 +27,7 @@ const HomeScreen = () => {
     }
   }, [privacyPoolsDispatch])
 
-  return <DashboardScreen />
+  return <DashboardScreen mode="private" />
 }
 
 export default React.memo(HomeScreen)

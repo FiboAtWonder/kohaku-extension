@@ -37,7 +37,6 @@ const TransferForm = ({
   maxAmount,
   amountFieldMode,
   amountInFiat,
-  isRecipientAddressUnknownAgreed,
   addressState,
   controllerAmount,
   quoteFee,
@@ -58,7 +57,12 @@ const TransferForm = ({
   maxAmount: string
   amountFieldMode: 'token' | 'fiat'
   amountInFiat: string
-  isRecipientAddressUnknownAgreed: boolean
+  /**
+   * @TODO (kohaku-resync) No longer read - the "I understand this is an unknown address"
+   * checkbox it backed is gone. Kept optional only so TransferScreen can stop passing it
+   * independently; delete once that call site drops it.
+   */
+  isRecipientAddressUnknownAgreed?: boolean
   addressState: any
   controllerAmount: string
   quoteFee: string
@@ -118,10 +122,6 @@ const TransferForm = ({
   const setMaxAmount = useCallback(() => {
     handleUpdateForm({ withdrawalAmount: maxAmount })
   }, [handleUpdateForm, maxAmount])
-
-  const onRecipientCheckboxClick = useCallback(() => {
-    handleUpdateForm({ isRecipientAddressUnknownAgreed: true })
-  }, [handleUpdateForm])
 
   const isMaxAmountEnabled = useMemo(() => {
     if (!maxAmount) return false
@@ -219,11 +219,7 @@ const TransferForm = ({
           addressValidationMsg={validation.message}
           isRecipientAddressUnknown={isRecipientAddressUnknown}
           isRecipientDomainResolving={addressState.isDomainResolving}
-          isRecipientAddressUnknownAgreed={isRecipientAddressUnknownAgreed}
-          onRecipientCheckboxClick={onRecipientCheckboxClick}
           isRecipientHumanizerKnownTokenOrSmartContract={false}
-          isSWWarningVisible={false}
-          isSWWarningAgreed={false}
           recipientMenuClosedAutomaticallyRef={{ current: false }}
           selectedTokenSymbol={selectedToken?.symbol}
         />
