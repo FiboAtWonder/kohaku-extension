@@ -29,6 +29,23 @@ const PRIMARY_BUTTON_LABELS: Record<
     default: 'Send',
     isLoading: 'Sending...'
   },
+  // Privacy flows: shielding/unshielding funds (kohaku)
+  PrivacyPools: {
+    default: 'Confirm',
+    isLoading: 'Confirming...'
+  },
+  PrivacyPoolsV1: {
+    default: 'Deposit',
+    isLoading: 'Depositing...'
+  },
+  Railgun: {
+    default: 'Confirm',
+    isLoading: 'Confirming...'
+  },
+  RailgunV2: {
+    default: 'Shield',
+    isLoading: 'Shielding...'
+  },
   Sign: {
     default: 'Sign',
     isLoading: 'Signing...'
@@ -68,6 +85,12 @@ const useSign = ({
   const { dispatch: signAccountOpDispatch } = useController('SignAccountOpController')
   const { dispatch: swapAndBridgeDispatch } = useController('SwapAndBridgeController')
   const { dispatch: transferDispatch } = useController('TransferController')
+  // Privacy flows own their own SignAccountOpController, reached through each
+  // controller's callSignAccountOpMethod helper (kohaku)
+  const { dispatch: privacyPoolsDispatch } = useController('PrivacyPoolsController')
+  const { dispatch: privacyPoolsV1Dispatch } = useController('PrivacyPoolsV1Controller')
+  const { dispatch: railgunDispatch } = useController('RailgunController')
+  const { dispatch: railgunV2Dispatch } = useController('RailgunV2Controller')
   const {
     state: { accountStates }
   } = useController('AccountsController')
@@ -248,6 +271,24 @@ const useSign = ({
     if (updateType === 'Transfer&TopUp') {
       type = 'one-click-transfer'
     }
+
+    // Privacy flows map onto their own SignAccountOpType values (kohaku)
+    if (updateType === 'PrivacyPools') {
+      type = 'privacy-pools'
+    }
+
+    if (updateType === 'PrivacyPoolsV1') {
+      type = 'privacy-pools-v1'
+    }
+
+    if (updateType === 'Railgun') {
+      type = 'railgun'
+    }
+
+    if (updateType === 'RailgunV2') {
+      type = 'railgun-v2'
+    }
+
     mainControllerDispatch({
       type: 'method',
       params: {
@@ -283,6 +324,50 @@ const useSign = ({
       return
     }
 
+    if (updateType === 'PrivacyPools') {
+      privacyPoolsDispatch({
+        type: 'method',
+        params: {
+          method: 'callSignAccountOpMethod',
+          args: ['dismissGasFeeChangedConfirmation', []]
+        }
+      })
+      return
+    }
+
+    if (updateType === 'PrivacyPoolsV1') {
+      privacyPoolsV1Dispatch({
+        type: 'method',
+        params: {
+          method: 'callSignAccountOpMethod',
+          args: ['dismissGasFeeChangedConfirmation', []]
+        }
+      })
+      return
+    }
+
+    if (updateType === 'Railgun') {
+      railgunDispatch({
+        type: 'method',
+        params: {
+          method: 'callSignAccountOpMethod',
+          args: ['dismissGasFeeChangedConfirmation', []]
+        }
+      })
+      return
+    }
+
+    if (updateType === 'RailgunV2') {
+      railgunV2Dispatch({
+        type: 'method',
+        params: {
+          method: 'callSignAccountOpMethod',
+          args: ['dismissGasFeeChangedConfirmation', []]
+        }
+      })
+      return
+    }
+
     signAccountOpDispatch({
       type: 'method',
       params: {
@@ -290,7 +375,16 @@ const useSign = ({
         args: []
       }
     })
-  }, [signAccountOpDispatch, swapAndBridgeDispatch, transferDispatch, updateType])
+  }, [
+    signAccountOpDispatch,
+    swapAndBridgeDispatch,
+    transferDispatch,
+    privacyPoolsDispatch,
+    privacyPoolsV1Dispatch,
+    railgunDispatch,
+    railgunV2Dispatch,
+    updateType
+  ])
 
   const handleDismissGasFeeUpdate = useCallback(() => {
     dismissGasFeeChangedConfirmation()

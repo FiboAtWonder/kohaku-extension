@@ -34,7 +34,15 @@ export type OneClickEstimationProps = {
   errors?: SignAccountOpError[]
   signAccountOpController: ISignAccountOpController | null
   hasProceeded: boolean
-  updateType: 'Swap&Bridge' | 'Transfer&TopUp'
+  // 'PrivacyPools', 'PrivacyPoolsV1', 'Railgun' and 'RailgunV2' drive the privacy
+  // one-click flows (kohaku)
+  updateType:
+    | 'Swap&Bridge'
+    | 'Transfer&TopUp'
+    | 'PrivacyPools'
+    | 'PrivacyPoolsV1'
+    | 'Railgun'
+    | 'RailgunV2'
   serviceFee?: SwapAndBridgeRoute['serviceFee']
   shouldShowTxnDetails?: boolean
   Modals: React.ComponentType<ModalsProps>
