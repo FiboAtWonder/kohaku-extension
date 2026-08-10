@@ -7,10 +7,14 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useModalize } from 'react-native-modalize'
-import { formatEther, formatUnits, parseUnits, toHex } from 'viem'
+import { formatEther, formatUnits, parseUnits, toHex, zeroAddress } from 'viem'
 import type { PPv1Address, PPv1AssetAmount } from '@kohaku-eth/privacy-pools'
 
 import useRailgunForm from '@web/modules/railgun/hooks/useRailgunForm'
+import {
+  type ChainData,
+  chainData as privacyPoolsChainData
+} from '@ambire-common/controllers/privacyPools/config'
 import { validateSendTransferAddress } from '@ambire-common/services/privacyPools/validations'
 import { TokenResult } from '@ambire-common/libs/portfolio'
 import { getTokenAmount } from '@ambire-common/libs/portfolio/helpers'
@@ -19,6 +23,16 @@ import { AddressState, AddressStateOptional } from '@ambire-common/interfaces/do
 import useAddressInput from '@common/hooks/useAddressInput'
 import useController from '@common/hooks/useController'
 import usePrivacyPools from './usePrivacyPools/usePrivacyPools'
+
+// Pools mark native ETH with the 0xEee… sentinel, while the portfolio uses the
+// zero address for native tokens. Same normalisation as the Curve humanizer.
+const NATIVE_ASSET_SENTINEL = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+
+const toPortfolioTokenAddress = (assetAddress: string) => {
+  const lowercasedAddress = assetAddress.toLowerCase()
+
+  return lowercasedAddress === NATIVE_ASSET_SENTINEL ? zeroAddress : lowercasedAddress
+}
 
 const DEFAULT_ADDRESS_STATE: AddressState = {
   fieldValue: '',
@@ -36,9 +50,8 @@ export interface UpdateFormParams {
 }
 
 export const usePrivacyPoolsDepositForm = () => {
-  // balance/sync/notes come from usePrivacyPools (the context wrapper)
+  // sync/notes come from usePrivacyPools (the context wrapper)
   const {
-    balance,
     sync,
     isReady,
     isSynced,
@@ -145,7 +158,17 @@ export const usePrivacyPoolsDepositForm = () => {
     [ethPrivateBalance, ethPrice]
   )
 
-  const supportedAssets = useMemo(() => new Set(balance.map((b) => b.asset.contract)), [balance])
+  // The shieldable assets come from the pool configuration, NOT from the notes the
+  // account already holds. Deriving them from existing notes left a wallet with no
+  // notes yet unable to make its first deposit, because every portfolio token was
+  // filtered out of the token select.
+  const supportedAssets = useMemo(() => {
+    const pools = Object.values(privacyPoolsChainData).flatMap(
+      (chain: ChainData[number]) => chain.poolInfo
+    )
+
+    return new Set(pools.map((pool) => toPortfolioTokenAddress(pool.assetAddress)))
+  }, [])
 
   const emptyImportedBalance = useMemo(() => ({ total: 0n, accounts: [] }), [])
 
