@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import React, {
   createContext,
   Dispatch,
@@ -20,6 +19,7 @@ import {
   type LeanIMTMerkleProof,
   type RagequitEvent,
   type PoolInfo,
+  type ChainConfig,
   Circuits,
   PrivacyPoolSDK,
   AccountService,
@@ -37,8 +37,7 @@ import {
 // import { sortPortfolioTokenList } from '@ambire-common/libs/swapAndBridge/swapAndBridge'
 import { AddressState } from '@ambire-common/interfaces/domains'
 import useDeepMemo from '@common/hooks/useDeepMemo'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useControllerState from '@web/hooks/useControllerState'
+import useController from '@common/hooks/useController'
 import useToast from '@common/hooks/useToast'
 // import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
 // import useNetworksControllerState from '@web/hooks/useNetworksControllerState'
@@ -55,11 +54,6 @@ import {
   generateAnonymitySetFromChain,
   convertToAlgorithmFormat
 } from '@web/modules/PPv1/sdk/noteSelection/anonimitySet/anonymitySetGeneration'
-import { getRpcProviderForUI } from '@web/services/provider'
-import {
-  createDataServiceWithProviders,
-  type ExtendedChainConfig
-} from '@web/services/privacyPools'
 
 export enum ReviewStatus {
   PENDING = 'pending',
@@ -192,9 +186,7 @@ const PrivacyPoolsControllerStateContext = createContext<EnhancedPrivacyPoolsCon
 )
 
 const PrivacyPoolsControllerStateProvider: React.FC<any> = ({ children }) => {
-  const controller = 'privacyPools'
-  const state = useControllerState(controller)
-  const { dispatch } = useBackgroundService()
+  const { state, dispatch } = useController('PrivacyPoolsController')
   const { addToast } = useToast()
   // const { portfolio } = useSelectedAccountControllerState()
   // const { networks } = useNetworksControllerState()
@@ -225,9 +217,7 @@ const PrivacyPoolsControllerStateProvider: React.FC<any> = ({ children }) => {
   )
   const [isLoadingAnonymitySet, setIsLoadingAnonymitySet] = useState(false)
 
-  const useHelium = false // TODO: enable helios when ready
-
-  const memoizedState = useDeepMemo(state, controller)
+  const memoizedState = useDeepMemo(state, 'PrivacyPoolsController')
   const { secret } = memoizedState
 
   // Load default private account if secret is provided and reset the secret in the controller state
@@ -235,7 +225,7 @@ const PrivacyPoolsControllerStateProvider: React.FC<any> = ({ children }) => {
     if (secret) {
       storeFirstPrivateAccount(secret)
         .then(() => {
-          dispatch({ type: 'PRIVACY_POOLS_CONTROLLER_RESET_SECRET' })
+          dispatch({ type: 'method', params: { method: 'resetSecret', args: [] } })
         })
         .catch(console.error)
     }
@@ -245,9 +235,9 @@ const PrivacyPoolsControllerStateProvider: React.FC<any> = ({ children }) => {
     try {
       setLoadingError(null)
       const firstChainInfo = memoizedState.chainData?.[chainId]
-      if (!firstChainInfo?.poolInfo?.length) throw new Error('No pool information found')
+      const firstPool = firstChainInfo?.poolInfo?.[0]
+      if (!firstPool) throw new Error('No pool information found')
 
-      const firstPool = firstChainInfo.poolInfo[0]
       const { aspUrl } = firstChainInfo
       const scope = firstPool.scope.toString()
 
@@ -320,8 +310,14 @@ const PrivacyPoolsControllerStateProvider: React.FC<any> = ({ children }) => {
 
       if (!poolAccountFromAccount) throw new Error('No pool accounts found.')
 
+      // A pool account with neither a deposit nor children has no last commitment,
+      // so there is nothing to process (and nothing spendable) for it.
+      const poolAccountsWithCommitment = poolAccountFromAccount.filter(
+        (poolAccount): poolAccount is PoolAccount => !!poolAccount.lastCommitment
+      )
+
       const newPoolAccounts = await processDeposits(
-        poolAccountFromAccount,
+        poolAccountsWithCommitment,
         leavesData,
         aspUrl,
         chainId,
@@ -564,12 +560,6 @@ const PrivacyPoolsControllerStateProvider: React.FC<any> = ({ children }) => {
     [sdk]
   )
 
-  useEffect(() => {
-    if (!Object.keys(state).length) {
-      dispatch({ type: 'INIT_CONTROLLER_STATE', params: { controller } })
-    }
-  }, [dispatch, state])
-
   // Load PPv1 accounts on initialization
   useEffect(() => {
     if (isReadyToLoad) {
@@ -602,49 +592,22 @@ const PrivacyPoolsControllerStateProvider: React.FC<any> = ({ children }) => {
 
       const circuits = new Circuits({ baseUrl })
 
-      const dataServiceConfig: ExtendedChainConfig[] = memoizedState.poolsByChain.map((pool) => {
-        const chainData = memoizedState.chainData?.[pool.chainId]
-        const sdkRpcUrl = chainData?.sdkRpcUrl || ''
-
-        if (!useHelium) {
-          return {
-            chainId: pool.chainId,
-            privacyPoolAddress: pool.address,
-            startBlock: pool.deploymentBlock,
-            rpcUrl: sdkRpcUrl
-          }
-        }
-
-        // Create a provider instance for this chain using UIProxyProvider
-        const provider = getRpcProviderForUI(
-          {
-            chainId: BigInt(pool.chainId),
-            rpcUrls: [sdkRpcUrl],
-            selectedRpcUrl: sdkRpcUrl
-          },
-          dispatch
-        )
-
-        return {
-          chainId: pool.chainId,
-          privacyPoolAddress: pool.address,
-          startBlock: pool.deploymentBlock,
-          rpcUrl: sdkRpcUrl,
-          provider
-        }
-      })
+      const dataServiceConfig: ChainConfig[] = memoizedState.poolsByChain.map((pool) => ({
+        chainId: pool.chainId,
+        privacyPoolAddress: pool.address as ChainConfig['privacyPoolAddress'],
+        startBlock: pool.deploymentBlock,
+        rpcUrl: memoizedState.chainData?.[pool.chainId]?.sdkRpcUrl || ''
+      }))
 
       const sdkModule = new PrivacyPoolSDK(circuits)
-      const ds = createDataServiceWithProviders(dataServiceConfig)
+      const ds = new DataService(dataServiceConfig)
 
       setDataService(ds)
       setSdk(sdkModule)
 
       fetchMtData().catch(console.error)
 
-      dispatch({
-        type: 'PRIVACY_POOLS_CONTROLLER_SDK_LOADED'
-      })
+      dispatch({ type: 'method', params: { method: 'setSdkInitialized', args: [] } })
     }
   }, [
     memoizedState.isInitialized,
@@ -654,8 +617,7 @@ const PrivacyPoolsControllerStateProvider: React.FC<any> = ({ children }) => {
     memoizedState,
     fetchMtData,
     dispatch,
-    sdk,
-    useHelium
+    sdk
   ])
 
   const value = useMemo(
@@ -698,7 +660,7 @@ const PrivacyPoolsControllerStateProvider: React.FC<any> = ({ children }) => {
         getContext,
         getMerkleProof,
         setSelectedPoolAccount
-      } as EnhancedPrivacyPoolsControllerState),
+      }) as EnhancedPrivacyPoolsControllerState,
     [
       memoizedState,
       mtRoots,

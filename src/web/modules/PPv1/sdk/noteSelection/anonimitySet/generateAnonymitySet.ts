@@ -49,7 +49,6 @@ export function generateAnonymitySet(deposits: DepositEvent[]): AnonymitySetData
   // Group deposits by ETH value and count occurrences
   const valueMap = new Map<string, number>()
 
-  // eslint-disable-next-line no-restricted-syntax
   for (const deposit of deposits) {
     // Convert wei to ETH
     const ethAmount = Number(deposit.value) / 1e18
@@ -115,7 +114,7 @@ export function generateAnonymitySetWithRagequits(
 ): AnonymitySetData {
   // Count deposits by value
   const depositMap = new Map<string, number>()
-  // eslint-disable-next-line no-restricted-syntax
+
   for (const deposit of deposits) {
     const ethAmount = Number(deposit.value) / 1e18
     const ethAmountStr = ethAmount.toString()
@@ -124,7 +123,7 @@ export function generateAnonymitySetWithRagequits(
 
   // Count ragequits by value
   const ragequitMap = new Map<string, number>()
-  // eslint-disable-next-line no-restricted-syntax
+
   for (const ragequit of ragequits) {
     const ethAmount = Number(ragequit.value) / 1e18
     const ethAmountStr = ethAmount.toString()

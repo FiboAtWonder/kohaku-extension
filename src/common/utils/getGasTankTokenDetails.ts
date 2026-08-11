@@ -4,28 +4,26 @@ import {
   SelectedAccountPortfolio,
   SelectedAccountPortfolioTokenResult
 } from '@ambire-common/interfaces/selectedAccount'
-import { GasTankTokenResult } from '@ambire-common/libs/portfolio'
 import getAndFormatTokenDetails from '@common/modules/dashboard/helpers/getTokenDetails'
 
-const parseGasTankToken = (token: GasTankTokenResult, type: keyof GasTankTokenResult) => {
-  const amount = token[type]
-  const { cashback, saved, availableAmount, ...rest } = token
+import type { GasTankTokenResult } from '@ambire-common/libs/portfolio'
+const parseGasTankToken = (token: GasTankTokenResult): SelectedAccountPortfolioTokenResult => {
+  const { availableAmount, ...rest } = token
 
-  return { ...rest, amount } as SelectedAccountPortfolioTokenResult
+  return rest
 }
 
 export const getGasTankTokenDetails = (
   portfolio: SelectedAccountPortfolio,
   account: Account | null,
-  networks: Network[],
-  key: 'amount' | 'cashback' | 'saved'
+  networks: Network[]
 ) => {
-  const gasTankResult = portfolio?.latest?.gasTank?.result as
+  const gasTankResult = portfolio?.portfolioState?.gasTank?.result as
     | { gasTankTokens: GasTankTokenResult[] }
     | undefined
 
   const noAccount = !account || !account.addr
-  const noPortfolio = !portfolio || !portfolio.latest || !portfolio.latest.gasTank
+  const noPortfolio = !portfolio || !portfolio.portfolioState || !portfolio.portfolioState.gasTank
   const noGasTankResult = !gasTankResult || !('gasTankTokens' in gasTankResult)
   const noGasTankTokens =
     noGasTankResult ||
@@ -36,10 +34,20 @@ export const getGasTankTokenDetails = (
     return { token: null, balanceFormatted: null }
   }
 
-  const token = parseGasTankToken(gasTankResult.gasTankTokens[0], key)
+  const token = gasTankResult.gasTankTokens[0]
+    ? parseGasTankToken(gasTankResult.gasTankTokens[0])
+    : null
+
+  if (!token) {
+    return { token: null, balanceFormatted: null }
+  }
+
+  const tokenDetails = getAndFormatTokenDetails(token, networks)
 
   return {
     token,
-    balanceFormatted: getAndFormatTokenDetails(token, networks).balanceFormatted
+    balanceFormatted: tokenDetails.balanceFormatted,
+    balanceUSDFormatted: tokenDetails.balanceUSDFormatted,
+    balanceUSD: tokenDetails.balanceUSD
   }
 }

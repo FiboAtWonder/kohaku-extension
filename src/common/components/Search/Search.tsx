@@ -16,11 +16,12 @@ interface Props extends InputProps {
   control: Control<{ search: string }, any>
   height?: number
   hasLeftIcon?: boolean
+  withClearButton?: boolean
   onSearchCleared?: () => void
 }
 
 const Search = ({
-  placeholder = 'Search',
+  placeholder = 'Search...',
   style,
   control,
   containerStyle = {},
@@ -28,6 +29,8 @@ const Search = ({
   height = 40,
   hasLeftIcon = true,
   onSearchCleared,
+  withClearButton = true,
+  leftIcon,
   ...rest
 }: Props) => {
   const { theme } = useTheme()
@@ -40,26 +43,36 @@ const Search = ({
       name="search"
       render={({ field: { onChange, onBlur, value } }) => (
         <Input
-          containerStyle={[spacings.mb0, containerStyle]}
-          leftIcon={hasLeftIcon ? () => <SearchIcon color={theme.secondaryText} /> : undefined}
+          containerStyle={[spacings.mb0 as ViewStyle, containerStyle]}
+          leftIcon={hasLeftIcon ? () => <SearchIcon color={theme.secondaryText} /> : leftIcon}
           placeholder={placeholder}
           style={style}
-          inputWrapperStyle={[{ height }, inputWrapperStyle]}
-          inputStyle={{ height: height - 2 }}
+          leftIconStyle={spacings.plSm}
+          inputStyle={{
+            ...spacings.plTy,
+            height: '100%'
+          }}
+          inputWrapperStyle={[
+            { height, borderRadius: height + 2, backgroundColor: theme.tertiaryBackground },
+            inputWrapperStyle
+          ]}
           placeholderTextColor={theme.secondaryText}
           onBlur={onBlur}
-          onChange={onChange}
+          onChangeText={onChange}
+          nativeInputStyle={{ fontSize: height >= 36 ? 16 : 14 }}
           value={value}
           button={
-            // A trick to prevent layout shift when the clear search icon appears
-            <View
-              style={{
-                width: clearSearchIconSize,
-                height: clearSearchIconSize
-              }}
-            >
-              {!!value && <CloseIcon width={clearSearchIconSize} height={clearSearchIconSize} />}
-            </View>
+            withClearButton && (
+              // A trick to prevent layout shift when the clear search icon appears
+              <View
+                style={{
+                  width: clearSearchIconSize,
+                  height: clearSearchIconSize
+                }}
+              >
+                {!!value && <CloseIcon width={clearSearchIconSize} height={clearSearchIconSize} />}
+              </View>
+            )
           }
           buttonStyle={{
             ...spacings.pv0,

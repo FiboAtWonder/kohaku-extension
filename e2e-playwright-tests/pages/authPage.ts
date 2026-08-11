@@ -1,4 +1,4 @@
-import { BA_PRIVATE_KEY, KEYSTORE_PASS } from 'constants/env'
+import { KEYSTORE_PASS, PRIVATE_KEY } from 'constants/env'
 import locators from 'constants/locators'
 import selectors from 'constants/selectors'
 import BootstrapContext from 'interfaces/bootstrapContext'
@@ -8,6 +8,8 @@ import { BasePage } from './basePage'
 
 export class AuthPage extends BasePage {
   extensionURL: string
+
+  generatedSeed: string = ''
 
   constructor(opts: BootstrapContext) {
     super(opts)
@@ -19,23 +21,39 @@ export class AuthPage extends BasePage {
   }
 
   async setExtensionPassword(): Promise<void> {
-    await this.page.getByTestId(selectors.enterPassField).fill(KEYSTORE_PASS)
-    await this.page.getByTestId(selectors.repeatPassField).fill(KEYSTORE_PASS)
-    await this.page.getByTestId(selectors.createKeystorePassBtn).click()
+    await this.entertext(selectors.getStarted.enterPassField, KEYSTORE_PASS)
+    await this.entertext(selectors.getStarted.repeatPassField, KEYSTORE_PASS)
+    await this.click(selectors.getStarted.createKeystorePassBtn)
   }
 
-  async importViewOnlyAccount(account): Promise<void> {
-    await this.page.locator(locators.watchAnAddress).click()
-    await this.page.locator(locators.viewOnlyInputAddressField).pressSequentially(account)
-    await this.page.locator(locators.importViewOnlyButton).click()
+  async decryptBackup(): Promise<void> {
+    await this.page.getByTestId(selectors.passphraseField).fill(KEYSTORE_PASS)
+    await this.page.getByTestId(selectors.submitButton).click()
+  }
+
+  // TODO: improve method assertions
+  async importViewOnlyAccount(account: string): Promise<void> {
+    await this.click(selectors.getStarted.watchAddress)
+    await this.entertext(selectors.getStarted.addressEnsField, account)
+    await this.click(selectors.getStarted.viewOnlyBtnImport)
     await this.setExtensionPassword()
-    await this.page.locator(locators.confirmationMessageForViewOnly).isVisible()
-    await this.page.locator(locators.completeButton).click()
-    await this.page.locator(locators.confirmationMessageAmbireWallet).isVisible()
-    await this.page.locator(locators.openDashboardButton).click()
+    await this.compareText(
+      selectors.getStarted.confirmationMessageForViewOnly,
+      'Added successfully'
+    )
+    await this.expectButtonEnabled(selectors.getStarted.saveAndContinueBtn)
+    await this.click(selectors.getStarted.saveAndContinueBtn)
+    await this.compareText(
+      selectors.getStarted.confirmationMessageAmbireWallet,
+      'Kohaku is ready to use'
+    )
+    await this.click(selectors.getStarted.openDashboardButton)
+    // assertion on Dashboard after login
   }
 
-  async verifyRecoveryPhraseScreen(): Promise<void> {
+  async verifyRecoveryPhraseScreen(): Promise<string> {
+    this.generatedSeed = ''
+
     const locator = this.page.getByTestId('info-0').locator('div').nth(3)
     if (
       await this.page
@@ -46,145 +64,233 @@ export class AuthPage extends BasePage {
       await locator.waitFor({ state: 'visible' })
       await locator.click()
     }
-    await this.page.locator(locators.recoveryPhraseHeader).isVisible()
-    await this.page.locator(locators.copyRecoveryPhraseButton).click()
-    await this.page.getByText('Recovery phrase copied to').isVisible()
-    await this.page.getByText('Recovery phrase copied to').waitFor({ state: 'detached' })
-    await this.page.locator(locators.savedPhraseButton).click()
+    await this.isVisible(selectors.getStarted.recoveryPhraseHeader)
+    await this.context.grantPermissions(['clipboard-read'])
+    await this.click(selectors.getStarted.copyRecoveryPhraseButton)
+    await this.compareText(
+      selectors.getStarted.recoveryPhraseCopiedSnackbar,
+      'Recovery phrase copied to clipboard'
+    )
+    this.generatedSeed = await this.page.evaluate(() => navigator.clipboard.readText())
+    await this.page
+      .getByTestId(selectors.getStarted.recoveryPhraseCopiedSnackbar)
+      .waitFor({ state: 'hidden' })
+    await this.click(selectors.getStarted.savedPhraseButton)
+
+    return this.generatedSeed
   }
 
-  async createNewAccount(): Promise<void> {
-    await this.page.locator(locators.createNewAccountButton).click()
+  // TODO: imporove method assertions
+  async createNewAccount(): Promise<string> {
+    this.generatedSeed = ''
+
+    await this.click(selectors.getStarted.createNewAccountButton)
     for (let index = 0; index < 3; index++) {
-      // eslint-disable-next-line no-await-in-loop
-      await this.page.locator(`div[data-testid="checkbox"] >> nth = ${index}`).click()
+      await this.click(selectors.getStarted.checkbox, index)
     }
-    await this.page.locator(locators.createRecoveryPhraseButton).click()
+    await this.click(selectors.getStarted.createRecoveryPhraseButton)
     await this.verifyRecoveryPhraseScreen()
     await this.setExtensionPassword()
-    await this.page.locator(locators.confirmationMessageForViewOnly).isVisible()
-    await this.page.locator(locators.addMoreAccountsButton).isVisible()
-    await this.page.locator(locators.completeButton).click()
-    await this.page.locator(locators.confirmationMessageAmbireWallet).isVisible()
-    await this.page.locator(locators.openDashboardButton).click()
+    // assertion on Dashboard after login
+    await this.compareText(
+      selectors.getStarted.confirmationMessageForViewOnly,
+      'Added successfully'
+    )
+    await this.compareText(selectors.getStarted.addMoreAccountsButton, 'Add more accounts')
+    await this.expectButtonEnabled(selectors.getStarted.saveAndContinueBtn)
+    await this.click(selectors.getStarted.saveAndContinueBtn)
+    await this.compareText(
+      selectors.getStarted.confirmationMessageAmbireWallet,
+      'Kohaku is ready to use'
+    )
+    await this.click(selectors.getStarted.openDashboardButton)
+
+    return this.generatedSeed
   }
 
+  // TODO: imporove method assertions
   async importExistingAccount(): Promise<void> {
-    await this.page.locator(locators.importExistingAccountButton).click()
-    await this.page.locator(locators.importFromPrivateKeyButton).click()
-    await this.typeTextInInputField(locators.inputPrivateKey, BA_PRIVATE_KEY)
-    await this.page.locator(locators.warningCheckbox).click()
-    await this.page.locator(locators.importConfirmButton).click()
+    await this.click(selectors.getStarted.importExistingAccBtn)
+    await this.click(selectors.getStarted.importMethodPrivateBtn)
+    await this.entertext(selectors.getStarted.enterPrivateKeyField, PRIVATE_KEY)
+    await this.click(selectors.getStarted.warningCheckbox)
+    await this.click(selectors.getStarted.importBtn)
     await this.setExtensionPassword()
-    await this.page.locator(locators.confirmationMessageForViewOnly).isVisible()
-    await this.page.locator(locators.addMoreAccountsButton).isVisible()
-    await this.page.locator(locators.completeButton).click()
-    await this.page.locator(locators.confirmationMessageAmbireWallet).isVisible()
-    await this.page.locator(locators.openDashboardButton).click()
+    // assertion on Dashboard after login
+    await this.compareText(
+      selectors.getStarted.confirmationMessageForViewOnly,
+      'Added successfully'
+    )
+    await this.expectButtonEnabled(selectors.getStarted.saveAndContinueBtn)
+    await this.click(selectors.getStarted.saveAndContinueBtn)
+    await this.compareText(
+      selectors.getStarted.confirmationMessageAmbireWallet,
+      'Kohaku is ready to use'
+    )
+    await this.click(selectors.getStarted.openDashboardButton)
   }
 
+  // TODO: imporove method assertions
   async importExistingAccountByRecoveryPhrase(passphrase: string): Promise<void> {
-    await this.page.locator(locators.importExistingAccountButton).click()
-    await this.page.locator(locators.importFromRecoveryPhraseButton).click()
-    await this.typeTextInInputField(locators.inputSeetField, passphrase)
-    await this.page.locator(locators.recoveryPhraseAdvancedModeToggle).isVisible()
+    await this.click(selectors.getStarted.importExistingAccBtn)
+    await this.click(selectors.getStarted.importMethodRecoveryPhrase)
+    await this.entertext(selectors.getStarted.enterSeedPhraseField, passphrase)
+    // enter phrase and recovery phrase
+    // await this.click(selectors.getStarted.advancedPassPhraseSwitch) // TODO: added selector is not working
     await this.page.locator(locators.recoveryPhraseAdvancedModeToggle).click()
-    await this.typeTextInInputField(locators.inputPassphrase, passphrase)
-    await this.page.locator(locators.importConfirmButton).click()
+    await this.entertext(selectors.getStarted.recoveryPhrasePassphraseField, passphrase)
+    // import
+    await this.click(selectors.getStarted.importBtn)
+    // set pass and name
     await this.setExtensionPassword()
-    await this.personalizeAccountName()
-    await this.page.locator(locators.addMoreAccountsButton).isVisible()
-    await this.page.locator(locators.completeButton).click()
-    await this.page.locator(locators.confirmationMessageAmbireWallet).isVisible()
-    await this.page.locator(locators.openDashboardButton).click()
+    await this.personalizeAccountName('Name 1')
+    // assertion on Dashboard after login
+    await this.compareText(selectors.getStarted.addMoreAccountsButton, 'Add more accounts')
+
+    await this.expectButtonEnabled(selectors.getStarted.saveAndContinueBtn)
+    await this.click(selectors.getStarted.saveAndContinueBtn)
+    await this.compareText(
+      selectors.getStarted.confirmationMessageAmbireWallet,
+      'Kohaku is ready to use'
+    )
+    await this.click(selectors.getStarted.openDashboardButton)
   }
 
-  async personalizeAccountName(): Promise<void> {
-    await this.page.locator(locators.editAccountButton).click()
-    // TODO: Parametrization
-    await this.typeTextInInputField(locators.editAccountNameField, 'Name 1')
-    await this.page.locator(locators.saveMessageText).isVisible()
+  async personalizeAccountName(name: string): Promise<void> {
+    // clear field input first
+    await this.click(selectors.getStarted.editFirstAccNameButton)
+    await this.entertext(selectors.getStarted.editAccountNameInputField, name)
+    await this.compareText(selectors.getStarted.editFirstAccNameButton, 'Save')
   }
 
+  // TODO: imporove method assertions
   async importCoupleOfViewOnlyAccount(account1: string, account2: string): Promise<void> {
-    await this.page.locator(locators.watchAnAddress).click()
-    await this.page.locator(locators.viewOnlyInputAddressField).pressSequentially(account1)
-    await this.page.locator(locators.addMoreAdressesButton).click()
-    await this.page.locator(locators.viewOnlySecondInputAddressField).pressSequentially(account2)
-    await this.page.locator(locators.importViewOnlyButton).click()
+    await this.click(selectors.getStarted.watchAddress)
+    // add address 1
+    await this.entertext(selectors.getStarted.addressEnsField, account1)
+    // add address 2
+    await this.click(selectors.getStarted.addOneMoreAddress)
+    await this.entertext(selectors.getStarted.addressEnsField, account2, 1)
+    // import
+    await this.click(selectors.getStarted.viewOnlyBtnImport)
+    // set pass and name
     await this.setExtensionPassword()
-    await this.page.locator(locators.confirmationMessageForViewOnly).isVisible()
-    await this.personalizeAccountName()
-    await this.page.locator(locators.completeButton).click()
-    await this.page.locator(locators.confirmationMessageAmbireWallet).isVisible()
-    await this.page.locator(locators.openDashboardButton).click()
+    // assertion on Dashboard after login
+    await this.compareText(
+      selectors.getStarted.confirmationMessageForViewOnly,
+      'Added successfully'
+    )
+    await this.personalizeAccountName('Name 1')
+    await this.expectButtonEnabled(selectors.getStarted.saveAndContinueBtn)
+    await this.click(selectors.getStarted.saveAndContinueBtn)
+    await this.compareText(
+      selectors.getStarted.confirmationMessageAmbireWallet,
+      'Kohaku is ready to use'
+    )
+    await this.click(selectors.getStarted.openDashboardButton)
   }
 
   async createNewHotWalletAndPersonalizeName(): Promise<void> {
-    await this.page.locator(locators.createNewAccountButton).click()
+    await this.click(selectors.getStarted.createNewAccountButton)
     for (let index = 0; index < 3; index++) {
-      // eslint-disable-next-line no-await-in-loop
-      await this.page.locator(`div[data-testid="checkbox"] >> nth = ${index}`).click()
+      await this.click(selectors.getStarted.checkbox, index)
     }
-    await this.page.locator(locators.createRecoveryPhraseButton).click()
+    await this.click(selectors.getStarted.createRecoveryPhraseButton)
     await this.verifyRecoveryPhraseScreen()
     await this.setExtensionPassword()
-    await this.page.locator(locators.addMoreAccountsButton).click()
+    await this.click(selectors.getStarted.addMoreAccountsButton)
     await this.page.locator(locators.smartAccountPicker).click()
-    await this.page.locator(locators.importAccountButton).click()
-    await this.page.locator(locators.confirmationMessageForViewOnly).isVisible()
-    await this.personalizeAccountName()
-    await this.page.locator(locators.addMoreAccountsButton).isVisible()
-    await this.page.locator(locators.completeButton).click()
-    await this.page.locator(locators.confirmationMessageAmbireWallet).isVisible()
-    await this.page.locator(locators.openDashboardButton).click()
+    // await this.click(selectors.getStarted.smartAccountPicker, 5) // TODO: not working
+    await this.click(selectors.getStarted.importAccountButton)
+    await this.compareText(
+      selectors.getStarted.confirmationMessageForViewOnly,
+      'Added successfully'
+    )
+    await this.personalizeAccountName('Name 1')
+    await this.isVisible(selectors.getStarted.addMoreAccountsButton)
+    await this.expectButtonEnabled(selectors.getStarted.saveAndContinueBtn)
+    await this.click(selectors.getStarted.saveAndContinueBtn)
+    await this.compareText(
+      selectors.getStarted.confirmationMessageAmbireWallet,
+      'Kohaku is ready to use'
+    )
+    await this.click(selectors.getStarted.openDashboardButton)
   }
 
   async selectHDPath(path: string): Promise<void> {
-    await this.page.locator(locators.changeHDPathButton).click()
-    await this.page.locator(path).click()
-    await this.page.locator(locators.hdPathConfirmButton).click()
+    await this.page.waitForTimeout(3000)
+    await this.expectButtonEnabled(selectors.getStarted.changeHDPathButton)
+    await this.click(selectors.getStarted.changeHDPathButton)
+    await this.isVisible(path)
+    await this.click(path)
+    await this.click(selectors.getStarted.hdPathConfirmButton)
   }
 
   async createAccountAndImportFromDifferentHDPath(): Promise<void> {
-    await this.page.locator(locators.createNewAccountButton).click()
+    await this.click(selectors.getStarted.createNewAccountButton)
     for (let index = 0; index < 3; index++) {
-      // eslint-disable-next-line no-await-in-loop
-      await this.page.locator(`div[data-testid="checkbox"] >> nth = ${index}`).click()
+      await this.click(selectors.getStarted.checkbox, index)
     }
-    await this.page.locator(locators.createRecoveryPhraseButton).click()
+    await this.click(selectors.getStarted.createRecoveryPhraseButton)
     await this.verifyRecoveryPhraseScreen()
     await this.setExtensionPassword()
-    await this.page.locator(locators.addMoreAccountsButton).click()
-    await this.selectHDPath(locators.hdPathLegerLive)
+    await this.page.waitForTimeout(1000)
+    await this.expectButtonEnabled(selectors.getStarted.addMoreAccountsButton)
+    await this.click(selectors.getStarted.addMoreAccountsButton)
+    await this.page.waitForTimeout(3000)
+    await this.selectHDPath(selectors.getStarted.hdPathLegerLive)
     await this.page.locator(locators.smartAccountPicker).click()
-    await this.page.locator(locators.importAccountButton).click()
-    await this.page.locator(locators.confirmationMessageForViewOnly).isVisible()
-    await this.page.locator(locators.addMoreAccountsButton).click()
-    await this.selectHDPath(locators.hdPathLegerLive)
-    await this.page.locator(locators.smartAccountPickerForHDPath).click()
-    await this.page.locator(locators.importAccountButton).click()
-    await this.page.locator(locators.addMoreAccountsButton).isVisible()
-    await this.page.locator(locators.completeButton).click()
-    await this.page.locator(locators.confirmationMessageAmbireWallet).isVisible()
-    await this.page.locator(locators.openDashboardButton).click()
+    // await this.click(selectors.getStarted.smartAccountPicker, 5) // TODO: not working
+    await this.click(selectors.getStarted.importAccountButton)
+    await this.compareText(
+      selectors.getStarted.confirmationMessageForViewOnly,
+      'Added successfully'
+    )
+    // add another acc
+    await this.expectButtonEnabled(selectors.getStarted.addMoreAccountsButton)
+    await this.click(selectors.getStarted.addMoreAccountsButton)
+    await this.page.waitForTimeout(3000)
+    await this.selectHDPath(selectors.getStarted.hdPathLegerLive)
+    await this.page.locator(locators.smartAccountPicker).click()
+    // await this.click(selectors.getStarted.smartAccountPicker, 5) // TODO: not working
+    await this.click(selectors.getStarted.importAccountButton)
+    await this.compareText(
+      selectors.getStarted.confirmationMessageForViewOnly,
+      'Added successfully'
+    )
+    await this.isVisible(selectors.getStarted.addMoreAccountsButton)
+    await this.expectButtonEnabled(selectors.getStarted.saveAndContinueBtn)
+    await this.click(selectors.getStarted.saveAndContinueBtn)
+    await this.compareText(
+      selectors.getStarted.confirmationMessageAmbireWallet,
+      'Kohaku is ready to use'
+    )
+    await this.click(selectors.getStarted.openDashboardButton)
   }
 
+  // TODO: imporove method assertions
   async importAccountFromJSONFile(): Promise<void> {
     const saAccounts = JSON.parse(process.env.SA_ACCOUNT_JSON || '{}')
     const jsonBuffer = Buffer.from(JSON.stringify(saAccounts))
-    await this.page.locator(locators.importExistingAccountButton).click()
-    await this.page.locator(locators.showMoreButton).click()
-    await this.page.locator(locators.importJSONBackupFileButton).click()
+
+    await this.click(selectors.getStarted.importExistingAccBtn)
+    await this.click(selectors.getStarted.showMoreBtn)
+    await this.click(selectors.getStarted.importMethodJSON)
     const fileInput = this.page.locator('input[type="file"]')
     await fileInput.setInputFiles({
       name: 'sa.json',
       mimeType: 'application/json',
       buffer: jsonBuffer
     })
+    await this.decryptBackup()
     await this.setExtensionPassword()
-    await this.page.locator(locators.completeButton).click()
-    await this.page.locator(locators.confirmationMessageAmbireWallet).isVisible()
-    await this.page.locator(locators.openDashboardButton).click()
+    // assertion on Dashboard after login
+    await this.expectButtonEnabled(selectors.getStarted.saveAndContinueBtn)
+    await this.click(selectors.getStarted.saveAndContinueBtn)
+    await this.compareText(
+      selectors.getStarted.confirmationMessageAmbireWallet,
+      'Kohaku is ready to use'
+    )
+    await this.click(selectors.getStarted.openDashboardButton)
   }
 }

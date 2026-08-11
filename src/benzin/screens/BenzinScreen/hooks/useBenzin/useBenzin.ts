@@ -1,34 +1,42 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Linking } from 'react-native'
 
-import { allBundlers, BUNDLER } from '@ambire-common/consts/bundlers'
+import { BUNDLER } from '@ambire-common/consts/bundlers'
 import {
   AccountOpIdentifiedBy,
   SubmittedAccountOp
 } from '@ambire-common/libs/accountOp/submittedAccountOp'
 import { relayerCall } from '@ambire-common/libs/relayerCall/relayerCall'
-import { getDefaultBundler } from '@ambire-common/services/bundlers/getBundler'
+import { BundlerSwitcher } from '@ambire-common/services/bundlers/bundlerSwitcher'
 import { getBenzinUrlParams } from '@ambire-common/utils/benzin'
 import useBenzinNetworksContext from '@benzin/hooks/useBenzinNetworksContext'
 import useSteps from '@benzin/screens/BenzinScreen/hooks/useSteps'
 import { ActiveStepType } from '@benzin/screens/BenzinScreen/interfaces/steps'
+import { isWeb } from '@common/config/env'
+import useController from '@common/hooks/useController'
 import useRoute from '@common/hooks/useRoute'
 import useToast from '@common/hooks/useToast'
 import { setStringAsync } from '@common/utils/clipboard'
 import { RELAYER_URL } from '@env'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useNetworksControllerState from '@web/hooks/useNetworksControllerState'
-import { getRpcProviderForUI } from '@web/services/provider'
 
-const fetch = window.fetch.bind(window) as any
+const fetch = (typeof window !== 'undefined' ? window.fetch.bind(window) : global.fetch) as any
 const standardOptions = {
   fetch,
   callRelayer: relayerCall.bind({ url: RELAYER_URL, fetch })
 }
 
+interface BenzinParams {
+  txnId?: string | null
+  userOpHash?: string | null
+  relayerId?: string | null
+  chainId?: string | null
+  bundler?: string | null
+}
+
 interface Props {
   onOpenExplorer?: () => void
   extensionAccOp?: SubmittedAccountOp
+  params?: BenzinParams
 }
 
 const getParams = (search?: string) => {
@@ -38,47 +46,71 @@ const getParams = (search?: string) => {
     txnId: params.get('txnId') ?? null,
     userOpHash: params.get('userOpHash') ?? null,
     relayerId: params.get('relayerId') ?? null,
-    isRenderedInternally: typeof params.get('isInternal') === 'string',
     chainId: params.get('chainId'),
     bundler: params.get('bundler') ?? null
   }
 }
 
-const useBenzin = ({ onOpenExplorer, extensionAccOp }: Props = {}) => {
+const useBenzin = ({ onOpenExplorer, extensionAccOp, params: directParams }: Props = {}) => {
   const { addToast } = useToast()
   const route = useRoute()
-  const { txnId, userOpHash, relayerId, isRenderedInternally, chainId, bundler } = getParams(
-    route?.search
-  )
+  const routeParams = getParams(route?.search)
+  const { txnId, userOpHash, relayerId, chainId, bundler } = directParams
+    ? {
+        txnId: directParams.txnId ?? null,
+        userOpHash: directParams.userOpHash ?? null,
+        relayerId: directParams.relayerId ?? null,
+        chainId: directParams.chainId ?? null,
+        bundler: directParams.bundler ?? null
+      }
+    : routeParams
 
-  const { dispatch } = useBackgroundService()
-  const { networks } = useNetworksControllerState()
-  const { benzinNetworks, loadingBenzinNetworks = [], addNetwork } = useBenzinNetworksContext()
+  const {
+    state: { networks }
+  } = useController('NetworksController')
+  const {
+    benzinNetworks,
+    loadingBenzinNetworks = [],
+    addNetwork,
+    notFoundNetworks
+  } = useBenzinNetworksContext()
   const bigintChainId = BigInt(chainId || '') || 0n
   const actualNetworks = networks ?? benzinNetworks
   const areRelayerNetworksLoaded = actualNetworks && actualNetworks.length
-  const network = actualNetworks.find((n) => n.chainId === bigintChainId) || null
-  const [provider, setProvider] = useState<any>(null)
   const isNetworkLoading = loadingBenzinNetworks.includes(bigintChainId)
   const [activeStep, setActiveStep] = useState<ActiveStepType>('signed')
-  const isInitialized = !isNetworkLoading && areRelayerNetworksLoaded
+  const isInitialized =
+    !isNetworkLoading && areRelayerNetworksLoaded && (!!extensionAccOp || activeStep !== 'signed')
+
+  const network = useMemo(() => {
+    return actualNetworks.find((n) => n.chainId === bigintChainId) || null
+  }, [actualNetworks, bigintChainId])
+
+  const {
+    dispatch: providerDispatch,
+    state: { providers }
+  } = useController('ProvidersController')
 
   useEffect(() => {
-    if (!network || !chainId) return
-    const rpcUrl = network.selectedRpcUrl || network.rpcUrls[0]
-    if (!provider) {
-      setProvider(getRpcProviderForUI({ ...network, rpcUrls: [rpcUrl] }, dispatch) as any)
-    }
-    return () => {
-      if (provider && provider.destroy) provider.destroy()
-    }
-  }, [network, chainId, provider, dispatch])
+    if (!network) return
+    if (providers[network.chainId.toString()]) return
 
-  const userOpBundler = useMemo(() => {
-    if (bundler && allBundlers.includes(bundler)) return bundler as BUNDLER
-    if (!network) return undefined
-    return getDefaultBundler(network).getName()
-  }, [bundler, network])
+    providerDispatch({ type: 'method', params: { method: 'setProvider', args: [network] } })
+  }, [network, providers, providerDispatch])
+
+  const switcher = useMemo(() => {
+    if (!network) return null
+    return new BundlerSwitcher(
+      network,
+      () => {
+        return false
+      },
+      {
+        canDelegate: false,
+        preferredBundler: (bundler as BUNDLER) ?? undefined
+      }
+    )
+  }, [network, bundler])
 
   const stepsState = useSteps({
     txnId,
@@ -87,17 +119,21 @@ const useBenzin = ({ onOpenExplorer, extensionAccOp }: Props = {}) => {
     network,
     standardOptions,
     setActiveStep,
-    provider,
-    bundler: userOpBundler,
+    switcher,
     extensionAccOp,
     networks: actualNetworks
   })
 
-  const identifiedBy: AccountOpIdentifiedBy = useMemo(() => {
+  const getIdentifiedBy = useCallback((): AccountOpIdentifiedBy => {
     if (relayerId) return { type: 'Relayer', identifier: relayerId }
-    if (userOpHash) return { type: 'UserOperation', identifier: userOpHash, bundler: userOpBundler }
+    if (userOpHash)
+      return {
+        type: 'UserOperation',
+        identifier: userOpHash,
+        bundler: switcher ? switcher.getBundler().getName() : undefined
+      }
     return { type: 'Transaction', identifier: txnId as string }
-  }, [relayerId, userOpHash, txnId, userOpBundler])
+  }, [relayerId, userOpHash, switcher, txnId])
 
   useEffect(() => {
     if (areRelayerNetworksLoaded && !network && bigintChainId) {
@@ -107,13 +143,13 @@ const useBenzin = ({ onOpenExplorer, extensionAccOp }: Props = {}) => {
 
   const handleCopyText = useCallback(async () => {
     try {
-      let address = window.location.href
+      let address = isWeb ? window.location.href : ''
 
       if (chainId) {
         address = `https://explorer.ambire.com/${getBenzinUrlParams({
           chainId,
           txnId: stepsState.txnId,
-          identifiedBy
+          identifiedBy: getIdentifiedBy()
         })}`
       }
 
@@ -122,7 +158,7 @@ const useBenzin = ({ onOpenExplorer, extensionAccOp }: Props = {}) => {
       addToast('Error copying to clipboard', { type: 'error' })
     }
     addToast('Copied to clipboard!')
-  }, [addToast, chainId, stepsState.txnId, identifiedBy])
+  }, [addToast, chainId, stepsState.txnId, getIdentifiedBy])
 
   const handleOpenExplorer = useCallback(async () => {
     if (!network?.explorerUrl) return
@@ -140,11 +176,12 @@ const useBenzin = ({ onOpenExplorer, extensionAccOp }: Props = {}) => {
   }, [network, userOpHash, stepsState.txnId, onOpenExplorer, addToast])
 
   const showCopyBtn = useMemo(() => {
-    if (!network) return true
+    if (!network) return false
+    if (extensionAccOp && extensionAccOp.identifiedBy?.type === 'MultipleTxns') return false
 
     const isRejected = stepsState.finalizedStatus?.status === 'rejected'
     return !isRejected
-  }, [network, stepsState.finalizedStatus?.status])
+  }, [network, stepsState.finalizedStatus?.status, extensionAccOp])
 
   const showOpenExplorerBtn = useMemo(() => {
     if (!network) return false
@@ -154,6 +191,12 @@ const useBenzin = ({ onOpenExplorer, extensionAccOp }: Props = {}) => {
     const isRejected = stepsState.finalizedStatus?.status === 'rejected'
     return !isRejected
   }, [network, stepsState.finalizedStatus?.status, stepsState.txnId])
+
+  const disableOpenExplorerBtn = useMemo(() => {
+    const accountOp = stepsState.submittedAccountOp || extensionAccOp
+
+    return accountOp?.identifiedBy?.type === 'MultipleTxns' && accountOp.calls.length > 1
+  }, [extensionAccOp, stepsState.submittedAccountOp])
 
   if (!chainId || (!txnId && !userOpHash && !relayerId)) return null
 
@@ -165,10 +208,12 @@ const useBenzin = ({ onOpenExplorer, extensionAccOp }: Props = {}) => {
     network,
     txnId: stepsState.txnId,
     userOpHash,
-    isRenderedInternally,
+    bigintChainId,
     showCopyBtn,
     showOpenExplorerBtn,
-    isInitialized
+    disableOpenExplorerBtn,
+    isInitialized,
+    isNetworkNotFound: notFoundNetworks.includes(bigintChainId)
   }
 }
 

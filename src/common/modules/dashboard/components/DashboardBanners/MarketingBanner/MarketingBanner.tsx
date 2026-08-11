@@ -1,184 +1,135 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import { Pressable, View } from 'react-native'
 
-import { Banner } from '@ambire-common/interfaces/banner'
-import AmbireBackgroundLogo from '@common/assets/svg/AmbireBackgroundLogo'
+import { Banner, MarketingBannerTypes } from '@ambire-common/interfaces/banner'
 import CloseIcon from '@common/assets/svg/CloseIcon'
 import Text from '@common/components/Text'
+import { isMobile } from '@common/config/env'
+import useController from '@common/hooks/useController'
+import { AnimatedPressable, useMultiHover } from '@common/hooks/useHover'
+import useNavigation from '@common/hooks/useNavigation'
 import useTheme from '@common/hooks/useTheme'
+import { WEB_ROUTES } from '@common/modules/router/constants/common'
 import spacings from '@common/styles/spacings'
-import ThemeColors, { THEME_TYPES } from '@common/styles/themeConfig'
-import common from '@common/styles/utils/common'
+import { BORDER_RADIUS_PRIMARY, hexToRgba } from '@common/styles/utils/common'
 import flexbox from '@common/styles/utils/flexbox'
-import { openInTab } from '@web/extension-services/background/webapi/tab'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import { getUiType } from '@web/utils/uiType'
+import { openInTab } from '@common/utils/links'
+import { getUiType } from '@common/utils/uiType'
 
-import getStyles from './styles'
+const TYPE_EMOJI_MAP: { [key in MarketingBannerTypes]: string } = {
+  updates: '💜',
+  rewards: '💎',
+  new: '📢',
+  vote: '✋',
+  tips: '💡',
+  alert: '🚨'
+}
 
-const RELAYER_BANNER_TYPES = ['updates', 'rewards', 'new', 'vote', 'tips', 'alert'] as const
+const FALLBACK_EMOJI = '🔥'
 
 interface Props {
   banner: Banner
 }
 
-const typeEmojiMap: Record<string, string> = {
-  updates: '💜',
-  rewards: '💎',
-  new: '📢',
-  vote: '✋',
-  tips: '💡'
-}
-interface BannerColors {
-  background: string
-  border: string
-  logoColor: string
-}
-
-const typeBannerColorsMap: Record<string, BannerColors> = {
-  updates: {
-    background: '#9D7AFF',
-    border: '#7B59E7',
-    logoColor: '#7443F8'
-  },
-  rewards: {
-    background: '#191B1F',
-    border: '#323D73',
-    logoColor: '#2D2467'
-  },
-  new: {
-    background: '#B14904',
-    border: '#CD6020',
-    logoColor: '#E29101'
-  },
-  vote: {
-    background: '#6C38F7',
-    border: '#946EFD',
-    logoColor: '#946EFD'
-  },
-  tips: {
-    background: '#003A3C',
-    border: '#3A6762',
-    logoColor: '#188B89'
-  }
-}
-
 const MarketingBanner: React.FC<Props> = ({ banner }) => {
-  const { isTab, isPopup } = getUiType()
-  const { dispatch } = useBackgroundService()
-  const { styles } = useTheme(getStyles)
-  const { text, type: bannerType = 'updates', actions } = banner
-  const type = RELAYER_BANNER_TYPES.includes(bannerType as any) ? bannerType : 'updates'
-  const url = actions?.find((action) => action.actionName === 'open-link')?.meta?.url || ''
-  const colors = typeBannerColorsMap[type]
+  const { isPopup } = getUiType()
+  const { dispatch: bannerDispatch } = useController('BannerController')
+  const { dispatch: surveyDispatch } = useController('SurveyController')
+  const { theme } = useTheme()
+  const { text, title, type: bannerType = 'updates', actions, emoji: backendEmoji } = banner
+  const emoji = backendEmoji || TYPE_EMOJI_MAP[bannerType as MarketingBannerTypes] || FALLBACK_EMOJI
+  const action = actions?.[0]
+  const url = action?.actionName === 'open-link' ? action.meta.url : ''
+  const size = (banner.text?.length || 0) > 50 ? 'large' : 'normal'
+  const emojiSize = isMobile ? 48 : size === 'large' ? 64 : 48
+  const { navigate } = useNavigation()
+
+  const [bindAnim, animStyle] = useMultiHover({
+    values: [
+      {
+        property: 'backgroundColor',
+        from: theme.secondaryBackground,
+        to: theme.tertiaryBackground
+      },
+      {
+        property: 'borderColor',
+        from: hexToRgba(theme.neutral100, 0),
+        to: theme.neutral100
+      }
+    ]
+  })
+
+  const dismissBanner = useCallback(() => {
+    bannerDispatch({
+      type: 'method',
+      params: {
+        method: 'dismissBanner',
+        args: [banner.id]
+      }
+    })
+  }, [banner.id, bannerDispatch])
 
   return (
-    <View
+    <AnimatedPressable
       style={[
-        styles.container,
-        {
-          backgroundColor: colors.background,
-          borderColor: colors.border
-        }
+        spacings.phTy,
+        spacings.pvTy,
+        flexbox.directionRow,
+        { borderRadius: BORDER_RADIUS_PRIMARY, borderWidth: 1 },
+        spacings.mbTy,
+        animStyle,
+        { alignItems: 'center' }
       ]}
+      onPress={async () => {
+        const action = banner.actions[0]
+        if (action?.actionName === 'survey') {
+          surveyDispatch({
+            type: 'method',
+            params: { method: 'fetchSurvey', args: [action.meta.surveyId, banner.id] }
+          })
+          navigate(WEB_ROUTES.survey)
+        } else await openInTab({ url, shouldCloseCurrentWindow: isPopup })
+      }}
+      {...bindAnim}
     >
-      <View style={styles.backgroundLogo}>
-        <AmbireBackgroundLogo color={typeBannerColorsMap[type]?.logoColor} />
-      </View>
-      <View style={[flexbox.directionRow, flexbox.alignCenter, spacings.plSm]}>
-        <View
+      <View
+        style={[
+          flexbox.center,
+          {
+            width: emojiSize,
+            height: emojiSize
+          },
+          spacings.plTy
+        ]}
+      >
+        <Text
           style={{
-            width: 32,
-            height: 33,
-            ...flexbox.directionRow,
-            ...flexbox.alignCenter,
-            ...flexbox.justifyCenter,
-            ...spacings.mrSm
+            fontSize: emojiSize * 0.7,
+            lineHeight: emojiSize
           }}
         >
-          <Text fontSize={24}>{typeEmojiMap[type] || ''}</Text>
+          {emoji}
+        </Text>
+      </View>
+      <View style={[spacings.ml, flexbox.flex1]}>
+        <View style={[flexbox.directionRow, flexbox.justifySpaceBetween]}>
+          <Text weight="medium" style={{ flexShrink: 1 }}>
+            {title}
+          </Text>
+          <Pressable
+            onPress={dismissBanner}
+            hitSlop={8}
+            style={{ width: 24, height: 24, ...flexbox.center }}
+            testID="banner-button-reject"
+          >
+            <CloseIcon color={theme.iconPrimary} strokeWidth="2" width={12} height={12} />
+          </Pressable>
         </View>
-        <Text
-          weight="medium"
-          fontSize={isTab ? 16 : 14}
-          color={ThemeColors.primaryText[THEME_TYPES.DARK]}
-        >
+        <Text appearance="secondaryText" fontSize={14} style={spacings.mrLg}>
           {text}
         </Text>
       </View>
-
-      <View style={[flexbox.directionRow, flexbox.alignCenter]}>
-        <Pressable
-          testID="marketing-banner-button"
-          onPress={async () => {
-            await openInTab({ url, shouldCloseCurrentWindow: isPopup })
-          }}
-        >
-          {({ hovered }: any) => (
-            <View
-              style={[
-                flexbox.alignCenter,
-                flexbox.justifyCenter,
-                common.borderRadiusPrimary,
-                {
-                  minWidth: 80,
-                  backgroundColor: hovered
-                    ? '#1b2b2c'
-                    : ThemeColors.primaryBackground[THEME_TYPES.DARK],
-                  borderWidth: 1,
-                  borderColor: ThemeColors.primary[THEME_TYPES.DARK],
-                  padding: 8
-                }
-              ]}
-            >
-              <Text
-                style={{ color: hovered ? '#FFFFFF' : ThemeColors.primary[THEME_TYPES.DARK] }}
-                weight="medium"
-                fontSize={14}
-              >
-                Open
-              </Text>
-            </View>
-          )}
-        </Pressable>
-
-        <View>
-          <Pressable
-            onPress={() => {
-              dispatch({
-                type: 'DISMISS_BANNER',
-                params: { bannerId: banner.id }
-              })
-            }}
-            hitSlop={8}
-          >
-            {({ hovered }: any) => (
-              <View
-                style={[
-                  spacings.mhSm,
-                  spacings.mvSm,
-                  spacings.pvTy,
-                  spacings.phTy,
-                  {
-                    borderRadius: 50,
-                    backgroundColor: hovered
-                      ? '#1b2b2c'
-                      : ThemeColors.primaryBackground[THEME_TYPES.DARK]
-                  }
-                ]}
-              >
-                <CloseIcon
-                  strokeWidth="2"
-                  width={10}
-                  height={10}
-                  color={hovered ? '#FFFFFF' : ThemeColors.primary[THEME_TYPES.DARK]}
-                />
-              </View>
-            )}
-          </Pressable>
-        </View>
-      </View>
-    </View>
+    </AnimatedPressable>
   )
 }
 

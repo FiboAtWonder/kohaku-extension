@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { getData, storeData } from '@web/modules/PPv1/utils/extensionStorage'
 import { decrypt, encrypt } from '@web/modules/PPv1/utils/encryption'
 import {

@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useModalize } from 'react-native-modalize'
 import { encodeFunctionData, formatEther, getAddress, parseUnits } from 'viem'
@@ -6,18 +5,18 @@ import { Hash, Secret, type Withdrawal } from '@0xbow/privacy-pools-core-sdk'
 import { Call } from '@ambire-common/libs/accountOp/types'
 import { BatchWithdrawalParams } from '@ambire-common/controllers/privacyPools/privacyPools'
 import { ReviewStatus } from '@web/contexts/privacyPoolsControllerStateContext'
-import useBackgroundService from '@web/hooks/useBackgroundService'
 import usePrivacyPoolsControllerState from '@web/hooks/usePrivacyPoolsControllerState'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
 import { prepareWithdrawalProofInput, transformProofForRelayerApi } from '../utils/withdrawal'
 import { transformRagequitProofForContract } from '../utils/ragequit'
 import { entrypointAbi, privacyPoolAbi } from '../utils/abi'
 import { selectNotesForWithdrawal } from '../sdk/noteSelection/selectNotesForWithdrawal'
 import { getPoolAccountsFromResult } from '../sdk/noteSelection/helpers'
 import { PoolAccount } from '../sdk/noteSelection/types'
+import useController from '@common/hooks/useController'
 
 const usePrivacyPoolsForm = () => {
-  const { dispatch } = useBackgroundService()
+  const { dispatch: privacyPoolsDispatch } = useController('PrivacyPoolsController')
+  const { dispatch: railgunDispatch } = useController('RailgunController')
   const {
     chainId,
     mtRoots,
@@ -59,7 +58,7 @@ const usePrivacyPoolsForm = () => {
     createWithdrawalSecretsForImportedAccount
   } = usePrivacyPoolsControllerState()
 
-  const { account: userAccount, portfolio } = useSelectedAccountControllerState()
+  const { account: userAccount, portfolio } = useController('SelectedAccountController').state
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [ragequitLoading, setRagequitLoading] = useState<Record<string, boolean>>({})
   const [showAddedToBatch] = useState(false)
@@ -187,8 +186,10 @@ const usePrivacyPoolsForm = () => {
           )
         })
 
-        if (algorithmResults.length > 0) {
-          const poolAccountsFromResult = getPoolAccountsFromResult(algorithmResults[0])
+        const bestResult = algorithmResults[0]
+
+        if (bestResult) {
+          const poolAccountsFromResult = getPoolAccountsFromResult(bestResult)
           setCalculatedBatchSize(poolAccountsFromResult.length || 1)
           setSelectedNotesCache(poolAccountsFromResult)
         } else {
@@ -220,32 +221,32 @@ const usePrivacyPoolsForm = () => {
 
   const handleUpdateForm = useCallback(
     (params: { [key: string]: any }) => {
-      dispatch({
-        type: 'PRIVACY_POOLS_CONTROLLER_UPDATE_FORM',
-        params: { ...params }
+      privacyPoolsDispatch({
+        type: 'method',
+        params: { method: 'update', args: [{ ...params }] }
       })
 
       // If privacyProvider is being updated, sync it to Railgun controller as well
       if (params.privacyProvider !== undefined) {
-        dispatch({
-          type: 'RAILGUN_CONTROLLER_UPDATE_FORM',
-          params: { privacyProvider: params.privacyProvider }
+        railgunDispatch({
+          type: 'method',
+          params: { method: 'update', args: [{ privacyProvider: params.privacyProvider }] }
         })
       }
 
       setMessage(null)
     },
-    [dispatch]
+    [privacyPoolsDispatch, railgunDispatch]
   )
 
   const directBroadcastWithdrawal = useCallback(
     async (params: BatchWithdrawalParams): Promise<void> => {
-      dispatch({
-        type: 'PRIVACY_POOLS_CONTROLLER_DIRECT_BROADCAST_WITHDRAWAL',
-        params
+      privacyPoolsDispatch({
+        type: 'method',
+        params: { method: 'directBroadcastWithdrawal', args: [params] }
       })
     },
-    [dispatch]
+    [privacyPoolsDispatch]
   )
 
   const handleSelectedAccount = (poolAccount: PoolAccount) => {
@@ -260,25 +261,23 @@ const usePrivacyPoolsForm = () => {
 
   const openEstimationModalAndDispatch = useCallback(() => {
     console.log('DEBUG: openEstimationModalAndDispatch called')
-    dispatch({
-      type: 'PRIVACY_POOLS_CONTROLLER_HAS_USER_PROCEEDED',
-      params: {
-        proceeded: true
-      }
+    privacyPoolsDispatch({
+      type: 'method',
+      params: { method: 'setUserProceeded', args: [true] }
     })
     console.log('DEBUG: about to call openEstimationModal()')
     openEstimationModal()
     console.log('DEBUG: after openEstimationModal()')
-  }, [openEstimationModal, dispatch])
+  }, [openEstimationModal, privacyPoolsDispatch])
 
   const syncSignAccountOp = useCallback(
     async (calls: Call[]) => {
-      dispatch({
-        type: 'PRIVACY_POOLS_CONTROLLER_SYNC_SIGN_ACCOUNT_OP',
-        params: { calls }
+      privacyPoolsDispatch({
+        type: 'method',
+        params: { method: 'syncSignAccountOp', args: [calls] }
       })
     },
-    [dispatch]
+    [privacyPoolsDispatch]
   )
 
   const handleDeposit = async () => {
@@ -414,11 +413,9 @@ const usePrivacyPoolsForm = () => {
     const proofs: Awaited<ReturnType<typeof generateWithdrawalProof>>[] = []
     const errors: Array<{ index: number; error: any }> = []
 
-    // eslint-disable-next-line no-await-in-loop
     for (let i = 0; i < accountsWithAmounts.length; i += BATCH_SIZE) {
       const batch = accountsWithAmounts.slice(i, i + BATCH_SIZE)
 
-      // eslint-disable-next-line no-await-in-loop
       const batchResults = await Promise.allSettled(
         batch.map(async ({ poolAccount, amount }) => {
           const commitment = poolAccount.lastCommitment
@@ -475,7 +472,6 @@ const usePrivacyPoolsForm = () => {
 
       // Add delay between batches for garbage collection (except after the last batch)
       if (i + BATCH_SIZE < accountsWithAmounts.length) {
-        // eslint-disable-next-line no-await-in-loop
         await new Promise<void>((resolve) => {
           setTimeout(resolve, GC_DELAY)
         })

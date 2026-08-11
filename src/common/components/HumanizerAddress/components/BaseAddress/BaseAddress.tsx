@@ -2,9 +2,10 @@ import { ZeroAddress } from 'ethers'
 import { nanoid } from 'nanoid'
 import React, { FC, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Linking, Pressable, View } from 'react-native'
+import { GestureResponderEvent, Linking, Pressable, View } from 'react-native'
 
 import { getCoinGeckoTokenUrl } from '@ambire-common/consts/coingecko'
+import { BlacklistedStatus } from '@ambire-common/interfaces/phishing'
 import shortenAddress from '@ambire-common/utils/shortenAddress'
 import useBenzinNetworksContext from '@benzin/hooks/useBenzinNetworksContext'
 // import AddressBookIcon from '@common/assets/svg/AddressBookIcon'
@@ -13,33 +14,43 @@ import InfoIcon from '@common/assets/svg/InfoIcon'
 import OpenIcon from '@common/assets/svg/OpenIcon'
 import Text, { Props as TextProps } from '@common/components/Text'
 import Tooltip from '@common/components/Tooltip'
+import { isMobile, isWeb } from '@common/config/env'
+import useController from '@common/hooks/useController'
 import useTheme from '@common/hooks/useTheme'
 import useToast from '@common/hooks/useToast'
 import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
 import { setStringAsync } from '@common/utils/clipboard'
-import { isExtension } from '@web/constants/browserapi'
-import { openInTab } from '@web/extension-services/background/webapi/tab'
-import useNetworksControllerState from '@web/hooks/useNetworksControllerState'
-import { getUiType } from '@web/utils/uiType'
 
 import Option from './BaseAddressOption'
 
 interface Props extends TextProps {
   address: string
   chainId?: bigint
-  hideLinks?: boolean
+  actionsMode?: 'tooltip' | 'inline'
+  shouldWrapInlineActions?: boolean
+  verification?: BlacklistedStatus
+  isDisplayingPlainAddress?: boolean
 }
 
-const { isActionWindow } = getUiType()
-
-const BaseAddress: FC<Props> = ({ children, address, chainId, hideLinks = false, ...rest }) => {
+const BaseAddress: FC<Props> = ({
+  children,
+  address,
+  chainId,
+  actionsMode = 'tooltip',
+  shouldWrapInlineActions = true,
+  verification,
+  isDisplayingPlainAddress,
+  ...rest
+}) => {
   const { t } = useTranslation()
   const { theme } = useTheme()
   const { addToast } = useToast()
   const { benzinNetworks } = useBenzinNetworksContext()
   // Standalone Benzin doesn't have access to controllers
-  const { networks } = useNetworksControllerState()
+  const {
+    state: { networks }
+  } = useController('NetworksController')
 
   const actualNetworks = networks ?? benzinNetworks
   const network = actualNetworks?.find((n) => n.chainId === chainId)
@@ -65,14 +76,10 @@ const BaseAddress: FC<Props> = ({ children, address, chainId, hideLinks = false,
             getCoinGeckoTokenUrl(network.nativeAssetId)
           : `${network.explorerUrl}/address/${address}`
 
-      // openInTab doesn't work in Standalone Benzin
-      if (!isExtension) {
-        await Linking.openURL(targetUrl)
-        return
-      }
-      // Close the action-window if this address is opened in one, otherwise
-      // the user will have to minimize it to see the explorer.
-      await openInTab({ url: targetUrl, shouldCloseCurrentWindow: isActionWindow })
+      // use Linking instead of openInTab as openInTab may trigger
+      // a close of the action window. We don't want to close it, we
+      // want to minimize it on the side
+      await Linking.openURL(targetUrl)
     } catch {
       addToast(t('Failed to open explorer'), {
         type: 'error'
@@ -84,52 +91,122 @@ const BaseAddress: FC<Props> = ({ children, address, chainId, hideLinks = false,
   // will be show at the same time. We cannot use a shared tooltip as the content
   // is JSX and not a string.
   const tooltipId = useMemo(() => `address-${address}-${nanoid(6)}`, [address])
+  const showInlineActions = actionsMode === 'inline'
+  const displayValue =
+    showInlineActions && isDisplayingPlainAddress ? shortenAddress(address, 18, 4) : children
+  const textStyle = {
+    flexShrink: 1,
+    ...(isWeb ? { wordBreak: 'break-all' } : {})
+  }
+  const textWeight = isDisplayingPlainAddress ? 'mono_regular' : 'medium'
+  const textAppearance = verification === 'BLACKLISTED' ? 'errorText' : 'primaryText'
+  const handleInlineExplorerPress = useCallback(
+    (event: GestureResponderEvent) => {
+      event.stopPropagation()
+      void handleOpenExplorer()
+    },
+    [handleOpenExplorer]
+  )
 
   return (
-    <View style={[flexbox.alignCenter, flexbox.directionRow, flexbox.flex1]}>
-      <Text fontSize={14} weight="medium" appearance="primaryText" selectable {...rest}>
-        {children}
-        <Pressable style={spacings.mlMi}>
+    <View
+      style={[
+        flexbox.alignCenter,
+        flexbox.directionRow,
+        flexbox.wrap,
+        isWeb && !showInlineActions && flexbox.flex1,
+        showInlineActions && { maxWidth: '100%' }
+      ]}
+    >
+      {showInlineActions && !!network?.explorerUrl ? (
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel={t('View in Explorer')}
+          onPress={handleInlineExplorerPress}
+          style={[
+            flexbox.directionRow,
+            flexbox.alignCenter,
+            shouldWrapInlineActions && flexbox.wrap,
+            { maxWidth: '100%' }
+          ]}
+        >
           {({ hovered }: any) => (
-            <InfoIcon
-              data-tooltip-id={tooltipId}
-              color={hovered ? theme.primaryText : theme.secondaryText}
-              width={14}
-              height={14}
-            />
+            <>
+              <Text
+                weight={textWeight}
+                fontSize={14}
+                appearance={textAppearance}
+                underline={hovered}
+                selectable
+                style={textStyle}
+                {...rest}
+              >
+                {displayValue}
+              </Text>
+              <View style={[!isMobile ? { marginLeft: 2, marginTop: -8 } : {}, flexbox.center]}>
+                <OpenIcon
+                  color={hovered ? theme.primaryText : theme.secondaryText}
+                  width={isMobile ? 14 : 10}
+                  height={isMobile ? 14 : 10}
+                />
+              </View>
+            </>
           )}
         </Pressable>
-      </Text>
-      <Tooltip
-        id={tooltipId}
-        style={{
-          padding: 0,
-          overflow: 'hidden'
-        }}
-        clickable
-        noArrow
-        place="bottom-end"
-      >
-        {network?.explorerUrl && !hideLinks && (
+      ) : (
+        <Text
+          weight={textWeight}
+          fontSize={14}
+          appearance={textAppearance}
+          selectable
+          style={textStyle}
+          {...rest}
+        >
+          {displayValue}
+          {isWeb && !showInlineActions && (
+            <Pressable style={spacings.mlMi}>
+              {({ hovered }: any) => (
+                <InfoIcon
+                  data-tooltip-id={tooltipId}
+                  color={hovered ? theme.primaryText : theme.secondaryText}
+                  width={14}
+                  height={14}
+                />
+              )}
+            </Pressable>
+          )}
+        </Text>
+      )}
+      {!showInlineActions && (
+        <Tooltip
+          id={tooltipId}
+          style={{ padding: 0, overflow: 'hidden' }}
+          clickable
+          noArrow
+          place="bottom-end"
+        >
+          {network?.explorerUrl && (
+            <Option
+              title={t('View in Explorer')}
+              renderIcon={() => <OpenIcon color={theme.secondaryText} width={14} height={14} />}
+              onPress={handleOpenExplorer}
+            />
+          )}
+          {/* @TODO: Uncomment when we have the feature
           <Option
-            title={t('View in Explorer')}
-            renderIcon={() => <OpenIcon color={theme.secondaryText} width={14} height={14} />}
-            onPress={handleOpenExplorer}
+            title={t('Add to Address Book')}
+            renderIcon={() => <AddressBookIcon color={theme.secondaryText} width={18} height={18} />}
+            onPress={() => {}}
+          /> */}
+          <Option
+            title={t('Copy Address')}
+            isAddress
+            text={shortenAddress(address, 15)}
+            renderIcon={() => <CopyIcon color={theme.secondaryText} width={16} height={16} />}
+            onPress={handleCopyAddress}
           />
-        )}
-        {/* @TODO: Uncomment when we have the feature
-        <Option
-          title={t('Add to Address Book')}
-          renderIcon={() => <AddressBookIcon color={theme.secondaryText} width={18} height={18} />}
-          onPress={() => {}}
-        /> */}
-        <Option
-          title={t('Copy Address')}
-          text={shortenAddress(address, 15)}
-          renderIcon={() => <CopyIcon color={theme.secondaryText} width={16} height={16} />}
-          onPress={handleCopyAddress}
-        />
-      </Tooltip>
+        </Tooltip>
+      )}
     </View>
   )
 }

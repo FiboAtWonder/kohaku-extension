@@ -3,44 +3,131 @@ import { useTranslation } from 'react-i18next'
 import { useModalize } from 'react-native-modalize'
 
 import { EstimationStatus } from '@ambire-common/controllers/estimation/types'
-import {
-  SignAccountOpController,
-  SigningStatus
-} from '@ambire-common/controllers/signAccountOp/signAccountOp'
+import { SignAccountOpType } from '@ambire-common/controllers/signAccountOp/helper'
 import { Key } from '@ambire-common/interfaces/keystore'
+import { ISignAccountOpController, SigningStatus } from '@ambire-common/interfaces/signAccountOp'
+import useController from '@common/hooks/useController'
+import useExtremeGasFeeWarning from '@common/hooks/useExtremeGasFeeWarning'
 import usePrevious from '@common/hooks/usePrevious'
-import useMainControllerState from '@web/hooks/useMainControllerState'
-import useNetworksControllerState from '@web/hooks/useNetworksControllerState'
-import useLedger from '@web/modules/hardware-wallet/hooks/useLedger'
+import useLedger from '@common/modules/hardware-wallets/hooks/useLedger'
+import useQrSigningFlow from '@common/modules/hardware-wallets/hooks/useQrSigningFlow'
+import { OneClickEstimationProps } from '@common/modules/sign-account-op/components/OneClick/Estimation/Estimation'
 import { getIsSignLoading } from '@web/modules/sign-account-op/utils/helpers'
+
+import type { SignAccountOpUpdateProps } from '@ambire-common/controllers/signAccountOp/signAccountOp'
+type ButtonMode = OneClickEstimationProps['updateType'] | 'Sign' | 'HW' | 'Safe'
+
+const PRIMARY_BUTTON_LABELS: Record<
+  ButtonMode,
+  { default: string; isLoading: string; config?: string }
+> = {
+  'Swap&Bridge': {
+    default: 'Swap',
+    isLoading: 'Swapping...'
+  },
+  'Transfer&TopUp': {
+    default: 'Send',
+    isLoading: 'Sending...'
+  },
+  // Privacy flows: shielding/unshielding funds (kohaku)
+  PrivacyPools: {
+    default: 'Confirm',
+    isLoading: 'Confirming...'
+  },
+  PrivacyPoolsV1: {
+    default: 'Deposit',
+    isLoading: 'Depositing...'
+  },
+  Railgun: {
+    default: 'Confirm',
+    isLoading: 'Confirming...'
+  },
+  RailgunV2: {
+    default: 'Shield',
+    isLoading: 'Shielding...'
+  },
+  Sign: {
+    default: 'Sign',
+    isLoading: 'Signing...'
+  },
+  HW: {
+    default: 'Begin signing',
+    isLoading: 'Signing...'
+  },
+  Safe: {
+    default: 'Begin signing',
+    isLoading: 'Close signing'
+  }
+}
 
 type Props = {
   handleUpdateStatus: (status: SigningStatus) => void
-  handleBroadcast: () => void
-  handleUpdate: (params: { signingKeyAddr?: Key['addr']; signingKeyType?: Key['type'] }) => void
-  signAccountOpState: SignAccountOpController | null
+  handleUpdate: (params: SignAccountOpUpdateProps) => void
+  signAccountOpState: ISignAccountOpController | null
   isOneClickSign?: boolean
+  updateType?: OneClickEstimationProps['updateType'] | undefined
+  hasReachedBottom?: boolean | null
 }
 
 const useSign = ({
   handleUpdateStatus,
   signAccountOpState,
-  handleBroadcast,
   handleUpdate,
-  isOneClickSign
+  isOneClickSign,
+  updateType = undefined,
+  hasReachedBottom
 }: Props) => {
   const { t } = useTranslation()
-  const mainState = useMainControllerState()
-  const { networks } = useNetworksControllerState()
+  const {
+    state: { networks }
+  } = useController('NetworksController')
+  const { dispatch: mainControllerDispatch } = useController('MainController')
+  const { dispatch: signAccountOpDispatch } = useController('SignAccountOpController')
+  const { dispatch: swapAndBridgeDispatch } = useController('SwapAndBridgeController')
+  const { dispatch: transferDispatch } = useController('TransferController')
+  // Privacy flows own their own SignAccountOpController, reached through each
+  // controller's callSignAccountOpMethod helper (kohaku)
+  const { dispatch: privacyPoolsDispatch } = useController('PrivacyPoolsController')
+  const { dispatch: privacyPoolsV1Dispatch } = useController('PrivacyPoolsV1Controller')
+  const { dispatch: railgunDispatch } = useController('RailgunController')
+  const { dispatch: railgunV2Dispatch } = useController('RailgunV2Controller')
+  const {
+    state: { accountStates }
+  } = useController('AccountsController')
   const [isChooseSignerShown, setIsChooseSignerShown] = useState(false)
+  const [showSafeSigners, setShowSafeSigners] = useState(false)
+  const [isChooseFeePayerKeyShown, setIsChooseFeePayerKeyShown] = useState(false)
   const [shouldDisplayLedgerConnectModal, setShouldDisplayLedgerConnectModal] = useState(false)
+  const [shouldDisplayQrSigningModal, setShouldDisplayQrSigningModal] = useState(false)
+  const [acknowledgedBannersKey, setAcknowledgedBannersKey] = useState<string | null>(null)
   const prevIsChooseSignerShown = usePrevious(isChooseSignerShown)
   const { isLedgerConnected } = useLedger()
+  const {
+    currentRequest,
+    signingStep,
+    moveToResponseScan,
+    moveBack,
+    submitSignatureResponse,
+    signingCleanup
+  } = useQrSigningFlow()
+
+  const currentBannersKey = useMemo(
+    () => JSON.stringify(signAccountOpState?.banners || []),
+    [signAccountOpState?.banners]
+  )
+  const shouldHoldToProceed =
+    !!signAccountOpState?.banners.length && acknowledgedBannersKey !== currentBannersKey
+  const shouldShowSafeSigners = showSafeSigners && !shouldHoldToProceed
+
   const [slowRequest, setSlowRequest] = useState<boolean>(false)
   const [slowPaymasterRequest, setSlowPaymasterRequest] = useState<boolean>(true)
   const [acknowledgedWarnings, setAcknowledgedWarnings] = useState<string[]>([])
   const { ref: warningModalRef, open: openWarningModal, close: closeWarningModal } = useModalize()
-  const [initDispatchedForId, setInitDispatchedForId] = useState<number | string | null>(null)
+  const {
+    ref: gasFeeUpdatedModalRef,
+    open: openGasFeeUpdatedModal,
+    close: closeGasFeeUpdatedModal
+  } = useModalize()
 
   const hasEstimation = useMemo(
     () =>
@@ -121,13 +208,41 @@ const useSign = ({
   }, [networks, signAccountOpState?.accountOp?.chainId])
 
   const signingKeyType = signAccountOpState?.accountOp?.signingKeyType
-  const feePayerKeyType = mainState.feePayerKey?.type
-  const isAtLeastOneOfTheKeysInvolvedLedger =
-    signingKeyType === 'ledger' || feePayerKeyType === 'ledger'
+  const feePayerKeyType = signAccountOpState?.accountOp?.gasFeePayment?.paidByKeyType
+
+  const isAtLeastOneOfTheKeysInvolvedLedger = useMemo(() => {
+    // if we're broadcasting with ledger, return true
+    if (feePayerKeyType === 'ledger') return true
+
+    // if the account is not a Safe, check the txn signer
+    if (!signAccountOpState?.account.safeCreation) return signingKeyType === 'ledger'
+
+    // if it's a Safe, check all the signers
+    return !!signAccountOpState.accountOp.signers?.find((s) => s.type === 'ledger')
+  }, [
+    signAccountOpState?.account.safeCreation,
+    signAccountOpState?.accountOp.signers,
+    signingKeyType,
+    feePayerKeyType
+  ])
 
   const handleDismissLedgerConnectModal = useCallback(() => {
     setShouldDisplayLedgerConnectModal(false)
   }, [])
+
+  const handleQrSigningFlowOnClosePressed = useCallback(
+    () => setShouldDisplayQrSigningModal(false),
+    []
+  )
+
+  const handleQrSigningFlowOnContinuePressed = moveToResponseScan
+  const handleQrSigningFlowOnBackPressed = moveBack
+  const handleQrSigningFlowSubmitSignatureResponse = submitSignatureResponse
+
+  const handleQrSigningFlowOnRejectPressed = useCallback(() => {
+    signingCleanup()
+    setShouldDisplayQrSigningModal(false)
+  }, [signingCleanup])
 
   const warningToPromptBeforeSign = useMemo(
     () =>
@@ -144,8 +259,145 @@ const useSign = ({
     [acknowledgedWarnings, isOneClickSign, signAccountOpState?.warnings]
   )
 
+  const handleBroadcast = useCallback(() => {
+    if (!signAccountOpState) return // should never happen
+
+    let type: SignAccountOpType = 'default'
+
+    if (updateType === 'Swap&Bridge') {
+      type = 'one-click-swap-and-bridge'
+    }
+
+    if (updateType === 'Transfer&TopUp') {
+      type = 'one-click-transfer'
+    }
+
+    // Privacy flows map onto their own SignAccountOpType values (kohaku)
+    if (updateType === 'PrivacyPools') {
+      type = 'privacy-pools'
+    }
+
+    if (updateType === 'PrivacyPoolsV1') {
+      type = 'privacy-pools-v1'
+    }
+
+    if (updateType === 'Railgun') {
+      type = 'railgun'
+    }
+
+    if (updateType === 'RailgunV2') {
+      type = 'railgun-v2'
+    }
+
+    mainControllerDispatch({
+      type: 'method',
+      params: {
+        method: 'handleSignAndBroadcastAccountOp',
+        // Pass the id of the accountOp the user is reviewing on screen. The
+        // background compares it against the live accountOp before signing to
+        // reject signing calls that were appended after this review.
+        args: [type, signAccountOpState.fromRequestId, signAccountOpState.accountOp.id]
+      }
+    })
+  }, [mainControllerDispatch, signAccountOpState, updateType])
+
+  const dismissGasFeeChangedConfirmation = useCallback(() => {
+    if (updateType === 'Swap&Bridge') {
+      swapAndBridgeDispatch({
+        type: 'method',
+        params: {
+          method: 'callSignAccountOpMethod',
+          args: ['dismissGasFeeChangedConfirmation', []]
+        }
+      })
+      return
+    }
+
+    if (updateType === 'Transfer&TopUp') {
+      transferDispatch({
+        type: 'method',
+        params: {
+          method: 'callSignAccountOpMethod',
+          args: ['dismissGasFeeChangedConfirmation', []]
+        }
+      })
+      return
+    }
+
+    if (updateType === 'PrivacyPools') {
+      privacyPoolsDispatch({
+        type: 'method',
+        params: {
+          method: 'callSignAccountOpMethod',
+          args: ['dismissGasFeeChangedConfirmation', []]
+        }
+      })
+      return
+    }
+
+    if (updateType === 'PrivacyPoolsV1') {
+      privacyPoolsV1Dispatch({
+        type: 'method',
+        params: {
+          method: 'callSignAccountOpMethod',
+          args: ['dismissGasFeeChangedConfirmation', []]
+        }
+      })
+      return
+    }
+
+    if (updateType === 'Railgun') {
+      railgunDispatch({
+        type: 'method',
+        params: {
+          method: 'callSignAccountOpMethod',
+          args: ['dismissGasFeeChangedConfirmation', []]
+        }
+      })
+      return
+    }
+
+    if (updateType === 'RailgunV2') {
+      railgunV2Dispatch({
+        type: 'method',
+        params: {
+          method: 'callSignAccountOpMethod',
+          args: ['dismissGasFeeChangedConfirmation', []]
+        }
+      })
+      return
+    }
+
+    signAccountOpDispatch({
+      type: 'method',
+      params: {
+        method: 'dismissGasFeeChangedConfirmation',
+        args: []
+      }
+    })
+  }, [
+    signAccountOpDispatch,
+    swapAndBridgeDispatch,
+    transferDispatch,
+    privacyPoolsDispatch,
+    privacyPoolsV1Dispatch,
+    railgunDispatch,
+    railgunV2Dispatch,
+    updateType
+  ])
+
+  const handleDismissGasFeeUpdate = useCallback(() => {
+    dismissGasFeeChangedConfirmation()
+    closeGasFeeUpdatedModal()
+  }, [dismissGasFeeChangedConfirmation, closeGasFeeUpdatedModal])
+
+  const handleAcceptGasFeeUpdate = useCallback(() => {
+    closeGasFeeUpdatedModal()
+    handleBroadcast()
+  }, [closeGasFeeUpdatedModal, handleBroadcast])
+
   const handleSign = useCallback(
-    (_chosenSigningKeyType?: string, _warningAccepted?: boolean) => {
+    (_chosenSigningKeyTypes?: Key['type'][], _warningAccepted?: boolean) => {
       // Prioritize warning(s) modals over all others
       // Warning modals are not displayed in the one-click swap flow
       if (warningToPromptBeforeSign && !_warningAccepted) {
@@ -154,18 +406,46 @@ const useSign = ({
         return
       }
 
-      const isLedgerKeyInvolvedInTheJustChosenKeys = _chosenSigningKeyType
-        ? _chosenSigningKeyType === 'ledger' || feePayerKeyType === 'ledger'
-        : isAtLeastOneOfTheKeysInvolvedLedger
+      const isExternalQr =
+        signAccountOpState?.accountOp.signingKeyType === 'qr' ||
+        signAccountOpState?.accountOp.gasFeePayment?.paidByKeyType === 'qr'
+      const isFeePayerSameAsSigner =
+        signAccountOpState?.accountOp.signingKeyAddr ===
+        signAccountOpState?.accountOp.gasFeePayment?.paidBy
+      const isLedgerKeyInvolvedInTheJustChosenKeys =
+        _chosenSigningKeyTypes && _chosenSigningKeyTypes.length
+          ? _chosenSigningKeyTypes.indexOf('ledger') !== -1 || feePayerKeyType === 'ledger'
+          : isAtLeastOneOfTheKeysInvolvedLedger
 
       if (isLedgerKeyInvolvedInTheJustChosenKeys && !isLedgerConnected) {
         setShouldDisplayLedgerConnectModal(true)
         return
       }
 
+      if (
+        !signAccountOpState?.account.safeCreation &&
+        (signAccountOpState?.feePayerKeyStoreKeys?.length || 0) > 1 &&
+        !isFeePayerSameAsSigner
+      ) {
+        setIsChooseFeePayerKeyShown(true)
+        return
+      }
+
+      if (isExternalQr) {
+        // don't return here — QR flow is part of the signing itself,
+        // unlike Ledger where we need to stop and wait for connection
+        setShouldDisplayQrSigningModal(true)
+      }
+
       handleBroadcast()
     },
     [
+      signAccountOpState?.accountOp.signingKeyAddr,
+      signAccountOpState?.accountOp.gasFeePayment?.paidBy,
+      signAccountOpState?.feePayerKeyStoreKeys?.length,
+      signAccountOpState?.account.safeCreation,
+      signAccountOpState?.accountOp.signingKeyType,
+      signAccountOpState?.accountOp.gasFeePayment?.paidByKeyType,
       warningToPromptBeforeSign,
       feePayerKeyType,
       isAtLeastOneOfTheKeysInvolvedLedger,
@@ -183,24 +463,41 @@ const useSign = ({
       // Explicitly pass the currently selected signing key type, because
       // the signing key type in the state might not be updated yet,
       // and Sign Account Op controller assigns a default signing upfront
-      handleSign(_chosenSigningKeyType)
-      // setIsChooseSignerShown(false)
+      handleSign([_chosenSigningKeyType])
     },
     [handleSign, handleUpdate]
+  )
+
+  const handleChangeFeePayerKeyType = useCallback(
+    // Done for compatibility with the select component
+    (_: Key['addr'], newFeePayerKeyType: Key['type']) => {
+      handleUpdate({ paidByKeyType: newFeePayerKeyType })
+
+      handleBroadcast()
+    },
+    [handleBroadcast, handleUpdate]
   )
 
   const onSignButtonClick = useCallback(() => {
     if (!signAccountOpState) return
 
-    // If the account has only one signer, we don't need to show the select signer overlay,
-    // and we will sign the transaction with the only one available signer (it is set by default in the controller).
-    if (signAccountOpState?.accountKeyStoreKeys.length === 1) {
+    setAcknowledgedBannersKey(currentBannersKey)
+
+    if (!!signAccountOpState.account.safeCreation && !signAccountOpState.canBroadcast) {
+      setShowSafeSigners((prev) => (shouldHoldToProceed ? true : !prev))
+      return
+    }
+
+    if (
+      signAccountOpState?.accountKeyStoreKeys.length === 1 ||
+      !!signAccountOpState?.account.safeCreation
+    ) {
       handleSign()
       return
     }
 
     setIsChooseSignerShown(true)
-  }, [signAccountOpState, handleSign])
+  }, [currentBannersKey, handleSign, shouldHoldToProceed, signAccountOpState])
 
   const acknowledgeWarning = useCallback(() => {
     if (!warningToPromptBeforeSign) return
@@ -222,65 +519,198 @@ const useSign = ({
     closeWarningModal()
   }, [handleUpdateStatus, closeWarningModal])
 
-  const isViewOnly = useMemo(
-    () => signAccountOpState?.accountKeyStoreKeys.length === 0,
-    [signAccountOpState?.accountKeyStoreKeys]
+  const isViewOnly = useMemo(() => {
+    // for all accounts except Safe, check if the account has keys
+    const noKeysImported = signAccountOpState?.accountKeyStoreKeys.length === 0
+    if (!signAccountOpState?.account.safeCreation) return noKeysImported
+
+    // for Safe accounts, do not treat accounts that are not deployed
+    // on the network as view only as it will mislead the user into
+    // thinking that the account is deployed but no owners have been
+    // imported
+    const isDeployed =
+      !!accountStates[signAccountOpState?.account.addr]?.[
+        signAccountOpState?.accountOp.chainId.toString()
+      ]?.isDeployed
+
+    return isDeployed && noKeysImported
+  }, [
+    signAccountOpState?.accountKeyStoreKeys,
+    accountStates,
+    signAccountOpState?.account,
+    signAccountOpState?.accountOp.chainId
+  ])
+
+  const isAtLeastOneOfTheKeysInvolvedExternal = useMemo(
+    () =>
+      (!!signingKeyType && signingKeyType !== 'internal') ||
+      (!!feePayerKeyType && feePayerKeyType !== 'internal'),
+    [feePayerKeyType, signingKeyType]
   )
 
-  const isAtLeastOneOfTheKeysInvolvedExternal =
-    (!!signingKeyType && signingKeyType !== 'internal') ||
-    (!!feePayerKeyType && feePayerKeyType !== 'internal')
+  const renderedButNotNecessarilyVisibleModal:
+    | 'warnings'
+    | 'gas-fee-updated'
+    | 'ledger-connect'
+    | 'hw-sign'
+    | 'qr-sign'
+    | null = useMemo(() => {
+    // Prioritize warning(s) modals over all others
+    if (
+      warningToPromptBeforeSign ||
+      // We render the warning modal if the paymaster is loading, but
+      // don't display it to the user until the paymaster has been loading for too long.
+      // This is required because opening the modal isn't possible if it isn't rendered.
+      signAccountOpState?.status?.type === SigningStatus.WaitingForPaymaster
+    )
+      return 'warnings'
 
-  const renderedButNotNecessarilyVisibleModal: 'warnings' | 'ledger-connect' | 'hw-sign' | null =
-    useMemo(() => {
-      // Prioritize warning(s) modals over all others
-      if (
-        warningToPromptBeforeSign ||
-        // We render the warning modal if the paymaster is loading, but
-        // don't display it to the user until the paymaster has been loading for too long.
-        // This is required because opening the modal isn't possible if it isn't rendered.
-        signAccountOpState?.status?.type === SigningStatus.WaitingForPaymaster
-      )
-        return 'warnings'
+    if (signAccountOpState?.gasFeeChangedConfirmationRequired) return 'gas-fee-updated'
 
-      if (shouldDisplayLedgerConnectModal) return 'ledger-connect'
+    if (shouldDisplayLedgerConnectModal) return 'ledger-connect'
 
-      if (isAtLeastOneOfTheKeysInvolvedExternal) return 'hw-sign'
+    const hasActiveQrFlow = !!currentRequest || (!!signingStep && signingStep !== 'idle')
 
-      return null
-    }, [
-      isAtLeastOneOfTheKeysInvolvedExternal,
-      shouldDisplayLedgerConnectModal,
-      signAccountOpState?.status?.type,
-      warningToPromptBeforeSign
-    ])
+    if (shouldDisplayQrSigningModal || hasActiveQrFlow) return 'qr-sign'
+
+    if (isAtLeastOneOfTheKeysInvolvedExternal) return 'hw-sign'
+
+    return null
+  }, [
+    currentRequest,
+    isAtLeastOneOfTheKeysInvolvedExternal,
+    shouldDisplayLedgerConnectModal,
+    shouldDisplayQrSigningModal,
+    signAccountOpState?.gasFeeChangedConfirmationRequired,
+    signAccountOpState?.status?.type,
+    signingStep,
+    warningToPromptBeforeSign
+  ])
 
   const primaryButtonText = useMemo(() => {
-    if (isAtLeastOneOfTheKeysInvolvedExternal) return t('Begin signing')
+    let buttonLabelType: ButtonMode =
+      updateType || (isAtLeastOneOfTheKeysInvolvedExternal ? 'HW' : 'Sign')
 
-    return isSignLoading ? t('Signing...') : t('Sign')
-  }, [isAtLeastOneOfTheKeysInvolvedExternal, isSignLoading, t])
+    if (signAccountOpState?.account.safeCreation) {
+      const isBroadcast =
+        (signAccountOpState?.accountOp.signed?.length || 0) >= signAccountOpState?.threshold ||
+        (signAccountOpState?.threshold === 1 &&
+          signAccountOpState?.accountKeyStoreKeys.length === 1)
+      if (isBroadcast) {
+        // the "Safe" term for broadcast is called "Execute"
+        return isSignLoading ? 'Executing...' : 'Execute'
+      }
+
+      // always use the default state of Safes
+      return !shouldShowSafeSigners
+        ? PRIMARY_BUTTON_LABELS['Safe'].default
+        : PRIMARY_BUTTON_LABELS['Safe'].isLoading
+    }
+
+    return t(
+      isSignLoading
+        ? PRIMARY_BUTTON_LABELS[buttonLabelType].isLoading
+        : PRIMARY_BUTTON_LABELS[buttonLabelType].default
+    )
+  }, [
+    isAtLeastOneOfTheKeysInvolvedExternal,
+    isSignLoading,
+    t,
+    updateType,
+    signAccountOpState?.account.safeCreation,
+    signAccountOpState?.accountOp.signed?.length,
+    signAccountOpState?.threshold,
+    shouldShowSafeSigners,
+    signAccountOpState?.accountKeyStoreKeys.length
+  ])
 
   // When being done, there is a corner case if the sign succeeds, but the broadcast fails.
   // If so, the "Sign" button should NOT be disabled, so the user can retry broadcasting.
   const notReadyToSignButAlsoNotDone =
     !signAccountOpState?.readyToSign && signAccountOpState?.status?.type !== SigningStatus.Done
 
+  const {
+    isActive: isExtremeGasFeeActive,
+    isProceedDelayed: isExtremeGasFeeProceedDelayed,
+    remainingSeconds: extremeGasFeeProceedDelaySeconds,
+    signButtonType: extremeGasFeeSignButtonType
+  } = useExtremeGasFeeWarning(signAccountOpState, signAccountOpState?.accountOp.chainId)
+
+  // View-only accounts can't sign, so skip the warning-styled button and delay UX.
+  const signButtonType = useMemo(
+    () => (isViewOnly ? ('primary' as const) : extremeGasFeeSignButtonType),
+    [isViewOnly, extremeGasFeeSignButtonType]
+  )
+
+  const isExtremeGasFeeProceedDelayedForSign = isExtremeGasFeeProceedDelayed && !isViewOnly
+
   const isSignDisabled = useMemo(() => {
     return (
       isViewOnly ||
       isSignLoading ||
+      signAccountOpState?.isHumanizing ||
       notReadyToSignButAlsoNotDone ||
       !signAccountOpState?.readyToSign ||
-      (signAccountOpState && signAccountOpState.estimation.status === EstimationStatus.Loading)
+      (signAccountOpState && signAccountOpState.estimation.status === EstimationStatus.Loading) ||
+      isExtremeGasFeeProceedDelayedForSign
     )
-  }, [isViewOnly, isSignLoading, notReadyToSignButAlsoNotDone, signAccountOpState])
+  }, [
+    isViewOnly,
+    isSignLoading,
+    isExtremeGasFeeProceedDelayedForSign,
+    notReadyToSignButAlsoNotDone,
+    signAccountOpState
+  ])
+
+  const disabledReason = useMemo(() => {
+    if (isExtremeGasFeeProceedDelayedForSign) {
+      return t('Please wait {{seconds}}s to review the high network fee.', {
+        seconds: extremeGasFeeProceedDelaySeconds
+      })
+    }
+
+    return typeof hasReachedBottom === 'boolean' && !hasReachedBottom
+      ? t('Scroll to the bottom of the transaction overview to sign.')
+      : undefined
+  }, [extremeGasFeeProceedDelaySeconds, hasReachedBottom, isExtremeGasFeeProceedDelayedForSign, t])
+
+  const signButtonText = useMemo(() => {
+    if (isExtremeGasFeeProceedDelayedForSign) {
+      return t('Wait {{seconds}}s', { seconds: extremeGasFeeProceedDelaySeconds })
+    }
+
+    return primaryButtonText
+  }, [extremeGasFeeProceedDelaySeconds, isExtremeGasFeeProceedDelayedForSign, primaryButtonText, t])
 
   const bundlerNonceDiscrepancy = useMemo(
     () =>
-      signAccountOpState?.warnings.find((warning) => warning.id === 'bundler-nonce-discrepancy'),
+      signAccountOpState?.warnings.find((warning) => warning.id === 'bundler-nonce-discrepancy') ||
+      signAccountOpState?.warnings.find((warning) => warning.id === 'bundler-failure'),
     [signAccountOpState?.warnings]
   )
+
+  useEffect(() => {
+    const isExternalQr =
+      signAccountOpState?.accountOp.signingKeyType === 'qr' ||
+      signAccountOpState?.accountOp.gasFeePayment?.paidByKeyType === 'qr'
+
+    const hasActiveQrFlow = !!currentRequest || (!!signingStep && signingStep !== 'idle')
+
+    if (isExternalQr && hasActiveQrFlow) {
+      setShouldDisplayQrSigningModal(true)
+    }
+  }, [
+    currentRequest,
+    signingStep,
+    signAccountOpState?.accountOp.signingKeyType,
+    signAccountOpState?.accountOp.gasFeePayment?.paidByKeyType
+  ])
+
+  useEffect(() => {
+    if (signAccountOpState?.gasFeeChangedConfirmationRequired) {
+      openGasFeeUpdatedModal()
+    }
+  }, [signAccountOpState?.gasFeeChangedConfirmationRequired, openGasFeeUpdatedModal])
 
   return {
     renderedButNotNecessarilyVisibleModal,
@@ -298,16 +728,34 @@ const useSign = ({
     isSignLoading,
     hasEstimation,
     warningModalRef,
+    gasFeeUpdatedModalRef,
+    handleAcceptGasFeeUpdate,
+    handleDismissGasFeeUpdate,
     signingKeyType,
     feePayerKeyType,
+    handleChangeFeePayerKeyType,
     shouldDisplayLedgerConnectModal,
     network,
     notReadyToSignButAlsoNotDone,
-    initDispatchedForId,
-    setInitDispatchedForId,
     isSignDisabled,
     primaryButtonText,
-    bundlerNonceDiscrepancy
+    signButtonText,
+    isExtremeGasFeeActive,
+    extremeGasFeeSignButtonType: signButtonType,
+    bundlerNonceDiscrepancy,
+    isChooseFeePayerKeyShown,
+    setIsChooseFeePayerKeyShown,
+    shouldHoldToProceed,
+    shouldDisplayQrSigningModal,
+    handleQrSigningFlowOnContinuePressed,
+    handleQrSigningFlowSubmitSignatureResponse,
+    handleQrSigningFlowOnClosePressed,
+    handleQrSigningFlowOnRejectPressed,
+    handleQrSigningFlowOnBackPressed,
+    currentRequest,
+    signingStep,
+    disabledReason,
+    showSafeSigners: shouldShowSafeSigners
   }
 }
 

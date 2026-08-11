@@ -1,46 +1,42 @@
 import { StyleSheet, ViewStyle } from 'react-native'
 
-import spacings, { SPACING_2XL } from '@common/styles/spacings'
-import { ThemeProps } from '@common/styles/themeConfig'
-import { BORDER_RADIUS_PRIMARY } from '@common/styles/utils/common'
+import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
-import { getUiType } from '@web/utils/uiType'
 
 interface Style {
+  panel: ViewStyle
   container: ViewStyle
-  panelHeader: ViewStyle
-  backgroundWrapper: ViewStyle
-  backgroundSVG: ViewStyle
+  biometricsContainer: ViewStyle
+  biometricsIconButton: ViewStyle
+  switchButton: ViewStyle
 }
 
-const isPopup = getUiType().isPopup
-
-const getStyles = (theme: ThemeProps) =>
+const getStyles = () =>
   StyleSheet.create<Style>({
+    panel: {
+      ...spacings.ptSm,
+      ...spacings.pbLg
+    },
     container: {
-      marginBottom: isPopup ? 0 : SPACING_2XL,
-      borderWidth: isPopup ? 0 : 1,
-      borderColor: theme.secondaryBorder,
-      borderRadius: isPopup ? 0 : BORDER_RADIUS_PRIMARY,
-      overflow: 'hidden',
-      backgroundColor: theme.primaryBackground,
-      flex: 1
-    },
-    panelHeader: {
+      maxWidth: 352,
       width: '100%',
-      ...spacings.pvLg
+      marginHorizontal: 'auto',
+      ...flexbox.alignCenter
     },
-    backgroundWrapper: {
-      overflow: 'hidden',
-      borderBottomLeftRadius: BORDER_RADIUS_PRIMARY,
-      borderBottomRightRadius: BORDER_RADIUS_PRIMARY,
-      ...flexbox.flex1,
-      ...flexbox.alignCenter,
-      ...flexbox.justifyEnd
+    biometricsContainer: {
+      width: '100%',
+      ...flexbox.alignCenter
     },
-    backgroundSVG: {
-      position: 'absolute',
-      zIndex: -1
+    biometricsIconButton: {
+      width: 90,
+      height: 90,
+      borderRadius: 52,
+      backgroundColor: '#F3F4F7',
+      marginBottom: 50,
+      ...flexbox.center
+    },
+    switchButton: {
+      width: '100%'
     }
   })
 

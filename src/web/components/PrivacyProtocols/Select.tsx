@@ -73,7 +73,7 @@ const PrivacyProtocolSelector = ({
   return (
     <View style={[...contStyle, containerStyle]}>
       <Text
-        appearance="muted"
+        appearance="tertiaryText"
         fontSize={14}
         weight={labelWeight}
         style={direction === 'row' ? undefined : [spacings.mbMi]}

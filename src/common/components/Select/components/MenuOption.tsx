@@ -4,7 +4,6 @@ import { Image, Pressable, View } from 'react-native'
 import Text from '@common/components/Text'
 import useTheme from '@common/hooks/useTheme'
 import spacings from '@common/styles/spacings'
-import { THEME_TYPES } from '@common/styles/themeConfig'
 import flexbox from '@common/styles/utils/flexbox'
 
 import getStyles from '../styles'
@@ -26,8 +25,8 @@ const Option = React.memo(({ item, ...rest }: { item: SelectValue }) => {
     typeof item.label === 'string'
       ? formatOptionString(item.label)
       : typeof item.value === 'string'
-      ? formatOptionString(item.value)
-      : undefined
+        ? formatOptionString(item.value)
+        : undefined
   }`
 
   if (!item) return null
@@ -50,6 +49,8 @@ const Option = React.memo(({ item, ...rest }: { item: SelectValue }) => {
     </View>
   )
 })
+
+Option.displayName = 'Option'
 
 const MenuOption = React.memo(
   ({
@@ -97,14 +98,11 @@ const MenuOption = React.memo(
           mode === 'bottomSheet' && styles.sheetMenuOption,
           !!height && { height },
           isSelected && {
-            backgroundColor: themeType === THEME_TYPES.DARK ? '#FFFFFF1F' : theme.tertiaryBackground
+            backgroundColor: theme.secondaryBackground
           },
           isHighlighted &&
             !disabled && {
-              backgroundColor:
-                themeType === THEME_TYPES.DARK
-                  ? theme.tertiaryBackground
-                  : theme.secondaryBackground
+              backgroundColor: theme.secondaryBackground
             },
           // @ts-ignore
           disabled && { opacity: 0.6, cursor: 'not-allowed' }
@@ -118,5 +116,7 @@ const MenuOption = React.memo(
     )
   }
 )
+
+MenuOption.displayName = 'MenuOption'
 
 export { MenuOption, Option }

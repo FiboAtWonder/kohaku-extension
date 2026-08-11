@@ -1,4 +1,4 @@
-name: Build production browser extensions ⚡
+name: Build browser extensions (webkit & gecko) 🌐
 
 on:
   workflow_dispatch: # Manual trigger
@@ -7,17 +7,38 @@ on:
 
 jobs:
   build:
-    name: Build browser extension webkit and gecko .zips, ready for review submission
-    runs-on: ubuntu-24.04
-    environment: extension-production
+    name: Build ${{ matrix.artifact_suffix }} extension .zips, ready for review submission
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      # Don't cancel the other variants if one fails (important for releases)
+      fail-fast: false
+      matrix:
+        include:
+          - environment: extension-production
+            build_variant: webkit
+            artifact_suffix: webkit
+            runner: ubuntu-24.04
+          - environment: extension-production-next
+            build_variant: next:webkit
+            artifact_suffix: next-webkit
+            runner: ubuntu-24.04
+          # gecko must be built natively on ARM64, otherwise Firefox can't
+          # reproduce the build during review. Native arm64 standard runners
+          # became available for private repositories on 2026-01-29, which let
+          # us drop the previous QEMU-based emulation workflow.
+          - environment: extension-production
+            build_variant: gecko
+            artifact_suffix: gecko
+            runner: ubuntu-24.04-arm
+    environment: ${{ matrix.environment }}
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.build_variant }}
     steps:
       - name: Checkout code 🛎️
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Add SSH key to checkout a private repo
-        uses: webfactory/ssh-agent@v0.5.4
+        uses: webfactory/ssh-agent@v0.9.1
         with:
           ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
@@ -30,12 +51,12 @@ jobs:
         shell: bash
 
       - name: Install Node.js ⚙️
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
 
       - name: Install Dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn setup:ci
         shell: bash
 
       - name: Generate .env file for review
@@ -45,10 +66,22 @@ jobs:
           echo "BROWSER_EXTENSION_PUBLIC_KEY=\"${{ vars.BROWSER_EXTENSION_PUBLIC_KEY }}\"" >> .env
           echo "REACT_APP_PIMLICO_API_KEY=\"${{ vars.REACT_APP_PIMLICO_API_KEY }}\"" >> .env
           echo "REACT_APP_ETHERSPOT_API_KEY=\"${{ vars.REACT_APP_ETHERSPOT_API_KEY }}\"" >> .env
+          echo "REACT_APP_CANDIDE_API_KEY=\"${{ vars.REACT_APP_CANDIDE_API_KEY }}\"" >> .env
+          echo "REACT_APP_GELATO_API_KEY=\"${{ vars.REACT_APP_GELATO_API_KEY }}\"" >> .env
           echo "NFT_CDN_URL=\"${{ vars.NFT_CDN_URL }}\"" >> .env
           echo "LEGENDS_NFT_ADDRESS=\"${{ vars.LEGENDS_NFT_ADDRESS }}\"" >> .env
           echo "LI_FI_API_KEY=\"${{ vars.LI_FI_API_KEY }}\"" >> .env
+          echo "BUNGEE_API_KEY=\"${{ vars.BUNGEE_API_KEY }}\"" >> .env
+          echo "SQUID_INTEGRATOR_ID=\"${{ vars.SQUID_INTEGRATOR_ID }}\"" >> .env
+          echo "UNISWAP_API_KEY=\"${{ vars.UNISWAP_API_KEY }}\"" >> .env
+          echo "SAFE_API_KEY=\"${{ vars.SAFE_API_KEY }}\"" >> .env
+          echo "WALLETCONNECT_PROJECT_ID=\"${{ vars.WALLETCONNECT_PROJECT_ID }}\"" >> .env
           echo "SENTRY_DSN_BROWSER_EXTENSION=\"${{ vars.SENTRY_DSN_BROWSER_EXTENSION }}\"" >> .env
+        shell: bash
+
+      - name: Get version from app.json
+        id: version
+        run: echo "VERSION=$(grep '"version"' ./app.json | head -n1 | cut -d':' -f2 | tr -d ' ",')" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Build extensions and upload source maps to Sentry
@@ -58,26 +91,37 @@ jobs:
           BROWSER_EXTENSION_PUBLIC_KEY: ${{ vars.BROWSER_EXTENSION_PUBLIC_KEY }}
           REACT_APP_PIMLICO_API_KEY: ${{ vars.REACT_APP_PIMLICO_API_KEY }}
           REACT_APP_ETHERSPOT_API_KEY: ${{ vars.REACT_APP_ETHERSPOT_API_KEY }}
+          REACT_APP_CANDIDE_API_KEY: ${{ vars.REACT_APP_CANDIDE_API_KEY }}
+          REACT_APP_GELATO_API_KEY: ${{ vars.REACT_APP_GELATO_API_KEY }}
           NFT_CDN_URL: ${{ vars.NFT_CDN_URL }}
           LEGENDS_NFT_ADDRESS: ${{ vars.LEGENDS_NFT_ADDRESS }}
           LI_FI_API_KEY: ${{ vars.LI_FI_API_KEY }}
+          BUNGEE_API_KEY: ${{ vars.BUNGEE_API_KEY }}
+          SQUID_INTEGRATOR_ID: ${{ vars.SQUID_INTEGRATOR_ID }}
+          UNISWAP_API_KEY: ${{ vars.UNISWAP_API_KEY }}
+          SAFE_API_KEY: ${{ vars.SAFE_API_KEY }}
+          WALLETCONNECT_PROJECT_ID: ${{ vars.WALLETCONNECT_PROJECT_ID }}
           SENTRY_DSN_BROWSER_EXTENSION: ${{ vars.SENTRY_DSN_BROWSER_EXTENSION }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN_BROWSER_EXTENSIONS }}
-        run: yarn build:extensions
+        run: yarn build:extensions:${{ matrix.build_variant }}
 
+      # Firefox requires the full source code (including .env) to reproduce the
+      # build during review, so this is only needed for the gecko variant.
       - name: Generate .zip with the full source code (including .env)
+        if: matrix.build_variant == 'gecko'
         run: |
-          zip -r extension-source-code.zip . -x "node_modules/*" -x ".git/*" -x "build/*" -x "*.zip"
+          zip -r extension-source-code.zip . -x "node_modules/*" -x ".git/*" -x "build/*" -x "*.zip" -x "src/legends/*"
         shell: bash
 
       - name: Upload source code 📦
-        uses: actions/upload-artifact@v4
+        if: matrix.build_variant == 'gecko'
+        uses: actions/upload-artifact@v6
         with:
-          name: extension-source-code
+          name: ambire-extension-v${{ steps.version.outputs.VERSION }}-${{ matrix.artifact_suffix }}-SOURCE-CODE
           path: ./extension-source-code.zip
 
       - name: Upload extension builds 📦
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
-          name: extension-builds-and-source-maps
+          name: ambire-extension-v${{ steps.version.outputs.VERSION }}-${{ matrix.artifact_suffix }}-with-sourcemaps
           path: ./build/*.zip

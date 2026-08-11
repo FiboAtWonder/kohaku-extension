@@ -1,10 +1,10 @@
-import { StyleSheet, ViewStyle } from 'react-native'
+import { StyleSheet, TextStyle, ViewStyle } from 'react-native'
 import { ThemeProps } from '@common/styles/themeConfig'
 
 type Style = {
   container: ViewStyle
   disclaimer: ViewStyle
-  disclaimerText: ViewStyle
+  disclaimerText: TextStyle
 }
 
 const getStyles = (theme: ThemeProps) =>

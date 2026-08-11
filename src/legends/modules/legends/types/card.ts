@@ -55,9 +55,10 @@ export enum CardStatus {
 export type Networks = '1' | '10' | '8453' | '534352' | '42161' | '56'
 export interface CardXp {
   type: CardXpType
-  from: number
-  to: number
-  minUsdThreshold: number
+  from?: number
+  to?: number
+  minUsdThreshold?: number
+  linearMultiplier?: number
   chains: Networks[] | null
 }
 
@@ -114,21 +115,17 @@ export interface CardFromResponse {
     }[]
     usedInvitationSlots?: number
     accountLinkingHistory: { invitedEoaOrV1: string; date: string }[]
-    availableToClaim?: BigInt
+    availableToClaim?: number
     notMetLvlThreshold?: true
     hasAlreadyMigrated?: true
     hasPenalty?: boolean
+    initial7702Xp?: number
+    code?: string
+    allCollected?: boolean
+    activeProposals?: { id: string; title: string; created: number; end: number }[]
+    revealedMascotLetter?: boolean
   }
   contentSteps?: string[]
   contentImageV2?: string
   contentVideoV2?: string
-}
-
-export interface ChestCard extends Omit<CardFromResponse, 'id' | 'meta'> {
-  id: 'chest'
-  meta: {
-    streak: number
-    points: number[]
-    expiresOrResetsAt: string
-  }
 }

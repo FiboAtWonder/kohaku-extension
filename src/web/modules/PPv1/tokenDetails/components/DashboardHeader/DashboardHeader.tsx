@@ -6,20 +6,20 @@ import useNavigation from '@common/hooks/useNavigation'
 import { ROUTES, WEB_ROUTES } from '@common/modules/router/constants/common'
 import spacings from '@common/styles/spacings'
 import flexboxStyles from '@common/styles/utils/flexbox'
-import useHover from '@web/hooks/useHover'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
+import useHover from '@common/hooks/useHover'
 import commonWebStyles from '@web/styles/utils/common'
 import BurgerIcon from '@common/assets/svg/BurgerIcon'
 import { THEME_TYPES } from '@common/styles/themeConfig'
-import { getUiType } from '@web/utils/uiType'
+import { getUiType } from '@common/utils/uiType'
 import useTheme from '@common/hooks/useTheme'
 import AccountButton from './AccountButton'
 import getStyles from './styles'
+import useController from '@common/hooks/useController'
 
 const { isPopup } = getUiType()
 
 const DashboardHeader = () => {
-  const { account } = useSelectedAccountControllerState()
+  const { account } = useController('SelectedAccountController').state
   const [bindBurgerAnim, burgerAnimStyle] = useHover({ preset: 'opacity' })
   const [bindBackAnim, backAnimStyle] = useHover({ preset: 'opacity' })
   const { navigate } = useNavigation()

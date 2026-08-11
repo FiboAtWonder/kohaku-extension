@@ -1,16 +1,16 @@
 import React, { useContext, useEffect } from 'react'
 import { View } from 'react-native'
 
+import AvatarTypeControlOption from '@common/modules/settings/components/General/AvatarTypeControlOption'
+import LogLevelControlOption from '@common/modules/settings/components/General/LogLevelControlOption'
+import ThemeControlOption from '@common/modules/settings/components/General/ThemeControlOption'
 // import { isProd } from '@common/config/env'
 import spacings from '@common/styles/spacings'
+import AutoLockDeviceControlOption from '@web/modules/settings/components/General/AutoLockDeviceControlOption'
+import BiometricsOption from '@web/modules/settings/components/General/BiometricsOption'
+import LockAmbireControlOption from '@web/modules/settings/components/General/LockAmbireControlOption'
 import SettingsPageHeader from '@web/modules/settings/components/SettingsPageHeader'
 import { SettingsRoutesContext } from '@web/modules/settings/contexts/SettingsRoutesContext'
-
-import AutoLockDeviceControlOption from './components/AutoLockDeviceControlOption'
-// import CrashAnalyticsControlOption from './components/CrashAnalyticsControlOption'
-import LockAmbireControlOption from './components/LockAmbireControlOption'
-import LogLevelControlOption from './components/LogLevelControlOption'
-// import ThemeControlOption from './components/ThemeControlOption'
 
 const GeneralSettingsScreen = () => {
   const { setCurrentSettingsPage } = useContext(SettingsRoutesContext)
@@ -24,15 +24,13 @@ const GeneralSettingsScreen = () => {
       <SettingsPageHeader title="General settings" />
       <View style={spacings.mb2Xl}>
         <LockAmbireControlOption />
+        <BiometricsOption />
         <AutoLockDeviceControlOption />
-        {/* <ThemeControlOption /> */}
+        <ThemeControlOption />
+        <AvatarTypeControlOption />
       </View>
       <SettingsPageHeader title="Support tools" />
       <LogLevelControlOption />
-      {/* As of v5.15.0, temporarily hidden on all environments, */}
-      {/* because we enable anonymous crash reporting by default, */}
-      {/* which is part of our privacy policy now. */}
-      {/* {isProd && <CrashAnalyticsControlOption />} */}
     </>
   )
 }

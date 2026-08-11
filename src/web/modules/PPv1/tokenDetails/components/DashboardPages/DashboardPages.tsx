@@ -8,13 +8,11 @@ import usePrevious from '@common/hooks/usePrevious'
 import useRoute from '@common/hooks/useRoute'
 import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useNetworksControllerState from '@web/hooks/useNetworksControllerState'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
-import { getUiType } from '@web/utils/uiType'
+import { getUiType } from '@common/utils/uiType'
 
 import Activity from '../Activity'
 import { TabType } from '../TabsAndSearch/Tabs/Tab/Tab'
+import useController from '@common/hooks/useController'
 
 interface Props {
   onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void
@@ -28,9 +26,9 @@ const DashboardPages = ({ onScroll, animatedOverviewHeight }: Props) => {
   const route = useRoute()
   const [sessionId] = useState(nanoid())
   const [, setSearchParams] = useSearchParams()
-  const { dashboardNetworkFilter } = useSelectedAccountControllerState()
-  const { networks } = useNetworksControllerState()
-  const { dispatch } = useBackgroundService()
+  const { dashboardNetworkFilter } = useController('SelectedAccountController').state
+  const { networks } = useController('NetworksController').state
+  const { dispatch: activityDispatch } = useController('ActivityController')
 
   const [openTab, setOpenTab] = useState(() => {
     const params = new URLSearchParams(route?.search)
@@ -51,7 +49,7 @@ const DashboardPages = ({ onScroll, animatedOverviewHeight }: Props) => {
     if (dashboardNetworkFilter === 'rewards') return t('Rewards')
     if (dashboardNetworkFilter === 'gasTank') return t('Gas Tank')
 
-    const network = networks.find(({ id }) => id === dashboardNetworkFilter)
+    const network = networks.find(({ chainId }) => chainId === BigInt(dashboardNetworkFilter))
 
     return network?.name || null
   }, [dashboardNetworkFilter, networks, t])
@@ -75,12 +73,15 @@ const DashboardPages = ({ onScroll, animatedOverviewHeight }: Props) => {
       // Remove session - this will be triggered only when navigation to another screen internally in the extension.
       // The session removal when the window is forcefully closed is handled
       // in the port.onDisconnect callback in the background.
-      dispatch({ type: 'MAIN_CONTROLLER_ACTIVITY_RESET_ACC_OPS_FILTERS', params: { sessionId } })
+      activityDispatch({
+        type: 'method',
+        params: { method: 'resetAccountsOpsFilters', args: [sessionId] }
+      })
     }
     // setSearchParams must not be in the dependency array
     // as it changes on call and kills the session prematurely
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, sessionId])
+  }, [activityDispatch, sessionId])
 
   return (
     <View style={[flexbox.flex1, isTab ? spacings.phSm : {}]}>

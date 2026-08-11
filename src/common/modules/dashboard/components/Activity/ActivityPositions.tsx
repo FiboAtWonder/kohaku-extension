@@ -1,23 +1,32 @@
-import React, { FC, useCallback, useEffect } from 'react'
+import React, { FC, useCallback, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Animated, FlatListProps, View } from 'react-native'
 
-import shortenAddress from '@ambire-common/utils/shortenAddress'
+import { BannerType } from '@ambire-common/interfaces/banner'
+import { Network } from '@ambire-common/interfaces/network'
+import { SubmittedAccountOp } from '@ambire-common/libs/accountOp/submittedAccountOp'
+import { getCurrentAccountBanners } from '@ambire-common/libs/banners/banners'
+import InfoIcon from '@common/assets/svg/InfoIcon'
+import Banner from '@common/components/Banner'
 import Button from '@common/components/Button'
+import Spinner from '@common/components/Spinner'
 import Text from '@common/components/Text'
+import { isWeb } from '@common/config/env'
+import useController from '@common/hooks/useController'
+import usePrevious from '@common/hooks/usePrevious'
 import useTheme from '@common/hooks/useTheme'
 import ActivityPositionsSkeleton from '@common/modules/dashboard/components/Activity/ActivityPositionsSkeleton'
 import DashboardBanners from '@common/modules/dashboard/components/DashboardBanners'
 import DashboardPageScrollContainer from '@common/modules/dashboard/components/DashboardPageScrollContainer'
 import TabsAndSearch from '@common/modules/dashboard/components/TabsAndSearch'
 import { TabType } from '@common/modules/dashboard/components/TabsAndSearch/Tabs/Tab/Tab'
+import SubmittedTransactionSummary, {
+  preloadSummaryPreview
+} from '@common/modules/settings/components/TransactionHistory/SubmittedTransactionSummary'
 import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
-import useActivityControllerState from '@web/hooks/useActivityControllerState'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
-import SubmittedTransactionSummary from '@web/modules/settings/components/TransactionHistory/SubmittedTransactionSummary'
-import { getUiType } from '@web/utils/uiType'
+import { openInTab } from '@common/utils/links'
+import { getUiType } from '@common/utils/uiType'
 
 import styles from './styles'
 
@@ -27,13 +36,31 @@ interface Props {
   initTab?: { [key: string]: boolean }
   sessionId: string
   onScroll: FlatListProps<any>['onScroll']
-  dashboardNetworkFilterName: string | null
   animatedOverviewHeight: Animated.Value
+  network: Network | null
+  refreshing?: boolean
+  onRefresh?: () => void
 }
 
-const { isPopup } = getUiType()
+const { isPopup, isRequestWindow } = getUiType()
 
 const ITEMS_PER_PAGE = 10
+
+const blockExplorerUrl = (explorerUrl: string | null, address: string) => {
+  return `${explorerUrl}/address/${address}`
+}
+
+const blockExplorerName = (explorerUrl: string) => {
+  return explorerUrl.replace('https://', '').replace('http://', '').replace('www.', '')
+}
+
+type Item =
+  | SubmittedAccountOp
+  | 'header'
+  | 'empty'
+  | 'keep-this-to-avoid-key-warning'
+  | 'skeleton'
+  | 'load-more'
 
 const ActivityPositions: FC<Props> = ({
   openTab,
@@ -41,63 +68,157 @@ const ActivityPositions: FC<Props> = ({
   setOpenTab,
   initTab,
   onScroll,
-  dashboardNetworkFilterName,
-  animatedOverviewHeight
+  animatedOverviewHeight,
+  network,
+  refreshing,
+  onRefresh
 }) => {
   const { t } = useTranslation()
   const { theme } = useTheme()
 
-  const { dispatch } = useBackgroundService()
-  const { accountsOps } = useActivityControllerState()
-  const { account, dashboardNetworkFilter } = useSelectedAccountControllerState()
+  const {
+    state: { accountsOps, banners },
+    dispatch: activityDispatch
+  } = useController('ActivityController')
+  const {
+    state: { account, dashboardNetworkFilter }
+  } = useController('SelectedAccountController')
+  const prevOpenTab = usePrevious(openTab)
+
+  const currentAccountBanners = useMemo(() => {
+    return getCurrentAccountBanners(banners, account?.addr)
+  }, [banners, account])
+
+  // Warm the humanizer-carrying preview chunk while the account ops are still loading, so
+  // rows render their final content in one step instead of flashing a skeleton on mount.
+  useEffect(() => {
+    void preloadSummaryPreview()
+  }, [])
+
+  useEffect(() => {
+    if (prevOpenTab === 'activity' && openTab !== 'activity') {
+      activityDispatch({
+        type: 'method',
+        params: { method: 'resetAccountsOpsFilters', args: [sessionId] }
+      })
+    }
+  }, [prevOpenTab, openTab, activityDispatch, sessionId])
 
   useEffect(() => {
     // Optimization: Don't apply filtration if we are not on Activity tab
     if (!account?.addr || openTab !== 'activity') return
 
-    dispatch({
-      type: 'MAIN_CONTROLLER_ACTIVITY_SET_ACC_OPS_FILTERS',
+    activityDispatch({
+      type: 'method',
       params: {
-        sessionId,
-        filters: {
-          account: account.addr,
-          ...(dashboardNetworkFilter && {
-            chainId: dashboardNetworkFilter ? BigInt(dashboardNetworkFilter) : undefined
-          })
-        },
-        pagination: {
-          itemsPerPage: ITEMS_PER_PAGE,
-          fromPage: 0
-        }
+        method: 'filterAccountsOps',
+        args: [
+          sessionId,
+          {
+            account: account.addr,
+            ...(dashboardNetworkFilter && {
+              chainId: dashboardNetworkFilter ? BigInt(dashboardNetworkFilter) : undefined
+            })
+          },
+          {
+            itemsPerPage: ITEMS_PER_PAGE,
+            fromPage: 0
+          }
+        ]
       }
     })
-  }, [openTab, account?.addr, dispatch, dashboardNetworkFilter, sessionId])
+  }, [openTab, account?.addr, activityDispatch, dashboardNetworkFilter, sessionId])
 
   const renderItem = useCallback(
-    ({ item }: any) => {
+    ({ item }: { item: Item }) => {
       if (item === 'header') {
         return (
           <View style={{ backgroundColor: theme.primaryBackground }}>
-            <TabsAndSearch openTab={openTab} setOpenTab={setOpenTab} sessionId={sessionId} />
+            <TabsAndSearch
+              openTab={openTab}
+              setOpenTab={setOpenTab}
+              currentTab="activity"
+              sessionId={sessionId}
+            />
+
+            {!!accountsOps[sessionId] && (
+              <View style={spacings.mbMi}>
+                {currentAccountBanners.map((banner) => (
+                  <Banner
+                    key={banner.id}
+                    type={banner.type as BannerType}
+                    CustomIcon={() => {
+                      return (
+                        <View style={[flexbox.alignCenter, flexbox.justifyCenter]}>
+                          {banner.type === 'info' ? (
+                            <Spinner style={{ width: 20, height: 20 }} variant="info" />
+                          ) : (
+                            <View
+                              style={{
+                                width: 20,
+                                height: 20,
+                                borderWidth: 2,
+                                borderRadius: 50,
+                                borderColor: theme[`${banner.type as BannerType}Decorative`]
+                              }}
+                            />
+                          )}
+                          <Text
+                            fontSize={12}
+                            weight="semiBold"
+                            style={{ position: 'absolute' }}
+                            appearance={`${banner.type as BannerType}Text`}
+                          >
+                            {banner.meta!.accountOpsCount}
+                          </Text>
+                        </View>
+                      )
+                    }}
+                    title={banner.title}
+                    text={banner.text}
+                    style={{ minHeight: 28, ...spacings.mbTy }}
+                    contentContainerStyle={{ minHeight: 28 }}
+                  />
+                ))}
+              </View>
+            )}
           </View>
         )
       }
 
       if (item === 'empty') {
         return (
-          <Text
-            testID="no-transaction-history-text"
-            fontSize={16}
-            weight="medium"
-            style={styles.noPositions}
-          >
-            {t('No transactions history for {{account}}', {
-              account: `${account!.preferences.label} (${shortenAddress(account!.addr, 10)})`
-            })}
-            {!!dashboardNetworkFilter && !!dashboardNetworkFilterName && (
-              <> {t('on {{network}}', { network: dashboardNetworkFilterName })}</>
-            )}
-          </Text>
+          <View style={styles.noPositionsWrapper}>
+            <InfoIcon width={32} height={32} color={theme.infoText} style={spacings.mtSm} />
+            <Text
+              testID="no-transaction-history-text"
+              fontSize={16}
+              weight="medium"
+              style={styles.noPositions}
+            >
+              {t(
+                `Ambire doesn't retrieve transactions made${isWeb ? '\n' : ''} before installing the extension, but you can ${isWeb ? '\n' : ''}check your address on `
+              )}
+              <Text
+                weight="medium"
+                color={theme.linkText}
+                fontSize={16}
+                style={{ textDecorationLine: 'none' }}
+                onPress={() =>
+                  openInTab({
+                    url: blockExplorerUrl(
+                      network?.explorerUrl || 'https://etherscan.io',
+                      account!.addr
+                    ),
+                    shouldCloseCurrentWindow: isRequestWindow
+                  })
+                }
+              >
+                {blockExplorerName(network?.explorerUrl || 'https://etherscan.io')}
+              </Text>
+              .
+            </Text>
+          </View>
         )
       }
 
@@ -122,20 +243,26 @@ const ActivityPositions: FC<Props> = ({
               size="small"
               style={[flexbox.alignSelfCenter, spacings.mbSm]}
               onPress={() => {
-                dispatch({
-                  type: 'MAIN_CONTROLLER_ACTIVITY_SET_ACC_OPS_FILTERS',
+                activityDispatch({
+                  type: 'method',
                   params: {
-                    sessionId,
-                    filters: {
-                      account: account!.addr,
-                      ...(dashboardNetworkFilter && {
-                        chainId: dashboardNetworkFilter ? BigInt(dashboardNetworkFilter) : undefined
-                      })
-                    },
-                    pagination: {
-                      itemsPerPage: accountsOps[sessionId].pagination.itemsPerPage + ITEMS_PER_PAGE,
-                      fromPage: 0
-                    }
+                    method: 'filterAccountsOps',
+                    args: [
+                      sessionId,
+                      {
+                        account: account!.addr,
+                        ...(dashboardNetworkFilter && {
+                          chainId: dashboardNetworkFilter
+                            ? BigInt(dashboardNetworkFilter)
+                            : undefined
+                        })
+                      },
+                      {
+                        itemsPerPage:
+                          (accountsOps[sessionId]?.pagination.itemsPerPage || 0) + ITEMS_PER_PAGE,
+                        fromPage: 0
+                      }
+                    ]
                   }
                 })
               }}
@@ -147,7 +274,7 @@ const ActivityPositions: FC<Props> = ({
 
       return (
         <SubmittedTransactionSummary
-          key={item.txnId}
+          key={`${item.id}-${item.txnId}-${item.timestamp}`}
           defaultType="summary"
           submittedAccountOp={item}
           style={spacings.mbSm}
@@ -157,23 +284,24 @@ const ActivityPositions: FC<Props> = ({
     },
     [
       initTab?.activity,
-      theme.primaryBackground,
+      theme,
       openTab,
       setOpenTab,
       sessionId,
-      t,
-      account,
-      dashboardNetworkFilter,
-      dashboardNetworkFilterName,
       accountsOps,
-      dispatch
+      currentAccountBanners,
+      t,
+      network?.explorerUrl,
+      account,
+      activityDispatch,
+      dashboardNetworkFilter
     ]
   )
 
-  const keyExtractor = useCallback((positionOrElement: any) => {
+  const keyExtractor = useCallback((positionOrElement: Item) => {
     if (typeof positionOrElement === 'string') return positionOrElement
 
-    return positionOrElement.txnId
+    return `${positionOrElement.id}-${positionOrElement.txnId}-${positionOrElement.timestamp}`
   }, [])
 
   return (
@@ -196,6 +324,9 @@ const ActivityPositions: FC<Props> = ({
       initialNumToRender={isPopup ? 10 : 20}
       windowSize={9} // Larger values can cause performance issues.
       onScroll={onScroll}
+      scrollEventThrottle={16}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
       animatedOverviewHeight={animatedOverviewHeight}
     />
   )

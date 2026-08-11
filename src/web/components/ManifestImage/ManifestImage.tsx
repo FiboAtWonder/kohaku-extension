@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Image, ImageStyle, View, ViewStyle } from 'react-native'
+import { Image, ImageStyle, StyleProp, View, ViewStyle } from 'react-native'
 
 import SkeletonLoader from '@common/components/SkeletonLoader'
 import { SkeletonLoaderProps } from '@common/components/SkeletonLoader/types'
 import useTheme from '@common/hooks/useTheme'
-import { THEME_TYPES } from '@common/styles/themeConfig'
 import commonStyles from '@common/styles/utils/common'
 import flexboxStyles from '@common/styles/utils/flexbox'
 
@@ -15,9 +14,10 @@ type Props = {
   size: ViewStyle['width']
   isRound?: boolean
   iconScale?: number
-  containerStyle?: ViewStyle
+  containerStyle?: StyleProp<ViewStyle>
   imageStyle?: ImageStyle
   skeletonAppearance?: SkeletonLoaderProps['appearance']
+  hideOnError?: boolean
 }
 
 const ManifestImage = ({
@@ -29,17 +29,19 @@ const ManifestImage = ({
   iconScale = 1,
   containerStyle = {},
   imageStyle = {},
-  skeletonAppearance
+  skeletonAppearance,
+  hideOnError = false
 }: Props) => {
   const { theme } = useTheme()
+
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
   const [currentUri, setCurrentUri] = useState({
     index: 0,
     uri: uri || uris[0]
   })
-  const scaledSize = typeof size !== 'string' ? size * iconScale : size
-  const roundBorderRadius = typeof scaledSize !== 'string' ? scaledSize / 2 : 50
+  const scaledSize = typeof size === 'number' ? size * iconScale : size
+  const roundBorderRadius = typeof scaledSize === 'number' ? scaledSize / 2 : 50
 
   const onError = useCallback(() => {
     setHasError(true)
@@ -52,14 +54,24 @@ const ManifestImage = ({
     }
   }, [currentUri.index, uris])
 
-  const onLoadEnd = useCallback(() => setIsLoading(false), [])
+  const onLoadEnd = useCallback(() => {
+    setIsLoading(false)
+  }, [])
 
   useEffect(() => {
     if (!uris.length && !uri) {
       setIsLoading(false)
       setHasError(true)
+      return
     }
-  }, [uri, uris.length])
+
+    setCurrentUri({ index: 0, uri: uri || uris[0] })
+    setHasError(false)
+    setIsLoading(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uri, uris?.length])
+
+  if (hideOnError && !isLoading && hasError && !fallback) return null
 
   return (
     <View

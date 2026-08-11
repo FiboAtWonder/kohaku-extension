@@ -1,4 +1,3 @@
-/* eslint-disable import/no-mutable-exports */
 let browser: any = null
 let engine: 'webkit' | 'gecko' | null = null
 let platform: 'browser-webkit' | 'browser-gecko' | 'default' = 'default'
@@ -23,7 +22,7 @@ try {
     if (browser?.runtime?.id) isExtension = true
   }
 } catch (error) {
-  // Silent fail
+  console.error(error)
 }
 
 const getFirefoxVersion = () => {
@@ -37,6 +36,7 @@ const getFirefoxVersion = () => {
 
     return undefined
   } catch (error) {
+    console.error(error)
     return undefined
   }
 }
@@ -46,6 +46,7 @@ const isOpera = () => {
     const userAgent = navigator.userAgent
     return userAgent.includes('Opera') || userAgent.includes('OPR')
   } catch (error) {
+    console.error(error)
     return false
   }
 }
@@ -54,6 +55,7 @@ const isSafari = () => {
   try {
     return navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome')
   } catch (error) {
+    console.error(error)
     return false
   }
 }
@@ -65,6 +67,7 @@ const isVivaldi = async () => {
     // {@link https://stackoverflow.com/a/77047611/1333836}
     return !!currentWindow?.vivExtData
   } catch (error) {
+    console.error(error)
     return false
   }
 }

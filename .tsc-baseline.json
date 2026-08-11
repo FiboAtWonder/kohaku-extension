@@ -1,0 +1,590 @@
+{
+  "meta": {
+    "baselineFileVersion": 1,
+    "ignoreMessages": false
+  },
+  "errors": {
+    "e45b9c37e0ffbb9ef699a45c996d3033d2632b61": {
+      "file": "src/ambire-common/node_modules/ox/core/AbiParameters.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type '`0x${string}`'."
+    },
+    "05c3fbcd8a8c9f49f50393275070e30faba87342": {
+      "file": "src/ambire-common/node_modules/ox/core/Secp256k1.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type '{ prefix: number; x: bigint; y: bigint; } | { prefix: number; x: bigint; y?: undefined; } | undefined' is not assignable to parameter of type '{ prefix: number; x: bigint; y: bigint; } | { prefix: number; x: bigint; y?: undefined; }'."
+    },
+    "5b447e41da053206e3cecb0e7b44335e109574f6": {
+      "file": "src/ambire-common/node_modules/ox/tempo/KeyAuthorization.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'BaseTuple | readonly [chainId: `0x${string}`, keyType: `0x${string}`, keyId: string, expiry: `0x${string}`] | readonly [chainId: `0x${string}`, keyType: `0x${string}`, keyId: string, expiry: `0x${string}`, limits: readonly [token: string, limit: `0x${string}`][]] | readonly [chainId: `0x${string}`, keyType: `0x${str...' is not assignable to parameter of type 'RecursiveArray<`0x${string}`>'."
+    },
+    "f4a31b8b5500fb535e223ee99cd18a1046c5901d": {
+      "file": "src/ambire-common/node_modules/ox/tempo/SignatureEnvelope.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string' is not assignable to parameter of type '`0x${string}`'."
+    },
+    "c9af4d36a3b371bfa6300b4d3db80b9ae797a268": {
+      "file": "src/ambire-common/node_modules/ox/tempo/TokenId.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string' is not assignable to parameter of type '`0x${string}`'."
+    },
+    "956a3e060f9a769c9d8b9c3102479cb56fa54c0d": {
+      "file": "src/ambire-common/node_modules/ox/tempo/TxEnvelopeTempo.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'readonly [`0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`, string[][], readonly [address: string, storageKeys: readonly `0x${string}`[]][], `0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`, string, string | Tuple, readonly (readonly [chainId: `0x${string}`, address: `0x${string}`, nonce: `0x${st...' is not assignable to parameter of type 'RecursiveArray<`0x${string}`>'."
+    },
+    "3386302d29a84f99e07af189cb0d59184d993ae0": {
+      "file": "src/ambire-common/src/controllers/accounts/accounts.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'Account | undefined' is not assignable to parameter of type 'Account'."
+    },
+    "05b52cd9e870b67b6a334e1c7fffadff0362fab2": {
+      "file": "src/ambire-common/src/controllers/accounts/accounts.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ [chainId: string]: AccountOnchainState; } | undefined' is not assignable to type '{ [chainId: string]: AccountOnchainState; }'."
+    },
+    "e672f7c3cdb824bd6009ce950e9ff9a00848e6c5": {
+      "file": "src/ambire-common/src/controllers/accounts/accounts.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'AccountOnchainState | undefined' is not assignable to type 'AccountOnchainState'."
+    },
+    "5b3136c5c87dd30b17fc4efc1bfb6958856f8de9": {
+      "file": "src/ambire-common/src/controllers/accounts/accounts.ts",
+      "code": "TS2532",
+      "count": 1,
+      "message": "Object is possibly 'undefined'."
+    },
+    "4a29da22dc7d9cd863cc97e2bea68cb2e4e4bfda": {
+      "file": "src/ambire-common/src/controllers/accounts/accounts.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ associatedKeys: [string | undefined, string][]; creation: { factoryAddr: string; salt: string; baseIdentityAddr: string; }; email?: string | undefined; addr: string; }[]' is not assignable to type 'AmbireSmartAccountIdentityCreateRequest[]'."
+    },
+    "92a3ccf697d005d72eb39feed77fa6fe6166b771": {
+      "file": "src/ambire-common/src/controllers/activity/activity.ts",
+      "code": "TS18048",
+      "count": 1,
+      "message": "'allOps' is possibly 'undefined'."
+    },
+    "d2cb6b1063d32334b967a945a00b9a6574fbebab": {
+      "file": "src/ambire-common/src/controllers/emailVault/emailVault.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | undefined' is not assignable to type 'string | null'."
+    },
+    "beb0b6ab29f61136eed0c2c25e70bc06258dfe3c": {
+      "file": "src/ambire-common/src/controllers/emailVault/emailVault.ts",
+      "code": "TS2532",
+      "count": 4,
+      "message": "Object is possibly 'undefined'."
+    },
+    "ff755ce814784fe8c9af9325a0baeb83b91cc6d7": {
+      "file": "src/ambire-common/src/controllers/emailVault/emailVault.ts",
+      "code": "TS18048",
+      "count": 3,
+      "message": "'op' is possibly 'undefined'."
+    },
+    "1fdb4511e0538eab2137d16b76019f30eebbb121": {
+      "file": "src/ambire-common/src/controllers/signAccountOp/helper.ts",
+      "code": "TS2322",
+      "count": 4,
+      "message": "Type 'Warning | undefined' is not assignable to type 'Warning | null'."
+    },
+    "7a2377118546b2b1fe471943325781f7884680eb": {
+      "file": "src/ambire-common/src/controllers/transaction/transactionFormState.ts",
+      "code": "TS2532",
+      "count": 3,
+      "message": "Object is possibly 'undefined'."
+    },
+    "d7c9cfd2d3f3ccb8a9b86cfb89e308ad1a1d32b7": {
+      "file": "src/ambire-common/src/controllers/transaction/transactionFormState.ts",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type '{ serviceProviderId?: string | undefined; fromAsset?: SocketAPIToken; toAsset?: SocketAPIToken; fromAssetAddress?: string | undefined; ... 9 more ...; error?: string; }' is not assignable to type 'SwapAndBridgeActiveRoute'."
+    },
+    "e4823fd0cc34159e4c4addd623b09108119e8095": {
+      "file": "src/ambire-common/src/libs/entropyGenerator/entropyGenerator.ts",
+      "code": "TS2532",
+      "count": 2,
+      "message": "Object is possibly 'undefined'."
+    },
+    "6a3ad69b546913b12ea55c15158503eafe6a49f1": {
+      "file": "src/ambire-common/src/libs/erc7677/erc7677.ts",
+      "code": "TS18048",
+      "count": 1,
+      "message": "'paymasterService' is possibly 'undefined'."
+    },
+    "4590ee4edea1a6628466e71588bf907a8b6ede29": {
+      "file": "src/ambire-common/src/libs/errorDecoder/handlers/bundler.ts",
+      "code": "TS18048",
+      "count": 1,
+      "message": "'regex' is possibly 'undefined'."
+    },
+    "d4b2940da975b551384aafa36f27885ec7a60bad": {
+      "file": "src/ambire-common/src/libs/humanizer/messageModules/legendsModule.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string | undefined' is not assignable to parameter of type 'string'."
+    },
+    "fbeaa3869132304d38ff297af0ae72d86d008e50": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/1Inch/index.ts",
+      "code": "TS2722",
+      "count": 1,
+      "message": "Cannot invoke an object which is possibly 'undefined'."
+    },
+    "6bfd5e41603fd585f96f6ad3352d074eb35eabb6": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/Aave/aaveV3.ts",
+      "code": "TS2532",
+      "count": 2,
+      "message": "Object is possibly 'undefined'."
+    },
+    "af89d257a75a7426812c282dd33de14994c7e462": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/Aave/aaveV3.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string | undefined' is not assignable to parameter of type 'string'."
+    },
+    "8e82a8abd9882421d17bcb6224f4628ca0a25cee": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/Across/index.ts",
+      "code": "TS2722",
+      "count": 1,
+      "message": "Cannot invoke an object which is possibly 'undefined'."
+    },
+    "65a390129c98219ede27aeeb235b93a0440dd62e": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/Curve/index.ts",
+      "code": "TS2345",
+      "count": 2,
+      "message": "Argument of type 'string | undefined' is not assignable to parameter of type 'string'."
+    },
+    "f319349260fa6b19b3f6d21d1bd2c7b4d435bf79": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/Curve/index.ts",
+      "code": "TS2722",
+      "count": 1,
+      "message": "Cannot invoke an object which is possibly 'undefined'."
+    },
+    "b9b747cab1d3a6ef256bb84713b65dc4b901d82d": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/ENS/index.ts",
+      "code": "TS2722",
+      "count": 2,
+      "message": "Cannot invoke an object which is possibly 'undefined'."
+    },
+    "a1c32a3cca57a1836be472420bfdee9032e431a8": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/GasTankModule/gasTankModule.ts",
+      "code": "TS2532",
+      "count": 1,
+      "message": "Object is possibly 'undefined'."
+    },
+    "93d2328a53f3faa311a6c50bf6aac9c7f0ffc0fe": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/Guild/index.ts",
+      "code": "TS2722",
+      "count": 1,
+      "message": "Cannot invoke an object which is possibly 'undefined'."
+    },
+    "5471aaa1056a1bda097fd660aac56280a0396108": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/KyberSwap/index.ts",
+      "code": "TS2722",
+      "count": 1,
+      "message": "Cannot invoke an object which is possibly 'undefined'."
+    },
+    "a1d2a9b339c9339f876ef56d0bc90a5338cb5980": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/Legends/index.ts",
+      "code": "TS2532",
+      "count": 4,
+      "message": "Object is possibly 'undefined'."
+    },
+    "af0469e1f6ac0755546a2c104d545adeffacb887": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/Legends/index.ts",
+      "code": "TS2345",
+      "count": 2,
+      "message": "Argument of type 'string | undefined' is not assignable to parameter of type 'string'."
+    },
+    "5135cf59e2167f32ac58b39063e659212b13cc09": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/Legends/index.ts",
+      "code": "TS2722",
+      "count": 1,
+      "message": "Cannot invoke an object which is possibly 'undefined'."
+    },
+    "65b0c551e086fee9b67a8e78aaf4561ad491eaf2": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/OpenSea/index.ts",
+      "code": "TS2532",
+      "count": 10,
+      "message": "Object is possibly 'undefined'."
+    },
+    "62f972656deead2926b79abbac1a7a5f783f9a35": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/OpenSea/index.ts",
+      "code": "TS18048",
+      "count": 3,
+      "message": "'finalOrder' is possibly 'undefined'."
+    },
+    "a346996150ff114c75b8012c55afcefc4f7b8ebd": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/Socket/socketModules.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'bigint | undefined' is not assignable to parameter of type 'bigint'."
+    },
+    "0d104170e625699149e44604f9a4d139b65c77c2": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/Socket/socketModules.ts",
+      "code": "TS2722",
+      "count": 2,
+      "message": "Cannot invoke an object which is possibly 'undefined'."
+    },
+    "69b44f4ff50787641f957ac90a1c142ad6284a47": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/Sushiswap/sushiSwapModule.ts",
+      "code": "TS2722",
+      "count": 1,
+      "message": "Cannot invoke an object which is possibly 'undefined'."
+    },
+    "601a9c92c05d4737df6e3b9e9b0569c5e87c7a0b": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/TraderJoe/index.ts",
+      "code": "TS2722",
+      "count": 1,
+      "message": "Cannot invoke an object which is possibly 'undefined'."
+    },
+    "46e737d1e37f9ebedcfe079686af368ec043fdf2": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/Uniswap/uniUniversalRouter.ts",
+      "code": "TS2345",
+      "count": 4,
+      "message": "Argument of type 'string | undefined' is not assignable to parameter of type 'string'."
+    },
+    "1abc4b3d1b7ac4a1326a7e14037e6ce6c8fb6542": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/Uniswap/uniV3.ts",
+      "code": "TS2345",
+      "count": 8,
+      "message": "Argument of type 'string | undefined' is not assignable to parameter of type 'string'."
+    },
+    "6f5279fabd8a19094ae233278d3c61f6e1fb1d2e": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/WALLET/stakingPools.ts",
+      "code": "TS2532",
+      "count": 1,
+      "message": "Object is possibly 'undefined'."
+    },
+    "1400c36587b6499c1a1a5c492a3f9aaf68beb895": {
+      "file": "src/ambire-common/src/libs/humanizer/modules/WALLET/stakingPools.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string | undefined' is not assignable to parameter of type 'string'."
+    },
+    "d28d5ab886d3103d4a81a367a1c197185986e822": {
+      "file": "src/ambire-common/src/libs/portfolio/gecko.ts",
+      "code": "TS2532",
+      "count": 1,
+      "message": "Object is possibly 'undefined'."
+    },
+    "cae8608e1ad5e0f32f8cb778ea1bf26aa82dd57c": {
+      "file": "src/ambire-common/src/services/bundlers/bundlerSwitcher.ts",
+      "code": "TS2322",
+      "count": 3,
+      "message": "Type 'Bundler | undefined' is not assignable to type 'Bundler'."
+    },
+    "4681f399d56078ed421b6d6d5430eb8739193b97": {
+      "file": "src/ambire-common/src/services/paymaster/FailedPaymasters.ts",
+      "code": "TS2722",
+      "count": 1,
+      "message": "Cannot invoke an object which is possibly 'undefined'."
+    },
+    "337886b13586f8e581634abd51f0c61e45508fdf": {
+      "file": "src/ambire-common/src/utils/networks.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string | undefined' is not assignable to parameter of type 'string'."
+    },
+    "f51c9bd11dee46f9891f85aec626b3971f78abbb": {
+      "file": "src/ambire-common/src/utils/networks.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | undefined' is not assignable to type 'string | null'."
+    },
+    "f0a0acb268d3b2fb6c917df6307a9af707df279d": {
+      "file": "src/ambire-common/src/utils/networks.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | null' is not assignable to type 'string'."
+    },
+    "d6b9fcee583936a9777ded4d0d936127eb6eba26": {
+      "file": "src/benzin/screens/BenzinScreen/hooks/useSteps/utils/reproduceCalls.ts",
+      "code": "TS2722",
+      "count": 1,
+      "message": "Cannot invoke an object which is possibly 'undefined'."
+    },
+    "0a23f0692386aff9bdaa9fd3a3e2e00bf436cdd1": {
+      "file": "src/common/hooks/useLoader/useLoader.ts",
+      "code": "TS2307",
+      "count": 1,
+      "message": "Cannot find module '@common/contexts/loaderContext' or its corresponding type declarations."
+    },
+    "195afe5ee9094ac0698ccc5c30ed362ced65316f": {
+      "file": "src/common/hooks/useRelayerData/useRelayerData.ts",
+      "code": "TS2769",
+      "count": 1,
+      "message": "No overload matches this call."
+    },
+    "15909da0268e4f3ab62b606ef19ef97c70fea623": {
+      "file": "src/common/utils/mixHexColors.ts",
+      "code": "TS18048",
+      "count": 1,
+      "message": "'r1' is possibly 'undefined'."
+    },
+    "22e77fd9cff8ac6ce8c313a59c18c295ce9be5e3": {
+      "file": "src/common/utils/mixHexColors.ts",
+      "code": "TS18048",
+      "count": 1,
+      "message": "'r2' is possibly 'undefined'."
+    },
+    "80a66e483853c65adfcbc5de6b73c53b523ba648": {
+      "file": "src/common/utils/mixHexColors.ts",
+      "code": "TS18048",
+      "count": 1,
+      "message": "'g1' is possibly 'undefined'."
+    },
+    "bdc0b77b3b9abe0cf50c10f02aec69426466e839": {
+      "file": "src/common/utils/mixHexColors.ts",
+      "code": "TS18048",
+      "count": 1,
+      "message": "'g2' is possibly 'undefined'."
+    },
+    "8d5ea6abb3d5059d172ab8305f2f61ba5a351215": {
+      "file": "src/common/utils/mixHexColors.ts",
+      "code": "TS18048",
+      "count": 1,
+      "message": "'b1' is possibly 'undefined'."
+    },
+    "5cd2277b953ef8f519ca3c6ad9e8038cab5fb08c": {
+      "file": "src/common/utils/mixHexColors.ts",
+      "code": "TS18048",
+      "count": 1,
+      "message": "'b2' is possibly 'undefined'."
+    },
+    "a9a9afbc12a8b943f84c19e3a62ffb9653fba396": {
+      "file": "src/web/constants/browserapi.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string | undefined' is not assignable to parameter of type 'string'."
+    },
+    "02104aaf87846cdfd510acbca83384441379b157": {
+      "file": "src/web/extension-services/background/provider/handleProviderRequests.ts",
+      "code": "TS2532",
+      "count": 2,
+      "message": "Object is possibly 'undefined'."
+    },
+    "125671419c26520e062e2e0b391cf3742e411875": {
+      "file": "src/web/extension-services/content-script/content-script-ambire-injection.ts",
+      "code": "TS2451",
+      "count": 1,
+      "message": "Cannot redeclare block-scoped variable 'injectProviderScript'."
+    },
+    "9d4478794bc7ca2859615baaabd5f7f5e2627d52": {
+      "file": "src/web/extension-services/content-script/content-script-ambire-injection.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'Element | undefined' is not assignable to parameter of type 'Node | null'."
+    },
+    "77e2c9656d42d81f91a581e0868ce80a0a7a6231": {
+      "file": "src/web/extension-services/content-script/content-script-ethereum-injection.ts",
+      "code": "TS2451",
+      "count": 1,
+      "message": "Cannot redeclare block-scoped variable 'injectProviderScript'."
+    },
+    "fab1228bd4ab9a8e7ac2c77e3d7e282a4710b0ad": {
+      "file": "src/web/extension-services/content-script/content-script-ethereum-injection.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'Element | undefined' is not assignable to parameter of type 'Node | null'."
+    },
+    "eb76f44360860f71f1d1674405c780d6e033524e": {
+      "file": "src/web/extension-services/inpage/EthereumProvider.ts",
+      "code": "TS7006",
+      "count": 3,
+      "message": "Parameter 'data' implicitly has an 'any' type."
+    },
+    "9673e850d1c24c75e4b10044c3a6b398b61ed013": {
+      "file": "src/web/extension-services/inpage/EthereumProvider.ts",
+      "code": "TS18048",
+      "count": 8,
+      "message": "'response' is possibly 'undefined'."
+    },
+    "64bebb6c9560b3e4a6a7c536d2abb0270eb457a4": {
+      "file": "src/web/extension-services/inpage/EthereumProvider.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'id' does not exist on type 'boolean | { id: number; error: Error; result?: undefined; } | { id: number; error?: undefined; result: any; }'."
+    },
+    "07a96e9017d551e9e9d261b24c31e7b71ff1a7ff": {
+      "file": "src/web/extension-services/inpage/EthereumProvider.ts",
+      "code": "TS2339",
+      "count": 5,
+      "message": "Property 'error' does not exist on type 'boolean | { id: number; error: Error; result?: undefined; } | { id: number; error?: undefined; result: any; }'."
+    },
+    "1d5c889bf1876ecc6a422319b12ede2164f8feaa": {
+      "file": "src/web/extension-services/inpage/EthereumProvider.ts",
+      "code": "TS2339",
+      "count": 2,
+      "message": "Property 'result' does not exist on type 'boolean | { id: number; error: Error; result?: undefined; } | { id: number; error?: undefined; result: any; }'."
+    },
+    "551de82805823c52c86b6c745c7d3f833bd8625b": {
+      "file": "src/web/extension-services/inpage/EthereumProvider.ts",
+      "code": "TS7030",
+      "count": 1,
+      "message": "Not all code paths return a value."
+    },
+    "2c4fbe8f305132535c3af386ac584d281cb59381": {
+      "file": "src/web/extension-services/inpage/EthereumProvider.ts",
+      "code": "TS7006",
+      "count": 2,
+      "message": "Parameter 'payload' implicitly has an 'any' type."
+    },
+    "1d8bd29e3ba5594e20495cc5161a5071e3b11864": {
+      "file": "src/web/extension-services/inpage/EthereumProvider.ts",
+      "code": "TS7006",
+      "count": 2,
+      "message": "Parameter 'callback' implicitly has an 'any' type."
+    },
+    "27e1de75818bd466f4392d122c811fd34eaea47b": {
+      "file": "src/web/extension-services/inpage/EthereumProvider.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'err' implicitly has an 'any' type."
+    },
+    "1302f5541817737cb1137be17110a037b15abc88": {
+      "file": "src/web/extension-services/inpage/EthereumProvider.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'res' implicitly has an 'any' type."
+    },
+    "644cc3b9dd06759b321027298f923afddda3e86c": {
+      "file": "src/web/extension-services/inpage/EthereumProvider.ts",
+      "code": "TS2538",
+      "count": 1,
+      "message": "Type 'undefined' cannot be used as an index type."
+    },
+    "c2fc6d0701be669c8d2fd6a2ccf3c7026d57b556": {
+      "file": "src/web/extension-services/inpage/services/dedupePromise.ts",
+      "code": "TS2532",
+      "count": 1,
+      "message": "Object is possibly 'undefined'."
+    },
+    "7e758bca833b1ddf84c026d4121520c28b31dee1": {
+      "file": "src/web/extension-services/messengers/initializeMessenger.ts",
+      "code": "TS2305",
+      "count": 1,
+      "message": "Module '\"@web/extension-services/messengers/utils/detectScriptType\"' has no exported member 'ScriptType'."
+    },
+    "abb309d2c3ca65474c2c834d82f0cc73524dd0a1": {
+      "file": "src/web/extension-services/messengers/internal/bridge.ts",
+      "code": "TS7030",
+      "count": 1,
+      "message": "Not all code paths return a value."
+    },
+    "a72fe8ef7c52f8de5a617729cfd50356602e1d03": {
+      "file": "src/web/extension-services/messengers/internal/portMessenger.ts",
+      "code": "TS2532",
+      "count": 2,
+      "message": "Object is possibly 'undefined'."
+    },
+    "f748cf7f4193d4358a71f64faeede7d699ad703d": {
+      "file": "src/web/modules/action-requests/screens/AddOrUpdateNetworkScreen/AddChain.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | undefined' is not assignable to type 'string'."
+    },
+    "9a256e339db9e1cb908b0d6309f1b9f0cd423268": {
+      "file": "src/web/modules/auth/screens/EmailLoginScreen/EmailLoginScreen.tsx",
+      "code": "TS2741",
+      "count": 1,
+      "message": "Property 'children' is missing in type '{}' but required in type 'TabLayoutWrapperMainContentProps'."
+    },
+    "2c9153723bbc636c039d71fce7fb347d09575e72": {
+      "file": "src/web/modules/auth/screens/EmailRegisterScreen/EmailRegisterScreen.tsx",
+      "code": "TS2741",
+      "count": 1,
+      "message": "Property 'children' is missing in type '{}' but required in type 'TabLayoutWrapperMainContentProps'."
+    },
+    "f6f73ef66989bafb4675956efd78d77e13b65f5d": {
+      "file": "src/web/modules/hardware-wallet/controllers/LatticeController/LatticeController.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'id' implicitly has an 'any' type."
+    },
+    "320e19602da9f0c598fb3d33f53ca034693d6647": {
+      "file": "src/web/modules/hardware-wallet/controllers/LatticeController/LatticeController.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'tab' implicitly has an 'any' type."
+    },
+    "04f4209d8736f1f295b6ca38cc13ca2fa2c16dc7": {
+      "file": "src/web/modules/hardware-wallet/controllers/LatticeController/LatticeController.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'stateData' does not exist on type '{ name: string; baseUrl: any; timeout: number; privKey: Buffer<ArrayBufferLike>; skipRetryOnWrongWallet: boolean; }'."
+    },
+    "b435474fd26cd8113291bbb6ee83c83a438a7603": {
+      "file": "src/web/modules/hardware-wallet/libs/TrezorSigner/TrezorSigner.ts",
+      "code": "TS2416",
+      "count": 1,
+      "message": "Property 'key' in type 'TrezorSigner' is not assignable to the same property in base type 'KeystoreSignerInterface'."
+    },
+    "e7911100e5a91177e98a18b96bd016e35e9b6d8d": {
+      "file": "src/web/modules/hardware-wallet/libs/latticeKeyIterator/latticeKeyIterator.ts",
+      "code": "TS2532",
+      "count": 1,
+      "message": "Object is possibly 'undefined'."
+    },
+    "023dcf94cdf7b23da92b2ef5c21f74d43a074e07": {
+      "file": "src/web/modules/settings/screens/AccountsSettingsScreen/AccountsSettingsScreen.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '(item: AccountInterface, index: number, isDragging: boolean, listeners: any, attributes: any) => React.JSX.Element' is not assignable to type 'ListRenderItem<any> & SectionListRenderItem<any, any> & ((item: any, index: number, isDragging: boolean, listeners: any, attributes: any) => ReactElement<...> | null)'."
+    },
+    "f6bff974665bae80f4f01072d1040151d7cafb22": {
+      "file": "src/web/modules/settings/screens/TransactionHistorySettingsScreen/Tabs/Tabs.tsx",
+      "code": "TS2532",
+      "count": 2,
+      "message": "Object is possibly 'undefined'."
+    },
+    "bb52b19b4610e264dbe65f39fd09a5d0994f9780": {
+      "file": "node_modules/viem/node_modules/ox/core/AbiParameters.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type '`0x${string}`'."
+    },
+    "d1eef087f7274730f6577ad7c57ef0c8130d08f7": {
+      "file": "node_modules/viem/node_modules/ox/core/Secp256k1.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type '{ prefix: number; x: bigint; y: bigint; } | { prefix: number; x: bigint; y?: undefined; } | undefined' is not assignable to parameter of type '{ prefix: number; x: bigint; y: bigint; } | { prefix: number; x: bigint; y?: undefined; }'."
+    },
+    "73bdcd59700acbda1b3eab25e0a1b5402840ce65": {
+      "file": "node_modules/viem/node_modules/ox/tempo/KeyAuthorization.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'BaseTuple | readonly [chainId: `0x${string}`, keyType: `0x${string}`, keyId: string, expiry: `0x${string}`] | readonly [chainId: `0x${string}`, keyType: `0x${string}`, keyId: string, expiry: `0x${string}`, limits: readonly [token: string, limit: `0x${string}`][]] | readonly [chainId: `0x${string}`, keyType: `0x${str...' is not assignable to parameter of type 'RecursiveArray<`0x${string}`>'."
+    },
+    "21dfb8ac75cf23906e5bd1ddf213965592052e69": {
+      "file": "node_modules/viem/node_modules/ox/tempo/SignatureEnvelope.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string' is not assignable to parameter of type '`0x${string}`'."
+    },
+    "0437a4fb715917cf0a5a9eadf98c94fc02299cc3": {
+      "file": "node_modules/viem/node_modules/ox/tempo/TokenId.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string' is not assignable to parameter of type '`0x${string}`'."
+    },
+    "cde7caa24d6b0c6136ce6c02fbdde1b704eec5a7": {
+      "file": "node_modules/viem/node_modules/ox/tempo/TxEnvelopeTempo.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'readonly [`0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`, string[][], readonly [address: string, storageKeys: readonly `0x${string}`[]][], `0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`, string, string | Tuple, readonly (readonly [chainId: `0x${string}`, address: `0x${string}`, nonce: `0x${st...' is not assignable to parameter of type 'RecursiveArray<`0x${string}`>'."
+    }
+  }
+}

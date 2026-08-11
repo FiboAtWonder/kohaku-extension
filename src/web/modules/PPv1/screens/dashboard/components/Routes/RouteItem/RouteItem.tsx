@@ -74,8 +74,8 @@ const RouteItem: FC<Props> = ({ routeItem, index, routeItemsLength }) => {
                   ? '#1b2b2c'
                   : '#141833CC'
                 : themeType === THEME_TYPES.DARK
-                ? theme.primaryBackground
-                : theme.primaryText,
+                  ? theme.primaryBackground
+                  : theme.primaryText,
               ...flexbox.center,
               ...spacings.mbTy
             }}
@@ -92,8 +92,8 @@ const RouteItem: FC<Props> = ({ routeItem, index, routeItemsLength }) => {
                   themeType === THEME_TYPES.DARK
                     ? theme.primary
                     : hovered
-                    ? theme.infoDecorative
-                    : theme.primaryBackground
+                      ? theme.infoDecorative
+                      : theme.primaryBackground
                 }
                 height={ITEM_HEIGHT}
               />

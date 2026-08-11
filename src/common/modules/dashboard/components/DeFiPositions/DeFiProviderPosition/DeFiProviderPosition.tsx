@@ -4,6 +4,7 @@ import { View } from 'react-native'
 import { PositionsByProvider } from '@ambire-common/libs/defiPositions/types'
 import formatDecimals from '@ambire-common/utils/formatDecimals/formatDecimals'
 import useTheme from '@common/hooks/useTheme'
+import spacings from '@common/styles/spacings'
 
 import DeFiPosition from './DeFiPosition'
 import DeFiPositionHeader from './DeFiPositionHeader'
@@ -19,7 +20,7 @@ const DeFiProviderPosition: FC<PositionsByProvider> = ({
   positions
 }) => {
   const [isExpanded, setIsExpanded] = useState(false)
-  const { styles } = useTheme(getStyles)
+  const { styles, theme } = useTheme(getStyles)
 
   const positionInUSDFormatted = formatDecimals(positionInUSD, 'value')
 
@@ -28,32 +29,45 @@ const DeFiProviderPosition: FC<PositionsByProvider> = ({
   }, [])
 
   return (
-    <View style={[styles.container, !!isExpanded && styles.expandedContainer]}>
+    <View
+      style={[
+        styles.container,
+        isExpanded && {
+          borderColor: theme.primaryBorder
+        }
+      ]}
+    >
       <DeFiPositionHeader
         providerName={providerName}
         chainId={chainId}
         toggleExpanded={toggleExpanded}
         isExpanded={isExpanded}
         positionInUSD={positionInUSDFormatted}
-        healthRate={positions.length === 1 ? positions[0].additionalData.healthRate : undefined}
+        healthRate={
+          positions.length === 1 && positions[0]
+            ? positions[0].additionalData.healthRate
+            : undefined
+        }
         iconUrl={iconUrl}
         siteUrl={siteUrl}
       />
-      {isExpanded &&
-        positions.map(({ id, assets, additionalData }, index) => (
-          <DeFiPosition
-            key={id}
-            withTopBorder={index !== 0 && positions.length > 1}
-            id={id}
-            type={type}
-            assets={assets}
-            providerName={providerName}
-            chainId={chainId}
-            additionalData={additionalData}
-            siteUrl={siteUrl}
-            positionInUSD={formatDecimals(additionalData.positionInUSD || 0, 'value')}
-          />
-        ))}
+      {isExpanded && (
+        <View style={spacings.mvMi}>
+          {positions.map(({ id, assets, additionalData }) => (
+            <DeFiPosition
+              key={id}
+              id={id}
+              type={type}
+              assets={assets}
+              providerName={providerName}
+              chainId={chainId}
+              additionalData={additionalData}
+              siteUrl={siteUrl}
+              positionInUSD={formatDecimals(additionalData.positionInUSD || 0, 'value')}
+            />
+          ))}
+        </View>
+      )}
     </View>
   )
 }

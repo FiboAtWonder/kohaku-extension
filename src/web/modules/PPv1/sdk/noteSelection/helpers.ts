@@ -72,7 +72,7 @@ export function getAnonymitySetSize(ctx: Ctx, amount: bigint): number {
 
   if (keys.length === 0) return 1
 
-  const maxKey = keys.reduce((max, k) => (k > max ? k : max), keys[0])
+  const maxKey = keys.reduce((max, k) => (k > max ? k : max), keys[0] as bigint)
 
   return ctx.anonymitySet[maxKey.toString()] ?? 1
 }

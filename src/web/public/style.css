@@ -19,6 +19,14 @@ body,
   flex: 1;
 }
 
+@media (prefers-color-scheme: dark) {
+  html,
+  body,
+  #root {
+    background-color: #0d0d0f;
+  }
+}
+
 .light-scrollbar {
   --scroll-thumb-color: #6770b360;
   --scroll-track-color: #dddff766;
@@ -31,7 +39,7 @@ body,
 
 /* Sets specific size for the extension popup, otherwise, it shrinks to fit the content */
 .body-extension-popup {
-  width: 600px;
+  width: 480px;
   height: 600px;
 }
 
@@ -54,6 +62,11 @@ input {
   outline: none;
 }
 
+/* <TextArea /> with multiline={true} is compiled to <textarea /> */
+textarea {
+  outline: none;
+}
+
 ::-webkit-scrollbar {
   width: 4px;
 }
@@ -66,4 +79,11 @@ input {
 ::-webkit-scrollbar-thumb {
   background: var(--scroll-thumb-color);
   border-radius: 13px;
+}
+
+.button-icon g,
+.button-icon path {
+  transition:
+    fill 200ms ease-in-out,
+    stroke 200ms ease-in-out;
 }

@@ -1,6 +1,6 @@
 import { StyleSheet, TextStyle, ViewStyle } from 'react-native'
 
-import { isWeb } from '@common/config/env'
+import { isAndroid, isWeb } from '@common/config/env'
 import { FONT_FAMILIES } from '@common/hooks/useFonts'
 import spacings, { SPACING_MI } from '@common/styles/spacings'
 import { ThemeProps } from '@common/styles/themeConfig'
@@ -9,10 +9,9 @@ import flexbox from '@common/styles/utils/flexbox'
 
 export interface Style {
   inputContainer: ViewStyle
-  borderWrapper: ViewStyle
   inputWrapper: ViewStyle
   input: TextStyle
-  nativeInput: ViewStyle
+  nativeInput: TextStyle
   button: ViewStyle
   buttonWithBackground: ViewStyle
   bottomLabel: TextStyle
@@ -21,9 +20,10 @@ export interface Style {
   disabled: ViewStyle
   tooltipWrapper: ViewStyle
   tooltip: ViewStyle
+  errorContainer: ViewStyle
 }
 
-const INPUT_HEIGHT = 48
+export const INPUT_HEIGHT = 48
 export const INPUT_WRAPPER_HEIGHT = INPUT_HEIGHT + 2 // 1px border top and bottom
 
 const getStyles = (theme: ThemeProps) =>
@@ -32,14 +32,9 @@ const getStyles = (theme: ThemeProps) =>
       ...spacings.mbSm,
       zIndex: 10
     },
-    borderWrapper: {
-      borderWidth: 2,
-      borderRadius: 8,
-      borderColor: 'transparent',
-      ...common.hidden
-    },
     inputWrapper: {
       ...flexbox.directionRow,
+      ...flexbox.alignCenter,
       borderWidth: 1,
       height: INPUT_WRAPPER_HEIGHT,
       ...common.borderRadiusPrimary
@@ -50,18 +45,26 @@ const getStyles = (theme: ThemeProps) =>
       ...flexbox.flex1,
       height: INPUT_HEIGHT,
       borderWidth: 0,
-      ...spacings.ph
+      ...spacings.phSm
     },
     nativeInput: {
       height: '100%',
       fontFamily: isWeb ? FONT_FAMILIES.REGULAR : FONT_FAMILIES.LIGHT,
       color: theme.secondaryText,
-      fontSize: 14
+      fontSize: 14,
+      ...(isAndroid
+        ? {
+            includeFontPadding: false,
+            paddingVertical: 0,
+            paddingHorizontal: 0
+          }
+        : {})
     },
     bottomLabel: {
       ...spacings.phMi,
       ...spacings.mbMI,
       ...spacings.phTy,
+      ...spacings.mtTy,
       paddingTop: SPACING_MI / 2
     },
     label: {
@@ -73,7 +76,6 @@ const getStyles = (theme: ThemeProps) =>
       ...spacings.mrTy,
       ...spacings.mvTy,
       ...spacings.pvMi,
-      ...spacings.phSm,
       ...common.borderRadiusPrimary
     },
     buttonWithBackground: {
@@ -100,6 +102,10 @@ const getStyles = (theme: ThemeProps) =>
       borderRadius: 6,
       borderColor: theme.secondaryBorder,
       borderWidth: 2
+    },
+    errorContainer: {
+      ...flexbox.directionRow,
+      ...flexbox.justifySpaceBetween
     }
   })
 

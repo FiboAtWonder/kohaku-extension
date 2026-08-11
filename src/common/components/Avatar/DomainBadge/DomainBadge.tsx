@@ -1,31 +1,26 @@
 import React, { FC } from 'react'
-import { View } from 'react-native'
+import { ColorValue, View } from 'react-native'
 
-import EnsCircularIcon from '@common/assets/svg/EnsCircularIcon'
-import useTheme from '@common/hooks/useTheme'
-import { SPACING_MI } from '@common/styles/spacings'
+import EnsIcon from '@common/assets/svg/EnsIcon'
+import GnsIcon from '@common/assets/svg/GnsIcon'
+import NamoshiIcon from '@common/assets/svg/NamoshiIcon'
+import { ReverseLookupResult } from '@common/hooks/useReverseLookup/useReverseLookup'
+import spacings from '@common/styles/spacings'
 
-interface Props {
-  ens?: string | null
-}
-
-const DomainBadge: FC<Props> = ({ ens }) => {
-  const { theme } = useTheme()
-
-  if (!ens) return null
+const DomainBadge: FC<
+  Pick<ReverseLookupResult, 'name' | 'type'> & {
+    color?: ColorValue
+  }
+> = ({ name, type, color }) => {
+  if (!name && !type) return null
 
   return (
-    <View
-      style={{
-        padding: SPACING_MI / 2,
-        backgroundColor: theme.primaryBackground,
-        zIndex: 2,
-        borderRadius: 50
-      }}
-    >
-      {ens && <EnsCircularIcon />}
+    <View style={{ zIndex: 2, borderRadius: 50, ...spacings.mrMi }}>
+      {type === 'ens' && <EnsIcon width={16} height={16} color={color} />}
+      {type === 'namoshi' && <NamoshiIcon width={16} height={16} isActive color={color} />}
+      {type === 'gns' && <GnsIcon width={16} height={16} isActive color={color} />}
     </View>
   )
 }
 
-export default DomainBadge
+export default React.memo(DomainBadge)

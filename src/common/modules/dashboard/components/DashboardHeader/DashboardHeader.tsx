@@ -1,52 +1,130 @@
 import React from 'react'
 import { Animated, Pressable, View } from 'react-native'
+import { useModalize } from 'react-native-modalize'
 
+import BurgerIcon from '@common/assets/svg/BurgerIcon'
+import NetworkStatusesIcon from '@common/assets/svg/NetworkStatusIcon'
 import Text from '@common/components/Text'
+import { isAmbireNext, isDev, isMobile } from '@common/config/env'
+import { useTranslation } from '@common/config/localization'
+import { DashboardMode } from '@common/controllers/wallet-state'
+import useController from '@common/hooks/useController'
+import useHover from '@common/hooks/useHover'
 import useNavigation from '@common/hooks/useNavigation'
-import useTheme from '@common/hooks/useTheme'
-import { WEB_ROUTES } from '@common/modules/router/constants/common'
+import { ROUTES, WEB_ROUTES } from '@common/modules/router/constants/common'
 import spacings from '@common/styles/spacings'
-import flexboxStyles from '@common/styles/utils/flexbox'
-import useHover from '@web/hooks/useHover'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
-import commonWebStyles from '@web/styles/utils/common'
+import flexbox from '@common/styles/utils/flexbox'
+import { getUiType } from '@common/utils/uiType'
 
+import DashboardModeToggle from '../DashboardModeToggle'
+import NetworkStatusesBottomSheet from '../NetworkStatusesBottomSheet'
 import AccountButton from './AccountButton'
-import getStyles from './styles'
 
-const DashboardHeader = () => {
-  const { account } = useSelectedAccountControllerState()
+const { isPopup } = getUiType()
+
+const SHOULD_DISPLAY_NETWORK_STATUSES = isAmbireNext || isDev
+
+type Props = {
+  // (kohaku) only the merged (web) dashboard passes these - it renders the
+  // private/public toggle in place of the "Back To Dashboard" shortcut
+  dashboardMode?: DashboardMode
+  onDashboardModeChange?: (mode: DashboardMode) => void
+}
+
+const DashboardHeader = ({ dashboardMode, onDashboardModeChange }: Props) => {
+  const {
+    state: { account }
+  } = useController('SelectedAccountController')
+  const { t } = useTranslation()
+  const [bindBurgerAnim, burgerAnimStyle] = useHover({ preset: 'opacityInverted', duration: 50 })
+  // Takes the user back to the private dashboard, which is the landing screen (kohaku)
   const [bindDashboardAnim, dashboardAnimStyle] = useHover({ preset: 'opacity' })
+  const [bindNetworkStatusesAnim, networkStatusesAnimStyle] = useHover({
+    preset: 'opacityInverted',
+    duration: 50
+  })
   const { navigate } = useNavigation()
-  useTheme(getStyles)
+
+  const {
+    ref: networkStatusesSheetRef,
+    open: openNetworkStatusesSheet,
+    close: closeNetworkStatusesSheet
+  } = useModalize()
 
   if (!account) return null
 
   return (
-    <View
-      style={[
-        flexboxStyles.directionRow,
-        flexboxStyles.alignCenter,
-        flexboxStyles.flex1,
-        commonWebStyles.contentContainer
-      ]}
-    >
-      <View
-        style={[flexboxStyles.directionRow, flexboxStyles.flex1, flexboxStyles.justifySpaceBetween]}
-      >
+    <View style={[flexbox.directionRow, flexbox.alignCenter, { width: '100%' }]}>
+      {SHOULD_DISPLAY_NETWORK_STATUSES && (
+        <NetworkStatusesBottomSheet
+          sheetRef={networkStatusesSheetRef}
+          closeBottomSheet={closeNetworkStatusesSheet}
+        />
+      )}
+      <View style={[flexbox.directionRow, flexbox.flex1, flexbox.justifySpaceBetween]}>
         <AccountButton />
-        <Pressable
-          testID="dashboard-home-btn"
-          style={[spacings.ml, spacings.phTy, spacings.pvTy, flexboxStyles.alignSelfCenter]}
-          onPress={() => navigate(WEB_ROUTES.mainDashboard)}
-          {...bindDashboardAnim}
-        >
-          <Animated.View style={dashboardAnimStyle}>
-            <Text fontSize={14} weight="medium" appearance="secondaryText">
-              Back To Dashboard
-            </Text>
-          </Animated.View>
-        </Pressable>
+        <View style={[flexbox.directionRow, flexbox.alignStart]}>
+          {dashboardMode && onDashboardModeChange ? (
+            <DashboardModeToggle
+              mode={dashboardMode}
+              onChange={onDashboardModeChange}
+              style={{ ...spacings.ml, ...flexbox.alignSelfCenter }}
+              testID="dashboard-mode-toggle"
+            />
+          ) : (
+            <Pressable
+              testID="dashboard-home-btn"
+              style={[spacings.ml, spacings.phTy, spacings.pvTy, flexbox.alignSelfCenter]}
+              onPress={() => navigate(WEB_ROUTES.mainDashboard)}
+              {...bindDashboardAnim}
+            >
+              <Animated.View style={dashboardAnimStyle}>
+                <Text fontSize={14} weight="medium" appearance="secondaryText">
+                  {t('Back To Dashboard')}
+                </Text>
+              </Animated.View>
+            </Pressable>
+          )}
+
+          {SHOULD_DISPLAY_NETWORK_STATUSES && (
+            <Pressable
+              style={[flexbox.justifyCenter, flexbox.alignCenter, { width: 40, height: 40 }]}
+              onPress={() => openNetworkStatusesSheet()}
+              {...bindNetworkStatusesAnim}
+            >
+              <Animated.View style={networkStatusesAnimStyle}>
+                <NetworkStatusesIcon width={20} height={20} color="#FFFFFF" />
+              </Animated.View>
+            </Pressable>
+          )}
+
+          <Pressable
+            testID="dashboard-hamburger-btn"
+            style={[
+              spacings.mlTy,
+              flexbox.justifyCenter,
+              flexbox.alignCenter,
+              {
+                borderRadius: 50,
+                width: 40,
+                height: 40,
+                backgroundColor: '#000000A3'
+              },
+              isMobile && {
+                borderWidth: 1,
+                borderColor: '#FFFFFF1F'
+              }
+            ]}
+            onPress={() => {
+              isPopup || isMobile ? navigate(ROUTES.menu) : navigate(WEB_ROUTES.generalSettings)
+            }}
+            {...bindBurgerAnim}
+          >
+            <Animated.View style={burgerAnimStyle}>
+              <BurgerIcon color="#FFFFFF" width={28} height={28} />
+            </Animated.View>
+          </Pressable>
+        </View>
       </View>
     </View>
   )

@@ -29,7 +29,7 @@ export const encrypt = async (data: string, password: string) => {
   const derivedKey = key.slice(0, 16)
   const macPrefix = key.slice(16, 32)
   const counter = new aes.Counter(iv)
-  // eslint-disable-next-line new-cap
+
   const aesCtr = new aes.ModeOfOperation.ctr(derivedKey, counter)
   const ciphertext = aesCtr.encrypt(new TextEncoder().encode(data))
   const mac = keccak256(concat([macPrefix, ciphertext]))
@@ -70,7 +70,7 @@ export const decrypt = async (encryptedData: string, password: string) => {
     const derivedKey = key.slice(0, 16)
     const macPrefix = key.slice(16, 32)
     const counter = new aes.Counter(ivBytes)
-    // eslint-disable-next-line new-cap
+
     const aesCtr = new aes.ModeOfOperation.ctr(derivedKey, counter)
     const calculatedMac = keccak256(concat([macPrefix, ciphertext]))
 
@@ -81,7 +81,6 @@ export const decrypt = async (encryptedData: string, password: string) => {
     const decrypted = aesCtr.decrypt(getBytes(ciphertext))
     return new TextDecoder().decode(decrypted)
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Decrypt - Error:', error)
     throw error
   }

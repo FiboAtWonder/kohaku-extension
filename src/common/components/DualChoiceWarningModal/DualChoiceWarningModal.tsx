@@ -1,17 +1,20 @@
 import React, { FC } from 'react'
-import { View, ViewStyle } from 'react-native'
+import { TextStyle, View, ViewStyle } from 'react-native'
 
 import ErrorIcon from '@common/assets/svg/ErrorIcon'
 import WarningIcon from '@common/assets/svg/WarningIcon'
 import Button, { Props as ButtonProps } from '@common/components/Button'
 import { Props as DualChoiceModalProps } from '@common/components/DualChoiceModal/DualChoiceModal'
 import CommonText, { Props } from '@common/components/Text'
+import { isMobile, isWeb } from '@common/config/env'
 import useTheme from '@common/hooks/useTheme'
 import spacings from '@common/styles/spacings'
+import flexbox from '@common/styles/utils/flexbox'
 
+import GlassView from '../GlassView'
 import getStyles from './styles'
 
-type Type = 'error' | 'warning'
+type Type = 'error' | 'warning' | 'info'
 
 const DEFAULT_TYPE = 'warning'
 
@@ -35,19 +38,26 @@ const TitleAndIcon = ({
 
   return (
     <View style={[styles.titleAndIcon, style]}>
-      <View style={spacings.mbTy}>
-        <Icon width={32} height={32} color={theme[`${type}Decorative`]} />
+      <View style={spacings.mrTy}>
+        <Icon width={24} height={24} color={theme[`${type}Text`]} />
       </View>
-      <CommonText appearance={`${type}Text`} weight="medium" fontSize={20}>
+      <CommonText appearance={`${type}Text`} weight="semiBold">
         {title}
       </CommonText>
     </View>
   )
 }
 
-const Text = ({ text, ...rest }: { text: string } & Props) => {
+const Text = ({ text, type, ...rest }: { text: string; type?: Type } & Omit<Props, 'type'>) => {
+  const { theme } = useTheme()
+
   return (
-    <CommonText fontSize={16} appearance="secondaryText" {...rest}>
+    <CommonText
+      fontSize={16}
+      color={theme[`${type || 'secondary'}Text`]}
+      style={spacings.mb3Xl}
+      {...rest}
+    >
       {text}
     </CommonText>
   )
@@ -59,10 +69,26 @@ const ContentWrapper = ({ children, style }: { children: React.ReactNode; style?
   return <View style={[styles.content, style]}>{children}</View>
 }
 
-const ButtonWrapper = ({ children }: { children: React.ReactNode }) => {
+const ButtonWrapper = ({
+  children,
+  reverse = false
+}: {
+  children: React.ReactNode
+  reverse: boolean
+}) => {
   const { styles } = useTheme(getStyles)
 
-  return <View style={styles.buttons}>{children}</View>
+  if (isMobile) {
+    return <View style={spacings.ptSm}>{children}</View>
+  }
+
+  return (
+    <View style={[flexbox.directionRow, flexbox.justifyCenter]}>
+      <GlassView borderRadius={28}>
+        <View style={[styles.buttons, reverse && flexbox.directionRowReverse]}>{children}</View>
+      </GlassView>
+    </View>
+  )
 }
 
 const DualChoiceWarningModal = ({
@@ -75,6 +101,8 @@ const DualChoiceWarningModal = ({
   secondaryButtonText,
   primaryButtonProps,
   secondaryButtonProps,
+  contentStyle,
+  descriptionStyle,
   type = DEFAULT_TYPE
 }: Omit<DualChoiceModalProps, 'description' | 'primaryButtonTestID' | 'secondaryButtonTestID'> & {
   title: string
@@ -82,34 +110,46 @@ const DualChoiceWarningModal = ({
   children?: React.ReactNode | React.ReactNode[]
   primaryButtonProps?: ButtonProps
   secondaryButtonProps?: ButtonProps
+  contentStyle?: ViewStyle
+  descriptionStyle?: TextStyle
   type?: Type
 }) => {
   const { theme } = useTheme()
+
   return (
     <Wrapper>
-      <ContentWrapper style={{ backgroundColor: theme[`${type}Background`] }}>
-        <TitleAndIcon type={type} title={title} />
-        {!!description && <Text text={description} />}
+      <ContentWrapper style={contentStyle}>
+        <TitleAndIcon type={type} title={title} style={{ backgroundColor: 'transparent' }} />
+        {!!description && (
+          <Text
+            testID="dual-choice-modal-title-text"
+            text={description}
+            type={type}
+            style={descriptionStyle}
+          />
+        )}
         {children}
       </ContentWrapper>
-      <ButtonWrapper>
+      <ButtonWrapper reverse={true}>
         <Button
+          testID="dual-choice-modal-primary-button"
           text={primaryButtonText}
           onPress={onPrimaryButtonPress}
-          type={type}
-          hasBottomSpacing={false}
-          style={spacings.ph2Xl}
+          type={type === 'error' ? 'dangerFilled' : type}
+          hasBottomSpacing={isMobile ? true : false}
+          size={isMobile ? 'regular' : 'smaller'}
           {...primaryButtonProps}
         />
         {secondaryButtonText && onSecondaryButtonPress && (
           <Button
             text={secondaryButtonText}
             onPress={onSecondaryButtonPress}
-            type="outline"
+            type="secondary"
             hasBottomSpacing={false}
-            style={spacings.phXl}
             accentColor={theme.secondaryText}
+            size={isMobile ? 'regular' : 'smaller'}
             {...secondaryButtonProps}
+            style={[isWeb && spacings.mrLg, secondaryButtonProps?.style as ViewStyle | undefined]}
           />
         )}
       </ButtonWrapper>

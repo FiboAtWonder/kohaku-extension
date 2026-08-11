@@ -3,11 +3,12 @@ import { useTranslation } from 'react-i18next'
 import { View, ViewStyle } from 'react-native'
 
 import CopyIcon from '@common/assets/svg/CopyIcon'
+import { isMobile, isWeb } from '@common/config/env'
+import useHover, { AnimatedPressable } from '@common/hooks/useHover'
 import useTheme from '@common/hooks/useTheme'
 import useToast from '@common/hooks/useToast'
 import flexbox from '@common/styles/utils/flexbox'
 import { setStringAsync } from '@common/utils/clipboard'
-import useHover, { AnimatedPressable } from '@web/hooks/useHover'
 
 import PlainAddress from './PlainAddress'
 
@@ -16,9 +17,26 @@ interface Props {
   address: string
   style?: ViewStyle
   hideParentheses?: boolean
+  fontSize?: number
+  children?: React.ReactNode
+  withWrap?: boolean
+  highlight?: {
+    prefix: number
+    suffix: number
+    color: 'errorText'
+  }
 }
 
-const PlainAddressWithCopy: FC<Props> = ({ maxLength, address, style, hideParentheses }) => {
+const PlainAddressWithCopy: FC<Props> = ({
+  maxLength,
+  address,
+  style,
+  hideParentheses,
+  fontSize = 12,
+  children,
+  withWrap = false,
+  highlight
+}) => {
   const { t } = useTranslation()
   const { addToast } = useToast()
   const { theme } = useTheme()
@@ -36,16 +54,35 @@ const PlainAddressWithCopy: FC<Props> = ({ maxLength, address, style, hideParent
   }
 
   return (
-    <View style={[flexbox.directionRow, flexbox.alignCenter]}>
+    <View
+      style={[
+        flexbox.directionRow,
+        flexbox.alignCenter,
+        withWrap
+          ? { flexBasis: 110, flexGrow: 1, flexShrink: 1 }
+          : isMobile
+            ? { flexShrink: 1, minWidth: 0 }
+            : {}
+      ]}
+    >
       <PlainAddress
         maxLength={maxLength}
         address={address}
         hideParentheses={hideParentheses}
-        style={style}
+        style={{
+          ...style,
+          ...(maxLength === 42 ? { flexShrink: 1 } : {}),
+          ...(isWeb ? { flexShrink: 0 } : {}),
+          ...(withWrap ? { minWidth: isMobile ? 70 : 170 } : {})
+        }}
+        fontSize={fontSize}
+        withWrap={withWrap}
+        highlight={highlight}
       />
       <AnimatedPressable onPress={handleCopy} style={animStyle} {...bindAnim}>
-        <CopyIcon width={14} height={14} color={theme.secondaryText} />
+        <CopyIcon width={fontSize + 8} height={fontSize + 8} color={theme.secondaryText} />
       </AnimatedPressable>
+      {children}
     </View>
   )
 }

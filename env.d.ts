@@ -7,8 +7,10 @@ declare module '@env' {
   export type EnvTypes = {
     RELAYER_URL: string
     VELCRO_URL: string
-    SOCKET_API_KEY: string
+    BUNGEE_API_KEY: string
     LI_FI_API_KEY: string
+    SQUID_INTEGRATOR_ID: string
+    UNISWAP_API_KEY: string
     SENTRY_DSN?: string
     ENVIRONMENT: string
     DEFAULT_KEYSTORE_PASSWORD_DEV: string
@@ -16,13 +18,18 @@ declare module '@env' {
     LEGENDS_NFT_ADDRESS: string
     SENTRY_DSN_LEGENDS?: string
     SENTRY_DSN_BROWSER_EXTENSION?: string
+    WEBVIEW_DEV_HOST?: string
+    WALLETCONNECT_PROJECT_ID: string
+    ALCHEMY_API_KEY: string
     SEPOLIA_RPC_URL: string
     PRIVACY_POOLS_ASP_URL: string
     PRIVACY_POOLS_RELAYER_URL: string
     HYPERSYNC_API_KEY: string
     RAILGUN_RELAYER_URL: string
+    RAILGUN_DELEGATING_SIGNER_PK: string
     RPC_PROVIDER: string
     HELIOS_CHECKPOINT: string
+    USE_COLIBRI: string
     COLIBRI_PROVER_URLS: string
     COLIBRI_TRUSTED_CHECKPOINT: string
     COLIBRI_DEBUG: string
@@ -60,6 +67,13 @@ declare module '@env' {
   export const BROWSER_EXTENSION_LOG_UPDATED_CONTROLLER_STATE_ONLY: string
 
   /**
+   * Whether the logs should be stored in an array and managed by the extension.
+   * This improves performance, but makes it harder to debug.
+   * When false, the logs are printed directly to the console.
+   */
+  export const BROWSER_EXTENSION_MEMORY_INTENSIVE_LOGS: string
+
+  /**
    * This value can be used to control the unique ID of an extension, when it is
    * loaded during development. In prod, the ID is generated in Chrome Web Store
    * and can't be changed (could be retrieved from Chrome Web Store).
@@ -84,12 +98,12 @@ declare module '@env' {
   export const IS_TESTING: string
 
   /**
-   * Socket API is part of the Bungee API. It allows developers to easily transfer
+   * Bungee API. It allows developers to easily transfer
    * liquidity across chains, access aggregated liquidity and information from
    * hundreds of on-chain and off-chain decentralized exchange networks, bridges,
    * across multiple blockchains. Access is restricted and requires an API key.
    */
-  export const SOCKET_API_KEY: EnvTypes['SOCKET_API_KEY']
+  export const BUNGEE_API_KEY: EnvTypes['BUNGEE_API_KEY']
 
   /**
    * Socket API is part of the Bungee API. It allows developers to easily transfer
@@ -98,6 +112,16 @@ declare module '@env' {
    * across multiple blockchains. Access is restricted and requires an API key.
    */
   export const LI_FI_API_KEY: EnvTypes['LI_FI_API_KEY']
+
+  /**
+   * Squid integrator ID. Required by the Squid API.
+   */
+  export const SQUID_INTEGRATOR_ID: EnvTypes['SQUID_INTEGRATOR_ID']
+
+  /**
+   * Uniswap Trading API key. Required by the Uniswap router.
+   */
+  export const UNISWAP_API_KEY: EnvTypes['UNISWAP_API_KEY']
 
   /**
    * The address of the Legends NFT contract (same on PROD and STAGING)
@@ -115,58 +139,42 @@ declare module '@env' {
   export const SENTRY_DSN_BROWSER_EXTENSION: EnvTypes['SENTRY_DSN_BROWSER_EXTENSION']
 
   /**
-   * The Sepolia RPC URL
+   * LAN IP of the dev machine for the WebView webpack-dev-server (Android physical device).
    */
-  export const SEPOLIA_RPC_URL: EnvTypes['SEPOLIA_RPC_URL']
+  export const WEBVIEW_DEV_HOST: EnvTypes['WEBVIEW_DEV_HOST']
 
   /**
-   * The PrivacyPools ASP API endpoint
+   * WalletConnect Project ID for v2 connections.
    */
-  export const PRIVACY_POOLS_ASP_URL: EnvTypes['PRIVACY_POOLS_ASP_URL']
-
-  /**
-   * The PrivacyPools Relayer URL
-   */
-  export const PRIVACY_POOLS_RELAYER_URL: EnvTypes['PRIVACY_POOLS_RELAYER_URL']
-
-  /**
-   * The API key for sdk RPC (Hypersync from Envio)
-   */
-  export const HYPERSYNC_API_KEY: EnvTypes['HYPERSYNC_API_KEY']
-
-  /** The Railgun Relayer URL
-   */
-  export const RAILGUN_RELAYER_URL: EnvTypes['RAILGUN_RELAYER_URL']
-
-  /**
-   * The Alchemy API key
-   */
+  export const WALLETCONNECT_PROJECT_ID: EnvTypes['WALLETCONNECT_PROJECT_ID']
+  /** The API key for Alchemy (kohaku) */
   export const ALCHEMY_API_KEY: EnvTypes['ALCHEMY_API_KEY']
-
+  /** Sepolia RPC endpoint (kohaku) */
+  export const SEPOLIA_RPC_URL: EnvTypes['SEPOLIA_RPC_URL']
+  /** The PrivacyPools ASP API endpoint (kohaku) */
+  export const PRIVACY_POOLS_ASP_URL: EnvTypes['PRIVACY_POOLS_ASP_URL']
+  /** The PrivacyPools relayer endpoint (kohaku) */
+  export const PRIVACY_POOLS_RELAYER_URL: EnvTypes['PRIVACY_POOLS_RELAYER_URL']
+  /** The API key for sdk RPC (Hypersync from Envio) (kohaku) */
+  export const HYPERSYNC_API_KEY: EnvTypes['HYPERSYNC_API_KEY']
+  /** The Railgun Relayer URL (kohaku) */
+  export const RAILGUN_RELAYER_URL: EnvTypes['RAILGUN_RELAYER_URL']
+  /** Private key of the throwaway signer that submits Railgun proofs via the relayer (kohaku) */
+  export const RAILGUN_DELEGATING_SIGNER_PK: EnvTypes['RAILGUN_DELEGATING_SIGNER_PK']
   /**
-   * Select which RPC provider implementation to use.
-   * Allowed values: "rpc", "helios", "colibri".
+   * Default verified RPC provider kind. Allowed values: "rpc", "helios", "colibri". (kohaku)
    */
   export const RPC_PROVIDER: EnvTypes['RPC_PROVIDER']
-
-  /**
-   * Custom Helios checkpoint
-   */
+  /** Custom Helios checkpoint (kohaku) */
   export const HELIOS_CHECKPOINT: EnvTypes['HELIOS_CHECKPOINT']
-
   /**
-   * Comma-separated list of Colibri prover URLs.
+   * Colibri (stateless) verified RPC provider feature gate. 'true' enables it. (kohaku)
    */
+  export const USE_COLIBRI: string
+  /** Comma-separated list of Colibri prover URLs. (kohaku) */
   export const COLIBRI_PROVER_URLS: string
-
-  /**
-   * Optional trusted checkpoint (beacon block root) for Colibri bootstrapping.
-   */
+  /** Optional trusted checkpoint (beacon block root) for Colibri bootstrapping. (kohaku) */
   export const COLIBRI_TRUSTED_CHECKPOINT: string
-
-  /**
-   * Enable Colibri debug logs.
-   * The accepted value is 'true' to enable debug logs.
-   */
+  /** Enable Colibri debug logs ('true'). (kohaku) */
   export const COLIBRI_DEBUG: string
 }

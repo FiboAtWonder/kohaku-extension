@@ -6,19 +6,20 @@ import InfoIcon from '@common/assets/svg/InfoIcon'
 import NetworkIcon from '@common/components/NetworkIcon'
 import SkeletonLoader from '@common/components/SkeletonLoader'
 import Text from '@common/components/Text'
+import useController from '@common/hooks/useController'
 import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
-import useNetworksControllerState from '@web/hooks/useNetworksControllerState'
 
 interface Props {
   chainId: bigint
   marginRight?: number
-  hideLinks?: boolean
 }
 
-const ChainVisualization: FC<Props> = ({ chainId, marginRight, hideLinks = false }) => {
+const ChainVisualization: FC<Props> = ({ chainId, marginRight }) => {
   const { benzinNetworks, loadingBenzinNetworks = [] } = useNetworksContext()
-  const { networks } = useNetworksControllerState()
+  const {
+    state: { networks }
+  } = useController('NetworksController')
   const actualNetworks = networks ?? benzinNetworks
   const isNetworkLoading = loadingBenzinNetworks.includes(chainId)
   const destinationNetwork = actualNetworks.find((n) => n.chainId === chainId)
@@ -36,11 +37,7 @@ const ChainVisualization: FC<Props> = ({ chainId, marginRight, hideLinks = false
             id={destinationNetwork.chainId.toString()}
             benzinNetwork={destinationNetwork}
           />
-          <Text
-            {...(!hideLinks && { onPress: handleLink })}
-            weight="semiBold"
-            style={spacings.mlMi}
-          >
+          <Text onPress={handleLink} weight="semiBold" style={spacings.mlMi}>
             {destinationNetwork.name}
           </Text>
         </>
@@ -51,11 +48,9 @@ const ChainVisualization: FC<Props> = ({ chainId, marginRight, hideLinks = false
         </Text>
       )}
       {isNetworkLoading && <SkeletonLoader width={140} height={20} />}
-      {!hideLinks && (
-        <Pressable style={spacings.mlMi} onPress={handleLink}>
-          <InfoIcon width={14} height={14} />
-        </Pressable>
-      )}
+      <Pressable style={spacings.mlMi} onPress={handleLink}>
+        <InfoIcon width={14} height={14} />
+      </Pressable>
     </View>
   )
 }

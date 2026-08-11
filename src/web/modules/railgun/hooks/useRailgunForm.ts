@@ -5,10 +5,15 @@ import { ZERO_ADDRESS } from '@ambire-common/services/socket/constants'
 import { TokenResult } from '@ambire-common/libs/portfolio'
 import { AddressState, AddressStateOptional } from '@ambire-common/interfaces/domains'
 import useAddressInput from '@common/hooks/useAddressInput'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useControllerState from '@web/hooks/useControllerState'
+import useController from '@common/hooks/useController'
 import useRailgunControllerState from '@web/hooks/useRailgunControllerState'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
+
+const DEFAULT_ADDRESS_STATE: AddressState = {
+  fieldValue: '',
+  resolvedAddress: '',
+  resolvedAddressType: null,
+  isDomainResolving: false
+}
 
 // Railgun wraps native ETH into WETH on shield, so shielded ETH comes back from
 // the SDK as the chain's WETH ERC20. Treat these (and native) as ETH for
@@ -25,8 +30,6 @@ const USDC_ADDRESSES = new Set<string>([
 ])
 
 const useRailgunForm = () => {
-  const { dispatch } = useBackgroundService()
-
   const {
     railgunAccountsState,
     isAccountLoaded,
@@ -37,7 +40,8 @@ const useRailgunForm = () => {
     refreshPrivateAccount
   } = useRailgunControllerState()
 
-  const railgunV2State = useControllerState('railgunV2')
+  const { state: railgunV2State, dispatch: railgunV2Dispatch } =
+    useController('RailgunV2Controller')
   const signAccountOpController = railgunV2State?.signAccountOpController ?? null
   const latestBroadcastedAccountOp = railgunV2State?.latestBroadcastedAccountOp ?? null
   const hasProceeded = !!railgunV2State?.hasProceeded
@@ -46,10 +50,12 @@ const useRailgunForm = () => {
   const privateOpInFlight = !!railgunV2State?.privateOpInFlight
 
   // privacyProvider is a shared tab toggle; the privacy-pools controller owns it.
-  const privacyPoolsState = useControllerState('privacyPools')
+  const { state: privacyPoolsState, dispatch: privacyPoolsDispatch } =
+    useController('PrivacyPoolsController')
   const privacyProvider = privacyPoolsState?.privacyProvider || 'railgun'
 
-  const { account: userAccount, portfolio } = useSelectedAccountControllerState()
+  const { state: selectedAccountState } = useController('SelectedAccountController')
+  const { account: userAccount, portfolio } = selectedAccountState
 
   const chainId = railgunAccountsState.chainId
 
@@ -62,23 +68,16 @@ const useRailgunForm = () => {
   const [programmaticUpdateCounter, setProgrammaticUpdateCounter] = useState(0)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  const [addressState, setAddressStateRaw] = useState<AddressState>({
-    fieldValue: '',
-    ensAddress: '',
-    isDomainResolving: false
-  })
+  const [addressState, setAddressStateRaw] = useState<AddressState>({ ...DEFAULT_ADDRESS_STATE })
   const setAddressState = useCallback((newState: AddressStateOptional) => {
     setAddressStateRaw((prev) => ({ ...prev, ...newState }))
   }, [])
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleCacheResolvedDomain = useCallback((..._args: [string, string, 'ens']) => {}, [])
   const addressInputState = useAddressInput({
     addressState,
     setAddressState,
-    overwriteError: '',
-    overwriteValidLabel: '',
-    handleCacheResolvedDomain
+    // Railgun unshield/transfer accepts both public (0x) and Railgun (0zk) recipients
+    allowRailgunAddresses: true
   })
 
   const resetForm = useCallback(() => {
@@ -87,7 +86,7 @@ const useRailgunForm = () => {
     setSelectedToken(null)
     setAmountFieldMode('token')
     setMessage(null)
-    setAddressStateRaw({ fieldValue: '', ensAddress: '', isDomainResolving: false })
+    setAddressStateRaw({ ...DEFAULT_ADDRESS_STATE })
   }, [])
 
   const ethPrice = useMemo(() => {
@@ -239,9 +238,9 @@ const useRailgunForm = () => {
   const { ref: estimationModalRef, open: openEstimationModal, close: closeModalRaw } = useModalize()
 
   const closeEstimationModal = useCallback(() => {
-    dispatch({ type: 'RAILGUN_V2_CONTROLLER_DESTROY_SIGN_ACCOUNT_OP' })
+    railgunV2Dispatch({ type: 'method', params: { method: 'destroySignAccountOp', args: [] } })
     closeModalRaw()
-  }, [dispatch, closeModalRaw])
+  }, [railgunV2Dispatch, closeModalRaw])
 
   const handleUpdateForm = useCallback(
     (params: { [key: string]: any }) => {
@@ -262,21 +261,21 @@ const useRailgunForm = () => {
 
       // privacyProvider is a shared tab toggle owned by the privacy-pools controller.
       if (params.privacyProvider !== undefined) {
-        dispatch({
-          type: 'PRIVACY_POOLS_CONTROLLER_UPDATE_FORM',
-          params: { privacyProvider: params.privacyProvider }
+        privacyPoolsDispatch({
+          type: 'method',
+          params: { method: 'update', args: [{ privacyProvider: params.privacyProvider }] }
         })
       }
 
       setMessage(null)
     },
-    [dispatch, setAddressState]
+    [privacyPoolsDispatch, setAddressState]
   )
 
   const openEstimationModalAndDispatch = useCallback(() => {
-    dispatch({ type: 'RAILGUN_V2_CONTROLLER_HAS_USER_PROCEEDED', params: { proceeded: true } })
+    railgunV2Dispatch({ type: 'method', params: { method: 'setUserProceeded', args: [true] } })
     openEstimationModal()
-  }, [openEstimationModal, dispatch])
+  }, [openEstimationModal, railgunV2Dispatch])
 
   /** Builds the SDK AssetAmount from the selected token (native vs erc20). */
   const buildAsset = useCallback((token: TokenResult, amount: bigint) => {
@@ -311,14 +310,14 @@ const useRailgunForm = () => {
       return
     }
 
-    dispatch({
-      type: 'RAILGUN_V2_CONTROLLER_SHIELD',
-      params: { asset: buildAsset(selectedToken, amount) }
+    railgunV2Dispatch({
+      type: 'method',
+      params: { method: 'prepareShield', args: [buildAsset(selectedToken, amount)] }
     })
 
     openEstimationModalAndDispatch()
     setMessage(null)
-  }, [selectedToken, depositAmount, dispatch, buildAsset, openEstimationModalAndDispatch])
+  }, [selectedToken, depositAmount, railgunV2Dispatch, buildAsset, openEstimationModalAndDispatch])
 
   const handleMultipleWithdrawal = useCallback(async () => {
     if (!selectedToken) {
@@ -329,7 +328,7 @@ const useRailgunForm = () => {
       setMessage({ type: 'error', text: 'Withdrawal amount is required.' })
       return
     }
-    const to = addressInputState.address || addressState.ensAddress || addressState.fieldValue
+    const to = addressInputState.address || addressState.resolvedAddress || addressState.fieldValue
 
     if (!to) {
       setMessage({ type: 'error', text: 'A recipient address is required.' })
@@ -347,19 +346,21 @@ const useRailgunForm = () => {
     const asset = buildAsset(selectedToken, amount)
     const isRailgunRecipient = to.toLowerCase().startsWith('0zk')
 
-    const toParam = isRailgunRecipient ? (to as `0zk${string}`) : getAddress(to)
+    const toParam: `0x${string}` | `0zk${string}` = isRailgunRecipient
+      ? (to as `0zk${string}`)
+      : (getAddress(to) as `0x${string}`)
 
-    dispatch({
-      type: 'RAILGUN_V2_CONTROLLER_SUBMIT_PRIVATE_OP',
-      params: { asset, to: toParam }
+    railgunV2Dispatch({
+      type: 'method',
+      params: { method: 'submitPrivateOp', args: [asset, toParam] }
     })
   }, [
     selectedToken,
     withdrawalAmount,
     addressInputState.address,
-    addressState.ensAddress,
+    addressState.resolvedAddress,
     addressState.fieldValue,
-    dispatch,
+    railgunV2Dispatch,
     buildAsset
   ])
 

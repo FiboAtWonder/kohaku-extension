@@ -2,32 +2,46 @@ import { computeAddress, getAddress, isAddress, isHexString } from 'ethers'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { Linking, TouchableOpacity, View } from 'react-native'
+import { useModalize } from 'react-native-modalize'
 
 import { AMBIRE_ACCOUNT_FACTORY } from '@ambire-common/consts/deploy'
 import { Account, AccountCreation } from '@ambire-common/interfaces/account'
 import { ReadyToAddKeys } from '@ambire-common/interfaces/keystore'
 import { getDefaultAccountPreferences } from '@ambire-common/libs/account/account'
 import { isValidPrivateKey } from '@ambire-common/libs/keyIterator/keyIterator'
+import UploadIcon from '@common/assets/svg/UploadIcon'
 import Alert from '@common/components/Alert'
+import BottomSheet from '@common/components/BottomSheet'
+import Button from '@common/components/Button'
 import Panel from '@common/components/Panel'
 import Spinner from '@common/components/Spinner'
 import Text from '@common/components/Text'
 import { Trans, useTranslation } from '@common/config/localization'
+import useController from '@common/hooks/useController'
+import useControllersMiddleware from '@common/hooks/useControllersMiddleware'
 import useTheme from '@common/hooks/useTheme'
 import useOnboardingNavigation from '@common/modules/auth/hooks/useOnboardingNavigation'
-import Header from '@common/modules/header/components/Header'
+import eventBus from '@common/services/event/eventBus'
 import spacings from '@common/styles/spacings'
+import flexbox from '@common/styles/utils/flexbox'
 import text from '@common/styles/utils/text'
 import {
   TabLayoutContainer,
   TabLayoutWrapperMainContent
 } from '@web/components/TabLayoutWrapper/TabLayoutWrapper'
-import useAccountsControllerState from '@web/hooks/useAccountsControllerState'
-import useBackgroundService from '@web/hooks/useBackgroundService'
+import PasswordConfirmation from '@web/modules/settings/components/PasswordConfirmation'
 
 import getStyles from './styles'
+import useToast from '@common/hooks/useToast'
 
-type ImportedJson = Account & { privateKey: string; creation: AccountCreation; id?: string }
+type ImportedJson = Account & {
+  privateKey?: string
+  creation: AccountCreation
+  id?: string
+  encryptedKey?: string
+  salt?: string
+  iv?: string
+}
 
 const validateJson = (json: ImportedJson): { error?: string; success: boolean } => {
   if ('id' in json && isAddress(json.id)) {
@@ -110,17 +124,39 @@ const validateJson = (json: ImportedJson): { error?: string; success: boolean } 
     }
   }
 
-  if (!('privateKey' in json) || !isValidPrivateKey(json.privateKey)) {
+  // @backwards-compatibility
+  // for old jsons that have an unencrypted private key in them
+  if (json.privateKey) {
+    if (!isValidPrivateKey(json.privateKey)) {
+      return {
+        error: 'Invalid privateKey in provided json.',
+        success: false
+      }
+    }
+
+    if (computeAddress(json.privateKey) !== getAddress(json.associatedKeys[0]!)) {
+      return {
+        error:
+          'PrivateKey and associatedKey address mismatch. Are you providing the correct private key?',
+        success: false
+      }
+    }
+
     return {
-      error: 'Invalid privateKey in provided json.',
+      success: true
+    }
+  }
+
+  if (!json.encryptedKey || !isHexString(json.encryptedKey)) {
+    return {
+      error: 'Invalid key in provided json.',
       success: false
     }
   }
 
-  if (computeAddress(json.privateKey) !== getAddress(json.associatedKeys[0])) {
+  if (!json.salt || !json.iv || !isHexString(json.salt) || !isHexString(json.encryptedKey)) {
     return {
-      error:
-        'PrivateKey and associatedKey address mismatch. Are you providing the correct private key?',
+      error: 'Invalid encryption information in provided json.',
       success: false
     }
   }
@@ -131,19 +167,69 @@ const validateJson = (json: ImportedJson): { error?: string; success: boolean } 
 }
 
 const SmartAccountImportScreen = () => {
+  const { addToast } = useToast()
   const { t } = useTranslation()
   const { theme, styles } = useTheme(getStyles)
   const [error, setError] = useState('')
+  const [accountToImport, setAccountToImport] = useState<Account | null>(null)
+  const [encryptedKey, setEncryptedKey] = useState<{
+    key: string
+    salt: string
+    iv: string
+  } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const { dispatch } = useBackgroundService()
+  const { dispatch } = useControllersMiddleware()
 
-  const { accounts } = useAccountsControllerState()
+  const {
+    state: { accounts }
+  } = useController('AccountsController')
+  const { dispatch: keystoreDispatch } = useController('KeystoreController')
   const newAccounts: Account[] = useMemo(() => accounts.filter((a) => a.newlyAdded), [accounts])
   const { goToNextRoute, goToPrevRoute } = useOnboardingNavigation()
+
+  const {
+    ref: sheetRefConfirmKeyPassword,
+    open: openConfirmKeyPassword,
+    close: closeConfirmKeyPassword
+  } = useModalize()
+
+  const importSmartAccountJson = useCallback(
+    (readyToAddAccount: Account, privateKey: string) => {
+      const keys: ReadyToAddKeys['internal'] = [
+        {
+          addr: computeAddress(privateKey),
+          label: '',
+          type: 'internal',
+          privateKey,
+          dedicatedToOneSA: true,
+          meta: { createdAt: Date.now() }
+        }
+      ]
+
+      dispatch({
+        type: 'IMPORT_SMART_ACCOUNT_JSON',
+        params: { readyToAddAccount, keys }
+      })
+    },
+    [dispatch]
+  )
+
+  useEffect(() => {
+    const onReceiveOneTimeData = (data: any) => {
+      if (!data.privateKey || !accountToImport) return
+      importSmartAccountJson(accountToImport, data.privateKey)
+    }
+
+    eventBus.addEventListener('receiveOneTimeData', onReceiveOneTimeData)
+
+    return () => eventBus.removeEventListener('receiveOneTimeData', onReceiveOneTimeData)
+  }, [accountToImport, importSmartAccountJson])
 
   const handleFileUpload = (files: any) => {
     setError('')
     setIsLoading(true)
+    setEncryptedKey(null)
+    setAccountToImport(null)
 
     const file = files[0]
     if (file.type !== 'application/json') {
@@ -162,29 +248,40 @@ const SmartAccountImportScreen = () => {
           return
         }
 
+        const accountAddr = getAddress(accountData.addr)
+        const isAlreadyAdded = accounts.some((acc) => getAddress(acc.addr) === accountAddr)
+        if (isAlreadyAdded) {
+          setIsLoading(false)
+          setError('This account is already in your wallet.')
+          return
+        }
+
         const readyToAddAccount: Account = {
-          addr: accountData.addr,
+          addr: accountAddr,
           associatedKeys: accountData.associatedKeys,
           initialPrivileges: accountData.initialPrivileges,
           creation: accountData.creation,
           newlyAdded: true,
           preferences:
-            accountData.preferences ?? getDefaultAccountPreferences(accountData.addr, accounts, 0)
+            accountData.preferences ?? getDefaultAccountPreferences(accountAddr, accounts, 0)
         }
-        const keys: ReadyToAddKeys['internal'] = [
-          {
-            addr: computeAddress(accountData.privateKey),
-            label: 'alabala',
-            type: 'internal',
-            privateKey: accountData.privateKey,
-            // TODO: maybe query the blockchain for this data
-            dedicatedToOneSA: true,
-            meta: { createdAt: Date.now() }
-          }
-        ]
+        setAccountToImport(readyToAddAccount)
 
-        dispatch({ type: 'IMPORT_SMART_ACCOUNT_JSON', params: { readyToAddAccount, keys } })
+        if (accountData.privateKey) {
+          importSmartAccountJson(readyToAddAccount, accountData.privateKey)
+          return
+        }
+
+        // encrypted key handle from now on
+        // all the below data has been validated to exist at this point
+        setEncryptedKey({
+          key: accountData.encryptedKey!,
+          salt: accountData.salt!,
+          iv: accountData.iv!
+        })
+        openConfirmKeyPassword()
       } catch (e) {
+        console.error(e)
         setError('Could not parse file. Please upload a valid json file')
         setIsLoading(false)
       }
@@ -192,25 +289,53 @@ const SmartAccountImportScreen = () => {
   }
 
   useEffect(() => {
-    if (newAccounts.length) goToNextRoute()
-  }, [newAccounts.length, goToNextRoute])
+    if (!accountToImport) return
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop: handleFileUpload })
+    const hasImportedAccount = newAccounts.some((acc) => acc.addr === accountToImport.addr)
+    if (!hasImportedAccount) return
+
+    setIsLoading(false)
+    setAccountToImport(null)
+    goToNextRoute()
+  }, [newAccounts, accountToImport, goToNextRoute])
+
+  const { getRootProps, getInputProps, open, isDragActive } = useDropzone({
+    onDrop: handleFileUpload
+  })
 
   const handleGuideLinkPressed = useCallback(
     () =>
       Linking.openURL(
-        'https://help.ambire.com/hc/en-us/articles/15468208978332--Extension-How-to-add-your-v1-account-to-Ambire-Wallet-extension'
+        'https://help.ambire.com/en/articles/13714255-how-to-add-your-v1-ambire-smart-account-legacy-to-the-extension'
       ),
     []
   )
 
+  const onPasswordSubmitted = (password: string) => {
+    if (!encryptedKey || !accountToImport) {
+      addToast(t('Encrypted key or account to import is not set. Should not happen.'), {
+        type: 'error'
+      })
+      return
+    }
+
+    keystoreDispatch({
+      type: 'method',
+      params: {
+        method: 'sendPasswordDecryptedPrivateKeyToUi',
+        args: [
+          password,
+          encryptedKey.key,
+          encryptedKey.salt,
+          encryptedKey.iv,
+          accountToImport.associatedKeys
+        ]
+      }
+    })
+  }
+
   return (
-    <TabLayoutContainer
-      backgroundColor={theme.secondaryBackground}
-      width="md"
-      header={<Header mode="custom-inner-content" withAmbireLogo />}
-    >
+    <TabLayoutContainer backgroundColor={theme.secondaryBackground} width="md">
       <TabLayoutWrapperMainContent>
         <Panel
           title={t('Import JSON backup file')}
@@ -227,58 +352,89 @@ const SmartAccountImportScreen = () => {
               flexDirection: 'column'
             }}
           >
-            <View style={styles.dropAreaContainer}>
-              <View style={styles.dropArea}>
-                <input {...getInputProps()} />
-                <Trans>
-                  {isDragActive ? (
-                    <Text appearance="secondaryText" style={text.center}>
-                      Drop your file here...
-                    </Text>
-                  ) : (
-                    <Text appearance="secondaryText" style={text.center}>
-                      {t('Drag & drop your file here or ')}
-                      <Text appearance="primary" weight="medium">
-                        upload
-                      </Text>
-                      <Text appearance="secondaryText">{' it from your computer'}</Text>
-                      {isLoading && (
-                        <View style={spacings.mlTy}>
-                          <Spinner style={{ width: 16, height: 16 }} />
-                        </View>
-                      )}
-                    </Text>
-                  )}
-                </Trans>
-              </View>
-              {!!error && (
-                <Text weight="regular" fontSize={14} appearance="errorText">
-                  {error}
+            <View style={styles.dropArea}>
+              <input {...getInputProps()} />
+              {isLoading ? (
+                <View style={[flexbox.flex1, flexbox.center]}>
+                  <Spinner style={{ width: 16, height: 16 }} />
+                </View>
+              ) : isDragActive ? (
+                <Text appearance="secondaryText" style={text.center}>
+                  Drop your file here...
                 </Text>
+              ) : (
+                <View style={[flexbox.flex1, flexbox.center]}>
+                  <UploadIcon width={32} height={32} style={spacings.mbSm} />
+                  <Text style={spacings.mbTy} appearance="secondaryText" weight="medium">
+                    {t('Drag&Drop your file here')}
+                  </Text>
+                  <Text
+                    style={spacings.mbTy}
+                    fontSize={12}
+                    appearance="secondaryText"
+                    weight="medium"
+                  >
+                    {t('or')}
+                  </Text>
+                  <Button
+                    type="outline"
+                    size="tiny"
+                    style={{ height: 40, ...spacings.phSm }}
+                    text={t('Browse files')}
+                    onPress={open}
+                    hasBottomSpacing={false}
+                  />
+                </View>
               )}
             </View>
-            <Trans>
+            {!!error ? (
+              <Alert type="error" text={error} style={{ ...spacings.mtTy, ...spacings.mb }} />
+            ) : (
               <Alert
                 title="Ambire v2 Smart Accounts only"
                 type="warning"
                 size="sm"
                 text={
-                  <Text fontSize={14} appearance="secondaryText">
-                    You can import backups only for v2 Smart Accounts created in the Ambire
-                    Extension. If you are looking to import v1 Smart Accounts from the web or mobile
-                    wallet check{' '}
-                    <TouchableOpacity onPress={handleGuideLinkPressed}>
-                      <Text color={theme.infoDecorative} fontSize={14} underline weight="medium">
-                        this guide
-                      </Text>
-                    </TouchableOpacity>
-                    .
-                  </Text>
+                  <Trans>
+                    <Text fontSize={14} appearance="secondaryText">
+                      You can import backups only for v2 Smart Accounts created in the Ambire
+                      Extension. If you are looking to import v1 Smart Accounts from the web or
+                      mobile wallet check{' '}
+                      <TouchableOpacity onPress={handleGuideLinkPressed}>
+                        <Text color={theme.linkText} fontSize={14} weight="medium">
+                          this guide
+                        </Text>
+                      </TouchableOpacity>
+                      .
+                    </Text>
+                  </Trans>
                 }
               />
-            </Trans>
+            )}
           </div>
         </Panel>
+        <BottomSheet
+          sheetRef={sheetRefConfirmKeyPassword}
+          id="confirm-password-bottom-sheet"
+          type="modal"
+          closeBottomSheet={closeConfirmKeyPassword}
+          scrollViewProps={{ contentContainerStyle: { flex: 1 } }}
+          containerInnerWrapperStyles={{ flex: 1 }}
+          style={{ maxWidth: 432, minHeight: 432, ...spacings.pvLg }}
+        >
+          <PasswordConfirmation
+            title="Decrypt backup"
+            text={t(
+              'Please enter the password that encrypted this file - the extension password at the time of export.'
+            )}
+            onPasswordConfirmed={() => closeConfirmKeyPassword()}
+            onCustomSubmit={onPasswordSubmitted}
+            onBackButtonPress={() => {
+              closeConfirmKeyPassword()
+              setIsLoading(false)
+            }}
+          />
+        </BottomSheet>
       </TabLayoutWrapperMainContent>
     </TabLayoutContainer>
   )

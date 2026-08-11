@@ -1,60 +1,79 @@
-import React, { FC, useCallback, useEffect, useMemo, useRef } from 'react'
+import React, { FC, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View, ViewStyle } from 'react-native'
-import { TooltipRefProps } from 'react-tooltip'
 
-import { isSmartAccount } from '@ambire-common/libs/account/account'
 import AccountAddress from '@common/components/AccountAddress'
 import Avatar from '@common/components/Avatar'
-import DomainBadge from '@common/components/Avatar/DomainBadge'
 import Editable from '@common/components/Editable'
 import Text from '@common/components/Text'
-import { isWeb } from '@common/config/env'
+import useController from '@common/hooks/useController'
+import useControllersMiddleware from '@common/hooks/useControllersMiddleware'
+import { AnimatedPressable, useCustomHover } from '@common/hooks/useHover'
 import useReverseLookup from '@common/hooks/useReverseLookup'
 import useTheme from '@common/hooks/useTheme'
 import useToast from '@common/hooks/useToast'
 import spacings from '@common/styles/spacings'
 import common from '@common/styles/utils/common'
 import flexbox from '@common/styles/utils/flexbox'
-import useAccountsControllerState from '@web/hooks/useAccountsControllerState'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import { AnimatedPressable, useCustomHover } from '@web/hooks/useHover'
 
 import ManageContact from './ManageContact'
+import getStyles from './styles'
 
 interface Props {
   address: string
-  name: string
+  name?: string
+  addressHighlight?: {
+    prefix: number
+    suffix: number
+    color: 'errorText'
+  }
   isManageable?: boolean
   isEditable?: boolean
+  withCopy?: boolean
+  plainAddressMaxLength?: number
   onPress?: () => void
   style?: ViewStyle
   testID?: string
   avatarSize?: number
   fontSize?: number
   height?: number
+  isActive?: boolean
 }
 
 const AddressBookContact: FC<Props> = ({
   address,
   name,
+  addressHighlight,
   isManageable,
   isEditable,
+  withCopy = true,
+  plainAddressMaxLength,
   onPress,
   testID,
   style = {},
   avatarSize,
   fontSize = 14,
-  height = 20
+  height = 20,
+  isActive = false
 }) => {
   const ContainerElement = onPress ? AnimatedPressable : View
 
   const { t } = useTranslation()
-  const { theme } = useTheme()
+  const { theme } = useTheme(getStyles)
   const { addToast } = useToast()
-  const { dispatch } = useBackgroundService()
-  const { accounts } = useAccountsControllerState()
-  const { ens, isLoading } = useReverseLookup({ address })
+  const { dispatch } = useControllersMiddleware()
+  const { accounts } = useController('AccountsController').state
+  const {
+    state: { account: selectedAccount }
+  } = useController('SelectedAccountController')
+  const reverseLookup = useReverseLookup({
+    address,
+    // This is needed because the component is rendered in AddressInput when a valid address
+    // is entered. If the field contains an address (not an ENS name), then we do a reverse lookup,
+    // instead of forward resolution. In this case, we want to keep the ENS name up to date,
+    // but we must ensure we don't trigger it for every account in the account book list
+    privacyUpdateMode: isActive ? 'whenStale' : 'never'
+  })
   const [bindAnim, animStyle] = useCustomHover({
     property: 'backgroundColor',
     values: {
@@ -62,9 +81,6 @@ const AddressBookContact: FC<Props> = ({
       to: theme.secondaryBackground
     }
   })
-  const tooltipRef = useRef<TooltipRefProps>(null)
-  const containerRef = useRef(null)
-
   const account = useMemo(() => {
     return accounts.find((acc) => acc.addr.toLowerCase() === address.toLowerCase())
   }, [accounts, address])
@@ -72,34 +88,15 @@ const AddressBookContact: FC<Props> = ({
   const onSave = (newName: string) => {
     dispatch({
       type: 'ADDRESS_BOOK_CONTROLLER_RENAME_CONTACT',
-      params: {
-        address,
-        newName
-      }
+      params: { address, newName }
     })
     addToast(t('Successfully renamed contact'))
   }
 
-  const closeTooltip = useCallback(() => {
-    tooltipRef?.current?.close()
-  }, [])
-
-  useEffect(() => {
-    if (!isWeb) return
-
-    if (!containerRef.current) return
-
-    const container = containerRef.current as HTMLElement
-
-    container.addEventListener('mouseleave', closeTooltip)
-
-    return () => {
-      container.removeEventListener('mouseleave', () => closeTooltip)
-    }
-  }, [closeTooltip])
-
-  const isSmart = useMemo(() => {
-    return account ? isSmartAccount(account) : false
+  const smartAccountType = useMemo(() => {
+    if (account?.creation) return 'Ambire'
+    if (account?.safeCreation) return 'Safe'
+    return undefined
   }, [account])
 
   const displayTypeBadge = useMemo(() => {
@@ -108,10 +105,10 @@ const AddressBookContact: FC<Props> = ({
 
   return (
     <ContainerElement
-      ref={containerRef}
       style={[
         flexbox.directionRow,
         flexbox.alignCenter,
+        flexbox.flex1,
         flexbox.justifySpaceBetween,
         spacings.phTy,
         spacings.pvTy,
@@ -123,14 +120,15 @@ const AddressBookContact: FC<Props> = ({
       {...(onPress ? bindAnim : {})}
       testID={testID}
     >
-      <View style={[flexbox.directionRow, flexbox.alignCenter]}>
+      <View style={[flexbox.directionRow, flexbox.alignCenter, flexbox.flex1]}>
         <Avatar
           {...(avatarSize && { size: avatarSize })}
           pfp={address}
-          isSmart={isSmart}
+          address={address}
+          smartAccountType={smartAccountType}
           displayTypeBadge={displayTypeBadge}
         />
-        <View>
+        <View style={{ flex: 1 }}>
           {isEditable ? (
             <Editable
               fontSize={fontSize}
@@ -144,21 +142,31 @@ const AddressBookContact: FC<Props> = ({
               onSave={onSave}
             />
           ) : (
-            <Text fontSize={fontSize} weight="medium">
-              {name}
-            </Text>
+            <View style={[flexbox.directionRow, flexbox.alignCenter]}>
+              <Text fontSize={fontSize} weight="medium" style={!name && spacings.mrTy}>
+                {name ||
+                  (account?.addr === selectedAccount?.addr
+                    ? account?.preferences.label
+                    : 'New address')}
+              </Text>
+            </View>
           )}
           <View style={[flexbox.directionRow, flexbox.alignCenter]}>
-            <DomainBadge ens={ens} />
-            <AccountAddress isLoading={isLoading} ens={ens} address={address} />
+            <AccountAddress
+              {...reverseLookup}
+              address={address}
+              addressHighlight={addressHighlight}
+              containerStyle={{ paddingVertical: 0 }}
+              withCopy={withCopy}
+              plainAddressMaxLength={plainAddressMaxLength}
+              withUpdateEnsInTooltip={!isEditable}
+            />
           </View>
         </View>
       </View>
-      {isManageable ? (
-        <ManageContact tooltipRef={tooltipRef} address={address} name={name} />
-      ) : null}
+      {isManageable && name ? <ManageContact address={address} name={name} /> : null}
     </ContainerElement>
   )
 }
 
-export default AddressBookContact
+export default React.memo(AddressBookContact)

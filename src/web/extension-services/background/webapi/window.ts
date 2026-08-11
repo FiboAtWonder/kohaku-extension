@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 
-import { FocusWindowParams, WindowProps } from '@ambire-common/interfaces/window'
+import { FocusWindowParams, WindowProps } from '@ambire-common/interfaces/ui'
 import { SPACING } from '@common/styles/spacings'
 import { browser, engine, isExtension, isSafari } from '@web/constants/browserapi'
 import { IS_FIREFOX, IS_WINDOWS } from '@web/constants/common'
@@ -82,8 +82,8 @@ const calculateWindowSizeAndPosition = async (
   if (isSafari()) {
     screenWidth = formatScreenWidth(NOTIFICATION_WINDOW_WIDTH)
     screenHeight = formatScreenHeight(NOTIFICATION_WINDOW_HEIGHT)
-  } else if (engine === 'webkit') {
-    const displayInfo = await chrome.system.display.getInfo()
+  } else if (engine === 'webkit' && browser?.system?.display?.getInfo) {
+    const displayInfo = await browser.system.display.getInfo()
     screenWidth = formatScreenWidth(displayInfo?.[0]?.workArea?.width)
     screenHeight = formatScreenHeight(displayInfo?.[0]?.workArea?.height)
   } else {
@@ -194,7 +194,7 @@ const create = async (
 }
 
 const remove = async (winId: number, pm: PortMessenger) => {
-  // In Firefox, closing a browser window (e.g., the action window) can also close the extension popup in the main window.
+  // In Firefox, closing a browser window (e.g., the request window) can also close the extension popup in the main window.
   // As a workaround, we first unfocus the window, then change the route. On the next chrome.windows.create call,
   // if a blank window exists, we close it before opening a new one. This prevents stacking multiple blank windows in the background.
   if (IS_FIREFOX) {
@@ -203,7 +203,7 @@ const remove = async (winId: number, pm: PortMessenger) => {
 
     if (
       windowToRemove &&
-      windowToRemove.type === 'popup' && // if an action window is opened
+      windowToRemove.type === 'popup' && // if a request window is opened
       pm.ports.some((p) => p.name === 'popup') // if the extension popup is opened
     ) {
       chrome.windows
@@ -213,7 +213,7 @@ const remove = async (winId: number, pm: PortMessenger) => {
       if (firstTab?.id)
         await chrome.tabs.update(firstTab.id, { url: 'about:blank' }).catch((e) => console.error(e))
       event.emit('windowRemoved', winId)
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+
       return
     }
   }
@@ -226,7 +226,7 @@ const open = async (
 ): Promise<WindowProps> => {
   const { route, customSize, baseWindowId } = options
 
-  const url = `action-window.html${route ? `#/${route}` : ''}`
+  const url = `request-window.html${route ? `#/${route}` : ''}`
   return create(url, customSize, baseWindowId)
 }
 /**
@@ -265,7 +265,6 @@ const focus = async (
     let timeoutId: NodeJS.Timeout
 
     const cleanup = () => {
-      // eslint-disable-next-line @typescript-eslint/no-use-before-define
       chrome.windows.onFocusChanged.removeListener(focusListener)
       if (timeoutId) clearTimeout(timeoutId)
     }
@@ -323,13 +322,7 @@ const focus = async (
 }
 
 const closeCurrentWindow = async () => {
-  let windowObj: Window | undefined
-
-  try {
-    windowObj = window
-  } catch (error) {
-    // silent fail
-  }
+  const windowObj: Window | undefined = window
 
   if (isSafari() || !windowObj) {
     try {
@@ -357,6 +350,10 @@ const closePopupWithUrl = async (url: string) => {
   await chrome.windows.remove(matchingWindowId)
 }
 
+const getCurrentWindow = async () => {
+  return chrome.windows.getCurrent()
+}
+
 export default { open, focus, closePopupWithUrl, remove, event }
 
-export { closeCurrentWindow }
+export { closeCurrentWindow, getCurrentWindow }

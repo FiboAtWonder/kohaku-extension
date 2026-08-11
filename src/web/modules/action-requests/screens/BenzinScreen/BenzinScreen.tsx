@@ -2,84 +2,84 @@ import React, { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 
-import { BenzinAction } from '@ambire-common/interfaces/actions'
 import Benzin from '@benzin/screens/BenzinScreen/components/Benzin/Benzin'
-import Buttons from '@benzin/screens/BenzinScreen/components/Buttons'
+import {
+  CopyButton,
+  OpenExplorerButton
+} from '@benzin/screens/BenzinScreen/components/Buttons/Buttons'
 import useBenzin from '@benzin/screens/BenzinScreen/hooks/useBenzin'
 import RightArrowIcon from '@common/assets/svg/RightArrowIcon'
 import Button from '@common/components/Button'
-import useTheme from '@common/hooks/useTheme'
+import FooterGlassView from '@common/components/FooterGlassView'
+import useController from '@common/hooks/useController'
 import useWindowSize from '@common/hooks/useWindowSize'
 import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
-import { TabLayoutContainer } from '@web/components/TabLayoutWrapper'
-import useActionsControllerState from '@web/hooks/useActionsControllerState'
-import useBackgroundService from '@web/hooks/useBackgroundService'
 
 const BenzinScreen = () => {
   const { t } = useTranslation()
-  const { dispatch } = useBackgroundService()
-  const actionsState = useActionsControllerState()
-  const { theme } = useTheme()
   const { maxWidthSize } = useWindowSize()
+
+  const {
+    state: { currentUserRequest, visibleUserRequests },
+    dispatch: requestsDispatch
+  } = useController('RequestsController')
+
+  const userRequest = useMemo(
+    () => (currentUserRequest?.kind === 'benzin' ? currentUserRequest : undefined),
+    [currentUserRequest]
+  )
+
   const resolveAction = useCallback(() => {
-    if (!actionsState.currentAction) return
-    dispatch({
-      type: 'REQUESTS_CONTROLLER_RESOLVE_USER_REQUEST',
+    if (!userRequest) return
+    requestsDispatch({
+      type: 'method',
       params: {
-        data: {},
-        id: actionsState.currentAction.id as number
+        method: 'resolveUserRequest',
+        args: [{}, userRequest.id as number]
       }
     })
-  }, [actionsState.currentAction, dispatch])
+  }, [userRequest, requestsDispatch])
 
-  const extensionAccOp = (actionsState.currentAction as BenzinAction)?.userRequest?.meta
-    ?.submittedAccountOp
+  const extensionAccOp = userRequest?.meta?.submittedAccountOp
 
-  const state = useBenzin({
-    onOpenExplorer: resolveAction,
-    extensionAccOp
-  })
+  const state = useBenzin({ onOpenExplorer: resolveAction, extensionAccOp })
 
   const pendingRequests = useMemo(() => {
-    if (!actionsState.visibleActionsQueue) return []
+    if (!visibleUserRequests.length) return []
 
-    return actionsState.visibleActionsQueue.filter((a) => a.type !== 'benzin')
-  }, [actionsState.visibleActionsQueue])
+    return visibleUserRequests.filter((r) => r.kind !== 'benzin')
+  }, [visibleUserRequests])
 
   return (
-    <TabLayoutContainer
-      width="full"
-      withHorizontalPadding={false}
-      footer={
-        <>
+    <Benzin state={state}>
+      <FooterGlassView>
+        {!!state?.handleOpenExplorer && (
+          <OpenExplorerButton
+            handleOpenExplorer={state.handleOpenExplorer}
+            disableOpenExplorerBtn={state.disableOpenExplorerBtn}
+          />
+        )}
+        <View style={[flexbox.directionRow, flexbox.alignCenter]}>
+          {!!state?.showCopyBtn && !!state?.handleCopyText && (
+            <CopyButton handleCopyText={state.handleCopyText} />
+          )}
           <Button
-            type="secondary"
             onPress={resolveAction}
-            style={{ minWidth: maxWidthSize('m') ? 180 : 140 }}
+            style={{ minWidth: maxWidthSize('s') ? 180 : 120, ...spacings.mlSm }}
             hasBottomSpacing={false}
+            size="large"
             text={pendingRequests.length ? t('Proceed to Next Request') : t('Close')}
           >
             {!!pendingRequests.length && (
               <View style={spacings.pl}>
-                <RightArrowIcon color={theme.primary} />
+                <RightArrowIcon color="#fff" />
               </View>
             )}
           </Button>
-          {state?.handleOpenExplorer ? (
-            <Buttons
-              handleCopyText={state.handleCopyText}
-              handleOpenExplorer={state.handleOpenExplorer}
-              showCopyBtn={state.showCopyBtn}
-              showOpenExplorerBtn={state.showOpenExplorerBtn}
-              style={{ ...flexbox.directionRow, ...spacings.mb0 }}
-            />
-          ) : null}
-        </>
-      }
-    >
-      <Benzin state={state} />
-    </TabLayoutContainer>
+        </View>
+      </FooterGlassView>
+    </Benzin>
   )
 }
 

@@ -66,7 +66,6 @@ const ActivityFilter: FC<Props> = ({
           placeholder={searchPlaceholder}
           height={32}
           hasLeftIcon
-          borderWrapperStyle={styles.borderWrapper}
           inputWrapperStyle={styles.searchInputWrapper}
         />
       </View>

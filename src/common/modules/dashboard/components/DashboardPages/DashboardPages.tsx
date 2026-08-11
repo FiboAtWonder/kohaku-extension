@@ -11,14 +11,10 @@ import {
 } from 'react-native'
 import { useSearchParams } from 'react-router-dom'
 
+import useController from '@common/hooks/useController'
 import usePrevious from '@common/hooks/usePrevious'
 import useRoute from '@common/hooks/useRoute'
-import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useNetworksControllerState from '@web/hooks/useNetworksControllerState'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
-import { getUiType } from '@web/utils/uiType'
 
 import Activity from '../Activity'
 import Collections from '../Collections'
@@ -29,19 +25,33 @@ import Tokens from '../Tokens'
 interface Props {
   onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void
   animatedOverviewHeight: Animated.Value
+  isSearchHidden: boolean
+  refreshing?: boolean
+  onRefresh?: () => void
+  // Lets the Kohaku dashboard render the public token list over its own background (kohaku)
   generalViewStyle?: StyleProp<ViewStyle>
 }
 
-const { isTab } = getUiType()
-
-const DashboardPages = ({ onScroll, animatedOverviewHeight, generalViewStyle }: Props) => {
+const DashboardPages = ({
+  onScroll,
+  isSearchHidden,
+  animatedOverviewHeight,
+  refreshing,
+  onRefresh,
+  generalViewStyle
+}: Props) => {
   const { t } = useTranslation()
   const route = useRoute()
-  const [sessionId] = useState(nanoid())
+  const [sessionId] = useState(`dashboard-${nanoid()}`)
   const [, setSearchParams] = useSearchParams()
-  const { dashboardNetworkFilter } = useSelectedAccountControllerState()
-  const { networks } = useNetworksControllerState()
-  const { dispatch } = useBackgroundService()
+  const {
+    state: { dashboardNetworkFilter }
+  } = useController('SelectedAccountController')
+
+  const {
+    state: { networks }
+  } = useController('NetworksController')
+  const { dispatch: activityDispatch } = useController('ActivityController')
 
   const [openTab, setOpenTab] = useState(() => {
     const params = new URLSearchParams(route?.search)
@@ -56,15 +66,22 @@ const DashboardPages = ({ onScroll, animatedOverviewHeight, generalViewStyle }: 
     [key: string]: boolean
   }>({})
 
+  const network = useMemo(() => {
+    if (!dashboardNetworkFilter || dashboardNetworkFilter === 'rewards') return null
+
+    const result = networks.find(({ chainId }) => chainId === BigInt(dashboardNetworkFilter))
+
+    return result || null
+  }, [dashboardNetworkFilter, networks])
+
   const dashboardNetworkFilterName = useMemo(() => {
     if (!dashboardNetworkFilter) return null
 
     if (dashboardNetworkFilter === 'rewards') return t('Rewards')
-    if (dashboardNetworkFilter === 'gasTank') return t('Gas Tank')
 
-    const network = networks.find(({ id }) => id === dashboardNetworkFilter)
+    const result = networks.find(({ chainId }) => chainId === BigInt(dashboardNetworkFilter))
 
-    return network?.name || null
+    return result?.name || null
   }, [dashboardNetworkFilter, networks, t])
 
   useEffect(() => {
@@ -86,15 +103,18 @@ const DashboardPages = ({ onScroll, animatedOverviewHeight, generalViewStyle }: 
       // Remove session - this will be triggered only when navigation to another screen internally in the extension.
       // The session removal when the window is forcefully closed is handled
       // in the port.onDisconnect callback in the background.
-      dispatch({ type: 'MAIN_CONTROLLER_ACTIVITY_RESET_ACC_OPS_FILTERS', params: { sessionId } })
+      activityDispatch({
+        type: 'method',
+        params: { method: 'resetAccountsOpsFilters', args: [sessionId] }
+      })
     }
     // setSearchParams must not be in the dependency array
     // as it changes on call and kills the session prematurely
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, sessionId])
+  }, [activityDispatch, sessionId])
 
   return (
-    <View style={[flexbox.flex1, isTab ? spacings.phSm : {}]}>
+    <View style={flexbox.flex1}>
       <Tokens
         openTab={openTab}
         sessionId={sessionId}
@@ -103,38 +123,55 @@ const DashboardPages = ({ onScroll, animatedOverviewHeight, generalViewStyle }: 
         initTab={initTab}
         dashboardNetworkFilterName={dashboardNetworkFilterName}
         animatedOverviewHeight={animatedOverviewHeight}
+        isSearchHidden={isSearchHidden}
+        onRefresh={onRefresh}
+        refreshing={refreshing}
         style={generalViewStyle}
       />
-      <Collections
-        openTab={openTab}
-        sessionId={sessionId}
-        setOpenTab={setOpenTab}
-        initTab={initTab}
-        onScroll={onScroll}
-        networks={networks}
-        dashboardNetworkFilterName={dashboardNetworkFilterName}
-        animatedOverviewHeight={animatedOverviewHeight}
-      />
+      {(openTab === 'collectibles' || initTab?.collectibles) && (
+        <Collections
+          openTab={openTab}
+          sessionId={sessionId}
+          setOpenTab={setOpenTab}
+          initTab={initTab}
+          onScroll={onScroll}
+          networks={networks}
+          dashboardNetworkFilterName={dashboardNetworkFilterName}
+          animatedOverviewHeight={animatedOverviewHeight}
+          isSearchHidden={isSearchHidden}
+          onRefresh={onRefresh}
+          refreshing={refreshing}
+        />
+      )}
 
-      <DeFiPositions
-        openTab={openTab}
-        sessionId={sessionId}
-        setOpenTab={setOpenTab}
-        onScroll={onScroll}
-        initTab={initTab}
-        dashboardNetworkFilterName={dashboardNetworkFilterName}
-        animatedOverviewHeight={animatedOverviewHeight}
-      />
+      {(openTab === 'defi' || initTab?.defi) && (
+        <DeFiPositions
+          openTab={openTab}
+          sessionId={sessionId}
+          setOpenTab={setOpenTab}
+          onScroll={onScroll}
+          initTab={initTab}
+          dashboardNetworkFilterName={dashboardNetworkFilterName}
+          animatedOverviewHeight={animatedOverviewHeight}
+          isSearchHidden={isSearchHidden}
+          onRefresh={onRefresh}
+          refreshing={refreshing}
+        />
+      )}
 
-      <Activity
-        openTab={openTab}
-        sessionId={sessionId}
-        setOpenTab={setOpenTab}
-        onScroll={onScroll}
-        initTab={initTab}
-        dashboardNetworkFilterName={dashboardNetworkFilterName}
-        animatedOverviewHeight={animatedOverviewHeight}
-      />
+      {(openTab === 'activity' || initTab?.activity) && (
+        <Activity
+          openTab={openTab}
+          sessionId={sessionId}
+          setOpenTab={setOpenTab}
+          onScroll={onScroll}
+          initTab={initTab}
+          animatedOverviewHeight={animatedOverviewHeight}
+          network={network}
+          onRefresh={onRefresh}
+          refreshing={refreshing}
+        />
+      )}
     </View>
   )
 }

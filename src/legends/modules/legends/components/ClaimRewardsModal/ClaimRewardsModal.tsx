@@ -1,36 +1,38 @@
-/* eslint-disable no-console */
-import { BrowserProvider } from 'ethers'
 import React, { useCallback } from 'react'
 import { createPortal } from 'react-dom'
 
 import formatDecimals from '@ambire-common/utils/formatDecimals/formatDecimals'
-import getAndFormatTokenDetails from '@common/modules/dashboard/helpers/getTokenDetails'
-import Alert from '@legends/components/Alert'
+import background from '@legends/common/assets/images/background.png'
 import CloseIcon from '@legends/components/CloseIcon'
 import { ERROR_MESSAGES } from '@legends/constants/errors/messages'
 import { ETHEREUM_CHAIN_ID } from '@legends/constants/networks'
-import useCharacterContext from '@legends/hooks/useCharacterContext'
 import useErc5792 from '@legends/hooks/useErc5792'
 import useEscModal from '@legends/hooks/useEscModal'
 import useLegendsContext from '@legends/hooks/useLegendsContext'
-import usePortfolioControllerState from '@legends/hooks/usePortfolioControllerState/usePortfolioControllerState'
+import usePortfolio from '@legends/hooks/usePortfolio'
+import useProviderContext from '@legends/hooks/useProviderContext'
 import useSwitchNetwork from '@legends/hooks/useSwitchNetwork'
 import useToast from '@legends/hooks/useToast'
-import smokeAndLights from '@legends/modules/leaderboard/screens/Leaderboard/Smoke-and-lights.png'
 import { humanizeError } from '@legends/modules/legends/utils/errors/humanizeError'
 
-import { CardActionCalls, CardActionPredefined, CardFromResponse, CardStatus } from '../../types'
+import {
+  CardAction,
+  CardActionCalls,
+  CardActionPredefined,
+  CardFromResponse,
+  CardStatus
+} from '../../types'
 import CardActionButton from '../Card/CardAction/actions/CardActionButton'
 import rewardsCoverImg from './assets/rewards-cover.png'
 import styles from './ClaimRewardsModal.module.scss'
 
 type Action = CardActionPredefined & {
-  calls: CardActionCalls['calls']
+  calls?: CardActionCalls['calls']
 }
 interface ClaimRewardsModalProps {
   isOpen: boolean
   handleClose: () => void
-  action: Action | undefined
+  action: Action | CardAction | undefined
   meta: CardFromResponse['meta'] | undefined
   card: CardFromResponse['card'] | undefined
 }
@@ -42,12 +44,9 @@ const ClaimRewardsModal: React.FC<ClaimRewardsModalProps> = ({
   meta,
   card
 }) => {
-  const { character } = useCharacterContext()
-  const { claimableRewards } = usePortfolioControllerState()
-  const { sendCalls, getCallsStatus, chainId } = useErc5792()
-  const formatXp = (xp: number) => {
-    return xp && xp.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
-  }
+  const { browserProvider } = useProviderContext()
+  const { walletTokenPrice } = usePortfolio()
+  const { sendCalls, getCallsStatus } = useErc5792()
   const { onLegendComplete } = useLegendsContext()
 
   const cardDisabled = card?.status === CardStatus.disabled
@@ -63,25 +62,28 @@ const ClaimRewardsModal: React.FC<ClaimRewardsModalProps> = ({
   useEscModal(isOpen, closeModal)
 
   const onButtonClick = useCallback(async () => {
-    if (!action || !action.calls) return
+    if (!browserProvider) return
+    if (!action || !('calls' in action) || !action.calls) return
+    // as of feb 2026 this is not needed for latest v's of the extension, because the wallet_sendCalls method handles the chainId
+    // but we are not removing it for now, becaus there are many users right now who have not yet updated their extension to latest
+    // same applies for most other such cases in rewards
     await switchNetwork(ETHEREUM_CHAIN_ID)
 
     try {
-      const provider = new BrowserProvider(window.ambire)
-      const signer = await provider.getSigner()
+      const signer = await browserProvider.getSigner()
 
       const formattedCalls = action.calls.map(([to, value, data]) => {
         return { to, value, data }
       })
 
       const sendCallsIdentifier = await sendCalls(
-        chainId,
+        BigInt(ETHEREUM_CHAIN_ID),
         await signer.getAddress(),
         formattedCalls,
         false
       )
       const receipt = await getCallsStatus(sendCallsIdentifier)
-      if (receipt.transactionHash) {
+      if (receipt?.transactionHash) {
         addToast('Transaction completed successfully', { type: 'success' })
       }
       onLegendComplete()
@@ -92,25 +94,17 @@ const ClaimRewardsModal: React.FC<ClaimRewardsModalProps> = ({
       addToast(message, { type: 'error' })
     }
   }, [
+    browserProvider,
     switchNetwork,
     action,
     onLegendComplete,
     sendCalls,
-    chainId,
     getCallsStatus,
     handleClose,
     addToast
   ])
 
   if (!isOpen) return null
-  if (!character)
-    return (
-      <Alert
-        type="error"
-        title="Failed to load character"
-        message="Please try again later or contact support if the issue persists."
-      />
-    )
 
   return createPortal(
     <div className={styles.backdrop}>
@@ -121,7 +115,7 @@ const ClaimRewardsModal: React.FC<ClaimRewardsModalProps> = ({
         <div
           className={styles.backgroundEffect}
           style={{
-            backgroundImage: `url(${smokeAndLights})`
+            backgroundImage: `url(${background})`
           }}
         />
         <div className={styles.contentWrapper}>
@@ -133,27 +127,19 @@ const ClaimRewardsModal: React.FC<ClaimRewardsModalProps> = ({
               <div className={styles.sectionContent}>
                 <p>
                   {formatDecimals(
-                    parseFloat(meta?.availableToClaim ? meta?.availableToClaim : '0')
+                    parseFloat(meta?.availableToClaim ? String(meta?.availableToClaim) : '0')
                   )}
                 </p>
                 <p className={styles.usdValue}>
-                  {
-                    getAndFormatTokenDetails(
-                      {
-                        ...claimableRewards,
-                        flags: { rewardsType: 'wallet-rewards' }
-                      },
-                      [{ chainId: 1 }]
-                    ).balanceUSDFormatted
-                  }{' '}
+                  {formatDecimals((walletTokenPrice || 0) * (meta?.availableToClaim || 0), 'value')}{' '}
                 </p>
               </div>
             </div>
 
-            <div>
+            {/* <div>
               <p className={styles.sectionTitle}>Total XP accrued</p>
               <div className={styles.sectionContent}>{formatXp(character.xp)}</div>
-            </div>
+            </div> */}
           </div>
 
           <CardActionButton

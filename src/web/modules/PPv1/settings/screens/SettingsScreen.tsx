@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react'
 import { View, ColorValue } from 'react-native'
 
-import { Wrapper, Content } from '@web/components/TransactionsScreen'
+import { Content, Wrapper } from '@web/modules/PPv1/deposit/components/TransactionsScreen'
 import Text from '@common/components/Text'
 import useNavigation from '@common/hooks/useNavigation'
 import { ROUTES } from '@common/modules/router/constants/common'
@@ -11,9 +11,8 @@ import flexbox from '@common/styles/utils/flexbox'
 import { BORDER_RADIUS_PRIMARY } from '@common/styles/utils/common'
 import AccountsIcon from '@common/assets/svg/AccountsIcon'
 import SendIcon from '@common/assets/svg/SendIcon'
-import { AnimatedPressable, useCustomHover } from '@web/hooks/useHover'
+import { AnimatedPressable, useCustomHover } from '@common/hooks/useHover'
 import usePrivacyPoolsForm from '../../hooks/usePrivacyPoolsForm'
-import usePrivacyPools from '@web/hooks/usePrivacyPools/usePrivacyPools'
 
 const SettingsOption = ({
   label,
@@ -69,7 +68,7 @@ const SettingsOption = ({
 const SettingsScreen = () => {
   const headerTitle = 'Settings'
   const { navigate } = useNavigation()
-  const { totalPendingBalance, totalDeclinedBalance } = usePrivacyPools()
+  const { totalPendingBalance, totalDeclinedBalance } = usePrivacyPoolsForm()
 
   const handleGoBack = useCallback(() => {
     navigate(ROUTES.pp1Home)

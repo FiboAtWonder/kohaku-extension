@@ -1,21 +1,20 @@
 import React from 'react'
 
+import { faTrophy } from '@fortawesome/free-solid-svg-icons/faTrophy'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Address from '@legends/components/Address'
 import useAccountContext from '@legends/hooks/useAccountContext'
 import { LeaderboardEntry } from '@legends/modules/leaderboard/types'
+import { formatIntegerWithSpaceThousands } from '@legends/modules/leaderboard/utils/formatIntegerWithSpaceThousands'
 
 import styles from './Podium.module.scss'
 
 interface PodiumProps {
-  data: Array<LeaderboardEntry>
+  data: LeaderboardEntry['entries']
 }
 
 const Podium: React.FC<PodiumProps> = ({ data }) => {
   const { connectedAccount } = useAccountContext()
-
-  const formatXp = (xp: number) => {
-    return xp.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
-  }
 
   return (
     <div className={styles.podium}>
@@ -25,7 +24,7 @@ const Podium: React.FC<PodiumProps> = ({ data }) => {
           className={`${styles.step} ${styles[`position${index + 1}`]}`}
         >
           <div className={styles.contentWrapper}>
-            <img src={item.image_avatar} alt="avatar" className={styles.avatar} />
+            <FontAwesomeIcon icon={faTrophy} className={styles.trophy} />
             {item.account === connectedAccount ? (
               <div className={styles.currentUserWrapper}>
                 You
@@ -37,7 +36,11 @@ const Podium: React.FC<PodiumProps> = ({ data }) => {
             ) : (
               <Address address={item.account} className={styles.name} maxAddressLength={11} />
             )}
-            <h4 className={styles.xp}>{formatXp(item.xp)}</h4>
+            <h4 className={styles.xp}>
+              {typeof item.xp === 'number'
+                ? formatIntegerWithSpaceThousands(item.xp)
+                : formatIntegerWithSpaceThousands(item.points || 0)}
+            </h4>
           </div>
         </div>
       ))}

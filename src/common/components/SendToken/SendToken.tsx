@@ -1,25 +1,30 @@
-import React, { FC, memo, ReactNode, useCallback } from 'react'
+import React, { FC, memo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pressable, View } from 'react-native'
 
-import { TokenResult } from '@ambire-common/libs/portfolio'
 import formatDecimals from '@ambire-common/utils/formatDecimals/formatDecimals'
+import { textToValidDecimal } from '@ambire-common/utils/numbers/formatters'
 import FlipIcon from '@common/assets/svg/FlipIcon'
-import NumberInput from '@common/components/NumberInput'
-import Select from '@common/components/Select'
-import { SelectValue } from '@common/components/Select/types'
+import AmountInput from '@common/components/AmountInput'
+import Select, { SectionedSelect } from '@common/components/Select'
+import { SectionedSelectProps, SelectValue } from '@common/components/Select/types'
 import Text from '@common/components/Text'
-import { FONT_FAMILIES } from '@common/hooks/useFonts'
+import { isMobile, isWeb } from '@common/config/env'
+import useController from '@common/hooks/useController'
 import useTheme from '@common/hooks/useTheme'
-import spacings from '@common/styles/spacings'
-import { THEME_TYPES } from '@common/styles/themeConfig'
+import MaxAmount from '@common/modules/swap-and-bridge/components/MaxAmount'
+import spacings, { SPACING, SPACING_SM } from '@common/styles/spacings'
+import { hexToRgba } from '@common/styles/utils/common'
 import flexbox from '@common/styles/utils/flexbox'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
-import MaxAmount from '@web/modules/swap-and-bridge/components/MaxAmount'
+import { ItemPanel } from '@web/components/TransactionsScreen'
 
 import getStyles from './styles'
 
+import type { TokenResult } from '@ambire-common/libs/portfolio'
+const SECTION_MENU_HEADER_HEIGHT = 50
+
 type Props = {
+  label: string
   fromTokenOptions: SelectValue[]
   fromTokenValue?: SelectValue
   fromAmountValue: string
@@ -30,17 +35,24 @@ type Props = {
   fromAmountInFiat?: string
   fromAmountFieldMode: 'token' | 'fiat'
   maxFromAmount: string
-  validateFromAmount: { message?: string; success?: boolean }
+  validateFromAmount: {
+    message?: string
+    success?: boolean
+    severity?: 'error' | 'warning' | 'info' | 'success'
+  }
   onFromAmountChange: (value: string) => void
   handleSwitchFromAmountFieldMode: () => void
   handleSetMaxFromAmount: () => void
   inputTestId?: string
   selectTestId?: string
-  title?: string | ReactNode
   maxAmountDisabled?: boolean
+  simulationFailed?: boolean
+  sections?: SectionedSelectProps['sections']
+  renderSectionHeader?: SectionedSelectProps['renderSectionHeader']
 }
 
 const SendToken: FC<Props> = ({
+  label,
   fromTokenOptions,
   fromTokenValue,
   fromAmountValue,
@@ -57,100 +69,94 @@ const SendToken: FC<Props> = ({
   handleSetMaxFromAmount,
   inputTestId,
   selectTestId,
-  title,
-  maxAmountDisabled
+  maxAmountDisabled,
+  simulationFailed,
+  sections,
+  renderSectionHeader
 }) => {
-  const { portfolio } = useSelectedAccountControllerState()
-  const { theme, styles, themeType } = useTheme(getStyles)
+  const {
+    state: { portfolio }
+  } = useController('SelectedAccountController')
+  const { theme, styles } = useTheme(getStyles)
   const { t } = useTranslation()
-  const heading = title ?? t('Send')
+  const isError = validateFromAmount?.severity === 'error' && !!validateFromAmount?.message
+  const isWarning = validateFromAmount?.severity === 'warning' && !!validateFromAmount?.message
+
+  const handleOnChangeTextAndFormat = useCallback(
+    (text: string) => {
+      let formatted = textToValidDecimal(text)
+
+      if (formatted !== fromAmountValue) {
+        onFromAmountChange(formatted)
+      }
+    },
+    [fromAmountValue, onFromAmountChange]
+  )
+
+  const nonEmptySections = sections?.filter((s) => s.data.length > 0)
 
   return (
-    <View style={spacings.mbLg}>
-      <Text appearance="secondaryText" fontSize={16} weight="medium" style={spacings.mbTy}>
-        {heading}
-      </Text>
-      <View
-        style={[
-          styles.outerContainer,
-          validateFromAmount?.message ? styles.outerContainerWarning : {}
-        ]}
-      >
-        <View
-          style={[styles.container, validateFromAmount?.message ? styles.containerWarning : {}]}
+    <>
+      <View style={[styles.outerContainer, isError ? styles.outerContainerError : {}]}>
+        <ItemPanel
+          style={{
+            // magic number to match the curve of the outer container
+            // which is with borderRadius: 16
+            borderRadius: 13,
+            ...spacings.pv,
+            ...(isWeb ? spacings.prMd : spacings.prSm),
+            ...(isError ? styles.containerError : {})
+          }}
         >
-          <View style={[flexbox.flex1, flexbox.directionRow, flexbox.alignCenter]}>
-            <Select
-              setValue={handleChangeFromToken}
-              options={fromTokenOptions}
-              value={fromTokenValue}
-              testID={selectTestId}
-              bottomSheetTitle={t('Send token')}
-              searchPlaceholder={t('Token name or address...')}
-              emptyListPlaceholderText={t('No tokens found.')}
-              containerStyle={{ ...flexbox.flex1, ...spacings.mb0 }}
-              selectStyle={{
-                backgroundColor:
-                  themeType === THEME_TYPES.DARK ? theme.primaryBackground : '#54597A14',
-                borderWidth: 0
-              }}
-              mode="bottomSheet"
-            />
-            <NumberInput
+          <Text appearance="secondaryText" fontSize={14} weight="medium" style={spacings.mbSm}>
+            {label}
+          </Text>
+          <View
+            style={[
+              flexbox.flex1,
+              flexbox.directionRow,
+              flexbox.alignCenter,
+              { columnGap: isMobile ? SPACING_SM : SPACING }
+            ]}
+          >
+            <View style={flexbox.flex1}>
+              {nonEmptySections?.length ? (
+                <SectionedSelect
+                  setValue={handleChangeFromToken}
+                  sections={nonEmptySections}
+                  value={fromTokenValue}
+                  testID={selectTestId}
+                  bottomSheetTitle={t('Send token')}
+                  searchPlaceholder={t('Token name or address...')}
+                  emptyListPlaceholderText={t('No tokens found.')}
+                  containerStyle={{ ...flexbox.flex1, ...spacings.mb0 }}
+                  selectStyle={{ ...spacings.plTy, ...spacings.prSm }}
+                  mode="bottomSheet"
+                  headerHeight={SECTION_MENU_HEADER_HEIGHT}
+                  renderSectionHeader={renderSectionHeader}
+                  stickySectionHeadersEnabled
+                />
+              ) : (
+                <Select
+                  setValue={handleChangeFromToken}
+                  options={fromTokenOptions}
+                  value={fromTokenValue}
+                  testID={selectTestId}
+                  bottomSheetTitle={t('Send token')}
+                  searchPlaceholder={t('Token name or address...')}
+                  emptyListPlaceholderText={t('No tokens found.')}
+                  containerStyle={{ ...flexbox.flex1, ...spacings.mb0 }}
+                  selectStyle={{ ...spacings.plTy, ...spacings.prSm }}
+                  mode="bottomSheet"
+                />
+              )}
+            </View>
+            <AmountInput
+              type={fromAmountFieldMode}
               value={fromAmountValue}
-              onChangeText={onFromAmountChange}
-              placeholder="0"
-              borderless
-              inputWrapperStyle={{ backgroundColor: 'transparent' }}
-              nativeInputStyle={{
-                fontFamily: FONT_FAMILIES.MEDIUM,
-                fontSize: 20,
-                textAlign: 'right'
-              }}
+              onChangeText={handleOnChangeTextAndFormat}
               disabled={fromTokenAmountSelectDisabled}
-              containerStyle={[
-                spacings.mb0,
-                flexbox.flex1,
-                {
-                  overflow: 'hidden'
-                }
-              ]}
-              inputStyle={spacings.ph0}
-              testID={inputTestId}
-              childrenBelowInput={
-                fromAmountFieldMode === 'fiat' && (
-                  <View
-                    style={{
-                      position: 'absolute',
-                      right: 0,
-                      top: -2,
-                      zIndex: -1,
-                      width: '100%',
-                      height: '100%',
-                      flexDirection: 'row',
-                      justifyContent: 'flex-end',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <Text
-                      fontSize={20}
-                      weight="medium"
-                      style={{ zIndex: 3 }}
-                      appearance="secondaryText"
-                    >
-                      $
-                      <Text
-                        fontSize={20}
-                        weight="medium"
-                        style={{ opacity: 0 }}
-                        appearance="secondaryText"
-                      >
-                        {fromAmountValue || '0'}
-                      </Text>
-                    </Text>
-                  </View>
-                )
-              }
+              inputTestId={inputTestId}
             />
           </View>
           <View
@@ -158,17 +164,21 @@ const SendToken: FC<Props> = ({
               flexbox.directionRow,
               flexbox.alignCenter,
               flexbox.justifySpaceBetween,
-              spacings.ptSm
+              spacings.ptMd
             ]}
           >
-            {!fromTokenAmountSelectDisabled && (
+            {!fromTokenAmountSelectDisabled ? (
               <MaxAmount
                 isLoading={!portfolio?.isReadyToVisualize}
                 maxAmount={Number(maxFromAmount)}
                 selectedTokenSymbol={fromSelectedToken?.symbol || ''}
                 onMaxButtonPress={handleSetMaxFromAmount}
                 disabled={maxAmountDisabled}
+                simulationFailed={simulationFailed}
               />
+            ) : (
+              // Prevent layout shifting
+              <View style={{ height: 22 }} />
             )}
             {fromSelectedToken && fromSelectedToken.priceIn.length !== 0 ? (
               <>
@@ -180,8 +190,8 @@ const SendToken: FC<Props> = ({
                     flexbox.alignSelfStart,
                     {
                       position: 'absolute',
-                      right: -32,
-                      top: -8
+                      right: 0,
+                      top: -6
                     }
                   ]}
                   disabled={fromTokenAmountSelectDisabled}
@@ -189,18 +199,13 @@ const SendToken: FC<Props> = ({
                   {({ hovered }: any) => (
                     <View
                       style={{
-                        backgroundColor:
-                          themeType === THEME_TYPES.DARK
-                            ? hovered
-                              ? theme.primary20
-                              : `${theme.primary as string}14`
-                            : hovered
-                            ? '#6000FF14'
-                            : theme.infoBackground,
-                        borderRadius: 50,
-                        paddingHorizontal: 5,
-                        paddingVertical: 5,
-                        ...spacings.mrTy
+                        ...flexbox.center,
+                        borderRadius: 10,
+                        backgroundColor: hovered
+                          ? hexToRgba(theme.primaryAccent200, 0.16)
+                          : theme.primaryAccent100,
+                        width: 20,
+                        height: 20
                       }}
                     >
                       <FlipIcon width={11} height={11} color={theme.primary} />
@@ -209,7 +214,7 @@ const SendToken: FC<Props> = ({
                 </Pressable>
                 <Text
                   fontSize={12}
-                  color={themeType === THEME_TYPES.DARK ? theme.linkText : theme.primary}
+                  color={theme.secondaryText}
                   weight="medium"
                   testID="switch-currency-sab"
                 >
@@ -228,14 +233,18 @@ const SendToken: FC<Props> = ({
               <View />
             )}
           </View>
-        </View>
+        </ItemPanel>
       </View>
       {validateFromAmount?.message && (
-        <Text fontSize={12} style={[spacings.mlMi, spacings.mtMi]} appearance="errorText">
+        <Text
+          fontSize={12}
+          style={[spacings.mlMi, spacings.mtMi]}
+          appearance={isWarning ? 'warningText' : 'errorText'}
+        >
           {validateFromAmount?.message}
         </Text>
       )}
-    </View>
+    </>
   )
 }
 

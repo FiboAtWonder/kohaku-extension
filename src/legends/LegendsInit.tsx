@@ -1,12 +1,15 @@
 import React from 'react'
+import { HashRouter } from 'react-router-dom'
 
+import { ControllerStoreProvider } from '@common/contexts/controllerStoreContext'
+import { EthereumProvider } from '@common/modules/inpage/EthereumProvider'
 import { PortalHost, PortalProvider } from '@gorhom/portal'
+import { ControllersMiddlewareProvider } from '@legends/contexts/controllersMiddlewareContext'
 import * as Sentry from '@sentry/react'
-import { EthereumProvider } from '@web/extension-services/inpage/EthereumProvider'
 
 import ErrorPage from './components/ErrorPage'
 import { AccountContextProvider } from './contexts/accountContext'
-import { CharacterContextProvider } from './contexts/characterContext'
+import { ProviderContextProvider } from './contexts/providerContext'
 import { ToastContextProvider } from './contexts/toastsContext'
 import Router from './modules/router/Router'
 
@@ -18,19 +21,27 @@ declare global {
 
 const errorComponent = <ErrorPage />
 
+const SentryRouter = Sentry.withSentryReactRouterV6Routing(HashRouter)
+
 const LegendsInit = () => {
   return (
     <Sentry.ErrorBoundary fallback={errorComponent}>
-      <PortalProvider>
-        <ToastContextProvider>
-          <AccountContextProvider>
-            <CharacterContextProvider>
-              <Router />
-            </CharacterContextProvider>
-          </AccountContextProvider>
-        </ToastContextProvider>
-        <PortalHost name="global" />
-      </PortalProvider>
+      <SentryRouter>
+        <PortalProvider>
+          <ToastContextProvider>
+            <ControllerStoreProvider>
+              <ControllersMiddlewareProvider>
+                <ProviderContextProvider>
+                  <AccountContextProvider>
+                    <Router />
+                  </AccountContextProvider>
+                </ProviderContextProvider>
+              </ControllersMiddlewareProvider>
+            </ControllerStoreProvider>
+          </ToastContextProvider>
+          <PortalHost name="global" />
+        </PortalProvider>
+      </SentryRouter>
     </Sentry.ErrorBoundary>
   )
 }

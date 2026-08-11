@@ -30,6 +30,7 @@ const PageContentArea = ({ activeView, isLoadingPublicBalances }: Props) => {
           onScroll={noop}
           animatedOverviewHeight={animatedOverviewHeight}
           generalViewStyle={{ backgroundColor: 'transparent' }}
+          isSearchHidden={false}
         />
       )}
       {activeView === 'private' && (

@@ -1,22 +1,38 @@
 import React from 'react'
+import { ColorValue } from 'react-native'
 
-import { Key } from '@ambire-common/interfaces/keystore'
-import LatticeIcon from '@common/assets/svg/LatticeIcon'
-import LedgerLetterIcon from '@common/assets/svg/LedgerLetterIcon'
+import GridPlusIcon from '@common/assets/svg/GridPlusIcon'
+import LedgerBadgeIcon from '@common/assets/svg/LedgerBadgeIcon'
 import NoKeysIcon from '@common/assets/svg/NoKeysIcon'
+import ReceiveIcon from '@common/assets/svg/ReceiveIcon'
+import SafeIcon from '@common/assets/svg/SafeIcon'
 import SingleKeyIcon from '@common/assets/svg/SingleKeyIcon'
-import TrezorLockIcon from '@common/assets/svg/TrezorLockIcon'
-import useTheme from '@common/hooks/useTheme'
+import TrezorBadgeIcon from '@common/assets/svg/TrezorBadgeIcon'
+import { KeyType } from '@common/components/AccountKeyIcons/AccountKeyIcons'
 
-const AccountKeyIcon = ({ type, color }: { type: Key['type']; color?: string }) => {
-  const { theme } = useTheme()
+const AccountKeyIcon = ({
+  type,
+  color,
+  iconSize = 16
+}: {
+  type: KeyType
+  color?: string | ColorValue
+  iconSize?: number
+}) => {
+  const props = {
+    color,
+    width: iconSize,
+    height: iconSize
+  }
 
-  if (type === 'lattice') return <LatticeIcon color={color} width={32} height={32} />
-  if (type === 'trezor') return <TrezorLockIcon color={color} width={20} height={20} />
-  if (type === 'ledger') return <LedgerLetterIcon color={color} width={20} height={20} />
-  if (type === 'none') return <NoKeysIcon color={theme.secondaryText} width={20} height={20} />
+  if (type === 'lattice') return <GridPlusIcon {...props} />
+  if (type === 'trezor') return <TrezorBadgeIcon {...props} />
+  if (type === 'ledger') return <LedgerBadgeIcon {...props} />
+  if (type === 'none') return <NoKeysIcon {...props} />
+  if (type === 'safe') return <SafeIcon width={iconSize} height={iconSize} />
+  if (type === 'qr') return <ReceiveIcon {...props} />
 
-  return <SingleKeyIcon color={color} width={20} height={20} />
+  return <SingleKeyIcon {...props} />
 }
 
 export default React.memo(AccountKeyIcon)

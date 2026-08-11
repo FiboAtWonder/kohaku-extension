@@ -5,18 +5,22 @@ import {
   isAmbireV1LinkedAccount as getIsAmbireV1LinkedAccount,
   isSmartAccount as getIsSmartAccount
 } from '@ambire-common/libs/account/account'
+import useController from '@common/hooks/useController'
+import useTheme from '@common/hooks/useTheme'
 import spacings from '@common/styles/spacings'
-import useKeystoreControllerState from '@web/hooks/useKeystoreControllerState'
 
 import { zeroAddress } from 'viem'
 import BadgeWithPreset from '../BadgeWithPreset'
 
 interface Props {
   accountData: Account
+  // When false, badges drop their fixed left margin so a parent columnGap can space them
+  withSpacing?: boolean
 }
 
-const AccountBadges: FC<Props> = ({ accountData }) => {
-  const keystoreCtrl = useKeystoreControllerState()
+const AccountBadges: FC<Props> = ({ accountData, withSpacing = true }) => {
+  const keystoreCtrl = useController('KeystoreController').state
+  const { theme } = useTheme()
 
   const isSmartAccount = useMemo(
     () => getIsSmartAccount(accountData),
@@ -28,14 +32,26 @@ const AccountBadges: FC<Props> = ({ accountData }) => {
     return getIsAmbireV1LinkedAccount(accountData?.creation?.factoryAddr)
   }, [accountData?.creation?.factoryAddr])
 
+  const isSafeAccount = !!accountData.safeCreation
+
   return (
     <>
       {keystoreCtrl.keys.every((k) => !accountData?.associatedKeys.includes(k.addr)) &&
+        !isSafeAccount &&
+        // (kohaku) hide the view-only badge for the zero-address placeholder account
         accountData?.addr !== zeroAddress && (
-          <BadgeWithPreset preset="view-only" style={spacings.mlTy} />
+          <BadgeWithPreset
+            preset="view-only"
+            style={{
+              ...(withSpacing ? spacings.mlTy : {}),
+              borderWidth: 1,
+              borderColor: theme.neutral600
+            }}
+          />
         )}
+
       {isSmartAccount && isAmbireV1LinkedAccount && (
-        <BadgeWithPreset preset="ambire-v1" style={spacings.mlTy} />
+        <BadgeWithPreset preset="ambire-v1" style={withSpacing ? spacings.mlTy : undefined} />
       )}
     </>
   )

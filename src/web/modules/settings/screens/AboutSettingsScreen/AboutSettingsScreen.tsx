@@ -1,22 +1,19 @@
 import React, { useContext, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Pressable, View } from 'react-native'
+import { Pressable } from 'react-native'
 
 import NewsletterIcon from '@common/assets/svg/NewsletterIcon'
 import OpenIcon from '@common/assets/svg/OpenIcon'
 import TosIcon from '@common/assets/svg/TosIcon'
 import Badge from '@common/components/Badge'
 import ControlOption from '@common/components/ControlOption'
-import Text from '@common/components/Text'
 import { APP_VERSION } from '@common/config/env'
 import useNavigation from '@common/hooks/useNavigation'
 import useTheme from '@common/hooks/useTheme'
 import { ROUTES } from '@common/modules/router/constants/common'
 import spacings from '@common/styles/spacings'
-import common from '@common/styles/utils/common'
 import flexbox from '@common/styles/utils/flexbox'
-import { openInTab } from '@web/extension-services/background/webapi/tab'
-import { SOCIAL } from '@web/modules/router/components/NavMenu/NavMenu'
+import { openInTab } from '@common/utils/links'
 import { SettingsRoutesContext } from '@web/modules/settings/contexts/SettingsRoutesContext'
 
 import SettingsPageHeader from '../../components/SettingsPageHeader'
@@ -68,41 +65,11 @@ const AboutSettingsScreen = () => {
           <OpenIcon />
         </Pressable>
       </ControlOption>
-      <Text fontSize={20} weight="medium" style={spacings.mb}>
-        {t('Follow us on')}
-      </Text>
-      <View style={[flexbox.directionRow, flexbox.alignCenter]}>
-        {SOCIAL.map(({ Icon, url, label }) => (
-          <Pressable
-            style={() => [
-              flexbox.directionRow,
-              flexbox.alignCenter,
-              spacings.ph,
-              spacings.pvTy,
-              common.borderRadiusPrimary,
-              spacings.mr2Xl
-            ]}
-            key={url}
-            onPress={() => openInTab({ url, shouldCloseCurrentWindow: true })}
-          >
-            {({ hovered }: any) => (
-              <>
-                <Icon
-                  style={spacings.mrSm}
-                  color={hovered ? theme.iconSecondary : theme.iconPrimary}
-                />
-                <Text
-                  fontSize={14}
-                  weight="medium"
-                  appearance={hovered ? 'primaryText' : 'secondaryText'}
-                >
-                  {label}
-                </Text>
-              </>
-            )}
-          </Pressable>
-        ))}
-      </View>
+      {/*
+        @TODO (kohaku) A "Follow us on" section used to render Ambire's X/Telegram/Discord links
+        from the NavMenu `SOCIAL` list. It was removed with the rebrand - add the Kohaku socials
+        here once they exist.
+      */}
     </>
   )
 }

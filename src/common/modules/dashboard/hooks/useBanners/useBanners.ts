@@ -1,25 +1,15 @@
 import { useMemo } from 'react'
 
-import { AccountId } from '@ambire-common/interfaces/account'
-import { Banner as BannerInterface } from '@ambire-common/interfaces/banner'
-import useActionsControllerState from '@web/hooks/useActionsControllerState'
-import useActivityControllerState from '@web/hooks/useActivityControllerState'
-import useBannersControllerState from '@web/hooks/useBannersControllerState'
-import useEmailVaultControllerState from '@web/hooks/useEmailVaultControllerState'
-import useExtensionUpdateControllerState from '@web/hooks/useExtensionUpdateControllerState'
-import useMainControllerState from '@web/hooks/useMainControllerState'
-import useRequestsControllerState from '@web/hooks/useRequestsControllerState'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
-import useSwapAndBridgeControllerState from '@web/hooks/useSwapAndBridgeControllerState'
+import {
+  defiPositionsOnDisabledNetworksBannerId,
+  getCurrentAccountBanners
+} from '@ambire-common/libs/banners/banners'
+import useController from '@common/hooks/useController'
+import useOtaUpdateBanner from '@common/modules/dashboard/hooks/useOtaUpdateBanner'
+// (kohaku) allows hiding banners that don't apply to the Kohaku build
 import { filterDisabledBanners } from '@web/config/disabledBanners'
 
-const getCurrentAccountBanners = (banners: BannerInterface[], selectedAccount?: AccountId) =>
-  banners.filter((banner) => {
-    if (!banner.meta?.accountAddr) return true
-
-    return banner.meta.accountAddr === selectedAccount
-  })
-
+import type { Banner as BannerInterface } from '@ambire-common/interfaces/banner'
 const OFFLINE_BANNER: BannerInterface = {
   id: 'offline-banner',
   type: 'error',
@@ -34,45 +24,62 @@ const OFFLINE_BANNER: BannerInterface = {
 }
 
 export default function useBanners(): [BannerInterface[], BannerInterface[]] {
-  const { isOffline } = useMainControllerState()
-  const { banners: marketingBanners } = useBannersControllerState()
-  const { account, portfolio, deprecatedSmartAccountBanner, firstCashbackBanner } =
-    useSelectedAccountControllerState()
+  const { isOffline } = useController('MainController').state
+  const { bannersData: marketingBannersData } = useController('BannerController').state
+  const {
+    state: {
+      account,
+      portfolio,
+      deprecatedSmartAccountBanner,
+      banners: selectedAccountBanners = []
+    }
+  } = useController('SelectedAccountController')
 
-  const { banners: activityBanners = [] } = useActivityControllerState()
-  const { banners: emailVaultBanners = [] } = useEmailVaultControllerState()
-  const { banners: requestBanners = [] } = useRequestsControllerState()
-  const { banners: actionBanners = [] } = useActionsControllerState()
-  const { banners: swapAndBridgeBanners = [] } = useSwapAndBridgeControllerState()
-  const { extensionUpdateBanner } = useExtensionUpdateControllerState()
-  const { banners: selectedAccountBanners } = useSelectedAccountControllerState()
+  const { banners: emailVaultBanners = [] } = useController('EmailVaultController').state
+  const { banners: requestBanners = [] } = useController('RequestsController').state
+  const { extensionUpdateBanner } = useController('ExtensionUpdateController').state
+  const { hasFundedHotAccount } = useController('PortfolioController').state
+  const otaUpdateBanner = useOtaUpdateBanner()
+
+  const marketingBanners = useMemo(() => {
+    return marketingBannersData.banners.filter(
+      // if the banner is not a survey banner there is no need to hide it
+      // but for surveys we have other requirements that are acc specific
+      // the acc comparing is used to hide the fact that banners are not updated at the
+      // selected same time as the acc
+      (b) => b.actions[0]?.actionName !== 'survey' || marketingBannersData.account === account?.addr
+    )
+  }, [account?.addr, marketingBannersData.account, marketingBannersData.banners])
 
   const controllerBanners = useMemo(() => {
+    // (kohaku) wrapped in filterDisabledBanners
     return filterDisabledBanners([
-      ...deprecatedSmartAccountBanner,
-      ...requestBanners,
-      ...actionBanners,
+      ...(deprecatedSmartAccountBanner || []),
+      ...(requestBanners || []),
       ...(isOffline && portfolio.isAllReady ? [OFFLINE_BANNER] : []),
-      // Swap & Bridge banners disabled for this build
-      ...activityBanners,
-      ...getCurrentAccountBanners(emailVaultBanners, account?.addr),
-      ...selectedAccountBanners,
-      ...extensionUpdateBanner,
-      ...firstCashbackBanner
+      // (kohaku) Swap & Bridge is disabled, so its banners are never shown
+      ...getCurrentAccountBanners(
+        hasFundedHotAccount ? emailVaultBanners || [] : [],
+        account?.addr
+      ),
+      // The defi-positions banner renders inside the DeFi tab, not the general dashboard.
+      ...getCurrentAccountBanners(selectedAccountBanners || [], account?.addr).filter(
+        (b) => b.id !== defiPositionsOnDisabledNetworksBannerId
+      ),
+      ...(extensionUpdateBanner || []),
+      ...otaUpdateBanner
     ])
   }, [
     deprecatedSmartAccountBanner,
     requestBanners,
-    actionBanners,
     isOffline,
     portfolio.isAllReady,
-    swapAndBridgeBanners,
-    activityBanners,
+    hasFundedHotAccount,
     emailVaultBanners,
-    account?.addr,
     selectedAccountBanners,
+    account?.addr,
     extensionUpdateBanner,
-    firstCashbackBanner
+    otaUpdateBanner
   ])
 
   return [controllerBanners, filterDisabledBanners(marketingBanners)]

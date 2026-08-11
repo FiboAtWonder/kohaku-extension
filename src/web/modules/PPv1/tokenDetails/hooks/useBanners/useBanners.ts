@@ -2,16 +2,8 @@ import { useMemo } from 'react'
 
 import { AccountId } from '@ambire-common/interfaces/account'
 import { Banner as BannerInterface } from '@ambire-common/interfaces/banner'
-import useActionsControllerState from '@web/hooks/useActionsControllerState'
-import useActivityControllerState from '@web/hooks/useActivityControllerState'
-import useBannersControllerState from '@web/hooks/useBannersControllerState'
-import useEmailVaultControllerState from '@web/hooks/useEmailVaultControllerState'
-import useExtensionUpdateControllerState from '@web/hooks/useExtensionUpdateControllerState'
-import useMainControllerState from '@web/hooks/useMainControllerState'
-import useRequestsControllerState from '@web/hooks/useRequestsControllerState'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
-import useSwapAndBridgeControllerState from '@web/hooks/useSwapAndBridgeControllerState'
 import { filterDisabledBanners } from '@web/config/disabledBanners'
+import useController from '@common/hooks/useController'
 
 const getCurrentAccountBanners = (banners: BannerInterface[], selectedAccount?: AccountId) =>
   banners.filter((banner) => {
@@ -34,18 +26,19 @@ const OFFLINE_BANNER: BannerInterface = {
 }
 
 export default function useBanners(): [BannerInterface[], BannerInterface[]] {
-  const { isOffline } = useMainControllerState()
-  const { banners: marketingBanners } = useBannersControllerState()
-  const { account, portfolio, deprecatedSmartAccountBanner, firstCashbackBanner } =
-    useSelectedAccountControllerState()
+  const { isOffline } = useController('MainController').state
+  const { bannersData: marketingBannersData } = useController('BannerController').state
+  const { account, portfolio, deprecatedSmartAccountBanner } = useController(
+    'SelectedAccountController'
+  ).state
 
-  const { banners: activityBanners = [] } = useActivityControllerState()
-  const { banners: emailVaultBanners = [] } = useEmailVaultControllerState()
-  const { banners: requestBanners = [] } = useRequestsControllerState()
-  const { banners: actionBanners = [] } = useActionsControllerState()
-  const { banners: swapAndBridgeBanners = [] } = useSwapAndBridgeControllerState()
-  const { extensionUpdateBanner } = useExtensionUpdateControllerState()
-  const { banners: selectedAccountBanners } = useSelectedAccountControllerState()
+  const { banners: activityBanners = [] } = useController('ActivityController').state
+  const { banners: emailVaultBanners = [] } = useController('EmailVaultController').state
+  const { banners: requestBanners = [] } = useController('RequestsController').state
+  const { banners: actionBanners = [] } = useController('RequestsController').state
+  const { banners: swapAndBridgeBanners = [] } = useController('SwapAndBridgeController').state
+  const { extensionUpdateBanner } = useController('ExtensionUpdateController').state
+  const { banners: selectedAccountBanners } = useController('SelectedAccountController').state
 
   const controllerBanners = useMemo(() => {
     return filterDisabledBanners([
@@ -57,8 +50,7 @@ export default function useBanners(): [BannerInterface[], BannerInterface[]] {
       ...activityBanners,
       ...getCurrentAccountBanners(emailVaultBanners, account?.addr),
       ...selectedAccountBanners,
-      ...extensionUpdateBanner,
-      ...firstCashbackBanner
+      ...extensionUpdateBanner
     ])
   }, [
     deprecatedSmartAccountBanner,
@@ -71,9 +63,8 @@ export default function useBanners(): [BannerInterface[], BannerInterface[]] {
     emailVaultBanners,
     account?.addr,
     selectedAccountBanners,
-    extensionUpdateBanner,
-    firstCashbackBanner
+    extensionUpdateBanner
   ])
 
-  return [controllerBanners, filterDisabledBanners(marketingBanners)]
+  return [controllerBanners, filterDisabledBanners(marketingBannersData.banners)]
 }

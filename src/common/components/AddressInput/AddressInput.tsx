@@ -1,64 +1,99 @@
-import React, { useCallback } from 'react'
+import { setStringAsync } from 'expo-clipboard'
+import React, { useCallback, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { View } from 'react-native'
+import { Pressable, TextInput, View } from 'react-native'
 
+import { AddressState } from '@ambire-common/interfaces/domains'
+import { validateAddress, Validation } from '@ambire-common/services/validations'
+import { getAddressFromAddressState } from '@ambire-common/utils/domains'
 import shortenAddress from '@ambire-common/utils/shortenAddress'
+import CloseIcon from '@common/assets/svg/CloseIcon'
 import CopyIcon from '@common/assets/svg/CopyIcon'
 import EnsIcon from '@common/assets/svg/EnsIcon'
+import GnsIcon from '@common/assets/svg/GnsIcon'
+import NamoshiIcon from '@common/assets/svg/NamoshiIcon'
+import AddressBookContact from '@common/components/AddressBookContact'
+import AddressScanButton from '@common/components/AddressInput/AddressScanButton'
 import Input, { InputProps } from '@common/components/Input'
 import Text from '@common/components/Text'
+import { isWeb } from '@common/config/env'
+import useController from '@common/hooks/useController'
+import useHover, { AnimatedPressable } from '@common/hooks/useHover'
 import useTheme from '@common/hooks/useTheme'
 import useToast from '@common/hooks/useToast'
 import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
-import { setStringAsync } from '@common/utils/clipboard'
-import useHover, { AnimatedPressable } from '@web/hooks/useHover'
 
 import getStyles from './styles'
 
-export interface AddressValidation {
-  isError: boolean
-  message: string
-}
-
 interface Props extends InputProps {
-  ensAddress: string
+  withDetails?: boolean
+  resolvedAddress: AddressState['resolvedAddress']
+  resolvedAddressType: AddressState['resolvedAddressType']
+  addressHighlight?: {
+    prefix: number
+    suffix: number
+    color: 'errorText'
+  }
   isRecipientDomainResolving: boolean
-  validation: AddressValidation
+  validation: Validation
   label?: string
+  onClearButtonPress?: () => void
+  renderConfirmAddress?: () => React.ReactNode
+  // When provided, a scan icon is shown that opens a camera QR scanner
+  // (mobile only) and passes the scanned address back. No-op on web.
+  onScanAddress?: (address: string) => void
 }
 
 const AddressInput: React.FC<Props> = ({
+  withDetails,
   onChangeText,
-  ensAddress,
+  resolvedAddress,
+  resolvedAddressType,
+  addressHighlight,
   isRecipientDomainResolving,
   label,
   validation,
   containerStyle = {},
   placeholder,
   childrenBeforeButtons,
+  onClearButtonPress,
+  value,
+  renderConfirmAddress,
+  onScanAddress,
   ...rest
 }) => {
   const { t } = useTranslation()
   const { addToast } = useToast()
   const { styles } = useTheme(getStyles)
-  const [bindAnim, animStyle] = useHover({ preset: 'opacityInverted' })
+  const { contacts } = useController('AddressBookController').state
+  const { message, severity } = validation
+  const isError = severity === 'error'
 
-  const { message, isError } = validation
   const isValidationInDomainResolvingState = message === 'Resolving domain...'
+  const inputRef = useRef<TextInput | null>(null)
+  const [bindAnim, animStyle] = useHover({ preset: 'opacityInverted' })
+  const setInputRef = useCallback((ref: TextInput | null) => {
+    if (ref) inputRef.current = ref
+  }, [])
 
   const handleCopyResolvedAddress = useCallback(async () => {
-    const address = ensAddress
-
-    if (address) {
+    if (resolvedAddress) {
       try {
-        await setStringAsync(address)
+        await setStringAsync(resolvedAddress)
         addToast(t('Copied to clipboard!'), { timeout: 2500 })
       } catch {
         addToast(t('Failed to copy address to clipboard'), { type: 'error' })
       }
     }
-  }, [addToast, ensAddress, t])
+  }, [addToast, resolvedAddress, t])
+
+  const address = getAddressFromAddressState({
+    resolvedAddress,
+    fieldValue: value || ''
+  })
+
+  const isValidAddress = useMemo(() => validateAddress(address).severity === 'success', [address])
 
   return (
     <>
@@ -68,57 +103,110 @@ const AddressInput: React.FC<Props> = ({
         </Text>
       )}
       <Input
-        onChangeText={onChangeText}
         // Purposefully spread props here, so that we don't override AddressInput's props
-        testID="address-ens-field"
         {...rest}
+        value={value}
+        setInputRef={setInputRef}
+        onChangeText={onChangeText}
+        testID="address-ens-field"
         containerStyle={containerStyle}
-        validLabel={!isError && !isValidationInDomainResolvingState ? message : ''}
+        validLabel={
+          !isError && severity !== 'info' && !isValidationInDomainResolvingState ? message : ''
+        }
+        validLabelAppearance={severity ? `${severity}Text` : undefined}
         error={isError ? message : ''}
         isValid={!isError && !isValidationInDomainResolvingState}
-        placeholder={placeholder || t('Address / ENS')}
+        placeholder={placeholder || t('Address / ENS / GNS / Namoshi')}
         bottomLabelStyle={styles.bottomLabel}
-        info={isValidationInDomainResolvingState ? t('Resolving domain...') : ''}
+        info={
+          !isError && severity === 'info'
+            ? message
+            : isValidationInDomainResolvingState
+              ? t('Resolving domain...')
+              : ''
+        }
+        renderConfirmAddress={renderConfirmAddress}
+        preventJumpOnValidationChange
         childrenBeforeButtons={
           <>
-            {ensAddress && !isRecipientDomainResolving ? (
-              <AnimatedPressable
-                style={[flexbox.alignCenter, flexbox.directionRow, animStyle]}
-                onPress={handleCopyResolvedAddress}
-                {...bindAnim}
-              >
-                <Text style={flexbox.flex1} numberOfLines={1}>
-                  <Text
-                    style={{
-                      flex: 1
-                    }}
-                    fontSize={12}
-                    appearance="secondaryText"
-                    numberOfLines={1}
-                    ellipsizeMode="head"
-                  >
-                    ({shortenAddress(ensAddress, 18)})
-                  </Text>
-                </Text>
-                <CopyIcon
-                  width={16}
-                  height={16}
-                  style={[
-                    spacings.mlMi,
-                    {
-                      minWidth: 16
-                    }
-                  ]}
-                />
-              </AnimatedPressable>
-            ) : null}
-            <View style={[styles.domainIcons, rest.button ? spacings.pr0 : spacings.pr]}>
-              {childrenBeforeButtons}
-              <View style={styles.plTy}>
-                <EnsIcon isActive={!!ensAddress} />
-              </View>
-            </View>
+            {childrenBeforeButtons ||
+              (!withDetails && (
+                <>
+                  {resolvedAddress && !isRecipientDomainResolving ? (
+                    <AnimatedPressable
+                      style={[flexbox.alignCenter, flexbox.directionRow, animStyle]}
+                      onPress={handleCopyResolvedAddress}
+                      {...bindAnim}
+                    >
+                      <Text style={flexbox.flex1} numberOfLines={1}>
+                        <Text
+                          style={{
+                            flex: 1
+                          }}
+                          fontSize={12}
+                          appearance="secondaryText"
+                          numberOfLines={1}
+                          ellipsizeMode="head"
+                        >
+                          ({shortenAddress(resolvedAddress, 18)})
+                        </Text>
+                      </Text>
+                      <CopyIcon width={16} height={16} style={[spacings.mlMi, { minWidth: 16 }]} />
+                    </AnimatedPressable>
+                  ) : null}
+                  <View style={[styles.domainIcons, rest.button ? spacings.pr0 : spacings.prSm]}>
+                    {!!resolvedAddressType && (
+                      <View style={[flexbox.directionRow, flexbox.alignCenter]}>
+                        {resolvedAddressType === 'ens' && <EnsIcon state="fresh" />}
+                        {resolvedAddressType === 'namoshi' && <NamoshiIcon isActive />}
+                        {resolvedAddressType === 'gns' && <GnsIcon isActive />}
+                      </View>
+                    )}
+                  </View>
+                </>
+              ))}
           </>
+        }
+        customInputContent={
+          !!withDetails && !!isValidAddress ? (
+            <View style={[flexbox.flex1, flexbox.directionRow, flexbox.alignCenter]}>
+              <AddressBookContact
+                avatarSize={36}
+                key={address}
+                style={{
+                  borderRadius: 0,
+                  ...spacings.ph0,
+                  ...spacings.pv0,
+                  ...flexbox.flex1
+                }}
+                address={address}
+                addressHighlight={addressHighlight}
+                name={
+                  contacts.find((c) => c.address.toLowerCase() === address.toLowerCase())?.name ||
+                  (resolvedAddressType ? value : undefined)
+                }
+                withCopy={isWeb}
+                isActive
+              />
+            </View>
+          ) : null
+        }
+        button={
+          rest.button ||
+          (!value && onScanAddress ? (
+            <AddressScanButton onScanned={onScanAddress} />
+          ) : value && withDetails ? (
+            <Pressable
+              style={{ width: 24, height: 24, ...flexbox.center }}
+              onPress={() => {
+                !!onChangeText && onChangeText('')
+                inputRef?.current?.focus()
+                !!onClearButtonPress && onClearButtonPress()
+              }}
+            >
+              <CloseIcon width={12} height={12} strokeWidth="1.75" style={spacings.mlMi} />
+            </Pressable>
+          ) : null)
         }
       />
     </>

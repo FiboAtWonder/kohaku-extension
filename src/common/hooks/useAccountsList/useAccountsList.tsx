@@ -1,19 +1,25 @@
+import Fuse from 'fuse.js'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { FlatList } from 'react-native'
+import { isAddress, zeroAddress } from 'viem'
 
 import { Account as AccountType } from '@ambire-common/interfaces/account'
-import { findAccountDomainFromPartialDomain } from '@ambire-common/utils/domains'
-import useAccountsControllerState from '@web/hooks/useAccountsControllerState'
-import useDomainsControllerState from '@web/hooks/useDomainsController/useDomainsController'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
-import { zeroAddress } from 'viem'
+import { isSmartAccount } from '@ambire-common/libs/account/account'
+import { getSearchableNames } from '@ambire-common/services/nameResolvers'
+import useController from '@common/hooks/useController'
+import {
+  ACCOUNT_SELECT_ACCOUNT_HEIGHT,
+  ACCOUNT_SELECT_ACCOUNT_MB
+} from '@common/modules/account-select/components/Account/styles'
 
+const ITEM_HEIGHT = ACCOUNT_SELECT_ACCOUNT_HEIGHT + ACCOUNT_SELECT_ACCOUNT_MB
 const useAccountsList = ({
   flatlistRef,
   privateFirst = false
 }: {
-  flatlistRef?: React.RefObject<FlatList<AccountType>> | null
+  flatlistRef?: React.RefObject<FlatList<AccountType> | null>
+  // Lists the private account before the public ones (kohaku)
   privateFirst?: boolean
 } = {}) => {
   const { control, watch } = useForm({
@@ -24,37 +30,78 @@ const useAccountsList = ({
   })
   const search = watch('search')
   const [shouldDisplayAccounts, setShouldDisplayAccounts] = useState(false)
-  const { domains } = useDomainsControllerState()
-  const { accounts } = useAccountsControllerState()
-  const { account: selectedAccount } = useSelectedAccountControllerState()
+  const {
+    state: { domains }
+  } = useController('DomainsController')
+  const { accounts } = useController('AccountsController').state
+  const { keys } = useController('KeystoreController').state
+  const {
+    state: { account: selectedAccount }
+  } = useController('SelectedAccountController')
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  const filteredAccounts = useMemo(
+  const searchableAccounts = useMemo(
     () =>
-      accounts.filter((account) => {
-        if (!search) return true
-
-        const doesAddressMatch = account.addr.toLowerCase().includes(search.toLowerCase())
-        const doesDomainMatch = findAccountDomainFromPartialDomain(account.addr, search, domains)
-        const doesLabelMatch = account.preferences.label
-          .toLowerCase()
-          .includes(search.toLowerCase())
-        const isSmartAccount = !!account?.creation
-        const doesSmartAccountMatch =
-          isSmartAccount && 'smart account'.includes(search.toLowerCase())
-        const doesBasicAccountMatch =
-          !isSmartAccount && 'basic account'.includes(search.toLowerCase())
-
-        return (
-          doesAddressMatch ||
-          doesLabelMatch ||
-          doesSmartAccountMatch ||
-          doesBasicAccountMatch ||
-          doesDomainMatch
-        )
-      }),
-    [accounts, domains, search]
+      accounts.map((account) => ({
+        account,
+        label: account.preferences.label.toLowerCase(),
+        keyLabels: keys
+          .filter((key) => account.associatedKeys.includes(key.addr))
+          .map((key) => `${key.label} ${key.type}`.toLowerCase())
+          .join(' '),
+        domainNames: getSearchableNames(domains[account.addr]?.names),
+        address: account.addr.toLowerCase(),
+        smart: isSmartAccount(account) ? 'smart' : ''
+      })),
+    [accounts, domains, keys]
   )
+
+  const filteredAccounts = useMemo(() => {
+    if (!search) return accounts
+
+    // Exact match if the search is an address
+    if (isAddress(search)) {
+      const account = accounts.find(
+        (account) => account.addr.toLowerCase() === search.toLowerCase()
+      )
+
+      return account ? [account] : []
+    }
+
+    const fuse = new Fuse(searchableAccounts, {
+      keys: [
+        { name: 'label', weight: 0.5 },
+        { name: 'domainNames', weight: 0.3 },
+        { name: 'address', weight: 0.1 },
+        { name: 'keyLabels', weight: 0.2 },
+        { name: 'smart', weight: 0.1 }
+      ],
+      threshold: 0.3,
+      /*
+      `ignoreLocation = false`:
+      - Fuse prioritizes matches that appear near the beginning of the string
+        (e.g. typing "vi" ranks "Vitalik" above "MyVitalikWallet").
+      - We set this explicitly, even though it's the default, to avoid accidental overrides during future refactoring.
+
+      `distance = 1000`:
+      - ETH addresses are long, and valid matches often appear near the end.
+        By default, Fuse scores these lower, which may exclude them.
+      - distance reduces this penalty so such matches are still returned
+        (e.g. searching for "33" should match 0x579f87277E14f32df7FA4036D76BbfC94C325033 even though "33" is at the end).
+      - distance does NOT represent string length - it controls how strongly Fuse penalizes late-position matches.
+        A large value reduces this penalty so end-of-string matches are still returned while start matches remain prioritized.
+
+      Summary:
+      - ignoreLocation: false → keep prioritizing early-position matches
+      - distance: 1000 → allow matches anywhere in the string without discarding them
+      */
+      ignoreLocation: false,
+      distance: 1000
+    })
+
+    const results = fuse.search(search)
+    return results.map((result) => result.item.account)
+  }, [accounts, searchableAccounts, search])
 
   const selectedAccountIndex = accounts.findIndex(
     (account) => account.addr === selectedAccount?.addr
@@ -64,16 +111,14 @@ const useAccountsList = ({
 
   const getItemLayout = useCallback(
     (_: any, index: number) => ({
-      length: 64,
-      offset: 64 * index,
+      length: ITEM_HEIGHT,
+      offset: ITEM_HEIGHT * index,
       index
     }),
     []
   )
 
-  // Scrolls to the selected account in the FlatList
-  // It's complexity comes from the fact that the FlatList is not mounted when the component is first rendered
-  // and so are the accounts.
+  // Scrolls to the selected account in the FlatList.
   const scrollToSelectedAccount = useCallback(
     (attempt: number = 0) => {
       const MAX_ATTEMPTS = 3
@@ -81,32 +126,29 @@ const useAccountsList = ({
         clearTimeout(timeoutRef.current)
         timeoutRef.current = null
       }
-      if (attempt > MAX_ATTEMPTS) {
-        // Display the accounts after reaching MAX_ATTEMPTS
+
+      if (attempt > MAX_ATTEMPTS || !accounts.length || selectedAccountIndex === -1) {
         setShouldDisplayAccounts(true)
         return
       }
-      if (
-        accounts.length &&
-        selectedAccountIndex !== -1 &&
-        flatlistRef?.current &&
-        !shouldDisplayAccounts
-      ) {
-        try {
-          flatlistRef.current.scrollToIndex({
-            animated: false,
-            index: selectedAccountIndex
-          })
-          setShouldDisplayAccounts(true)
-        } catch (error) {
-          console.warn(`Failed to scroll to the selected account. Attempt ${attempt}`, error)
-          timeoutRef.current = setTimeout(() => scrollToSelectedAccount(attempt + 1), 100)
-        }
+
+      if (flatlistRef?.current && !shouldDisplayAccounts) {
+        // Uses scrollToOffset (instead of scrollToIndex) so that FlatList does NOT need to
+        // pre-render every item between 0 and selectedAccountIndex
+        flatlistRef.current.scrollToOffset({
+          animated: false,
+          offset: selectedAccountIndex * ITEM_HEIGHT
+        })
+        setShouldDisplayAccounts(true)
+      } else if (!shouldDisplayAccounts) {
+        // Retry
+        timeoutRef.current = setTimeout(() => scrollToSelectedAccount(attempt + 1), 100)
       }
     },
     [accounts.length, flatlistRef, shouldDisplayAccounts, selectedAccountIndex]
   )
 
+  // (kohaku) synthetic zero-address "Private Account" appended to the accounts list
   const privateAccount = {
     addr: zeroAddress,
     associatedKeys: [zeroAddress],

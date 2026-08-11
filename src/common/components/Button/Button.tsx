@@ -1,34 +1,39 @@
-import React, { useMemo } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { Animated, ColorValue, PressableProps, TextStyle, ViewStyle } from 'react-native'
 
+import InfoIcon from '@common/assets/svg/InfoIcon'
+import { isMobile, isWeb } from '@common/config/env'
+import { AnimatedPressable, useCustomHover, useMultiHover } from '@common/hooks/useHover'
+import { AnimatedText } from '@common/hooks/useHover/useHover'
+import { AnimationValues } from '@common/hooks/useHover/useMultiHover'
 import useTheme from '@common/hooks/useTheme'
+import useToast from '@common/hooks/useToast'
 import spacings from '@common/styles/spacings'
-import { THEME_TYPES } from '@common/styles/themeConfig'
-import common from '@common/styles/utils/common'
+import common, { hexToRgba } from '@common/styles/utils/common'
 import flexbox from '@common/styles/utils/flexbox'
-import { AnimatedPressable, useCustomHover, useMultiHover } from '@web/hooks/useHover'
-import { AnimatedText } from '@web/hooks/useHover/useHover'
-import { AnimationValues } from '@web/hooks/useHover/useMultiHover'
 import useOnEnterKeyPress from '@web/hooks/useOnEnterKeyPress'
 
+import { createGlobalTooltipDataSet } from '../GlobalTooltip'
 import getStyles from './styles'
 
 type ButtonTypes =
   | 'primary'
   | 'secondary'
   | 'tertiary'
+  // Use danger if the button is a secondary action and dangerFilled
+  // if it's the primary action on the screen
   | 'danger'
+  | 'dangerFilled'
   | 'outline'
   | 'ghost'
   | 'ghost2'
-  | 'error'
   | 'warning'
   | 'info'
-  | 'info2'
   | 'success'
   | 'gray'
 
-type ButtonSizes = 'regular' | 'small' | 'large' | 'tiny'
+// We should rethink these sizes
+type ButtonSizes = 'regular' | 'smaller' | 'small' | 'large' | 'tiny'
 export interface Props extends PressableProps {
   text?: string
   type?: ButtonTypes
@@ -46,6 +51,7 @@ export interface Props extends PressableProps {
   innerContainerStyle?: (hovered: boolean) => ViewStyle
   testID?: string
   submitOnEnter?: boolean
+  tooltipDataSet?: ReturnType<typeof createGlobalTooltipDataSet>
 }
 
 const OPACITY_ANIMATION = {
@@ -68,7 +74,7 @@ const ButtonInnerContainer = ({
   children?: React.ReactNode
   innerContainerStyle?: (hovered: boolean) => ViewStyle
 } & PressableProps) => {
-  const { themeType, theme } = useTheme()
+  const { theme } = useTheme()
 
   const buttonInnerContainerColors = useMemo(
     () => ({
@@ -76,32 +82,23 @@ const ButtonInnerContainer = ({
       secondary: [],
       tertiary: [],
       danger: [],
+      dangerFilled: [],
       outline: [],
-      ghost:
-        themeType === THEME_TYPES.DARK
-          ? [
-              {
-                property: 'backgroundColor' as any,
-                from: `${theme.primary as string}00`,
-                to: theme.primary20
-              }
-            ]
-          : [
-              {
-                property: 'backgroundColor' as any,
-                from: `${theme.primary as string}00`,
-                to: theme.primary20
-              }
-            ],
+      ghost: [
+        {
+          property: 'backgroundColor',
+          from: `${String(theme.neutral400)}00`,
+          to: theme.neutral400
+        }
+      ],
       ghost2: [],
-      error: [],
       warning: [],
       info: [],
       info2: [],
       success: [],
       gray: []
     }),
-    [themeType, theme]
+    [theme]
   )
 
   const [buttonInnerContainerBind, buttonInnerContainerAnimatedStyle, isHovered] = useMultiHover({
@@ -132,11 +129,11 @@ const ButtonInnerContainer = ({
           !!rest.onHoverOut && rest.onHoverOut(e)
           buttonInnerContainerBind.onHoverOut(e)
         }}
-        onPressIn={(e) => {
+        onPressIn={(e: any) => {
           !!rest.onPressIn && rest.onPressIn(e)
           buttonInnerContainerBind.onPressIn(e)
         }}
-        onPressOut={(e) => {
+        onPressOut={(e: any) => {
           !!rest.onPressOut && rest.onPressOut(e)
           buttonInnerContainerBind.onPressOut(e)
         }}
@@ -166,13 +163,27 @@ const Button = ({
   childrenContainerStyle,
   testID,
   submitOnEnter: _submitOnEnter,
+  tooltipDataSet,
+  onPress,
   ...rest
 }: Props) => {
-  const { styles, theme, themeType } = useTheme(getStyles)
+  const { styles, theme } = useTheme(getStyles)
+  const { clearToasts } = useToast()
   const submitOnEnter = _submitOnEnter ?? type === 'primary'
 
+  const handlePress = useCallback(
+    (e: any) => {
+      if (type === 'primary') {
+        clearToasts({ type: 'error' })
+      }
+
+      onPress?.(e)
+    },
+    [clearToasts, onPress, type]
+  )
+
   useOnEnterKeyPress({
-    action: rest.onPress,
+    action: handlePress,
     disabled: !!disabled || !submitOnEnter
   })
 
@@ -183,91 +194,70 @@ const Button = ({
       primary: [
         {
           property: 'backgroundColor',
-          from: '#0D9FD8',
-          to: '#2EB5E5'
+          from: theme.primaryAccent,
+          to: theme.primaryAccentHovered
         }
-        // ...(themeType === THEME_TYPES.DARK
-        //   ? [
-        //       {
-        //         property: 'borderWidth',
-        //         from: 0,
-        //         to: 1
-        //       },
-        //       {
-        //         property: 'borderColor',
-        //         from: theme.primary,
-        //         to: theme.primary
-        //       }
-        //     ]
-        //   : [])
       ],
       secondary: [
-        // {
-        //   property: 'backgroundColor',
-        //   from:
-        //     themeType === THEME_TYPES.DARK
-        //       ? `${String(theme.primary)}00`
-        //       : `${String(theme.infoBackground)}00`,
-        //   to: themeType === THEME_TYPES.DARK ? `${String(theme.primary)}20` : theme.infoBackground
-        // }
         {
           property: 'backgroundColor',
-          // from:
-          //   themeType === THEME_TYPES.DARK
-          //     ? `${String(theme.primary)}00`
-          //     : `${String(theme.infoBackground)}00`,
-          // to: themeType === THEME_TYPES.DARK ? `${String(theme.primary)}20` : theme.infoBackground
-          from: 'transparent',
-          to: theme.accent
+          from: isMobile ? theme.secondaryBackground : theme.primaryBackground,
+          to: theme.tertiaryBackground
         }
       ],
       tertiary: [
         {
           property: 'backgroundColor',
-          from: 'transparent',
-          to: theme.accent
+          from: theme.secondaryBackground,
+          to: theme.tertiaryBackground
         }
       ],
       danger: [
         {
           property: 'backgroundColor',
-          // from: `${String(theme.errorBackground)}00`,
-          // to: theme.errorBackground
-          from: theme.danger,
-          to: theme.danger
+          from: theme.errorBackground,
+          to: theme.error300
         }
       ],
-      outline: [OPACITY_ANIMATION],
+      dangerFilled: [
+        {
+          property: 'backgroundColor',
+          from: theme.error200,
+          to: theme.error300
+        }
+      ],
+      outline: [
+        {
+          property: 'backgroundColor',
+          from: hexToRgba(theme.tertiaryBackground, 0),
+          to: hexToRgba(theme.tertiaryBackground, 1)
+        },
+        {
+          property: 'borderColor',
+          from: theme.primaryBorder,
+          to: theme.neutral400
+        }
+      ],
       ghost: [],
       ghost2: [],
-      error: [OPACITY_ANIMATION],
-      warning: [OPACITY_ANIMATION],
+      warning: [
+        {
+          property: 'backgroundColor',
+          from: theme.warningBackground,
+          to: theme.warning400
+        }
+      ],
       info: [OPACITY_ANIMATION],
-      info2: [OPACITY_ANIMATION],
       success: [OPACITY_ANIMATION],
       gray: [
         {
           property: 'backgroundColor',
-          from:
-            themeType === THEME_TYPES.DARK ? theme.tertiaryBackground : theme.quaternaryBackground,
-          to:
-            themeType === THEME_TYPES.DARK
-              ? theme.secondaryBackground
-              : `${String(theme.primaryLight)}10`
-        },
-        {
-          property: 'borderWidth',
-          from: 0,
-          to: 1
-        },
-        {
-          property: 'borderColor',
-          from: theme.quaternaryBackground,
-          to: themeType === THEME_TYPES.DARK ? `${theme.linkText as string}80` : theme.primaryLight
+          from: `${String(theme.neutral400)}00`,
+          to: theme.neutral400
         }
       ]
     }),
-    [themeType, theme]
+    [theme]
   )
 
   const [buttonContainerBind, buttonContainerAnimatedStyle] = useMultiHover({
@@ -278,35 +268,29 @@ const Button = ({
   const containerStyles: { [key in ButtonTypes]: ViewStyle } = {
     primary: styles.buttonContainerPrimary,
     secondary: styles.buttonContainerSecondary,
-    tertiary: styles.buttonContainerTertiary,
+    tertiary: styles.buttonContainerSecondary,
     danger: styles.buttonContainerDanger,
     outline: styles.buttonContainerOutline,
     ghost: styles.buttonContainerGhost,
     ghost2: {},
-    error: {
-      backgroundColor: theme.errorText,
+    dangerFilled: {
+      backgroundColor: theme.error200,
       borderWidth: 0
     },
     warning: {
-      // backgroundColor: theme.warningText,
-      backgroundColor: theme.warning,
-      borderWidth: 0
+      borderColor: theme.warningDecorative,
+      borderWidth: 1
     },
     info: {
       backgroundColor: theme.infoText,
       borderWidth: 0
     },
-    info2: {
-      backgroundColor: theme.info2Text,
-      borderWidth: 0
-    },
     success: {
-      // backgroundColor: theme.successText,
-      backgroundColor: theme.success,
+      backgroundColor: theme.successText,
       borderWidth: 0
     },
     gray: {
-      backgroundColor: theme.quaternaryBackground,
+      backgroundColor: theme.neutral400,
       borderWidth: 0
     }
   }
@@ -314,6 +298,7 @@ const Button = ({
   const containerStylesSizes: { [key in ButtonSizes]: ViewStyle } = {
     large: styles.buttonContainerStylesSizeLarge,
     regular: styles.buttonContainerStylesSizeRegular,
+    smaller: styles.buttonContainerStylesSmaller,
     small: styles.buttonContainerStylesSizeSmall,
     tiny: styles.buttonContainerStylesSizeTiny
   }
@@ -326,74 +311,64 @@ const Button = ({
       primary: [
         {
           property: 'color',
-          // from: themeType === THEME_TYPES.DARK ? theme.primaryBackground : '#fff',
-          // to: '#fff'
-          // from: theme.textPrimary,
-          // to: theme.textPrimary
-          from: theme.textPrimary,
-          to: theme.textPrimary
+          from: '#fff',
+          to: '#fff'
         }
       ],
       secondary: [
         {
           property: 'color',
-          from: theme.primary,
-          // to: themeType === THEME_TYPES.DARK ? '#fff' : theme.primary
-          // to: theme.textPrimary
-          to: '#fff'
+          from: theme.primaryText,
+          to: theme.primaryText
         }
       ],
       tertiary: [
         {
           property: 'color',
-          from: '#0D9FD8',
-          to: theme.textPrimary
+          from: theme.primaryText,
+          to: theme.primaryText
         }
       ],
       danger: [
         {
           property: 'color',
-          // from: themeType === THEME_TYPES.DARK ? theme.errorText : theme.errorDecorative,
-          // to: themeType === THEME_TYPES.DARK ? theme.errorText : theme.errorDecorative
-          from: theme.textPrimary,
-          to: theme.textPrimary
+          from: theme.errorText,
+          to: theme.error100
+        }
+      ],
+      dangerFilled: [
+        {
+          property: 'color',
+          from: '#fff',
+          to: '#fff'
         }
       ],
       outline: [
         {
           property: 'color',
-          from: themeType === THEME_TYPES.DARK ? theme.primary : theme.successDecorative,
-          to: themeType === THEME_TYPES.DARK ? '#fff' : theme.successDecorative
+          from: theme.primaryText,
+          to: theme.primaryText
         }
       ],
       ghost: [
         {
           property: 'color',
-          from: theme.primary,
-          to: theme.primary
+          from: theme.primaryText,
+          to: theme.primaryText
         }
       ],
       ghost2: [
         {
           property: 'color',
-          from: theme.iconPrimary,
-          to: theme.primaryBackgroundInverted
-        }
-      ],
-      error: [
-        {
-          property: 'color',
-          from: theme.primaryBackground,
-          to: theme.primaryBackground
+          from: theme.secondaryText,
+          to: theme.primaryText
         }
       ],
       warning: [
         {
           property: 'color',
-          // from: theme.primaryBackground,
-          // to: theme.primaryBackground
-          from: theme.surfaceInput,
-          to: theme.surfaceInput
+          from: theme.warningText,
+          to: theme.warning100
         }
       ],
       info: [
@@ -403,20 +378,11 @@ const Button = ({
           to: theme.primaryBackground
         }
       ],
-      info2: [
+      success: [
         {
           property: 'color',
           from: theme.primaryBackground,
           to: theme.primaryBackground
-        }
-      ],
-      success: [
-        {
-          property: 'color',
-          // from: theme.primaryBackground,
-          // to: theme.primaryBackground
-          from: theme.surfaceInput,
-          to: theme.surfaceInput
         }
       ],
       gray: [
@@ -427,7 +393,7 @@ const Button = ({
         }
       ]
     }),
-    [themeType, theme]
+    [theme]
   )
 
   const [buttonTextBind, buttonTextAnimatedStyle, isHovered] = useMultiHover({
@@ -438,6 +404,7 @@ const Button = ({
   const buttonTextStylesSizes: { [key in ButtonSizes]: TextStyle } = {
     large: styles.buttonTextStylesSizeLarge,
     regular: styles.buttonTextStylesSizeRegular,
+    smaller: styles.buttonTextStylesSizeSmaller,
     small: styles.buttonTextStylesSizeSmall,
     tiny: styles.buttonTextStylesSizeTiny
   }
@@ -454,11 +421,14 @@ const Button = ({
 
   const enhancedChildren = React.Children.toArray(children).map((child, index) => {
     if (index === 0 && React.isValidElement(child)) {
-      // Only override color if it's not already set
       const childProps = child.props as any
-      if (childProps.color === undefined) {
-        return React.cloneElement(child, { color: accentColor || effectiveColor } as any)
-      }
+      const extraProps: any = {}
+
+      if (childProps.color === undefined) extraProps.color = accentColor || effectiveColor
+
+      extraProps.className = [childProps.className, 'button-icon'].filter(Boolean).join(' ')
+
+      return React.cloneElement(child, extraProps)
     }
 
     return child
@@ -473,15 +443,16 @@ const Button = ({
           containerStylesSizes[size],
           styles.buttonContainer,
           containerStyles[type],
-          style,
           !!accentColor && { borderColor: accentColor },
           !hasBottomSpacing && spacings.mb0,
           buttonContainerAnimatedStyle,
+          style,
           disabled && disabledStyle ? disabledStyle : {},
           disabled && !disabledStyle ? styles.disabled : {}
-        ] as ViewStyle
+        ] as ViewStyle[]
       }
       {...rest}
+      onPress={handlePress}
       onHoverIn={(e) => {
         if (buttonTypesWithInnerContainer.includes(type)) return
 
@@ -515,6 +486,7 @@ const Button = ({
         buttonContainerBind.onPressOut(e)
         buttonTextBind.onPressOut(e)
         childrenScaleBind.onPressOut(e)
+
         rest?.onPressOut && rest.onPressOut(e)
       }}
     >
@@ -523,6 +495,7 @@ const Button = ({
         type={type}
         forceHoveredStyle={forceHoveredStyle}
         {...rest}
+        onPress={handlePress}
         onHoverIn={(e) => {
           buttonContainerBind.onHoverIn(e)
           buttonTextBind.onHoverIn(e)
@@ -548,6 +521,7 @@ const Button = ({
           buttonContainerBind.onPressOut(e)
           buttonTextBind.onPressOut(e)
           childrenScaleBind.onPressOut(e)
+
           rest?.onPressOut && rest.onPressOut(e)
         }}
       >
@@ -577,6 +551,17 @@ const Button = ({
           >
             {text}
           </AnimatedText>
+        )}
+        {!!tooltipDataSet && isWeb && (
+          <InfoIcon
+            width={16}
+            height={16}
+            style={{
+              ...flexbox.alignSelfStart,
+              ...spacings.mlMi
+            }}
+            dataSet={tooltipDataSet}
+          />
         )}
 
         {childrenPosition === 'right' && (

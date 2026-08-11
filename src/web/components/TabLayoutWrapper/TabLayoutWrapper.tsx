@@ -1,5 +1,5 @@
-import React, { ReactElement, ReactNode, useMemo } from 'react'
-import { ColorValue, ScrollView, StyleProp, View, ViewStyle } from 'react-native'
+import React, { ReactNode, useMemo } from 'react'
+import { ColorValue, DimensionValue, View, ViewStyle } from 'react-native'
 
 import ScrollableWrapper, { WrapperProps } from '@common/components/ScrollableWrapper'
 import useTheme from '@common/hooks/useTheme'
@@ -9,14 +9,14 @@ import { WindowSizes } from '@common/hooks/useWindowSize/types'
 import useOnboardingNavigation from '@common/modules/auth/hooks/useOnboardingNavigation'
 import spacings, { SPACING_3XL, SPACING_MD } from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
+import { getUiType } from '@common/utils/uiType'
 import { TAB_CONTENT_WIDTH, TAB_WIDE_CONTENT_WIDTH } from '@web/constants/spacings'
-import { getUiType } from '@web/utils/uiType'
 
 import getStyles from './styles'
 
 type Width = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'full'
 
-const { isTab, isActionWindow } = getUiType()
+const { isTab, isRequestWindow } = getUiType()
 
 export const tabLayoutWidths = {
   xs: 420,
@@ -29,26 +29,25 @@ export const tabLayoutWidths = {
 
 type TabLayoutContainerProps = {
   backgroundColor?: ColorValue
-  header?: React.ReactNode
-  footer?: React.ReactNode
+  header?: ReactNode
+  footer?: ReactNode
   footerStyle?: ViewStyle
   hideFooterInPopup?: boolean
   width?: Width
-  children: ReactElement | ReactElement[] | ReactNode | ReactNode[]
-  renderDirectChildren?: () => React.ReactNode
+  children: ReactNode | ReactNode[]
+  renderDirectChildren?: () => ReactNode
   style?: ViewStyle
   withHorizontalPadding?: boolean
-  containerStyle?: StyleProp<ViewStyle>
 }
 
 export const getTabLayoutPadding = (maxWidthSize: (size: WindowSizes) => boolean) => {
-  if (isTab || isActionWindow) {
+  if (isTab || isRequestWindow) {
     return {
       paddingHorizontal: maxWidthSize('xl') ? SPACING_3XL : SPACING_MD
     }
   }
 
-  return spacings.ph
+  return spacings.phSm
 }
 
 export const TabLayoutContainer = ({
@@ -61,8 +60,7 @@ export const TabLayoutContainer = ({
   children,
   renderDirectChildren,
   style,
-  withHorizontalPadding = true,
-  containerStyle
+  withHorizontalPadding = true
 }: TabLayoutContainerProps) => {
   const { theme, styles } = useTheme(getStyles)
   const { maxWidthSize } = useWindowSize()
@@ -71,15 +69,9 @@ export const TabLayoutContainer = ({
   const paddingHorizontalStyle = useMemo(() => getTabLayoutPadding(maxWidthSize), [maxWidthSize])
 
   return (
-    <View
-      style={[
-        flexbox.flex1,
-        { backgroundColor: backgroundColor || theme.primaryBackground },
-        containerStyle
-      ]}
-    >
+    <View style={[flexbox.flex1, { backgroundColor: backgroundColor || theme.primaryBackground }]}>
       {!!header && header}
-      {/* <View style={[flexbox.flex1, withHorizontalPadding && paddingHorizontalStyle]}>
+      <View style={[flexbox.flex1, withHorizontalPadding && paddingHorizontalStyle]}>
         <View
           style={[
             flexbox.directionRow,
@@ -87,7 +79,7 @@ export const TabLayoutContainer = ({
             width !== 'full' ? flexbox.alignSelfCenter : {},
             {
               backgroundColor: backgroundColor || theme.primaryBackground,
-              maxWidth: tabLayoutWidths[width],
+              maxWidth: tabLayoutWidths[width] as DimensionValue, // minor type mismatch
               width: '100%'
             },
             style
@@ -95,25 +87,7 @@ export const TabLayoutContainer = ({
         >
           {children}
         </View>
-      </View> */}
-      <ScrollView
-        style={[flexbox.flex1, withHorizontalPadding && paddingHorizontalStyle, { width: '100%' }]}
-        contentContainerStyle={[
-          flexbox.directionRow,
-          // flexbox.flexGrow1,
-          width !== 'full' ? flexbox.alignSelfCenter : {},
-          {
-            backgroundColor: backgroundColor || theme.primaryBackground,
-            maxWidth: tabLayoutWidths[width],
-            width: '100%'
-          },
-          style
-        ]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {children}
-      </ScrollView>
+      </View>
       {!!footer && !isFooterHiddenInPopup && (
         <View style={[styles.footerContainer, paddingHorizontalStyle]}>
           <View
@@ -136,7 +110,7 @@ export const TabLayoutContainer = ({
 }
 
 interface TabLayoutWrapperMainContentProps extends WrapperProps {
-  children: React.ReactNode
+  children: ReactNode
   withScroll?: boolean
   wrapperRef?: any
 }
@@ -157,7 +131,6 @@ export const TabLayoutWrapperMainContent: React.FC<TabLayoutWrapperMainContentPr
       <ScrollableWrapper
         contentContainerStyle={[
           styles.contentContainer,
-          isOnboardingRoute && (minHeightSize('l') ? spacings.pv0 : spacings.pt2Xl),
           isTab && minHeightSize('m') && spacings.mt0,
           contentContainerStyle
         ]}
@@ -175,7 +148,7 @@ export const TabLayoutWrapperMainContent: React.FC<TabLayoutWrapperMainContentPr
       ref={wrapperRef}
       style={[
         styles.contentContainer,
-        isOnboardingRoute && (minHeightSize('l') ? spacings.pv0 : spacings.pt2Xl),
+        isOnboardingRoute && (minHeightSize('xl') ? spacings.pv : spacings.pt2Xl),
         isTab && minHeightSize('m') && spacings.mt0,
         contentContainerStyle
       ]}

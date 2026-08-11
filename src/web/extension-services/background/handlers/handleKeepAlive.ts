@@ -16,7 +16,6 @@ export const handleKeepAlive = () => {
     let timer = 4 * SECONDS
     let wakeup: any
 
-    // eslint-disable-next-line no-inner-declarations
     async function Highlander() {
       if (alivePort == null) {
         alivePort = chrome.runtime.connect({ name: INTERNAL_STAYALIVE_PORT })
@@ -45,11 +44,6 @@ export const handleKeepAlive = () => {
     setInterval(saveTimestamp, SAVE_TIMESTAMP_INTERVAL_MS)
   }
 
-  browser.runtime.onMessage.addListener(
-    (message: any, _: chrome.runtime.MessageSender, sendResponse: (response?: any) => void) => {
-      if (message === 'ping') sendResponse('pong')
-    }
-  )
   // Notifies all open extension tabs/windows/popups that the service worker/background script has reactivated
   browser.runtime.sendMessage({ action: 'sw-started' }).catch(() => {
     // Upon restarting the extension or initial boot-up, there may or they may

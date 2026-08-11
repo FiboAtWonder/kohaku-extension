@@ -1,11 +1,16 @@
-import React, { createContext, useCallback, useEffect, useMemo } from 'react'
+import React, { createContext, useCallback, useMemo } from 'react'
 
 import type { PPv1Address, PPv1AssetAmount, PPv1AssetBalance } from '@kohaku-eth/privacy-pools'
 
 import useDeepMemo from '@common/hooks/useDeepMemo'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useControllerState from '@web/hooks/useControllerState'
-import { INote, OpStatus, PendingUnshieldOperation, State, SyncState } from '@ambire-common/controllers/privacyPools/privacyPoolsV1'
+import useController from '@common/hooks/useController'
+import {
+  INote,
+  OpStatus,
+  PendingUnshieldOperation,
+  State,
+  SyncState
+} from '@ambire-common/controllers/privacyPools/privacyPoolsV1'
 import { SignAccountOpController } from '@ambire-common/controllers/signAccountOp/signAccountOp'
 import { AccountOp } from '@ambire-common/libs/accountOp/accountOp'
 
@@ -15,7 +20,7 @@ type PrivacyPoolsV1ControllerStateContextType = {
   syncState: SyncState
   isInitialized: boolean
   initializationError: string | null
-  init: (chainId: number) => void
+  init: () => void
   sync: () => void
   shield: (asset: PPv1AssetAmount) => void
   prepareUnshield: (asset: PPv1AssetAmount, to: PPv1Address) => void
@@ -51,44 +56,34 @@ const PrivacyPoolsV1ControllerStateContext =
 const PrivacyPoolsV1ControllerStateProvider: React.FC<{ children: React.ReactNode }> = ({
   children
 }) => {
-  const controller = 'privacyPoolsV1'
-  const state = useControllerState(controller)
-  const { dispatch } = useBackgroundService()
+  const { state, dispatch } = useController('PrivacyPoolsV1Controller')
 
-  useEffect(() => {
-    if (!state || !Object.keys(state).length)
-      dispatch({ type: 'INIT_CONTROLLER_STATE', params: { controller } })
-  }, [dispatch, state])
+  const memoizedState = useDeepMemo(state, 'PrivacyPoolsV1Controller')
 
-  const memoizedState = useDeepMemo(state, controller)
-
-  const init = useCallback(
-    (chainId: number) => {
-      dispatch({ type: 'PRIVACY_POOLS_V1_CONTROLLER_INIT', params: { chainId } })
-    },
-    [dispatch]
-  )
+  const init = useCallback(() => {
+    dispatch({ type: 'method', params: { method: 'init', args: [] } })
+  }, [dispatch])
 
   const sync = useCallback(() => {
-    dispatch({ type: 'PRIVACY_POOLS_V1_CONTROLLER_SYNC' })
+    dispatch({ type: 'method', params: { method: 'sync', args: [] } })
   }, [dispatch])
 
   const shield = useCallback(
     (asset: PPv1AssetAmount) => {
-      dispatch({ type: 'PRIVACY_POOLS_V1_CONTROLLER_SHIELD', params: { asset } })
+      dispatch({ type: 'method', params: { method: 'prepareShield', args: [asset] } })
     },
     [dispatch]
   )
 
   const prepareUnshield = useCallback(
     (asset: PPv1AssetAmount, to: PPv1Address) => {
-      dispatch({ type: 'PRIVACY_POOLS_V1_CONTROLLER_PREPARE_UNSHIELD', params: { asset, to } })
+      dispatch({ type: 'method', params: { method: 'prepareUnshield', args: [asset, to] } })
     },
     [dispatch]
   )
 
   const unshield = useCallback(() => {
-    dispatch({ type: 'PRIVACY_POOLS_V1_CONTROLLER_UNSHIELD' })
+    dispatch({ type: 'method', params: { method: 'unshield', args: [] } })
   }, [dispatch])
 
   const value = useMemo<PrivacyPoolsV1ControllerStateContextType>(

@@ -10,7 +10,6 @@ import useTheme from '@common/hooks/useTheme'
 // import useToast from '@common/hooks/useToast'
 import useWindowSize from '@common/hooks/useWindowSize'
 import Header from '@common/modules/header/components/Header'
-import getHeaderStyles from '@common/modules/header/components/Header/styles'
 import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
 // import { setStringAsync } from '@common/utils/clipboard'
@@ -19,9 +18,9 @@ import {
   getTabLayoutPadding,
   tabLayoutWidths
 } from '@web/components/TabLayoutWrapper/TabLayoutWrapper'
-// import { AnimatedPressable } from '@web/hooks/useHover'
+// import { AnimatedPressable } from '@common/hooks/useHover'
 // import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
-import { getUiType } from '@web/utils/uiType'
+import { getUiType } from '@common/utils/uiType'
 // import { useTranslation } from 'react-i18next'
 
 import KohakuLogo from '@common/components/HokahuLogo'
@@ -52,8 +51,7 @@ const Wrapper: FC<WrapperProps> = ({ children, title, description, buttons, hand
   // const { t } = useTranslation()
   // const { addToast } = useToast()
   const { theme, styles } = useTheme(getStyles)
-  const { styles: headerStyles } = useTheme(getHeaderStyles)
-  // const { account } = useSelectedAccountControllerState()
+  // const { account } = useController('SelectedAccountController').state
 
   // const handleCopyText = async () => {
   //   if (!account) return
@@ -73,11 +71,13 @@ const Wrapper: FC<WrapperProps> = ({ children, title, description, buttons, hand
     <TabLayoutContainer
       backgroundColor={theme.secondaryBackground}
       header={
-        <Header mode="custom">
+        <Header.Wrapper>
           <View
             style={[
-              headerStyles.widthContainer,
-              { maxWidth: tabLayoutWidths.xl, ...flexbox.justifySpaceBetween }
+              flexbox.directionRow,
+              flexbox.alignCenter,
+              flexbox.justifySpaceBetween,
+              { maxWidth: Number(tabLayoutWidths.xl), width: '100%' }
             ]}
           >
             <View
@@ -91,16 +91,19 @@ const Wrapper: FC<WrapperProps> = ({ children, title, description, buttons, hand
               <View>
                 <KohakuLogo width={72} />
               </View>
-              <Text fontSize={16} style={{ color: theme.textPrimary }}>
+              <Text fontSize={16} style={{ color: theme.primaryText }}>
                 How does Kohaku work?
               </Text>
               {/* {account && (
                 <View style={[flexbox.directionRow, flexbox.alignCenter]}>
                   <View style={[flexbox.directionRow, flexbox.alignCenter]}>
                     <Avatar
+                      address={account.addr}
                       pfp={account.preferences.pfp}
                       size={32}
-                      isSmart={isSmartAccount(account)}
+                      smartAccountType={
+                        (account.creation && 'Ambire') || (account.safeCreation && 'Safe')
+                      }
                     />
                     <View style={spacings.mlTy}>
                       <Text fontSize={16} weight="medium" numberOfLines={1}>
@@ -136,13 +139,13 @@ const Wrapper: FC<WrapperProps> = ({ children, title, description, buttons, hand
                 {title}
               </Text>
               {description && (
-                <Text fontSize={14} color={theme.muted} style={{textAlign: "center"}}>
+                <Text fontSize={14} color={theme.tertiaryText} style={{textAlign: "center"}}>
                   {description}
                 </Text>
               )}
             </View>
           )} */}
-        </Header>
+        </Header.Wrapper>
       }
       withHorizontalPadding={false}
       footer={isTab ? buttons : null}
@@ -154,7 +157,7 @@ const Wrapper: FC<WrapperProps> = ({ children, title, description, buttons, hand
               {title}
             </Text>
             {description && (
-              <Text fontSize={14} color={theme.muted} style={{ textAlign: 'center' }}>
+              <Text fontSize={14} color={theme.tertiaryText} style={{ textAlign: 'center' }}>
                 {description}
               </Text>
             )}

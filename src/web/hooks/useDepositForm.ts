@@ -7,20 +7,39 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useModalize } from 'react-native-modalize'
-import { formatEther, formatUnits, parseUnits, toHex } from 'viem'
+import { formatEther, formatUnits, parseUnits, toHex, zeroAddress } from 'viem'
 import type { PPv1Address, PPv1AssetAmount } from '@kohaku-eth/privacy-pools'
 
 import useRailgunForm from '@web/modules/railgun/hooks/useRailgunForm'
+import {
+  type ChainData,
+  chainData as privacyPoolsChainData
+} from '@ambire-common/controllers/privacyPools/config'
 import { validateSendTransferAddress } from '@ambire-common/services/privacyPools/validations'
 import { TokenResult } from '@ambire-common/libs/portfolio'
 import { getTokenAmount } from '@ambire-common/libs/portfolio/helpers'
 import { INote } from '@ambire-common/controllers/privacyPools/privacyPoolsV1'
 import { AddressState, AddressStateOptional } from '@ambire-common/interfaces/domains'
 import useAddressInput from '@common/hooks/useAddressInput'
-import useBackgroundService from './useBackgroundService'
-import useRailgunControllerState from './useRailgunControllerState'
+import useController from '@common/hooks/useController'
 import usePrivacyPools from './usePrivacyPools/usePrivacyPools'
-import useSelectedAccountControllerState from './useSelectedAccountControllerState'
+
+// Pools mark native ETH with the 0xEee… sentinel, while the portfolio uses the
+// zero address for native tokens. Same normalisation as the Curve humanizer.
+const NATIVE_ASSET_SENTINEL = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+
+const toPortfolioTokenAddress = (assetAddress: string) => {
+  const lowercasedAddress = assetAddress.toLowerCase()
+
+  return lowercasedAddress === NATIVE_ASSET_SENTINEL ? zeroAddress : lowercasedAddress
+}
+
+const DEFAULT_ADDRESS_STATE: AddressState = {
+  fieldValue: '',
+  resolvedAddress: '',
+  resolvedAddressType: null,
+  isDomainResolving: false
+}
 
 export interface UpdateFormParams {
   depositAmount: string
@@ -31,9 +50,8 @@ export interface UpdateFormParams {
 }
 
 export const usePrivacyPoolsDepositForm = () => {
-  // balance/sync/notes come from usePrivacyPools (the context wrapper)
+  // sync/notes come from usePrivacyPools (the context wrapper)
   const {
-    balance,
     sync,
     isReady,
     isSynced,
@@ -51,14 +69,16 @@ export const usePrivacyPoolsDepositForm = () => {
     syncState
   } = usePrivacyPools()
 
-  const { portfolio } = useSelectedAccountControllerState()
-  const { dispatch } = useBackgroundService()
+  const { state: selectedAccountState } = useController('SelectedAccountController')
+  const { portfolio } = selectedAccountState
+  const { dispatch: privacyPoolsDispatch } = useController('PrivacyPoolsController')
+  const { dispatch: privacyPoolsV1Dispatch } = useController('PrivacyPoolsV1Controller')
   const { ref: estimationModalRef, open: openEstimationModal, close: closeModalRaw } = useModalize()
 
   const closeEstimationModal = useCallback(() => {
-    dispatch({ type: 'PRIVACY_POOLS_CONTROLLER_DESTROY_SIGN_ACCOUNT_OP' })
+    privacyPoolsDispatch({ type: 'method', params: { method: 'destroySignAccountOp', args: [] } })
     closeModalRaw()
-  }, [dispatch, closeModalRaw])
+  }, [privacyPoolsDispatch, closeModalRaw])
 
   const [depositAmount, setDepositAmount] = useState<string>('')
   const [withdrawalAmount, setWithdrawalAmount] = useState<string>('')
@@ -66,14 +86,12 @@ export const usePrivacyPoolsDepositForm = () => {
   const [selectedToken, setselectedToken] = useState<TokenResult | null>(null)
   const [amountFieldMode, setAmountFieldMode] = useState<'token' | 'fiat'>('token')
   const [isRecipientAddressUnknownAgreed, setIsRecipientAddressUnknownAgreed] = useState(false)
-  const [latestBroadcastedToken, setLatestBroadcastedToken] = useState<TokenResult | null>(null)
+  // PPv1 never broadcasts through a token-scoped flow, so this stays null; it exists
+  // to keep the return shape identical to the railgun form.
+  const [latestBroadcastedToken] = useState<TokenResult | null>(null)
   const [programmaticUpdateCounter, setProgrammaticUpdateCounter] = useState(0)
 
-  const [addressState, setAddressStateRaw] = useState<AddressState>({
-    fieldValue: '',
-    ensAddress: '',
-    isDomainResolving: false
-  })
+  const [addressState, setAddressStateRaw] = useState<AddressState>({ ...DEFAULT_ADDRESS_STATE })
 
   const setAddressState = useCallback((newState: AddressStateOptional) => {
     setAddressStateRaw((prev) => ({ ...prev, ...newState }))
@@ -87,18 +105,12 @@ export const usePrivacyPoolsDepositForm = () => {
     setAmountFieldMode('token')
     setIsRecipientAddressUnknownAgreed(false)
     setProgrammaticUpdateCounter(0)
-    setAddressStateRaw({ fieldValue: '', ensAddress: '', isDomainResolving: false })
+    setAddressStateRaw({ ...DEFAULT_ADDRESS_STATE })
   }, [])
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleCacheResolvedDomain = useCallback((..._args: [string, string, 'ens']) => {}, [])
 
   const addressInputState = useAddressInput({
     addressState,
-    setAddressState,
-    overwriteError: '',
-    overwriteValidLabel: '',
-    handleCacheResolvedDomain
+    setAddressState
   })
 
   const handleUpdateForm = useCallback(
@@ -146,7 +158,17 @@ export const usePrivacyPoolsDepositForm = () => {
     [ethPrivateBalance, ethPrice]
   )
 
-  const supportedAssets = useMemo(() => new Set(balance.map((b) => b.asset.contract)), [balance])
+  // The shieldable assets come from the pool configuration, NOT from the notes the
+  // account already holds. Deriving them from existing notes left a wallet with no
+  // notes yet unable to make its first deposit, because every portfolio token was
+  // filtered out of the token select.
+  const supportedAssets = useMemo(() => {
+    const pools = Object.values(privacyPoolsChainData).flatMap(
+      (chain: ChainData[number]) => chain.poolInfo
+    )
+
+    return new Set(pools.map((pool) => toPortfolioTokenAddress(pool.assetAddress)))
+  }, [])
 
   const emptyImportedBalance = useMemo(() => ({ total: 0n, accounts: [] }), [])
 
@@ -197,7 +219,7 @@ export const usePrivacyPoolsDepositForm = () => {
   // Auto-fetch the quote whenever the form inputs are valid and complete
   useEffect(() => {
     if (!selectedToken || !withdrawalAmount || parseFloat(withdrawalAmount) <= 0) return
-    if (!addressInputState.address || addressInputState.validation.isError) return
+    if (!addressInputState.address || addressInputState.validation.severity === 'error') return
 
     const timeout = setTimeout(() => updateQuoteStatus(), 400)
     return () => clearTimeout(timeout)
@@ -205,30 +227,33 @@ export const usePrivacyPoolsDepositForm = () => {
     selectedToken,
     withdrawalAmount,
     addressInputState.address,
-    addressInputState.validation.isError,
+    addressInputState.validation.severity,
     updateQuoteStatus
   ])
 
   const handleDeposit = useCallback(() => {
     if (!depositAmount || !selectedToken) return
 
-    dispatch({
-      type: 'PRIVACY_POOLS_V1_CONTROLLER_PREPARE_SHIELD',
+    privacyPoolsV1Dispatch({
+      type: 'method',
       params: {
-        asset: {
-          asset: { contract: selectedToken.address as `0x${string}`, __type: 'erc20' },
-          amount: BigInt(depositAmount)
-        }
+        method: 'prepareShield',
+        args: [
+          {
+            asset: { contract: selectedToken.address as `0x${string}`, __type: 'erc20' },
+            amount: BigInt(depositAmount)
+          }
+        ]
       }
     })
 
-    dispatch({
-      type: 'PRIVACY_POOLS_V1_CONTROLLER_HAS_USER_PROCEEDED',
-      params: { proceeded: true }
+    privacyPoolsV1Dispatch({
+      type: 'method',
+      params: { method: 'setUserProceeded', args: [true] }
     })
 
     openEstimationModal()
-  }, [depositAmount, selectedToken, dispatch, openEstimationModal])
+  }, [depositAmount, selectedToken, privacyPoolsV1Dispatch, openEstimationModal])
 
   const validationFormMsgs = useMemo(() => {
     const amount = (() => {
@@ -260,7 +285,7 @@ export const usePrivacyPoolsDepositForm = () => {
       isRecipientAddressUnknownAgreed,
       false,
       false,
-      !!addressState.ensAddress,
+      !!addressState.resolvedAddress,
       addressState.isDomainResolving
     )
 
@@ -271,7 +296,7 @@ export const usePrivacyPoolsDepositForm = () => {
     portfolio.tokens,
     addressInputState.address,
     isRecipientAddressUnknownAgreed,
-    addressState.ensAddress,
+    addressState.resolvedAddress,
     addressState.isDomainResolving
   ])
 
@@ -363,7 +388,8 @@ export const usePrivacyPoolsDepositForm = () => {
 }
 
 const useDepositForm = () => {
-  const { dispatch } = useBackgroundService()
+  const { dispatch: railgunDispatch } = useController('RailgunController')
+  const { dispatch: privacyPoolsDispatch } = useController('PrivacyPoolsController')
 
   // IMPORTANT: Always call both hooks unconditionally to maintain consistent hook order
   // This prevents React's "Hooks called in different order" error
@@ -381,13 +407,13 @@ const useDepositForm = () => {
     (params: any) => {
       // If privacyProvider is being updated, dispatch to both controllers
       if (params.privacyProvider !== undefined) {
-        dispatch({
-          type: 'RAILGUN_CONTROLLER_UPDATE_FORM',
-          params: { privacyProvider: params.privacyProvider }
+        railgunDispatch({
+          type: 'method',
+          params: { method: 'update', args: [{ privacyProvider: params.privacyProvider }] }
         })
-        dispatch({
-          type: 'PRIVACY_POOLS_CONTROLLER_UPDATE_FORM',
-          params: { privacyProvider: params.privacyProvider }
+        privacyPoolsDispatch({
+          type: 'method',
+          params: { method: 'update', args: [{ privacyProvider: params.privacyProvider }] }
         })
       }
 
@@ -399,7 +425,7 @@ const useDepositForm = () => {
         privacyPoolsForm.handleUpdateForm(params)
       }
     },
-    [dispatch, privacyProvider, railgunForm, privacyPoolsForm]
+    [railgunDispatch, privacyPoolsDispatch, privacyProvider, railgunForm, privacyPoolsForm]
   )
 
   if (activeProvider === 'railgun') {
@@ -407,7 +433,7 @@ const useDepositForm = () => {
       ...railgunForm,
       handleUpdateForm: wrappedHandleUpdateForm,
       supportedAssets: new Set<string>(),
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
+
       resetForm: () => {}
     }
   }

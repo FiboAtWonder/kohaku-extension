@@ -2,29 +2,36 @@ import { nanoid } from 'nanoid'
 import React, { FC } from 'react'
 import { View } from 'react-native'
 
+import SafeIcon from '@common/assets/svg/SafeIcon'
 import BADGE_PRESETS from '@common/components/BadgeWithPreset/presets'
+import { createGlobalTooltipDataSet } from '@common/components/GlobalTooltip'
 import Text from '@common/components/Text'
-import Tooltip from '@common/components/Tooltip'
+import { isMobile, isWeb } from '@common/config/env'
 import useTheme from '@common/hooks/useTheme'
 import { SPACING_MI } from '@common/styles/spacings'
 import { THEME_TYPES } from '@common/styles/themeConfig'
 
 interface Props {
-  isSmart: boolean
+  smartAccountType?: 'Ambire' | 'Safe'
   size?: 'big' | 'small'
   showTooltip?: boolean
 }
 
-const TypeBadge: FC<Props> = ({ isSmart, size, showTooltip = false }) => {
+const TypeBadge: FC<Props> = ({ smartAccountType, size, showTooltip = false }) => {
   const { theme, themeType } = useTheme()
   const badgePreset = BADGE_PRESETS['smart-account']
   const tooltipId = nanoid(6)
 
-  return isSmart ? (
-    <>
+  if (!smartAccountType) return null
+
+  if (smartAccountType === 'Ambire') {
+    return (
       <View
-        // @ts-ignore
-        dataSet={{ tooltipId }}
+        dataSet={createGlobalTooltipDataSet({
+          id: tooltipId,
+          content: badgePreset.tooltipText,
+          hidden: !showTooltip
+        })}
         style={{
           position: 'absolute',
           left: size === 'big' ? -SPACING_MI / 2 : -SPACING_MI,
@@ -43,9 +50,36 @@ const TypeBadge: FC<Props> = ({ isSmart, size, showTooltip = false }) => {
           SA
         </Text>
       </View>
-      {showTooltip && <Tooltip id={tooltipId} content={badgePreset.tooltipText} />}
-    </>
-  ) : null
+    )
+  }
+
+  return (
+    <View
+      dataSet={createGlobalTooltipDataSet({
+        id: tooltipId,
+        content: badgePreset.tooltipText,
+        hidden: !showTooltip
+      })}
+      style={{
+        position: 'absolute',
+        left: (size === 'big' ? -2 : -SPACING_MI) + (isMobile ? 2 : 0),
+        top: (size === 'big' ? -4 : -SPACING_MI) + (isMobile ? 2 : 0),
+        paddingHorizontal: 2,
+        paddingVertical: 2,
+        backgroundColor: theme.successText,
+        zIndex: 2,
+        borderRadius: 50,
+        borderWidth: isMobile ? 0 : size === 'big' ? 3 : 2,
+        borderColor:
+          themeType === THEME_TYPES.DARK ? theme.secondaryBackground : theme.primaryBackground
+      }}
+    >
+      <SafeIcon
+        width={size === 'big' && isWeb ? 21 : 15}
+        height={size === 'big' && isWeb ? 21 : 15}
+      />
+    </View>
+  )
 }
 
 export default React.memo(TypeBadge)

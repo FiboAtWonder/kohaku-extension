@@ -6,7 +6,7 @@ import { TokenResult } from '@ambire-common/libs/portfolio'
 import Text from '@common/components/Text'
 import spacings from '@common/styles/spacings'
 import text from '@common/styles/utils/text'
-import { getTokenId } from '@web/utils/token'
+import { getTokenId } from '@common/utils/token'
 
 import Skeletons from './Skeletons'
 import Token from './Token/Token'
@@ -56,11 +56,12 @@ const TokenSection: FC<Props> = ({
   return (
     <View style={[variant === 'custom' && spacings.mbLg]}>
       <Text fontSize={16} weight="medium" style={spacings.mbTy}>
-        {t(variant === 'custom' ? 'Custom Tokens' : 'Hidden Tokens')}
+        {t(variant === 'custom' ? 'Custom tokens' : 'Hidden tokens')}
       </Text>
       <TokenListHeader />
       {!isLoading && !data.length && (
         <Text
+          testID="you-dont-have-any-text"
           appearance="secondaryText"
           fontSize={16}
           style={[spacings.mt2Xl, text.center]}

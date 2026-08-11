@@ -1,3 +1,4 @@
+import Fuse from 'fuse.js'
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -7,19 +8,21 @@ import { useModalize } from 'react-native-modalize'
 import { Network } from '@ambire-common/interfaces/network'
 import CollectibleModal, { SelectedCollectible } from '@common/components/CollectibleModal'
 import Text from '@common/components/Text'
+import useController from '@common/hooks/useController'
 import useTheme from '@common/hooks/useTheme'
 import DashboardBanners from '@common/modules/dashboard/components/DashboardBanners'
 import DashboardPageScrollContainer from '@common/modules/dashboard/components/DashboardPageScrollContainer'
 import TabsAndSearch from '@common/modules/dashboard/components/TabsAndSearch'
 import { TabType } from '@common/modules/dashboard/components/TabsAndSearch/Tabs/Tab/Tab'
-import { getDoesNetworkMatch } from '@common/utils/search'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
-import { getUiType } from '@web/utils/uiType'
+import { tokenOrCollectionSearch } from '@common/utils/search'
+import { getUiType } from '@common/utils/uiType'
 
+import FloatingBottomBar from '../FloatingBottomBar'
 import Collection from './Collection'
 import CollectionsSkeleton from './CollectionsSkeleton'
 import styles from './styles'
 
+import type { TokenResult } from '@ambire-common/libs/portfolio'
 interface Props {
   openTab: TabType
   setOpenTab: React.Dispatch<React.SetStateAction<TabType>>
@@ -31,6 +34,9 @@ interface Props {
   networks: Network[]
   dashboardNetworkFilterName: string | null
   animatedOverviewHeight: Animated.Value
+  isSearchHidden: boolean
+  refreshing?: boolean
+  onRefresh?: () => void
 }
 
 const { isPopup } = getUiType()
@@ -43,9 +49,14 @@ const Collections: FC<Props> = ({
   onScroll,
   networks,
   dashboardNetworkFilterName,
-  animatedOverviewHeight
+  animatedOverviewHeight,
+  isSearchHidden,
+  refreshing,
+  onRefresh
 }) => {
-  const { portfolio, dashboardNetworkFilter } = useSelectedAccountControllerState()
+  const {
+    state: { portfolio, dashboardNetworkFilter }
+  } = useController('SelectedAccountController')
   const { ref: modalRef, open: openModal, close: closeModal } = useModalize()
   const { t } = useTranslation()
   const { theme } = useTheme()
@@ -65,28 +76,26 @@ const Collections: FC<Props> = ({
     [openModal]
   )
 
-  const filteredPortfolioCollections = useMemo(
-    () =>
-      (portfolio?.collections || []).filter(({ name, address, chainId, collectibles }) => {
+  const filteredPortfolioCollections = useMemo(() => {
+    const searchableCollections = (portfolio?.collections || []).filter(
+      ({ chainId, collectibles }) => {
         let isMatchingNetwork = true
-        let isMatchingSearch = true
 
         if (dashboardNetworkFilter) {
           isMatchingNetwork = chainId === BigInt(dashboardNetworkFilter)
         }
 
-        if (searchValue) {
-          const lowercaseSearch = searchValue.toLowerCase()
-          isMatchingSearch =
-            name.toLowerCase().includes(lowercaseSearch) ||
-            address.toLowerCase().includes(lowercaseSearch) ||
-            getDoesNetworkMatch({ networks, itemChainId: chainId, lowercaseSearch })
-        }
+        return isMatchingNetwork && collectibles.length
+      }
+    )
 
-        return isMatchingNetwork && isMatchingSearch && collectibles.length
-      }),
-    [portfolio?.collections, dashboardNetworkFilter, searchValue, networks]
-  )
+    return tokenOrCollectionSearch({
+      networks,
+      assets: searchableCollections,
+      search: searchValue,
+      searchType: 'collection'
+    })
+  }, [portfolio?.collections, networks, searchValue, dashboardNetworkFilter])
 
   const isReadyToVisualizeCollections = useMemo(() => {
     if (portfolio.isAllReady) return true
@@ -102,7 +111,7 @@ const Collections: FC<Props> = ({
             <TabsAndSearch
               openTab={openTab}
               setOpenTab={setOpenTab}
-              searchControl={control}
+              currentTab="collectibles"
               sessionId={sessionId}
             />
           </View>
@@ -111,12 +120,17 @@ const Collections: FC<Props> = ({
 
       if (item === 'empty') {
         return (
-          <Text fontSize={16} weight="medium" style={styles.noCollectibles}>
+          <Text
+            testID="no-collectibles-text"
+            fontSize={16}
+            weight="medium"
+            style={styles.noCollectibles}
+          >
             {!searchValue &&
               !dashboardNetworkFilterName &&
               t("You don't have any collectibles (NFTs) yet.")}
             {!searchValue &&
-              dashboardNetworkFilter &&
+              !!dashboardNetworkFilter &&
               t(`You don't have any collectibles (NFTs) on ${dashboardNetworkFilterName}.`)}
             {searchValue &&
               t(
@@ -156,7 +170,6 @@ const Collections: FC<Props> = ({
       theme.primaryBackground,
       openTab,
       setOpenTab,
-      control,
       sessionId,
       searchValue,
       dashboardNetworkFilterName,
@@ -166,10 +179,10 @@ const Collections: FC<Props> = ({
     ]
   )
 
-  const keyExtractor = useCallback((collectionOrElement: any) => {
+  const keyExtractor = useCallback((collectionOrElement: TokenResult) => {
     if (typeof collectionOrElement === 'string') return collectionOrElement
 
-    return collectionOrElement.address
+    return `${collectionOrElement.address}-${collectionOrElement.chainId?.toString() || 'unknown-chain'}-${collectionOrElement.name}`
   }, [])
 
   useEffect(() => {
@@ -186,7 +199,6 @@ const Collections: FC<Props> = ({
       <DashboardPageScrollContainer
         tab="collectibles"
         openTab={openTab}
-        onScroll={onScroll}
         ListHeaderComponent={<DashboardBanners />}
         data={[
           'header',
@@ -198,9 +210,19 @@ const Collections: FC<Props> = ({
         keyExtractor={keyExtractor}
         initialNumToRender={isPopup ? 4 : 10}
         windowSize={15}
-        bounces={false}
         animatedOverviewHeight={animatedOverviewHeight}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
       />
+      {openTab === 'collectibles' && (
+        <FloatingBottomBar
+          control={control}
+          isHidden={isSearchHidden}
+          searchPlaceholder={t('Search NFT')}
+        />
+      )}
     </>
   )
 }

@@ -5,13 +5,10 @@ import { useModalize } from 'react-native-modalize'
 
 import ScrollableWrapper from '@common/components/ScrollableWrapper'
 import { SelectValue } from '@common/components/Select/types'
+import useController from '@common/hooks/useController'
 import flexbox from '@common/styles/utils/flexbox'
-import { tokenSearch } from '@common/utils/search'
+import { tokenOrCollectionSearch } from '@common/utils/search'
 import { networkSort } from '@common/utils/sorting'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useNetworksControllerState from '@web/hooks/useNetworksControllerState'
-import usePortfolioControllerState from '@web/hooks/usePortfolioControllerState/usePortfolioControllerState'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
 import { SettingsRoutesContext } from '@web/modules/settings/contexts/SettingsRoutesContext'
 
 import AddTokenBottomSheet from './AddTokenBottomSheet'
@@ -26,14 +23,17 @@ const ManageTokensSettingsScreen = () => {
     open: openAddTokenBottomSheet,
     close: closeAddTokenBottomSheet
   } = useModalize()
-  const { tokenPreferences, customTokens: portfolioCustomTokens } = usePortfolioControllerState()
-  const { dispatch } = useBackgroundService()
+  const { tokenPreferences, customTokens: portfolioCustomTokens } =
+    useController('PortfolioController').state
   const { setCurrentSettingsPage } = useContext(SettingsRoutesContext)
   const { control, watch } = useForm({ mode: 'all', defaultValues: { search: '' } })
-  const { networks } = useNetworksControllerState()
+  const { networks } = useController('NetworksController').state
+  const { dispatch: mainDispatch } = useController('MainController')
   const {
-    portfolio: { isAllReady, tokens }
-  } = useSelectedAccountControllerState()
+    state: {
+      portfolio: { isAllReady, tokens }
+    }
+  } = useController('SelectedAccountController')
   const [networkFilter, setNetworkFilter] = useState('all')
   const search = watch('search')
 
@@ -42,14 +42,15 @@ const ManageTokensSettingsScreen = () => {
   }, [setCurrentSettingsPage])
 
   const filteredTokens = useMemo(() => {
-    return tokens.filter((token) => {
+    const filtered = tokens.filter((token) => {
       const { flags, chainId } = token
       if (flags.onGasTank || !!flags.rewardsType) return false
       const network = networks.find((n) => n.chainId === chainId)
-      if (networkFilter !== 'all' && network?.name !== networkFilter) return false
 
-      return tokenSearch({ search, token, networks })
+      return networkFilter === 'all' || network?.name === networkFilter
     })
+
+    return tokenOrCollectionSearch({ networks, assets: filtered, search })
   }, [networkFilter, networks, search, tokens])
 
   const customTokens = useMemo(() => {
@@ -112,17 +113,16 @@ const ManageTokensSettingsScreen = () => {
     }
 
     debouncedPortfolioUpdateInterval.current = setTimeout(() => {
-      dispatch({
-        type: 'MAIN_CONTROLLER_UPDATE_SELECTED_ACCOUNT_PORTFOLIO',
+      mainDispatch({
+        type: 'method',
         params: {
-          // Update the portfolio for all networks as the user may hide multiple tokens
-          // from different networks
-          forceUpdate: true
+          method: 'updateSelectedAccountPortfolio',
+          args: []
         }
       })
       debouncedPortfolioUpdateInterval.current = null
     }, 1000)
-  }, [dispatch])
+  }, [mainDispatch])
 
   const handleCloseAddTokenBottomSheet = useCallback(() => {
     closeAddTokenBottomSheet()

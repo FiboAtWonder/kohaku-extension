@@ -13,6 +13,7 @@ type RouteConfig = {
   }
 }
 
+// @ts-ignore
 const routesConfig: RouteConfig = {
   [ROUTES.keyStoreUnlock]: {
     route: ROUTES.keyStoreUnlock,
@@ -65,6 +66,17 @@ const routesConfig: RouteConfig = {
       web: i18n.t('Connect Ledger')
     })
   },
+  [ROUTES.trezorConnect]: {
+    route: ROUTES.trezorConnect,
+    title: Platform.select({
+      default: i18n.t('Welcome to Ambire Wallet'),
+      web: i18n.t('Welcome to Ambire Wallet')
+    }),
+    name: Platform.select({
+      default: i18n.t('Connect Trezor'),
+      web: i18n.t('Connect Trezor')
+    })
+  },
   [ROUTES.authEmailAccount]: {
     route: ROUTES.authEmailAccount,
     title: Platform.select({
@@ -103,10 +115,15 @@ const routesConfig: RouteConfig = {
     title: i18n.t('Welcome to Kohaku Wallet'),
     name: i18n.t('Extension Password Setup')
   },
-  [ROUTES.keyStoreReset]: {
-    route: ROUTES.keyStoreReset,
-    title: i18n.t('Restore Key Store Passphrase'),
-    name: i18n.t('Restore Key Store Passphrase')
+  [ROUTES.keyStoreEmailRecovery]: {
+    route: ROUTES.keyStoreEmailRecovery,
+    title: i18n.t('Restore Extension Password'),
+    name: i18n.t('Restore Extension Password')
+  },
+  [ROUTES.keyStoreEmailRecoverySetNewPassword]: {
+    route: ROUTES.keyStoreEmailRecoverySetNewPassword,
+    title: i18n.t('Set New Extension Password'),
+    name: i18n.t('Set New Extension Password')
   },
   [ROUTES.accountPicker]: {
     route: ROUTES.accountPicker,
@@ -137,6 +154,14 @@ const routesConfig: RouteConfig = {
   },
   [ROUTES.dashboard]: {
     route: ROUTES.dashboard,
+    title: Platform.select({
+      default: i18n.t('Dashboard')
+    }),
+    name: Platform.select({ default: i18n.t('Dashboard') })
+  },
+  // (kohaku) the landing route of the merged dashboard
+  [ROUTES.mainDashboard]: {
+    route: ROUTES.mainDashboard,
     title: Platform.select({
       default: i18n.t('Dashboard')
     }),
@@ -182,15 +207,26 @@ const routesConfig: RouteConfig = {
       default: i18n.t('App Wants to Connect')
     })
   },
-  [ROUTES.appCatalog]: {
-    route: ROUTES.appCatalog,
+  [ROUTES.explore]: {
+    route: ROUTES.explore,
     title: Platform.select({
-      web: i18n.t('App Catalog'),
-      default: i18n.t('App Catalog')
+      web: i18n.t('Explore'),
+      default: i18n.t('Explore')
     }),
     name: Platform.select({
-      web: i18n.t('App Catalog'),
-      default: i18n.t('App Catalog')
+      web: i18n.t('Explore'),
+      default: i18n.t('Explore')
+    })
+  },
+  [ROUTES.exploreSection]: {
+    route: ROUTES.exploreSection,
+    title: Platform.select({
+      web: i18n.t('Explore'),
+      default: i18n.t('Explore')
+    }),
+    name: Platform.select({
+      web: i18n.t('Explore'),
+      default: i18n.t('Explore')
     })
   },
   [ROUTES.watchAsset]: {
@@ -224,6 +260,11 @@ const routesConfig: RouteConfig = {
       default: i18n.t('Get Encryption Public Key Request')
     })
   },
+  [ROUTES.decryptRequest]: {
+    route: ROUTES.getEncryptionPublicKeyRequest,
+    title: Platform.select({ default: i18n.t('Decrypt Request') }),
+    name: Platform.select({ default: i18n.t('Decrypt Request') })
+  },
   [ROUTES.swap]: {
     route: ROUTES.swap,
     title: Platform.select({
@@ -232,11 +273,6 @@ const routesConfig: RouteConfig = {
     name: Platform.select({
       default: i18n.t('Swap')
     })
-  },
-  [ROUTES.appCatalog]: {
-    route: ROUTES.appCatalog,
-    title: i18n.t('App Catalog'),
-    name: i18n.t('App Catalog')
   },
   [ROUTES.accountSelect]: {
     route: ROUTES.accountSelect,
@@ -311,12 +347,10 @@ const routesConfig: RouteConfig = {
     }),
     name: Platform.select({ default: i18n.t('General Settings') })
   },
-  [ROUTES.securityAndPrivacy]: {
-    route: ROUTES.securityAndPrivacy,
-    title: Platform.select({
-      default: i18n.t('Security and Privacy')
-    }),
-    name: Platform.select({ default: i18n.t('Security and Privacy') })
+  [ROUTES.internalLogs]: {
+    route: ROUTES.internalLogs,
+    title: Platform.select({ default: i18n.t('Debug Logs') }),
+    name: Platform.select({ default: i18n.t('Debug Logs') })
   },
   [ROUTES.accountsSettings]: {
     route: ROUTES.accountsSettings,
@@ -394,6 +428,26 @@ const routesConfig: RouteConfig = {
     route: ROUTES.networks,
     title: Platform.select({ default: i18n.t('Networks') }),
     name: Platform.select({ default: i18n.t('Networks') })
+  },
+  [ROUTES.rewards]: {
+    route: ROUTES.rewards,
+    title: Platform.select({ default: i18n.t('Ambire Rewards') }),
+    name: Platform.select({ default: i18n.t('Ambire Rewards') })
+  },
+  [ROUTES.receive]: {
+    route: ROUTES.receive,
+    title: Platform.select({ default: i18n.t('Receive assets') }),
+    name: Platform.select({ default: i18n.t('Receive assets') })
+  },
+  [ROUTES.qrConnect]: {
+    route: ROUTES.qrConnect,
+    title: Platform.select({ default: i18n.t('Connect QR wallet') }),
+    name: Platform.select({ default: i18n.t('Connect QR wallet') })
+  },
+  [ROUTES.qrPermission]: {
+    route: ROUTES.qrPermission,
+    title: Platform.select({ default: i18n.t('Camera permission') }),
+    name: Platform.select({ default: i18n.t('Camera permission') })
   }
 }
 

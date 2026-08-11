@@ -1,13 +1,23 @@
-import { ViewStyle } from 'react-native'
+import { TextStyle, ViewStyle } from 'react-native'
 
 import { TextWeight } from '@common/components/Text'
 
-type BadgeType = 'info' | 'warning' | 'default' | 'success' | 'error' | 'ok' | 'new' | 'new2'
+type BadgeType =
+  | 'info'
+  | 'warning'
+  | 'default'
+  | 'success'
+  | 'error'
+  | 'primaryAccent'
+  | 'secondaryAccent'
+  | 'new'
+  | 'outline'
 
-type SpecialBadgeType = 'metamask'
+type SpecialBadgeType = 'metamask' | 'safe'
 
 type Props = {
   text: string
+  textStyle?: TextStyle
   weight?: TextWeight
   type?: BadgeType
   tooltipText?: string

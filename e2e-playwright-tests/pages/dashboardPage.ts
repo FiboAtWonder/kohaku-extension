@@ -1,12 +1,25 @@
 import locators from 'constants/locators'
 import selectors from 'constants/selectors'
+import BootstrapContext from 'interfaces/bootstrapContext'
+import Tabs from 'interfaces/tabs'
+import Threshold, { ThresholdError } from 'interfaces/threshold'
 
 import { expect } from '@playwright/test'
 
-import Token from '../interfaces/token'
 import { BasePage } from './basePage'
 
 export class DashboardPage extends BasePage {
+  extensionURL: string
+
+  constructor(opts: BootstrapContext) {
+    super(opts)
+    this.extensionURL = opts.extensionURL
+  }
+
+  async navigateToDashboard() {
+    await this.navigateToURL(`${this.extensionURL}/tab.html#/`)
+  }
+
   // TODO: should be refactored
   async checkBalanceInAccount(): Promise<void> {
     await this.page.waitForSelector(locators.fullAmountDashboard)
@@ -60,36 +73,91 @@ export class DashboardPage extends BasePage {
     return amountNumber
   }
 
-  async checkTokenBalance(token: Token) {
-    const key = `${token.symbol}-${token.chainId}`
-    const balanceThresholds: Record<string, number> = {
-      'WALLET-8453': 400,
-      'USDC-8453': 5,
-      'USDC-10': 5,
-      'USDC.E-10': 2,
-      'DAI-10': 2,
-      'xWALLET-1': 2
+  async #checkBalanceThresholds(params: { thresholds: Threshold[] }): Promise<{
+    errors: ThresholdError[]
+    warnings: ThresholdError[]
+  }> {
+    const { thresholds } = params
+
+    const errors: ThresholdError[] = []
+    const warnings: ThresholdError[] = []
+
+    // eslint-disable-next-line no-restricted-syntax
+    for (const [token, minBalance] of thresholds) {
+      let balance: number
+      let tokenName: string
+      let chainName: string
+
+      if (token === 'gas-token') {
+        // eslint-disable-next-line no-await-in-loop
+        balance = await this.getCurrentBalance()
+        tokenName = 'gas-token'
+        chainName = 'N/A'
+      } else {
+        // eslint-disable-next-line no-await-in-loop
+        balance = await this.getDashboardTokenBalance(token)
+        tokenName = token.symbol
+        chainName = token.chainName
+      }
+
+      const warnThreshold = minBalance * 1.5
+
+      if (balance < minBalance) {
+        errors.push({ tokenName, chainName, balance, minBalance })
+      } else if (balance < warnThreshold) {
+        warnings.push({ tokenName, chainName, balance, minBalance })
+      }
     }
 
-    const minBalance = balanceThresholds[key] ?? 0
-    const tokenBalance = await this.getDashboardTokenBalance(token)
-
-    let error: string | undefined
-
-    try {
-      expect(tokenBalance).toBeGreaterThanOrEqual(minBalance)
-    } catch (e) {
-      error = `${token.symbol} balance is only: ${tokenBalance}.`
-    }
-    return { token, error }
+    return { errors, warnings }
   }
 
-  // TODO: use this method to check activity tab after POM refactor
+  async checkBalances(params: { thresholds: Threshold[]; accountName: string }): Promise<void> {
+    const { thresholds, accountName } = params
+
+    const { errors, warnings } = await this.#checkBalanceThresholds({
+      thresholds
+    })
+
+    const formatTokens = (
+      items: { tokenName: string; chainName: string; balance: number; minBalance: number }[]
+    ) =>
+      items
+        .map(
+          (i) =>
+            `${i.tokenName} on ${i.chainName} (current: ${i.balance}, minimumRequired: ${i.minBalance})`
+        )
+        .join(', ')
+
+    let errorMessage: string | undefined
+    let warningMessage: string | undefined
+
+    if (warnings.length > 0) {
+      const warningTokens = formatTokens(warnings)
+      warningMessage = `💰 ${accountName} balance is getting low for: ${warningTokens}.`
+    }
+
+    if (errors.length > 0) {
+      const errorTokens = formatTokens(errors)
+      errorMessage = `${accountName} has insufficient balance for: ${errorTokens}.`
+    }
+
+    if (warningMessage) {
+      console.log(warningMessage)
+    }
+
+    if (errorMessage) {
+      throw new Error(errorMessage)
+    }
+
+    console.log(`✅ ${accountName} tokens and gas tank have sufficient balance.`)
+  }
+
   async checkNoTransactionOnActivityTab() {
     await this.click(selectors.dashboard.activityTabButton)
     await this.compareText(
       selectors.dashboard.noTransactionOnActivityTab,
-      'No transactions history for Account '
+      "Ambire doesn't retrieve transactions made before installing the extension, but you can check your address on etherscan.io."
     )
   }
 
@@ -100,5 +168,122 @@ export class DashboardPage extends BasePage {
     await expect(this.page.locator(selectors.dashboard.confirmedTransactionPill)).toContainText(
       'Confirmed'
     )
+  }
+
+  // TODO: works only for base now
+  async changeSigToolNetwork() {
+    // open apps page
+    await this.click(selectors.dashboard.appsButton)
+
+    // enter search phrase
+    await this.entertext(selectors.searchInput, 'SigTool')
+    await this.page.waitForTimeout(2000) // wait for search result
+
+    const wrapper = this.page.getByTestId(selectors.sigtool.dappWrapper)
+    const button = this.page.getByTestId(selectors.sigtool.sigToolIconButton)
+    const ethNetwork = this.page.locator(selectors.sigtool.sigToolNetworkEth)
+    const baseNetwork = this.page.locator(selectors.sigtool.sigToolNetworkBase)
+
+    // define element box
+    const box = await wrapper.boundingBox()
+
+    // move mouse to the center of the elem
+    await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    await this.page.waitForTimeout(1000)
+    // move mouse outside of the element
+    await this.page.mouse.move(box.x + box.width + 50, box.y + box.height + 50)
+    await this.page.waitForTimeout(1000)
+    // return mouse to the center of the element
+    await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    await button.waitFor({ state: 'visible' })
+    await button.waitFor({ state: 'attached' })
+    await button.click()
+
+    // choose network
+    await ethNetwork.first().click()
+    await baseNetwork.click()
+  }
+
+  async disconnectFromSigToolDapp() {
+    // open apps page
+    await this.click(selectors.dashboard.appsButton)
+
+    // enter search phrase
+    await this.entertext(selectors.searchInput, 'SigTool')
+    await this.page.waitForTimeout(2000) // wait for search result
+
+    const wrapper = this.page.getByTestId(selectors.sigtool.dappWrapper)
+    const button = this.page.getByTestId(selectors.sigtool.sigToolIconButton)
+    const disconnect = this.page.locator(selectors.sigtool.disconnectDapp)
+
+    // define element box
+    const box = await wrapper.boundingBox()
+
+    // move mouse to the center of the elem
+    await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    await this.page.waitForTimeout(1000)
+    // move mouse outside of the element
+    await this.page.mouse.move(box.x + box.width + 50, box.y + box.height + 50)
+    await this.page.waitForTimeout(1000)
+    // return mouse to the center of the element
+    await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    await button.waitFor({ state: 'visible' })
+    await button.waitFor({ state: 'attached' })
+    await button.click()
+
+    // disconnect
+    await disconnect.click()
+  }
+
+  async searchByNetworkOnTab(searchInput: string, tabName: Tabs) {
+    // map selectors by tab
+    const networkDropdownByTab: Record<Tabs, string> = {
+      tokens: selectors.dashboard.tokensNetworksDropdownButton,
+      collectibles: selectors.dashboard.nftNetworkDropdownButton,
+      defi: selectors.dashboard.defiNetworkDropdownButton,
+      activity: selectors.dashboard.activityNetworkDropdownButton
+    }
+
+    // open networks pagek
+    await this.click(networkDropdownByTab[tabName])
+
+    // enter search phrase
+    await this.entertext(selectors.searchInput, searchInput)
+
+    // click on searched network
+    const networkSelector = this.page.locator(`//div[text()="${searchInput}"]`)
+    await networkSelector.click()
+  }
+
+  async searchByMagnifyingGlassIcon(searchInput: string) {
+    await this.click(selectors.dashboard.magnifyingGlassIcon)
+    await this.entertext(selectors.dashboard.searchInputField, searchInput)
+  }
+
+  async checkOpenTicketPage() {
+    // assert text
+    await this.compareText(
+      selectors.dashboard.suggestProtocolText,
+      'To suggest a protocol integration, '
+    )
+    await this.compareText(selectors.dashboard.openTicketLink, 'open a ticket.')
+
+    // check redirection
+    const selector = this.page.getByTestId(selectors.dashboard.openTicketLink)
+    const newTab = await this.handleNewPage(selector)
+
+    expect(newTab.url()).toContain('https://help.ambire.com/en')
+  }
+
+  async checkRewardsPageRedirection(selector: string) {
+    const rewardsButton = this.page.getByTestId(selector)
+    await rewardsButton.click()
+
+    const rewardsLink = this.page.locator(selectors.dashboard.rewardsLink)
+
+    const newTab = await this.handleNewPage(rewardsLink)
+    expect(newTab.url()).toContain('https://rewards.ambire.com/')
+
+    await newTab.close()
   }
 }

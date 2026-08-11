@@ -1,24 +1,32 @@
 import React, { FC, useCallback, useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Animated, FlatListProps, View } from 'react-native'
+import { Animated, FlatListProps, TouchableOpacity, View } from 'react-native'
 
+import { BannerType } from '@ambire-common/interfaces/banner'
+import {
+  defiPositionsOnDisabledNetworksBannerId,
+  getCurrentAccountBanners
+} from '@ambire-common/libs/banners/banners'
+import PrivacyIcon from '@common/assets/svg/PrivacyIcon'
 import Text from '@common/components/Text'
+import useController from '@common/hooks/useController'
 import useNavigation from '@common/hooks/useNavigation'
 import usePrevious from '@common/hooks/usePrevious'
 import useTheme from '@common/hooks/useTheme'
 import DashboardBanners from '@common/modules/dashboard/components/DashboardBanners'
+import DashboardBanner from '@common/modules/dashboard/components/DashboardBanners/DashboardBanner'
 import DashboardPageScrollContainer from '@common/modules/dashboard/components/DashboardPageScrollContainer'
 import TabsAndSearch from '@common/modules/dashboard/components/TabsAndSearch'
 import { TabType } from '@common/modules/dashboard/components/TabsAndSearch/Tabs/Tab/Tab'
-import { THEME_TYPES } from '@common/styles/themeConfig'
-import { getDoesNetworkMatch } from '@common/utils/search'
-import { openInTab } from '@web/extension-services/background/webapi/tab'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useNetworksControllerState from '@web/hooks/useNetworksControllerState'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
-import { getUiType } from '@web/utils/uiType'
+import { ROUTES } from '@common/modules/router/constants/common'
+import spacings from '@common/styles/spacings'
+import flexbox from '@common/styles/utils/flexbox'
+import { openInTab } from '@common/utils/links'
+import { searchWithNetworkName } from '@common/utils/search'
+import { getUiType } from '@common/utils/uiType'
 
+import FloatingBottomBar from '../FloatingBottomBar'
 import DefiPositionsSkeleton from './DefiPositionsSkeleton'
 import DeFiPosition from './DeFiProviderPosition'
 import styles from './styles'
@@ -31,6 +39,9 @@ interface Props {
   onScroll: FlatListProps<any>['onScroll']
   dashboardNetworkFilterName: string | null
   animatedOverviewHeight: Animated.Value
+  isSearchHidden: boolean
+  refreshing?: boolean
+  onRefresh?: () => void
 }
 
 const { isPopup } = getUiType()
@@ -42,18 +53,34 @@ const DeFiPositions: FC<Props> = ({
   sessionId,
   onScroll,
   dashboardNetworkFilterName,
-  animatedOverviewHeight
+  animatedOverviewHeight,
+  isSearchHidden,
+  refreshing,
+  onRefresh
 }) => {
-  const { control, watch, setValue } = useForm({ mode: 'all', defaultValues: { search: '' } })
   const { t } = useTranslation()
-  const { theme, themeType } = useTheme()
+  const { flags } = useController('FeatureFlagsController').state
+  const { control, watch, setValue } = useForm({ mode: 'all', defaultValues: { search: '' } })
+  const { theme } = useTheme()
   const searchValue = watch('search')
-  const { networks } = useNetworksControllerState()
-  const { defiPositions, portfolio, dashboardNetworkFilter } = useSelectedAccountControllerState()
-  const { setSearchParams } = useNavigation()
+  const {
+    state: { networks }
+  } = useController('NetworksController')
+  const { dispatch: portfolioDispatch } = useController('PortfolioController')
+  const {
+    state: { account, portfolio, dashboardNetworkFilter, banners }
+  } = useController('SelectedAccountController')
+  const { setSearchParams, navigate } = useNavigation()
 
-  const { dispatch } = useBackgroundService()
   const prevInitTab: any = usePrevious(initTab)
+
+  const currentAccountBanners = useMemo(
+    () =>
+      getCurrentAccountBanners(banners, account?.addr).filter(
+        ({ id }) => id === defiPositionsOnDisabledNetworksBannerId
+      ),
+    [banners, account]
+  )
 
   useEffect(() => {
     setValue('search', '')
@@ -61,49 +88,67 @@ const DeFiPositions: FC<Props> = ({
 
   useEffect(() => {
     if (!prevInitTab?.defi && initTab?.defi) {
-      dispatch({ type: 'DEFI_CONTOLLER_ADD_SESSION', params: { sessionId } })
-      setSearchParams((prev) => {
+      portfolioDispatch({
+        type: 'method',
+        params: {
+          method: 'addDefiSession',
+          args: [sessionId]
+        }
+      })
+      setSearchParams((prev: any) => {
         prev.set('sessionId', sessionId)
         return prev
       })
     }
 
     if (prevInitTab?.defi && !initTab?.defi) {
-      dispatch({ type: 'DEFI_CONTOLLER_REMOVE_SESSION', params: { sessionId } })
+      portfolioDispatch({
+        type: 'method',
+        params: {
+          method: 'removeDefiSession',
+          args: [sessionId]
+        }
+      })
     }
-  }, [dispatch, setSearchParams, prevInitTab?.defi, initTab?.defi, sessionId])
+  }, [portfolioDispatch, setSearchParams, prevInitTab?.defi, initTab?.defi, sessionId])
 
   useEffect(() => {
     return () => {
-      dispatch({ type: 'DEFI_CONTOLLER_REMOVE_SESSION', params: { sessionId } })
+      portfolioDispatch({
+        type: 'method',
+        params: {
+          method: 'removeDefiSession',
+          args: [sessionId]
+        }
+      })
     }
-  }, [sessionId, dispatch])
+  }, [sessionId, portfolioDispatch])
 
-  const filteredPositions = useMemo(
-    () =>
-      defiPositions.filter(({ chainId, providerName }) => {
+  const filteredPositions = useMemo(() => {
+    const defiToSearch = portfolio.defiPositions
+      .filter(({ chainId, positions }) => {
         let isMatchingNetwork = true
-        let isMatchingSearch = true
 
         if (dashboardNetworkFilter) {
           isMatchingNetwork = chainId === BigInt(dashboardNetworkFilter)
         }
 
-        if (searchValue) {
-          const lowercaseSearch = searchValue.toLowerCase()
-          isMatchingSearch =
-            providerName.toLowerCase().includes(lowercaseSearch) ||
-            getDoesNetworkMatch({
-              networks,
-              itemChainId: chainId,
-              lowercaseSearch
-            })
-        }
+        return isMatchingNetwork && positions.length
+      })
+      .map((position) => ({
+        ...position,
+        assetNames: position.positions
+          .map(({ assets }) => assets.map(({ symbol }) => symbol).join(' '))
+          .join(' ')
+      }))
 
-        return isMatchingNetwork && isMatchingSearch
-      }),
-    [defiPositions, dashboardNetworkFilter, searchValue, networks]
-  )
+    return searchWithNetworkName({
+      networks,
+      items: defiToSearch,
+      search: searchValue,
+      keys: ['providerName', 'assetNames']
+    })
+  }, [portfolio.defiPositions, dashboardNetworkFilter, searchValue, networks])
 
   const renderItem = useCallback(
     ({ item }: any) => {
@@ -113,9 +158,22 @@ const DeFiPositions: FC<Props> = ({
             <TabsAndSearch
               openTab={openTab}
               setOpenTab={setOpenTab}
-              searchControl={control}
+              currentTab="defi"
               sessionId={sessionId}
             />
+          </View>
+        )
+      }
+
+      if (item === 'banners') {
+        return (
+          <View style={spacings.mbMi}>
+            {currentAccountBanners.map((banner) => (
+              <DashboardBanner
+                key={banner.id}
+                banner={{ ...banner, type: banner.type as BannerType }}
+              />
+            ))}
           </View>
         )
       }
@@ -123,7 +181,12 @@ const DeFiPositions: FC<Props> = ({
       if (item === 'empty') {
         return (
           <>
-            <Text fontSize={16} weight="medium" style={styles.noPositions}>
+            <Text
+              testID="no-protocols-text"
+              fontSize={16}
+              weight="medium"
+              style={styles.noPositions}
+            >
               {!searchValue && !dashboardNetworkFilterName && t('No known protocols detected.')}
               {!searchValue &&
                 dashboardNetworkFilterName &&
@@ -135,21 +198,45 @@ const DeFiPositions: FC<Props> = ({
                   }.`
                 )}
             </Text>
-            <Text fontSize={14} style={styles.noPositions}>
+            <Text testID="suggest-protocol-text" fontSize={14} style={styles.noPositions}>
               {t('To suggest a protocol integration, ')}
               <Text
+                testID="open-ticket-link"
                 fontSize={14}
                 appearance="primary"
-                color={themeType === THEME_TYPES.DARK ? theme.linkText : theme.primary}
+                color={theme.linkText}
                 onPress={() => {
                   // eslint-disable-next-line @typescript-eslint/no-floating-promises
-                  openInTab({ url: 'https://help.ambire.com/hc/en-us' })
+                  openInTab({ url: 'https://help.ambire.com/en' })
                 }}
               >
                 {t('open a ticket.')}
               </Text>
             </Text>
           </>
+        )
+      }
+
+      if (item === 'disabled') {
+        return (
+          <View style={[flexbox.alignCenter, spacings.mt]}>
+            <View style={[flexbox.directionRow, flexbox.alignSelfCenter]}>
+              <Text fontSize={16} weight="medium" style={[spacings.mrTy]}>
+                {t('Defi positions disabled')}
+              </Text>
+              <PrivacyIcon width={20} height={20} />
+            </View>
+            <TouchableOpacity onPress={() => navigate(ROUTES.optOuts)}>
+              <Text
+                onPress={() => navigate(ROUTES.optOuts)}
+                fontSize={16}
+                color={theme.infoText}
+                style={{ textDecorationLine: 'underline' }}
+              >
+                {t('You can enable them from settings')}
+              </Text>
+            </TouchableOpacity>
+          </View>
         )
       }
 
@@ -162,15 +249,18 @@ const DeFiPositions: FC<Props> = ({
       return <DeFiPosition key={item.providerName + item.network} {...item} />
     },
     [
-      control,
       initTab?.defi,
+      theme.primaryBackground,
+      theme.linkText,
+      theme.infoText,
       openTab,
-      searchValue,
       setOpenTab,
-      t,
-      theme,
       sessionId,
-      dashboardNetworkFilterName
+      currentAccountBanners,
+      searchValue,
+      dashboardNetworkFilterName,
+      t,
+      navigate
     ]
   )
 
@@ -180,25 +270,57 @@ const DeFiPositions: FC<Props> = ({
     return `${positionOrElement.providerName}-${positionOrElement.chainId}`
   }, [])
 
+  const dataItems = useMemo(() => {
+    const items = ['header']
+
+    if (currentAccountBanners.length > 0) {
+      items.push('banners')
+    }
+    if (flags.tokenAndDefiAutoDiscovery) {
+      items.push(!portfolio.isAllReady ? 'skeleton' : 'keep-this-to-avoid-key-warning')
+      if (initTab?.defi && portfolio.isAllReady) {
+        filteredPositions.forEach((p: any) => items.push(p))
+      }
+      items.push(portfolio.isAllReady && !filteredPositions.length ? 'empty' : '')
+    } else {
+      items.push('disabled')
+    }
+
+    return items
+  }, [
+    currentAccountBanners.length,
+    filteredPositions,
+    flags.tokenAndDefiAutoDiscovery,
+    initTab?.defi,
+    portfolio.isAllReady
+  ])
+
   return (
-    <DashboardPageScrollContainer
-      tab="defi"
-      openTab={openTab}
-      ListHeaderComponent={<DashboardBanners />}
-      data={[
-        'header',
-        !portfolio.isAllReady ? 'skeleton' : 'keep-this-to-avoid-key-warning',
-        ...(initTab?.defi && portfolio.isAllReady ? filteredPositions : []),
-        portfolio.isAllReady && !filteredPositions.length ? 'empty' : ''
-      ]}
-      renderItem={renderItem}
-      keyExtractor={keyExtractor}
-      onEndReachedThreshold={isPopup ? 5 : 2.5}
-      initialNumToRender={isPopup ? 10 : 20}
-      windowSize={9} // Larger values can cause performance issues.
-      onScroll={onScroll}
-      animatedOverviewHeight={animatedOverviewHeight}
-    />
+    <>
+      <DashboardPageScrollContainer
+        tab="defi"
+        openTab={openTab}
+        ListHeaderComponent={<DashboardBanners />}
+        data={dataItems}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        onEndReachedThreshold={isPopup ? 5 : 2.5}
+        initialNumToRender={isPopup ? 10 : 20}
+        windowSize={9} // Larger values can cause performance issues.
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        animatedOverviewHeight={animatedOverviewHeight}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+      />
+      {openTab === 'defi' && (
+        <FloatingBottomBar
+          control={control}
+          isHidden={isSearchHidden}
+          searchPlaceholder={t('Search DeFi')}
+        />
+      )}
+    </>
   )
 }
 

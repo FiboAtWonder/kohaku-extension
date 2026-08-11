@@ -1,4 +1,4 @@
-import { StyleSheet, ViewStyle } from 'react-native'
+import { StyleSheet, TextStyle, ViewStyle } from 'react-native'
 
 import spacings, { SPACING_MI } from '@common/styles/spacings'
 import { THEME_TYPES, ThemeProps, ThemeType } from '@common/styles/themeConfig'
@@ -8,15 +8,15 @@ import text from '@common/styles/utils/text'
 
 interface Style {
   container: ViewStyle
-  element: ViewStyle
-  activeElement: ViewStyle
+  element: TextStyle
+  activeElement: TextStyle
 }
 
 const getStyles = (theme: ThemeProps, themeType: ThemeType) =>
   StyleSheet.create<Style>({
     container: {
-      ...spacings.mrSm,
       ...flexbox.directionRow,
+      alignSelf: 'stretch',
       paddingHorizontal: SPACING_MI / 2,
       paddingVertical: SPACING_MI / 2,
       borderRadius: BORDER_RADIUS_PRIMARY,
@@ -27,9 +27,9 @@ const getStyles = (theme: ThemeProps, themeType: ThemeType) =>
       ...spacings.pvMi,
       ...spacings.phTy,
       ...text.center,
+      flex: 1,
       fontSize: 14,
       color: theme.secondaryText,
-      width: 72,
       borderRadius: BORDER_RADIUS_PRIMARY
     },
     activeElement: {

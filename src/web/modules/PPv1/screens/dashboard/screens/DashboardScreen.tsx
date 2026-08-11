@@ -1,19 +1,16 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react'
+import React, { FC, useCallback, useEffect, useMemo, useRef } from 'react'
 import { ScrollView, View, Pressable } from 'react-native'
-import { useModalize } from 'react-native-modalize'
 
 import formatDecimals from '@ambire-common/utils/formatDecimals/formatDecimals'
 import Text from '@common/components/Text/Text'
+import { DashboardMode } from '@common/controllers/wallet-state'
 import useNavigation from '@common/hooks/useNavigation'
 import useTheme from '@common/hooks/useTheme'
 import { WEB_ROUTES } from '@common/modules/router/constants/common'
 import spacings from '@common/styles/spacings'
-import ReceiveModal from '@web/components/ReceiveModal'
-import useAccountsControllerState from '@web/hooks/useAccountsControllerState'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
 import { usePrivacyPoolsDepositForm } from '@web/hooks/useDepositForm'
 import useRailgunForm from '@web/modules/railgun/hooks/useRailgunForm'
-import { getUiType } from '@web/utils/uiType'
+import { getUiType } from '@common/utils/uiType'
 
 import RefreshIcon from '@common/modules/dashboard/components/DashboardOverview/RefreshIcon'
 import flexbox from '@common/styles/utils/flexbox'
@@ -29,22 +26,34 @@ import { ActiveView } from './types'
 import NewSelectedPublicAccountDetail from './SelectedPublicAccountDetail'
 import NewPublicAccounts from './PublicAccounts'
 import NewDisplayBalance from './DisplayBalance'
+import useController from '@common/hooks/useController'
 
 const { isPopup } = getUiType()
 
 export const OVERVIEW_CONTENT_MAX_HEIGHT = 120
 
-const NewDashboardScreen = () => {
+type Props = {
+  // (kohaku) the merged dashboard owns the mode; the toggle lives in the header
+  dashboardMode: DashboardMode
+  onDashboardModeChange: (mode: DashboardMode) => void
+}
+
+const PrivateDashboardView: FC<Props> = ({ dashboardMode, onDashboardModeChange }) => {
   const { addToast } = useToast()
   const { theme } = useTheme()
-  const { navigate, setSearchParams, searchParams } = useNavigation()
-  const { ref: receiveModalRef, open: openReceiveModal, close: closeReceiveModal } = useModalize()
+  const { navigate } = useNavigation()
+  // The receive modal became a standalone route upstream (kohaku)
+  const openReceiveModal = useCallback(() => {
+    navigate(WEB_ROUTES.receive)
+  }, [navigate])
 
-  const { account, portfolio } = useSelectedAccountControllerState()
-  const { accounts } = useAccountsControllerState()
+  const { account, portfolio } = useController('SelectedAccountController').state
+  const { accounts } = useController('AccountsController').state
   const scrollViewRef = useRef<ScrollView>(null)
   const cachedPrivateBalanceRef = useRef<number>(0)
-  const activeView = (searchParams.get('view') ?? 'private') as ActiveView
+  // (kohaku) the in-screen view switch and the header toggle are now the same
+  // control - the public mode renders the public dashboard instead of this screen
+  const activeView: ActiveView = dashboardMode
 
   const privacyPoolsForm = usePrivacyPoolsDepositForm()
   const railgunForm = useRailgunForm()
@@ -69,17 +78,17 @@ const NewDashboardScreen = () => {
   const privateBalance = cachedPrivateBalanceRef.current
   const totalHoldings = totalPublicBalance + privateBalance
 
-  const [displayedInteger, displayedDecimal] = useMemo(
+  const [displayedInteger = '', displayedDecimal = ''] = useMemo(
     () => formatDecimals(totalHoldings, 'value').split('.'),
     [totalHoldings]
   )
 
-  const [privateInteger, privateDecimal] = useMemo(
+  const [privateInteger = '', privateDecimal = ''] = useMemo(
     () => formatDecimals(privateBalance, 'value').split('.'),
     [privateBalance]
   )
 
-  const [publicInteger, publicDecimal] = useMemo(
+  const [publicInteger = '', publicDecimal = ''] = useMemo(
     () => formatDecimals(totalPublicBalance, 'value').split('.'),
     [totalPublicBalance]
   )
@@ -87,9 +96,9 @@ const NewDashboardScreen = () => {
   const handleAddMoney = useCallback(() => navigate(WEB_ROUTES.pp1Deposit), [navigate])
   const changeView = useCallback(
     (view: ActiveView) => {
-      setSearchParams({ view })
+      onDashboardModeChange(view)
     },
-    [setSearchParams]
+    [onDashboardModeChange]
   )
 
   const handleRefreshAll = useCallback(() => {
@@ -111,7 +120,6 @@ const NewDashboardScreen = () => {
     // safe not to check sync state because the base function (sync) checks this
     if (privacyPoolsForm.isReady && !privacyPoolsForm.isLoading) {
       privacyPoolsForm.loadPrivateAccount().catch((error) => {
-        // eslint-disable-next-line no-console
         console.error('Failed to load private account:', error)
         addToast('Failed to load your privacy account. Please try again.', { type: 'error' })
       })
@@ -126,7 +134,6 @@ const NewDashboardScreen = () => {
 
   return (
     <>
-      <ReceiveModal modalRef={receiveModalRef} handleClose={closeReceiveModal} />
       <PendingActionWindowModal />
       <View
         style={{
@@ -163,7 +170,10 @@ const NewDashboardScreen = () => {
               }
             ]}
           >
-            <NewDashboardHeader activeView={activeView} />
+            <NewDashboardHeader
+              activeView={activeView}
+              onDashboardModeChange={onDashboardModeChange}
+            />
 
             <View
               style={{
@@ -196,7 +206,7 @@ const NewDashboardScreen = () => {
                   <Text
                     fontSize={16}
                     weight="number_regular"
-                    style={{ letterSpacing: 1, color: theme.muted }}
+                    style={{ letterSpacing: 1, color: theme.tertiaryText }}
                   >
                     Total funds
                   </Text>
@@ -257,4 +267,4 @@ const NewDashboardScreen = () => {
   )
 }
 
-export default React.memo(NewDashboardScreen)
+export default React.memo(PrivateDashboardView)

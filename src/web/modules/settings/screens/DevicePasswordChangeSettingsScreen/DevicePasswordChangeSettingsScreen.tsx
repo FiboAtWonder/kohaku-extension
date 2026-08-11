@@ -4,35 +4,33 @@ import { View } from 'react-native'
 import { useModalize } from 'react-native-modalize'
 
 import { isValidPassword } from '@ambire-common/services/validations'
+import KeyStoreIcon from '@common/assets/svg/KeyStoreIcon'
 import BottomSheet from '@common/components/BottomSheet'
 import Button from '@common/components/Button'
 import Input from '@common/components/Input'
 import InputPassword from '@common/components/InputPassword'
+import { PanelTitle } from '@common/components/Panel/Panel'
 import Text from '@common/components/Text'
 import { useTranslation } from '@common/config/localization'
+import useController from '@common/hooks/useController'
 import useExtraEntropy from '@common/hooks/useExtraEntropy'
 import useNavigation from '@common/hooks/useNavigation'
 import useTheme from '@common/hooks/useTheme'
 import useToast from '@common/hooks/useToast'
 import { WEB_ROUTES } from '@common/modules/router/constants/common'
 import spacings, { SPACING_XL } from '@common/styles/spacings'
-import { THEME_TYPES } from '@common/styles/themeConfig'
 import flexbox from '@common/styles/utils/flexbox'
 import text from '@common/styles/utils/text'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useKeystoreControllerState from '@web/hooks/useKeystoreControllerState'
-import KeyStoreLogo from '@web/modules/keystore/components/KeyStoreLogo'
 import { SettingsRoutesContext } from '@web/modules/settings/contexts/SettingsRoutesContext'
 
 const DevicePasswordChangeSettingsScreen = () => {
   const { t } = useTranslation()
   const { addToast } = useToast()
-  const { dispatch } = useBackgroundService()
   const { navigate } = useNavigation()
-  const state = useKeystoreControllerState()
+  const { state, dispatch: keystoreDispatch } = useController('KeystoreController')
   const { ref: modalRef, open: openModal, close: closeModal } = useModalize()
   const { setCurrentSettingsPage } = useContext(SettingsRoutesContext)
-  const { themeType } = useTheme()
+  const { theme } = useTheme()
   const {
     control,
     handleSubmit,
@@ -87,12 +85,11 @@ const DevicePasswordChangeSettingsScreen = () => {
 
   const handleChangeKeystorePassword = handleSubmit(
     ({ password, newPassword: newPasswordFieldValue }) =>
-      dispatch({
-        type: 'KEYSTORE_CONTROLLER_CHANGE_PASSWORD',
+      keystoreDispatch({
+        type: 'method',
         params: {
-          secret: password,
-          newSecret: newPasswordFieldValue,
-          extraEntropy: getExtraEntropy()
+          method: 'changeKeystorePassword',
+          args: [newPasswordFieldValue, password, getExtraEntropy()]
         }
       })
   )
@@ -114,7 +111,13 @@ const DevicePasswordChangeSettingsScreen = () => {
               onChangeText={(val: string) => {
                 onChange(val)
                 if (state.errorMessage) {
-                  dispatch({ type: 'KEYSTORE_CONTROLLER_RESET_ERROR_STATE' })
+                  keystoreDispatch({
+                    type: 'method',
+                    params: {
+                      method: 'resetErrorState',
+                      args: []
+                    }
+                  })
                 }
               }}
               isValid={isValidPassword(value)}
@@ -124,7 +127,8 @@ const DevicePasswordChangeSettingsScreen = () => {
                 (errors.password.message || t('Please fill in at least 8 characters for password.'))
               }
               autoFocus
-              containerStyle={[spacings.mbTy]}
+              containerStyle={spacings.mbTy}
+              inputWrapperStyle={{ backgroundColor: theme.tertiaryBackground }}
               onSubmitEditing={handleChangeKeystorePassword}
             />
           )}
@@ -145,7 +149,8 @@ const DevicePasswordChangeSettingsScreen = () => {
                 errors.newPassword &&
                 (t('Please fill in at least 8 characters for password.') as string)
               }
-              containerStyle={[spacings.mbTy]}
+              containerStyle={spacings.mbTy}
+              inputWrapperStyle={{ backgroundColor: theme.tertiaryBackground }}
               onSubmitEditing={handleChangeKeystorePassword}
             />
           )}
@@ -168,7 +173,8 @@ const DevicePasswordChangeSettingsScreen = () => {
               secureTextEntry
               error={errors.confirmNewPassword && (t("The new passwords don't match.") as string)}
               autoCorrect={false}
-              containerStyle={[spacings.mbXl]}
+              containerStyle={spacings.mbXl}
+              inputWrapperStyle={{ backgroundColor: theme.tertiaryBackground }}
               onSubmitEditing={handleChangeKeystorePassword}
             />
           )}
@@ -188,19 +194,10 @@ const DevicePasswordChangeSettingsScreen = () => {
           onPress={handleChangeKeystorePassword}
         />
       </View>
-      <BottomSheet
-        id="device-password-success-modal"
-        backgroundColor={
-          themeType === THEME_TYPES.DARK ? 'secondaryBackground' : 'primaryBackground'
-        }
-        sheetRef={modalRef}
-        autoWidth
-      >
-        <Text weight="medium" fontSize={20} style={[text.center, spacings.mbXl]}>
-          {t('Extension password')}
-        </Text>
-        <KeyStoreLogo style={[flexbox.alignSelfCenter, spacings.mbXl]} />
-        <Text fontSize={16} style={[spacings.mbLg, text.center]}>
+      <BottomSheet id="device-password-success-modal" sheetRef={modalRef}>
+        <PanelTitle title={t('Extension password')} style={spacings.mbXl} />
+        <KeyStoreIcon style={[flexbox.alignSelfCenter, spacings.mbXl]} />
+        <Text fontSize={16} style={[spacings.mbLg, text.center]} appearance="secondaryText">
           {t('Your extension password was successfully changed!')}
         </Text>
         <Button

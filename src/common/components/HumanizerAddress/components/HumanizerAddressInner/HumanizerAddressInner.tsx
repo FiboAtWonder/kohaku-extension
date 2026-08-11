@@ -1,41 +1,40 @@
 import { ZeroAddress } from 'ethers'
-import React, { FC, useEffect, useMemo, useState } from 'react'
+import React, { FC, useMemo } from 'react'
 
+import { BlacklistedStatus } from '@ambire-common/interfaces/phishing'
 import { HumanizerMetaAddress } from '@ambire-common/libs/humanizer/interfaces'
 import { getAddressCaught } from '@ambire-common/utils/getAddressCaught'
 import { Props as TextProps } from '@common/components/Text'
-import SkeletonLoader from '@common/components/SkeletonLoader'
+import useController from '@common/hooks/useController'
 import { isExtension } from '@web/constants/browserapi'
-import useAccountsControllerState from '@web/hooks/useAccountsControllerState'
-import useAddressBookControllerState from '@web/hooks/useAddressBookControllerState'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
 
+import { AddressName, BenzinAddressName } from '../AddressName'
 import BaseAddress from '../BaseAddress'
-import { BenzinDomainsAddress, DomainsAddress } from '../DomainsAddress'
 
 interface Props extends TextProps {
   address: string
   // example of highestPriorityAlias: a name coming from the humanizer's metadata
   highestPriorityAlias?: string
   humanizerInfo?: HumanizerMetaAddress
-  hideLinks?: boolean
+  actionsMode?: 'tooltip' | 'inline'
   chainId: bigint
+  verification?: BlacklistedStatus
 }
 
 const HumanizerAddressInner: FC<Props> = ({
   humanizerInfo,
   address,
   highestPriorityAlias,
-  hideLinks = false,
+  actionsMode = 'tooltip',
   chainId,
   ...rest
 }) => {
-  const { portfolio } = useSelectedAccountControllerState()
-  const accountsState = useAccountsControllerState()
-  const { contacts = [] } = useAddressBookControllerState()
+  const {
+    state: { portfolio }
+  } = useController('SelectedAccountController')
+  const accountsState = useController('AccountsController').state
+  const { contacts = [] } = useController('AddressBookController').state
   const checksummedAddress = getAddressCaught(address)
-  const [fetchedAddressLabel, setFetchedAddressLabel] = useState<null | string>(null)
-  const [isFetching, setIsFetching] = useState(false)
 
   const localAddressLabel = useMemo(() => {
     const zeroAddressLabel = address === ZeroAddress && 'Zero Address'
@@ -65,38 +64,60 @@ const HumanizerAddressInner: FC<Props> = ({
     accountsState?.accounts
   ])
 
-  useEffect(() => {
-    if (!localAddressLabel && chainId) {
-      setIsFetching(true)
-      fetch(`https://cena.ambire.com/api/v3/contracts/${address}/${chainId}`)
-        .then((r) => r.json())
-        .then((r) => {
-          setFetchedAddressLabel(r.name)
-          setIsFetching(false)
-        })
-        .catch((error) => {
-          console.error(error)
-          setIsFetching(false)
-        })
-    }
-  }, [address, chainId, localAddressLabel])
+  if (actionsMode === 'inline') {
+    if (!isExtension)
+      return (
+        <BenzinAddressName
+          address={checksummedAddress}
+          chainId={chainId}
+          actionsMode={actionsMode}
+          fallbackLabel={localAddressLabel || undefined}
+          {...rest}
+        />
+      )
 
-  // Show skeleton while fetching
-  if (isFetching && !localAddressLabel && !fetchedAddressLabel) {
-    return <SkeletonLoader width={120} height={16} appearance="tertiaryBackground" />
+    return (
+      <AddressName
+        address={checksummedAddress}
+        chainId={chainId}
+        actionsMode={actionsMode}
+        fallbackLabel={localAddressLabel || undefined}
+        {...rest}
+      />
+    )
   }
 
-  // highestPriorityAlias and account labels are of higher priority than domains
-  if (localAddressLabel || fetchedAddressLabel)
+  // highestPriorityAlias and account labels are of higher priority than domains outside inline mode.
+  if (localAddressLabel)
     return (
-      <BaseAddress address={checksummedAddress} hideLinks={hideLinks} chainId={chainId} {...rest}>
-        {localAddressLabel || fetchedAddressLabel}
+      <BaseAddress
+        address={checksummedAddress}
+        actionsMode={actionsMode}
+        chainId={chainId}
+        {...rest}
+      >
+        {localAddressLabel}
       </BaseAddress>
     )
 
-  if (!isExtension) return <BenzinDomainsAddress address={checksummedAddress} {...rest} />
+  if (!isExtension)
+    return (
+      <BenzinAddressName
+        address={checksummedAddress}
+        chainId={chainId}
+        actionsMode={actionsMode}
+        {...rest}
+      />
+    )
 
-  return <DomainsAddress address={checksummedAddress} {...rest} />
+  return (
+    <AddressName
+      address={checksummedAddress}
+      chainId={chainId}
+      actionsMode={actionsMode}
+      {...rest}
+    />
+  )
 }
 
 export default React.memo(HumanizerAddressInner)

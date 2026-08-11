@@ -1,27 +1,18 @@
-import { isAddress } from 'ethers'
-
 import { blockyColors } from '@common/components/Avatar/Blockies/utils'
+import { generateSeedEthereum, getPolyconColors } from '@common/components/Avatar/Polycons/utils'
+import { AvatarType } from '@common/controllers/wallet-state'
 import Jazzicon from '@raugfer/jazzicon'
-
-const getAvatarType = (pfp: string): string => {
-  if (isAddress(pfp)) {
-    return 'jazz'
-  }
-  return ''
-}
 
 const FALLBACK_COLORS: AvatarColors = ['#6000FF', '#A36AF8', '#35008C']
 
 export type AvatarColors = [string, string, string]
 
-const getAvatarColors = (pfp: string): AvatarColors => {
-  const avatarType = getAvatarType(pfp)
-
+const getAvatarColors = (avatarType: AvatarType, address: string): AvatarColors => {
   if (avatarType === 'blockies') {
-    return blockyColors(pfp)
+    return blockyColors(address)
   }
-  if (avatarType === 'jazz') {
-    const jazzIcon = Jazzicon(pfp)
+  if (avatarType === 'jazzicons') {
+    const jazzIcon = Jazzicon(address)
     const fillAttributeRegex = /fill="([^"]*)"/g
 
     const fillAttributes = jazzIcon.match(fillAttributeRegex)
@@ -35,10 +26,17 @@ const getAvatarColors = (pfp: string): AvatarColors => {
       return FALLBACK_COLORS
     }
 
-    return [colors[2], colors[1], colors[0]]
+    return [colors[1]!, colors[2]!, colors[3]!]
+  }
+
+  if (avatarType === 'polycons') {
+    const seed = generateSeedEthereum(address)
+    const polyconColors = getPolyconColors(seed)
+
+    return [polyconColors.fgColor, polyconColors.fgColor, polyconColors.bgColor]
   }
 
   return FALLBACK_COLORS
 }
 
-export { getAvatarType, getAvatarColors }
+export { getAvatarColors }

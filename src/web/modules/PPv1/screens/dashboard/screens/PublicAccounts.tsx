@@ -3,19 +3,17 @@ import Tooltip from '@common/components/Tooltip'
 import spacings, { SPACING_MD } from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
 import { FlatList, Pressable, TextInput, View } from 'react-native'
-import useAccountsControllerState from '@web/hooks/useAccountsControllerState'
-import useBackgroundService from '@web/hooks/useBackgroundService'
 import { Account } from '@ambire-common/interfaces/account'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import CopyText from '@common/components/CopyText'
 import { useModalize } from 'react-native-modalize'
 import BottomSheet from '@common/components/BottomSheet'
 import Avatar from '@common/components/Avatar'
-import { isSmartAccount } from '@ambire-common/libs/account/account'
 import useTheme from '@common/hooks/useTheme'
 import PinIcon from '@common/assets/svg/PinIcon'
 import useToast from '@common/hooks/useToast'
 import { ExtendedAccountPreferences } from '@web/interfaces/account-preferences'
+import useController from '@common/hooks/useController'
 
 const MAX_LIST_ACCOUNTS = 8
 
@@ -86,7 +84,12 @@ function PublicAccountsListModal({
             pathFill={isPinned ? '#097db2' : undefined}
           />
         </Pressable>
-        <Avatar pfp={item.preferences.pfp} size={30} isSmart={isSmartAccount(item)} />
+        <Avatar
+          address={item.addr}
+          pfp={item.preferences.pfp}
+          size={30}
+          smartAccountType={(item.creation && 'Ambire') || (item.safeCreation && 'Safe')}
+        />
 
         <View style={[flexbox.flex1]}>
           <View style={[flexbox.directionRow, flexbox.alignCenter, { gap: 8 }]}>
@@ -135,14 +138,14 @@ function PublicAccountsListModal({
         <Text
           fontSize={15}
           weight="semiBold"
-          color={isLoadingPublicBalances ? '#7F7F7F' : theme.textPrimary}
+          color={isLoadingPublicBalances ? '#7F7F7F' : theme.primaryText}
           style={[spacings.mrTy]}
         >
           {isLoadingPublicBalances
             ? 'Loading...'
             : balance != null
-            ? `$${balance.toFixed(2)}`
-            : '-'}
+              ? `$${balance.toFixed(2)}`
+              : '-'}
         </Text>
       </Pressable>
     )
@@ -199,8 +202,11 @@ function PublicAccountsListModal({
 const NewPublicAccounts = ({ selectedAccount, ...modalProps }: PublicAccountsProps) => {
   const { addToast } = useToast()
   const modal = useModalize()
-  const { dispatch } = useBackgroundService()
-  const { accounts } = useAccountsControllerState()
+  const { dispatch: mainDispatch } = useController('MainController')
+  const {
+    state: { accounts },
+    dispatch: accountsDispatch
+  } = useController('AccountsController')
 
   const sortedAccounts = sortWithPinned(accounts)
   const listedAccounts = sortedAccounts.slice(0, MAX_LIST_ACCOUNTS)
@@ -209,35 +215,55 @@ const NewPublicAccounts = ({ selectedAccount, ...modalProps }: PublicAccountsPro
   const selectAccount = (addr: string) => {
     if (selectedAccount === addr) return
 
-    dispatch({
-      type: 'MAIN_CONTROLLER_SELECT_ACCOUNT',
-      params: { accountAddr: addr }
+    mainDispatch({
+      type: 'method',
+      params: { method: 'selectAccount', args: [addr] }
     })
 
     modal.close()
   }
 
-  const togglePin = (addr: string, currentlyPinned: boolean) => {
-    if (!currentlyPinned) {
-      const totalPinned = accounts.filter(
-        (a) => !!(a.preferences as ExtendedAccountPreferences).pinnedAt
-      ).length
+  // Pinning is stored as a `pinnedAt` timestamp on the account preferences (kohaku)
+  const togglePin = useCallback(
+    (addr: string, currentlyPinned: boolean) => {
+      const account = accounts.find((a) => a.addr === addr)
+      if (!account) return
 
-      if (totalPinned >= MAX_LIST_ACCOUNTS) {
-        addToast(`You can pin a maximum of ${MAX_LIST_ACCOUNTS} accounts`, { type: 'error' })
-        return
+      if (!currentlyPinned) {
+        const totalPinned = accounts.filter(
+          (a) => !!(a.preferences as ExtendedAccountPreferences).pinnedAt
+        ).length
+
+        if (totalPinned >= MAX_LIST_ACCOUNTS) {
+          addToast(`You can pin a maximum of ${MAX_LIST_ACCOUNTS} accounts`, { type: 'error' })
+          return
+        }
       }
-    }
 
-    dispatch({
-      type: 'ACCOUNTS_CONTROLLER_TOGGLE_PIN_ACCOUNT',
-      params: { addr, pinned: !currentlyPinned }
-    })
-  }
+      accountsDispatch({
+        type: 'method',
+        params: {
+          method: 'updateAccountPreferences',
+          args: [
+            [
+              {
+                addr,
+                preferences: {
+                  ...account.preferences,
+                  pinnedAt: currentlyPinned ? undefined : Date.now()
+                } as ExtendedAccountPreferences
+              }
+            ]
+          ]
+        }
+      })
+    },
+    [accounts, accountsDispatch, addToast]
+  )
 
   return (
     <View>
-      <Text appearance="muted">Public Accounts</Text>
+      <Text appearance="tertiaryText">Public Accounts</Text>
       <View style={[flexbox.directionRow, flexbox.alignCenter, spacings.mtTy]}>
         {/* {listedAccounts.map((account, index) => (
           <Pressable
@@ -256,7 +282,14 @@ const NewPublicAccounts = ({ selectedAccount, ...modalProps }: PublicAccountsPro
           >
             {/* @ts-ignore */}
             <View dataSet={{ tooltipId: `account-avatar-${account.addr}` }}>
-              <Avatar pfp={account.preferences.pfp} size={30} isSmart={isSmartAccount(account)} />
+              <Avatar
+                address={account.addr}
+                pfp={account.preferences.pfp}
+                size={30}
+                smartAccountType={
+                  (account.creation && 'Ambire') || (account.safeCreation && 'Safe')
+                }
+              />
             </View>
             <Tooltip id={`account-avatar-${account.addr}`}>
               <Text fontSize={14} weight="medium" appearance="secondaryText">

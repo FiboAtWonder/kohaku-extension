@@ -2,7 +2,7 @@ import selectors from 'constants/selectors'
 import BootstrapContext from 'interfaces/bootstrapContext'
 import Token from 'interfaces/token'
 
-import { BrowserContext, expect, Locator, Page } from '@playwright/test'
+import { BrowserContext, expect, Locator, Page, Request as PWRequest } from '@playwright/test'
 
 import { categorizeRequests } from '../utils/requests'
 
@@ -11,7 +11,17 @@ export class BasePage {
 
   context: BrowserContext
 
+  private _reqListener?: (r: PWRequest) => void
+
+  private _monitorInstalled = false
+
   collectedRequests: string[] = []
+
+  private collectedRequestEntries: Array<{
+    url: string
+    postData: string | null
+    headers: Record<string, string>
+  }> = []
 
   constructor({ page, context }: BootstrapContext) {
     this.page = page
@@ -43,9 +53,8 @@ export class BasePage {
     await tokenLocator.click()
   }
 
-  async clickOnMenuFeeToken(paidByAddress: string, token: Token, onGasTank?: boolean) {
-    const selectMenu = this.page.getByTestId(selectors.feeTokensSelect)
-    await selectMenu.click()
+  async selectFeeToken(paidByAddress: string, token: Token, onGasTank?: boolean) {
+    await this.click(selectors.transaction.feeTokensSelectDropdown)
 
     // If the token is outside the viewport, we ensure it becomes visible by searching for its symbol
     await this.entertext(selectors.searchInput, token.symbol)
@@ -61,39 +70,57 @@ export class BasePage {
       .getByTestId('select-menu')
       .getByTestId(`option-${paidBy + tokenAddress + tokenSymbol + gasTank}`)
     await tokenLocator.click()
-  }
-
-  // TODO: refactor, this method can be depracated; switch to getByTestId
-  async typeTextInInputField(locator: string, text: string): Promise<void> {
-    await this.page.locator(locator).clear()
-    await this.page.locator(locator).pressSequentially(text)
+    await this.page.waitForTimeout(1000)
   }
 
   async clearFieldInput(selector: string): Promise<void> {
     await this.page.getByTestId(selector).fill('')
   }
 
-  async getText(selector: string): Promise<string> {
-    return this.page.getByTestId(selector).innerText()
+  async getText(selector: string, options?: { index?: number }): Promise<string> {
+    const index = options?.index ?? 0
+    return this.page.getByTestId(selector).nth(index).innerText()
   }
 
-  async entertext(selector: string, text: string): Promise<void> {
-    await this.page.getByTestId(selector).fill(text)
+  async entertext(selector: string, text: string, index?: number): Promise<void> {
+    await this.page
+      .getByTestId(selector)
+      .nth(index ?? 0)
+      .fill(text)
   }
 
   async getValue(selector: string): Promise<string> {
     return this.page.getByTestId(selector).inputValue()
   }
 
-  async handleNewPage(locator: Locator) {
-    const context = this.page.context()
+  async handleNewPage(locator: Locator, page: Page = this.page): Promise<Page> {
+    const context = page.context()
 
-    const [actionWindowPagePromise] = await Promise.all([
-      context.waitForEvent('page'),
-      locator.first().click({ timeout: 5000 }) // trigger opening
-    ])
+    // const [actionWindowPagePromise] = await Promise.all([
+    //   context.waitForEvent('page', { timeout: 10000 }),
+    //   locator.first().click({ timeout: 5000 }) // trigger opening
+    // ])
 
-    return actionWindowPagePromise
+    // await actionWindowPagePromise.waitForLoadState('domcontentloaded')
+
+    // return actionWindowPagePromise
+
+    // wait for locator before click
+    await locator.waitFor({ state: 'visible', timeout: 100000 })
+    await expect(locator).toBeEnabled()
+
+    // setup listener for new page event
+    const newPagePromise = context.waitForEvent('page', { timeout: 15000 })
+
+    // initiate new page event
+    await locator.click({ timeout: 5000 })
+
+    // Wait for the newly opened page to be available
+    const actionWindowPage = await newPagePromise
+
+    // wait for new page to load
+    await actionWindowPage.waitForLoadState('domcontentloaded')
+    return actionWindowPage
   }
 
   async pause() {
@@ -106,29 +133,93 @@ export class BasePage {
     expect(this.page.url()).toContain(url)
   }
 
-  async expectButtonVisible(selector: string) {
-    await expect(this.page.getByTestId(selector)).toBeVisible()
+  async expectElementVisible(selector: string) {
+    await expect(this.page.getByTestId(selector)).toBeVisible({ timeout: 15000 })
   }
 
   async expectButtonEnabled(selector: string) {
-    await expect(this.page.getByTestId(selector)).toBeEnabled()
+    const locator = this.page.getByTestId(selector)
+    await expect(locator).not.toHaveAttribute('aria-disabled', 'true', { timeout: 10000 })
+    await expect(locator).toBeEnabled({ timeout: 10000 })
   }
 
-  async compareText(selector: string, text: string) {
-    await expect(this.page.getByTestId(selector)).toContainText(text)
+  async compareText(
+    selector: string,
+    text: string,
+    options?: { index?: number; timeout?: number }
+  ) {
+    const { index = 0, timeout = 30000 } = options ?? {}
+    await expect(this.page.getByTestId(selector).nth(index ?? 0)).toContainText(text, {
+      timeout
+    })
   }
 
-  async isVisible(selector: string): Promise<boolean> {
-    return this.page.getByTestId(selector).isVisible()
+  async isVisible(selector: string, index?: number): Promise<boolean> {
+    return this.page
+      .getByTestId(selector)
+      .nth(index ?? 0)
+      .isVisible()
+  }
+
+  async expectElementNotVisible(selector: string): Promise<void> {
+    await expect(this.page.getByTestId(selector)).not.toBeVisible()
   }
 
   async monitorRequests() {
-    await this.context.route('**/*', async (route, request) => {
-      if (request.resourceType() === 'fetch' && request.method() !== 'OPTIONS') {
-        this.collectedRequests.push(request.url())
+    if (this._monitorInstalled) return
+    this._reqListener = (request: PWRequest) => {
+      const url = request.url()
+      if (!url.startsWith('http')) return
+      // OPTIONS preflights never carry a payload and only duplicate the real
+      // request, so they are irrelevant to both surfaces below.
+      if (request.method() === 'OPTIONS') return
+
+      const resourceType = request.resourceType()
+
+      // Two intentionally different capture surfaces:
+      //
+      // 1. Content scan (collectedRequestEntries) — captures EVERY http(s)
+      //    request regardless of resourceType. A secret can leak through more
+      //    than just fetch/xhr: navigator.sendBeacon (resourceType "ping"), a
+      //    tracking pixel ("image"), or EventSource/SSE ("eventsource") would
+      //    otherwise bypass the content check entirely. The leak detector is an
+      //    exact-match search for the secret, so widening this surface adds zero
+      //    false positives — only more coverage, which is exactly what we want.
+      //    (WebSocket frames are NOT delivered through the "request" event and
+      //    would need a separate page.on("websocket") listener — out of scope here.)
+      //
+      // 2. Domain check (collectedRequests) — stays narrow to fetch/xhr on
+      //    purpose. categorizeRequests() flags requests to unknown domains, and
+      //    legitimate images/fonts/CDN assets routinely hit "unknown" domains;
+      //    feeding those in would make the uncategorized-domain assertion flaky.
+      const postData = request.postData()
+      const headers = request.headers()
+      this.collectedRequestEntries.push({ url, postData, headers })
+
+      if (resourceType === 'fetch' || resourceType === 'xhr') {
+        this.collectedRequests.push(url)
       }
-      await route.continue()
-    })
+    }
+    this.context.on('request', this._reqListener)
+    this._monitorInstalled = true
+  }
+
+  stopMonitorRequests() {
+    if (this._monitorInstalled && this._reqListener) {
+      this.context.off('request', this._reqListener)
+      this._monitorInstalled = false
+    }
+
+    this.collectedRequests = []
+    this.collectedRequestEntries = []
+  }
+
+  getRequestsWithBodies(): Array<{
+    url: string
+    postData: string | null
+    headers: Record<string, string>
+  }> {
+    return [...this.collectedRequestEntries]
   }
 
   getCategorizedRequests() {
@@ -137,8 +228,33 @@ export class BasePage {
 
   async getDashboardTokenBalance(token: Token) {
     const balanceText = await this.getText(`token-balance-${token.address}.${token.chainId}`)
-    const tokenBalance = parseFloat(balanceText)
+    const parseText = balanceText.replace(/,/g, '')
+    const tokenBalance = parseFloat(parseText)
 
     return tokenBalance
+  }
+
+  // approve the high impact modal if appears
+  async handlePriceWarningModals() {
+    const isHighPrice = await this.page
+      .waitForSelector(selectors.highPriceImpactSab, { timeout: 1000 })
+      .catch(() => null)
+
+    const isHighSlippage = await this.page
+      .waitForSelector(selectors.highSlippageModal, { timeout: 1000 })
+      .catch(() => null)
+
+    if (isHighPrice || isHighSlippage) {
+      // TODO: change methods once we have IDs
+      await this.click(selectors.continueAnywayCheckboxSaB)
+      await this.page.locator(selectors.continueAnywayButton).click()
+    }
+  }
+
+  async longPressButton(selector: string, pressTime: number) {
+    await this.page.getByTestId(selector).hover()
+    await this.page.mouse.down()
+    await this.page.waitForTimeout(pressTime * 1000)
+    await this.page.mouse.up()
   }
 }

@@ -1,122 +1,57 @@
-import { baParams, saParams } from 'constants/env'
-import tokens from 'constants/tokens'
-import { test } from 'fixtures/pageObjects'
+import { expect, test } from '@playwright/test'
+import { baParams, ledgerSaParams, saParams } from 'constants/env'
 
-test.describe('Basic Acc - Token balance test', { tag: '@balanceCheck' }, async () => {
-  test.beforeEach(async ({ pages }) => {
-    await pages.initWithStorage(baParams)
-  })
+type InsufficientToken = {
+  chain: string
+  addr: string
+  token: string
+  minValue: string
+  currentBalance: string
+  insufficient: boolean
+}
 
-  test.afterEach(async ({ context }) => {
-    await context.close()
-  })
+const RELAYER_E2E_BALANCE_URL = 'https://relayer.ambire.com/v2/e2eBalance'
 
-  test('check balance of test tokens', async ({ pages }) => {
-    const walletBase = tokens.wallet.base
-    const usdcBase = tokens.usdc.base
-    const usdcOP = tokens.usdc.optimism
-    const usdceOP = tokens.usdce.optimism
-    const daiOP = tokens.dai.optimism
-    const xwalletETH = tokens.xwallet.ethereum
+// The relayer checks the funding addresses against a predefined set of tokens
+// and minimum balances. It returns 200 when every token is sufficiently funded
+// and 500 when at least one token is below its threshold. This lets us verify
+// the e2e funding accounts without booting up the extension.
+const ACCOUNTS: { name: string; address: string }[] = [
+  { name: 'Basic Account', address: baParams.envSelectedAccount },
+  { name: 'Smart Account', address: saParams.envSelectedAccount },
+  { name: 'Ledger SA e2e tests', address: ledgerSaParams.envSelectedAccount }
+]
 
-    const tokensList = [walletBase, usdcBase, usdcOP, usdceOP, daiOP, xwalletETH]
+test.describe('Tokens balance check', { tag: '@balanceCheck' }, () => {
+  for (const { name, address } of ACCOUNTS) {
+    test(`${name} - check balance of test tokens`, async ({ request }) => {
+      const response = await request.get(`${RELAYER_E2E_BALANCE_URL}/${address}`)
 
-    // collect errors if any
-    const errors: string[] = []
+      if (response.ok()) return
 
-    await test.step('Check balance of Gas tank', async () => {
-      const gasTankBalance = await pages.dashboard.getCurrentBalance()
-
-      if (gasTankBalance < 15) {
-        const msg = `⚠️ Gas Tank balance is only ${gasTankBalance} USDC. Top it up.`
-        errors.push(msg)
+      const body = await response.text()
+      let tokens: InsufficientToken[]
+      try {
+        tokens = JSON.parse(body)
+      } catch {
+        throw new Error(
+          `${name} (${address}) balance check failed with status ${response.status()}: ${body}`
+        )
       }
+
+      const insufficientTokens = tokens.filter((token) => token.insufficient)
+
+      const report = insufficientTokens
+        .map(
+          ({ chain, token, minValue, currentBalance }) =>
+            `  - ${chain} ${token}: has ${currentBalance}, needs ${minValue}`
+        )
+        .join('\n')
+
+      expect(
+        insufficientTokens,
+        `${name} (${address}) has insufficient balance:\n${report}`
+      ).toHaveLength(0)
     })
-
-    await test.step('Check balance for tokens used in tests', async () => {
-      const results = []
-
-      for (let i = 0; i < tokensList.length; i++) {
-        const token = tokensList[i]
-        const result = await pages.dashboard.checkTokenBalance(token)
-        results.push(result)
-      }
-
-      const failed = results.filter((r) => r.error)
-
-      if (failed.length > 0) {
-        console.warn('\n⚠️ Some tokens are underfunded.')
-        failed.forEach(({ error }) => {
-          console.warn(` - ${error}`)
-          errors.push(error)
-        })
-      }
-    })
-
-    if (errors.length > 0) {
-      throw new Error(`Test failed with ${errors.length} issues:\n${errors.join('\n')}`)
-    } else {
-      console.log('✅ BA Tokens and gas tank have sufficient balance.')
-    }
-  })
-})
-
-test.describe('Smart Acc - Token balance test', { tag: '@balanceCheck' }, async () => {
-  test.beforeEach(async ({ pages }) => {
-    await pages.initWithStorage(saParams)
-  })
-
-  test.afterEach(async ({ context }) => {
-    await context.close()
-  })
-
-
-  test('check balance of test tokens', async ({ pages }) => {
-    const walletBase = tokens.wallet.base
-    const usdcBase = tokens.usdc.base
-    const usdcOP = tokens.usdc.optimism
-    const usdceOP = tokens.usdce.optimism
-    const daiOP = tokens.dai.optimism
-    const xwalletETH = tokens.xwallet.ethereum
-
-    const tokensList = [walletBase, usdcBase, usdcOP, usdceOP, daiOP, xwalletETH]
-
-    // collect errors if any
-    const errors: string[] = []
-
-    await test.step('Check balance of Gas tank', async () => {
-      const gasTankBalance = await pages.dashboard.getCurrentBalance()
-
-      if (gasTankBalance < 5) {
-        const msg = `⚠️ Gas Tank balance is only ${gasTankBalance} USDC. Top it up.`
-        errors.push(msg)
-      }
-    })
-
-    await test.step('Check balance for tokens used in tests', async () => {
-      const results = []
-
-      for (let i = 0; i < tokensList.length; i++) {
-        const token = tokensList[i]
-        const result = await pages.dashboard.checkTokenBalance(token)
-        results.push(result)
-      }
-
-      const failed = results.filter((r) => r.error)
-
-      if (failed.length > 0) {
-        console.warn('\n⚠️ Some tokens are underfunded.')
-        failed.forEach(({ error }) => {
-          console.warn(` - ${error}`)
-          errors.push(error)
-        })
-      }
-    })
-
-    if (errors.length > 0) {
-      throw new Error(`Test failed with ${errors.length} issues:\n${errors.join('\n')}`)
-    } else {
-      console.log('✅ SA Tokens and gas tank have sufficient balance.')
-    }
-  })
+  }
 })

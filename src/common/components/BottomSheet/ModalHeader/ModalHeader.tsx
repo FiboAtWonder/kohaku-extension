@@ -1,62 +1,61 @@
 import React, { FC } from 'react'
-import { TouchableOpacity, View, ViewStyle } from 'react-native'
+import { View, ViewStyle } from 'react-native'
 
-import CloseIcon from '@common/assets/svg/CloseIcon'
-import BackButton from '@common/components/BackButton'
-import { PanelBackButton } from '@common/components/Panel/Panel'
-import Text from '@common/components/Text'
+import { isMobile } from '@common/config/env'
+import Header from '@common/modules/header/components/Header'
 import spacings from '@common/styles/spacings'
 
-import getStyles from './styles'
-
 interface Props {
-  hideLeftSideContainer?: boolean
-  hideRightSideContainer?: boolean
   handleClose?: () => void
-  withBackButton?: boolean
-  title?: string
-  titleSuffix?: JSX.Element
+  title?: React.ReactNode
+  titlePosition?: 'left' | 'center'
   style?: ViewStyle
+  hasAmbireLogo?: boolean
+  forceBackButtonOnMobile?: boolean
+  children?: React.ReactNode
+  headerTestID?: string
 }
 
 const ModalHeader: FC<Props> = ({
-  hideLeftSideContainer = false,
-  hideRightSideContainer = false,
   handleClose,
-  withBackButton = true,
   title,
-  titleSuffix,
-  style
+  titlePosition = 'center',
+  style,
+  children,
+  forceBackButtonOnMobile,
+  headerTestID
 }) => {
-  const styles = getStyles()
+  const withSideContainers = !!handleClose || !!children
 
   return (
-    <View style={[styles.modalHeader, style]}>
-      {!hideLeftSideContainer && (
-        <View style={styles.sideContainer}>
-          {!!handleClose && withBackButton && (
-            <View style={styles.backButton}>
-              <PanelBackButton onPress={handleClose} />
-            </View>
+    <Header.Wrapper
+      containerStyle={{ ...spacings.ptTy, ...spacings.pb0, ...spacings.ph0, ...spacings.mb0 }}
+      style={{ ...(isMobile ? spacings.mb : spacings.mbLg), ...style, minHeight: 28 }}
+    >
+      {withSideContainers && (
+        <Header.Container side="left">
+          {((handleClose && !isMobile) || forceBackButtonOnMobile) && (
+            <Header.BackButton onGoBackPress={handleClose} forceBack displayIn="always" />
           )}
-        </View>
+        </Header.Container>
       )}
-      {!!title && (
-        <Text fontSize={20} weight="medium" style={!!titleSuffix && spacings.mrSm}>
-          {title}
-        </Text>
-      )}
-      {titleSuffix}
-      {!hideRightSideContainer && (
-        <View style={styles.sideContainer}>
-          {!!handleClose && !withBackButton && (
-            <TouchableOpacity onPress={handleClose} style={styles.closeIcon}>
-              <CloseIcon />
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
-    </View>
+      {/* We are making the title absolute to be able to fit different sized elements on the right
+      without changing the flexbox layout to make it fit every possible combination */}
+      <View
+        style={{
+          position: 'absolute',
+          width: '100%',
+          left: 0,
+          height: '100%',
+          justifyContent: 'center',
+          alignItems: titlePosition === 'left' ? 'flex-start' : 'center',
+          pointerEvents: 'none'
+        }}
+      >
+        <Header.Title testID={headerTestID}>{title}</Header.Title>
+      </View>
+      {withSideContainers && <Header.Container side="right">{children}</Header.Container>}
+    </Header.Wrapper>
   )
 }
 

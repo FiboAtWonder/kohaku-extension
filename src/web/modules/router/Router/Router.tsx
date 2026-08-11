@@ -1,29 +1,26 @@
-import React, { lazy, Suspense, useContext } from 'react'
+import React, { lazy, Suspense, useContext, useEffect, useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 
 import Alert from '@common/components/Alert'
 import { useTranslation } from '@common/config/localization'
+import { ControllersStateLoadedContext } from '@common/contexts/controllersStateLoadedContext'
+import useController from '@common/hooks/useController'
+import useNavigation from '@common/hooks/useNavigation'
 import useRoute from '@common/hooks/useRoute'
 import useTheme from '@common/hooks/useTheme'
 import { AUTH_STATUS } from '@common/modules/auth/constants/authStatus'
 import useAuth from '@common/modules/auth/hooks/useAuth'
+import AuthenticatedRoute from '@common/modules/router/components/AuthenticatedRoute'
+import KeystoreUnlockedRoute from '@common/modules/router/components/KeystoreUnlockedRoute'
 import { WEB_ROUTES } from '@common/modules/router/constants/common'
+import { getInitialRoute } from '@common/modules/router/helpers'
 import flexbox from '@common/styles/utils/flexbox'
 import Splash from '@web/components/Splash'
-import { ControllersStateLoadedContext } from '@web/contexts/controllersStateLoadedContext'
-import useActionsControllerState from '@web/hooks/useActionsControllerState'
 import useCurrentActionSideEffects from '@web/hooks/useCurrentActionSideEffects'
-import useKeystoreControllerState from '@web/hooks/useKeystoreControllerState'
-import useSwapAndBridgeControllerState from '@web/hooks/useSwapAndBridgeControllerState'
-import useTransferControllerState from '@web/hooks/useTransferControllerState'
+import DashboardScreen from '@web/modules/dashboard/screens/DashboardScreen'
 import KeyStoreUnlockScreen from '@web/modules/keystore/screens/KeyStoreUnlockScreen'
-import AuthenticatedRoute from '@web/modules/router/components/AuthenticatedRoute'
-import KeystoreUnlockedRoute from '@web/modules/router/components/KeystoreUnlockedRoute'
 
-import DashboardScreen from '@common/modules/dashboard/screens'
-import KohakuDashboardScreen from '@web/modules/PPv1/screens/dashboard/screens'
-import { getInitialRoute } from './helpers'
 import getStyles from './styles'
 
 const AsyncMainRoute = lazy(() => import('@web/modules/router/components/MainRoutes'))
@@ -34,14 +31,45 @@ const Router = () => {
   const { path } = useRoute()
   const pathname = path?.substring(1)
   const { authStatus } = useAuth()
-  const keystoreState = useKeystoreControllerState()
-  const actionsState = useActionsControllerState()
-  const swapAndBridgeState = useSwapAndBridgeControllerState()
-  const transferState = useTransferControllerState()
+  const { navigate } = useNavigation()
+  const keystoreState = useController('KeystoreController').state
+  const requestsState = useController('RequestsController').state
+  const swapAndBridgeState = useController('SwapAndBridgeController').state
+  const transferState = useController('TransferController').state
+  const surveyState = useController('SurveyController').state
   const { areControllerStatesLoaded, isStatesLoadingTakingTooLong } = useContext(
     ControllersStateLoadedContext
   )
   useCurrentActionSideEffects()
+
+  // Guard against running `getInitialRoute` on empty state before controllers load.
+  const initialRoute = useMemo(() => {
+    if (authStatus === AUTH_STATUS.LOADING || !areControllerStatesLoaded) return null
+
+    return getInitialRoute({
+      keystoreState,
+      authStatus,
+      requestsState,
+      swapAndBridgeState,
+      transferState,
+      surveyState
+    })
+  }, [
+    authStatus,
+    areControllerStatesLoaded,
+    keystoreState,
+    requestsState,
+    swapAndBridgeState,
+    transferState,
+    surveyState
+  ])
+
+  // Redirect from an effect, not <Navigate>. The request-window reset in
+  // `useRequestsControllerHelpers` can bounce the URL back to `/` right after a redirect,
+  // and <Navigate> would never fire again (because it's one shot).
+  useEffect(() => {
+    if (initialRoute && !pathname) navigate(initialRoute, { replace: true })
+  }, [initialRoute, pathname, navigate, requestsState])
 
   if (isStatesLoadingTakingTooLong && !areControllerStatesLoaded) {
     return (
@@ -61,26 +89,16 @@ const Router = () => {
     return <Splash />
   }
 
-  // Never move this above the check for `areControllerStatesLoaded`
-  const initialRoute = getInitialRoute({
-    keystoreState,
-    authStatus,
-    actionsState,
-    swapAndBridgeState,
-    transferState: transferState.state
-  })
-
-  if (initialRoute && !pathname) {
-    return <Navigate to={initialRoute} replace />
-  }
-
   return (
     <View style={styles.container}>
       <Routes>
         <Route element={<KeystoreUnlockedRoute />}>
           <Route element={<AuthenticatedRoute />}>
-            <Route path={WEB_ROUTES.dashboard} element={<DashboardScreen />} />
-            <Route path={WEB_ROUTES.mainDashboard} element={<KohakuDashboardScreen />} />
+            {/* (kohaku) One dashboard, two modes. `mainDashboard` is the landing
+            route and opens in the persisted mode; `dashboard` is kept as a deep
+            link into the public view */}
+            <Route path={WEB_ROUTES.dashboard} element={<DashboardScreen mode="public" />} />
+            <Route path={WEB_ROUTES.mainDashboard} element={<DashboardScreen />} />
           </Route>
         </Route>
         <Route path={WEB_ROUTES.keyStoreUnlock} element={<KeyStoreUnlockScreen />} />

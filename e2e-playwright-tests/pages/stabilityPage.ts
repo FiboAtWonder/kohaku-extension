@@ -1,7 +1,4 @@
-import { bootstrapWithStorage } from 'common-helpers/bootstrap'
 import BootstrapContext from 'interfaces/bootstrapContext'
-
-import { BrowserContext } from '@playwright/test'
 
 // import { BrowserContext, Page } from '@playwright/test'
 import { baParams, KEYSTORE_PASS } from '../constants/env'
@@ -40,6 +37,18 @@ export class StabilityPage extends BasePage {
     await this.navigateToURL(`${this.extensionURL}/tab.html#/`)
     await this.entertext(selectors.passphraseField, KEYSTORE_PASS)
     await this.click(selectors.buttonUnlock)
+  }
+
+  async blockRoute(blockedRoute: string) {
+    await this.context.route(blockedRoute, async (route) => {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'failed' })
+      })
+    })
+
+    await this.unlock()
   }
 
   async blockRouteAndUnlock(blockedRoute: string) {

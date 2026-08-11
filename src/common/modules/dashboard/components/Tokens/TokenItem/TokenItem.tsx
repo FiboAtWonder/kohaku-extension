@@ -1,293 +1,113 @@
 import React, { useCallback, useMemo } from 'react'
-import { Pressable, StyleProp, View, ViewStyle } from 'react-native'
-import { useModalize } from 'react-native-modalize'
 
-import { TokenResult } from '@ambire-common/libs/portfolio'
-import BatchIcon from '@common/assets/svg/BatchIcon'
-import useNavigation from '@common/hooks/useNavigation'
-import PendingToBeConfirmedIcon from '@common/assets/svg/PendingToBeConfirmedIcon'
-import RewardsIcon from '@common/assets/svg/RewardsIcon'
-import BottomSheet from '@common/components/BottomSheet'
-import Button from '@common/components/Button'
-import Text from '@common/components/Text'
-import TokenIcon from '@common/components/TokenIcon'
-import Tooltip from '@common/components/Tooltip'
-import { useTranslation } from '@common/config/localization'
-import useTheme from '@common/hooks/useTheme'
 import KohakuLogo from '@common/components/HokahuLogo'
+import Text from '@common/components/Text'
+import { useTranslation } from '@common/config/localization'
+import useController from '@common/hooks/useController'
+import { AnimatedPressable, useCustomHover } from '@common/hooks/useHover'
+import useNavigation from '@common/hooks/useNavigation'
+import useTheme from '@common/hooks/useTheme'
 import getAndFormatTokenDetails from '@common/modules/dashboard/helpers/getTokenDetails'
-import spacings, { SPACING_2XL, SPACING_TY } from '@common/styles/spacings'
-import { THEME_TYPES } from '@common/styles/themeConfig'
+import { ROUTES } from '@common/modules/router/constants/common'
+import spacings from '@common/styles/spacings'
 import { BORDER_RADIUS_PRIMARY } from '@common/styles/utils/common'
-import flexboxStyles from '@common/styles/utils/flexbox'
-import { WEB_ROUTES } from '@common/modules/router/constants/common'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import { AnimatedPressable, useCustomHover } from '@web/hooks/useHover'
-import useNetworksControllerState from '@web/hooks/useNetworksControllerState'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
-import { getTokenId } from '@web/utils/token'
-import { getUiType } from '@web/utils/uiType'
+import flexbox from '@common/styles/utils/flexbox'
+import { getUiType } from '@common/utils/uiType'
 
-import TokenDetails from '../TokenDetails'
-import PendingBadge from './PendingBadge'
-import getStyles from './styles'
+import BaseTokenItem from './BaseTokenItem'
+import RewardsTokenItem from './RewardsTokenItem'
 
+import type { TokenResult } from '@ambire-common/libs/portfolio'
 const { isPopup } = getUiType()
 
-const TokenItem = ({ token, style }: { token: TokenResult; style: StyleProp<ViewStyle> }) => {
-  const { navigate } = useNavigation()
-  const shieldToken = () => {
-    navigate(`${WEB_ROUTES.pp1Deposit}`, { state: { token } })
-  }
-  const { portfolio } = useSelectedAccountControllerState()
-  const {
-    symbol,
-    address,
-    chainId,
-    flags: { onGasTank }
-  } = token
+// Shortcut from a funded token straight into the Privacy Pools deposit flow (kohaku)
+const ShieldTokenButton = ({ token }: { token: TokenResult }) => {
   const { t } = useTranslation()
-  const { dispatch } = useBackgroundService()
-  const { networks } = useNetworksControllerState()
-
-  const { styles, theme, themeType } = useTheme(getStyles)
-  const { ref: sheetRef, open: openBottomSheet, close: closeBottomSheet } = useModalize()
+  const { theme } = useTheme()
+  const { navigate } = useNavigation()
   const [bindAnim, animStyle] = useCustomHover({
     property: 'backgroundColor',
-    values: {
-      from: theme.primaryBackground,
-      to: themeType === THEME_TYPES.DARK ? theme.tertiaryBackground : theme.secondaryBackground
-    }
+    values: { from: theme.primaryBackgroundInverted, to: theme.tertiaryBackground }
   })
-  const tokenId = getTokenId(token)
 
-  const simulatedAccountOp = portfolio.networkSimulatedAccountOp[token.chainId.toString()]
-
-  const {
-    balanceFormatted,
-    balance,
-    balanceLatestFormatted,
-    priceUSDFormatted,
-    balanceUSDFormatted,
-    isVesting,
-    networkData,
-    isRewards,
-    isPending: hasPendingBadges,
-    pendingBalance,
-    pendingBalanceFormatted,
-    pendingBalanceUSDFormatted,
-    pendingToBeSigned,
-    pendingToBeSignedFormatted,
-    pendingToBeConfirmed,
-    pendingToBeConfirmedFormatted
-  } = getAndFormatTokenDetails(token, networks, simulatedAccountOp)
-
-  const isPending = !!hasPendingBadges
-
-  if ((isRewards || isVesting) && !balance && !pendingBalance) return null
-
-  const sendClaimTransaction = useCallback(() => {
-    dispatch({
-      type: 'REQUESTS_CONTROLLER_BUILD_REQUEST',
-      params: { type: 'claimWalletRequest', params: { token } }
-    })
-  }, [token, dispatch])
-
-  const sendVestingTransaction = useCallback(() => {
-    dispatch({
-      type: 'REQUESTS_CONTROLLER_BUILD_REQUEST',
-      params: { type: 'mintVestingRequest', params: { token } }
-    })
-  }, [token, dispatch])
-
-  const textColor = useMemo(() => {
-    if (!isPending) return theme.primaryText
-
-    // pendingToBeSigned is prioritized as both badges can be shown at the same time
-    return pendingToBeSigned ? theme.warningText : theme.info2Text
-  }, [isPending, pendingToBeSigned, theme])
+  const onPress = useCallback(() => {
+    navigate(ROUTES.pp1Deposit, { state: { token } })
+  }, [navigate, token])
 
   return (
     <AnimatedPressable
-      onPress={() => openBottomSheet()}
-      style={[styles.container, animStyle, style]}
+      testID="token-button-shield"
+      onPress={onPress}
+      style={[
+        flexbox.directionRow,
+        flexbox.alignCenter,
+        spacings.phTy,
+        { paddingVertical: 5, borderRadius: BORDER_RADIUS_PRIMARY },
+        animStyle
+      ]}
       {...bindAnim}
     >
-      <BottomSheet
-        id={`token-details-${address}`}
-        sheetRef={sheetRef}
-        closeBottomSheet={closeBottomSheet}
-      >
-        <TokenDetails token={token} handleClose={closeBottomSheet} />
-      </BottomSheet>
-      <View style={flexboxStyles.flex1}>
-        <View style={[flexboxStyles.directionRow, flexboxStyles.flex1]}>
-          <View style={[flexboxStyles.directionRow, { flex: 1.5, minWidth: 0 }]}>
-            <View style={[spacings.mr, flexboxStyles.justifyCenter]}>
-              {isRewards || isVesting ? (
-                <View style={styles.tokenButtonIconWrapper}>
-                  <RewardsIcon width={40} height={40} />
-                </View>
-              ) : (
-                <TokenIcon
-                  withContainer
-                  address={address}
-                  chainId={chainId}
-                  onGasTank={onGasTank}
-                  containerHeight={40}
-                  containerWidth={40}
-                  width={28}
-                  height={28}
-                />
-              )}
-            </View>
-            <View style={[flexboxStyles.alignCenter]}>
-              <View style={[flexboxStyles.directionRow, flexboxStyles.alignStart]}>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text
-                    selectable
-                    style={spacings.mrTy}
-                    color={textColor}
-                    fontSize={16}
-                    weight="number_bold"
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                    // @ts-ignore
-                    dataSet={{
-                      tooltipId: `${tokenId}-balance`
-                    }}
-                    testID={`token-balance-${tokenId}`}
-                  >
-                    {isPending ? pendingBalanceFormatted : balanceFormatted} {symbol}{' '}
-                  </Text>
-                  <Tooltip
-                    content={String(isPending ? pendingBalance : balance)}
-                    id={`${tokenId}-balance`}
-                  />
-                  <View style={[flexboxStyles.directionRow, flexboxStyles.alignCenter]}>
-                    <Text weight="regular" shouldScale={false} fontSize={12}>
-                      {isRewards && t('Claimable rewards')}
-                      {isVesting && !isPopup && t('Claimable early supporters vestings')}
-                      {isVesting && isPopup && t('Claimable vestings')}
-                      {!isRewards && !isVesting && t('on')}{' '}
-                    </Text>
-                    <Text weight="regular" style={[spacings.mrMi]} fontSize={12}>
-                      {onGasTank && t('Gas Tank')}
-                      {!onGasTank && !isRewards && !isVesting && networkData?.name}
-                    </Text>
-                  </View>
-                </View>
-                {isRewards && (
-                  <Button
-                    style={spacings.mlMi}
-                    size="small"
-                    hasBottomSpacing={false}
-                    type="secondary"
-                    text={t('Claim')}
-                    onPress={sendClaimTransaction}
-                  />
-                )}
-
-                {isVesting && (
-                  <Button
-                    style={spacings.mlMi}
-                    size="small"
-                    hasBottomSpacing={false}
-                    type="secondary"
-                    text={t('Claim')}
-                    onPress={sendVestingTransaction}
-                  />
-                )}
-                {Number(balance) > 0 && (
-                  <View style={{ marginLeft: 8, flexShrink: 0 }}>
-                    <Pressable
-                      onPress={shieldToken}
-                      style={({ hovered }: any) => [
-                        flexboxStyles.directionRow,
-                        flexboxStyles.alignCenter,
-                        {
-                          paddingVertical: 5,
-                          paddingHorizontal: 9,
-                          borderRadius: BORDER_RADIUS_PRIMARY,
-                          backgroundColor: hovered ? '#2a2a2a' : '#000',
-                          transform: [{ scale: hovered ? 1.06 : 1 }]
-                        }
-                      ]}
-                    >
-                      <Text weight="regular" fontSize={11} color="#fff" style={spacings.mrMi}>
-                        {t('Shield It!')}
-                      </Text>
-                      <KohakuLogo height={13} width={13} />
-                    </Pressable>
-                  </View>
-                )}
-              </View>
-            </View>
-          </View>
-          <Text selectable fontSize={16} weight="number_regular" style={{ flex: 0.7 }}>
-            {priceUSDFormatted}
-          </Text>
-          <Text
-            selectable
-            fontSize={16}
-            weight="number_bold"
-            color={textColor}
-            style={{ flex: 0.4, textAlign: 'right' }}
-          >
-            {isPending ? pendingBalanceUSDFormatted : balanceUSDFormatted}
-          </Text>
-        </View>
-        {isPending && (
-          <View style={[{ marginLeft: SPACING_2XL + SPACING_TY }, spacings.mtSm]}>
-            <View>
-              {!!pendingToBeSigned && !!pendingToBeSignedFormatted && (
-                <PendingBadge
-                  amount={pendingToBeSigned}
-                  amountFormatted={pendingToBeSignedFormatted}
-                  label="Pending transaction signature"
-                  backgroundColor={theme.warningBackground}
-                  textColor={theme.warningText}
-                  Icon={BatchIcon}
-                />
-              )}
-              {!!pendingToBeConfirmed && !!pendingToBeConfirmedFormatted && (
-                <PendingBadge
-                  amount={pendingToBeConfirmed}
-                  amountFormatted={pendingToBeConfirmedFormatted}
-                  label="Pending to be confirmed"
-                  backgroundColor={theme.info2Background}
-                  textColor={theme.info2Text}
-                  Icon={PendingToBeConfirmedIcon}
-                />
-              )}
-            </View>
-
-            <View style={[flexboxStyles.directionRow, flexboxStyles.alignCenter]}>
-              <Text
-                selectable
-                style={[spacings.mrMi, { opacity: 0.7 }]}
-                color={theme.successText}
-                fontSize={14}
-                weight="number_bold"
-                numberOfLines={1}
-              >
-                {balanceLatestFormatted}
-              </Text>
-              <Text
-                selectable
-                style={{ opacity: 0.7 }}
-                color={theme.successText}
-                fontSize={12}
-                numberOfLines={1}
-              >
-                {t('(Onchain)')}
-              </Text>
-            </View>
-          </View>
-        )}
-      </View>
+      <Text weight="regular" fontSize={11} color={theme.primaryBackground} style={spacings.mrMi}>
+        {t('Shield It!')}
+      </Text>
+      <KohakuLogo height={13} width={13} />
     </AnimatedPressable>
   )
+}
+
+const TokenItem = ({ token }: { token: TokenResult }) => {
+  const { dispatch: requestsDispatch } = useController('RequestsController')
+  const { state: portfolio } = useController(
+    'SelectedAccountController',
+    (state) => state.portfolio
+  )
+  const { state: networks } = useController('NetworksController', (state) => state.networks)
+  const simulatedAccountOp = portfolio.networkSimulatedAccountOp[token.chainId.toString()]
+  const { isVesting, isRewards, balance } = getAndFormatTokenDetails(
+    token,
+    networks,
+    simulatedAccountOp
+  )
+
+  const sendTransaction = useCallback(
+    (type: 'claimWalletRequest' | 'mintVestingRequest') => {
+      requestsDispatch({
+        type: 'method',
+        params: {
+          method: 'build',
+          args: [{ type, params: { token } }]
+        }
+      })
+    },
+    [requestsDispatch, token]
+  )
+
+  // Only funded tokens can be shielded (kohaku)
+  const extraActions = useMemo(
+    () => (Number(balance) > 0 ? <ShieldTokenButton token={token} /> : undefined),
+    [balance, token]
+  )
+
+  if (isRewards)
+    return (
+      <RewardsTokenItem
+        token={token}
+        onPress={() => sendTransaction('claimWalletRequest')}
+        actionButtonText="Claim"
+        description="Claimable rewards"
+      />
+    )
+  if (isVesting)
+    return (
+      <RewardsTokenItem
+        token={token}
+        actionButtonText="Claim"
+        onPress={() => sendTransaction('mintVestingRequest')}
+        description={!isPopup ? 'Claimable early supporters vestings' : 'Claimable vestings'}
+      />
+    )
+
+  return <BaseTokenItem token={token} extraActions={extraActions} />
 }
 
 export default React.memo(TokenItem)

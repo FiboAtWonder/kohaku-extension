@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import eventBus from '@web/extension-services/event/eventBus'
+import { captureException } from '@common/config/analytics/CrashAnalytics.web'
+import { useTranslation } from '@common/config/localization'
+import useController from '@common/hooks/useController'
+import useToast from '@common/hooks/useToast'
+
+type PublicBalances = { [addr: string]: number }
 
 const usePublicBalanceCache = ({
   accounts,
@@ -14,10 +18,15 @@ const usePublicBalanceCache = ({
   portfolioIsAllReady: boolean | undefined
   portfolioTotalBalance: number | null | undefined
 }) => {
-  const { dispatch } = useBackgroundService()
-  const [balanceCache, setBalanceCache] = useState<{ [addr: string]: number }>({})
+  const { t } = useTranslation()
+  const { addToast } = useToast()
+  const { dispatchAndWait: portfolioDispatchAndWait } = useController('PortfolioController')
+  const [balanceCache, setBalanceCache] = useState<PublicBalances>({})
   const [isLoadingPublicBalances, setIsLoadingPublicBalances] = useState(true)
   const hasRequestedRef = useRef(false)
+  // Increments on every request so that a response of a superseded request (e.g. the user
+  // hit refresh while the previous one was still in flight) is discarded
+  const requestIdRef = useRef(0)
 
   // Always keep the current account's balance up to date from its live portfolio
   useEffect(() => {
@@ -28,6 +37,35 @@ const usePublicBalanceCache = ({
       })
     }
   }, [accountAddr, portfolioIsAllReady, portfolioTotalBalance])
+
+  const loadTotalBalancesFor = useCallback(
+    async (addrs: string[]) => {
+      requestIdRef.current += 1
+      const requestId = requestIdRef.current
+
+      try {
+        const balances = await portfolioDispatchAndWait<'getAccountsTotalBalances', PublicBalances>(
+          {
+            type: 'method',
+            params: { method: 'getAccountsTotalBalances', args: [addrs] }
+          },
+          // A cold portfolio refresh across several accounts and networks routinely takes
+          // longer than the default 10s deadline, and timing out means no balances at all
+          { timeoutMs: 60_000 }
+        )
+
+        if (requestId !== requestIdRef.current) return
+
+        setBalanceCache((prev) => ({ ...prev, ...balances }))
+      } catch (error: any) {
+        captureException(error)
+        addToast(t('Failed to load the balances of your other accounts.'), { type: 'error' })
+      } finally {
+        if (requestId === requestIdRef.current) setIsLoadingPublicBalances(false)
+      }
+    },
+    [addToast, portfolioDispatchAndWait, t]
+  )
 
   // On mount, request all account balances in parallel
   useEffect(() => {
@@ -41,26 +79,12 @@ const usePublicBalanceCache = ({
       return
     }
 
-    dispatch({
-      type: 'PORTFOLIO_LOAD_ACCOUNTS_TOTAL_BALANCES',
-      params: { accountAddrs: otherAddrs }
-    })
-  }, [accounts, accountAddr, dispatch])
-
-  // Listen for the parallel-loaded results from the background
-  useEffect(() => {
-    const handler = (balances: { [addr: string]: number }) => {
-      setBalanceCache((prev) => ({ ...prev, ...balances }))
-      setIsLoadingPublicBalances(false)
-    }
-
-    eventBus.addEventListener('accountTotalBalances', handler)
-    return () => eventBus.removeEventListener('accountTotalBalances', handler)
-  }, [])
+    loadTotalBalancesFor(otherAddrs).catch(captureException)
+  }, [accounts, accountAddr, loadTotalBalancesFor])
 
   const refreshPublicBalances = useCallback(() => {
     if (!accounts.length || !accountAddr) return
-    setBalanceCache((prev) => ({ [accountAddr]: prev[accountAddr] }))
+    setBalanceCache((prev) => ({ [accountAddr]: prev[accountAddr] ?? 0 }))
     setIsLoadingPublicBalances(true)
     hasRequestedRef.current = false
 
@@ -70,11 +94,8 @@ const usePublicBalanceCache = ({
       return
     }
 
-    dispatch({
-      type: 'PORTFOLIO_LOAD_ACCOUNTS_TOTAL_BALANCES',
-      params: { accountAddrs: otherAddrs }
-    })
-  }, [accounts, accountAddr, dispatch])
+    loadTotalBalancesFor(otherAddrs).catch(captureException)
+  }, [accounts, accountAddr, loadTotalBalancesFor])
 
   return { balanceCache, isLoadingPublicBalances, refreshPublicBalances }
 }

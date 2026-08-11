@@ -12,7 +12,7 @@ import {
 import { SignAccountOpController } from '@ambire-common/controllers/signAccountOp/signAccountOp'
 import { AccountOp } from '@ambire-common/libs/accountOp/accountOp'
 import { formatUnits, toHex } from 'viem'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState/useSelectedAccountControllerState'
+import useController from '@common/hooks/useController'
 
 type SyncState = 'unsynced' | 'syncing' | 'synced'
 
@@ -70,7 +70,8 @@ const usePrivacyPools = (): UsePrivacyPoolsReturn => {
     signAccountOpController,
     latestBroadcastedAccountOp
   } = useContext(PrivacyPoolsV1ControllerStateContext)
-  const { portfolio } = useSelectedAccountControllerState()
+  const { state: selectedAccountState } = useController('SelectedAccountController')
+  const { portfolio } = selectedAccountState
   const isSynced = useMemo(() => syncState === 'synced', [syncState])
   const isShielding = useMemo(() => state === 'shielding', [state])
   const isPreparingUnshield = useMemo(() => state === 'preparing-unshield', [state])

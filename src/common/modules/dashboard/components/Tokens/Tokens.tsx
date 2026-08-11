@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import {
   Animated,
@@ -9,34 +9,32 @@ import {
   View,
   ViewStyle
 } from 'react-native'
-import { useModalize } from 'react-native-modalize'
 
 import { PINNED_TOKENS } from '@ambire-common/consts/pinnedTokens'
 import { Network } from '@ambire-common/interfaces/network'
 import { AssetType } from '@ambire-common/libs/defiPositions/types'
+import { PORTFOLIO_LIB_ERROR_NAMES } from '@ambire-common/libs/portfolio/errorNames'
 import { getTokenAmount, getTokenBalanceInUSD } from '@ambire-common/libs/portfolio/helpers'
 import { TokenResult } from '@ambire-common/libs/portfolio/interfaces'
 import RightArrowIcon from '@common/assets/svg/RightArrowIcon'
-import Button from '@common/components/Button'
 import Text from '@common/components/Text'
 import { useTranslation } from '@common/config/localization'
+import useController from '@common/hooks/useController'
 import useNavigation from '@common/hooks/useNavigation'
 import useTheme from '@common/hooks/useTheme'
 import { WEB_ROUTES } from '@common/modules/router/constants/common'
 import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
-import { tokenSearch } from '@common/utils/search'
-import useNetworksControllerState from '@web/hooks/useNetworksControllerState'
-import usePortfolioControllerState from '@web/hooks/usePortfolioControllerState/usePortfolioControllerState'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
-import AddTokenBottomSheet from '@web/modules/settings/screens/ManageTokensSettingsScreen/AddTokenBottomSheet'
-import { getTokenId } from '@web/utils/token'
-import { getUiType } from '@web/utils/uiType'
+import { tokenOrCollectionSearch } from '@common/utils/search'
+import { getTokenId } from '@common/utils/token'
+import { getUiType } from '@common/utils/uiType'
 
 import DashboardBanners from '../DashboardBanners'
 import DashboardPageScrollContainer from '../DashboardPageScrollContainer'
+import FloatingBottomBar from '../FloatingBottomBar'
 import TabsAndSearch from '../TabsAndSearch'
 import { TabType } from '../TabsAndSearch/Tabs/Tab/Tab'
+import OtherTokensSummary from './OtherTokensSummary'
 import TokenItem from './TokenItem'
 import Skeleton from './TokensSkeleton'
 
@@ -50,18 +48,70 @@ interface Props {
   onScroll: FlatListProps<any>['onScroll']
   dashboardNetworkFilterName: string | null
   animatedOverviewHeight: Animated.Value
+  isSearchHidden: boolean
+  refreshing?: boolean
+  onRefresh?: () => void
+  // Overrides the tab header background so the Kohaku dashboard can render the
+  // token list over its own background. Token rows are already transparent. (kohaku)
   style?: StyleProp<ViewStyle>
 }
 
 // if any of the post amount (during simulation) or the current state
 // has a balance above 0, we should consider it legit and show it
 const hasAmount = (token: TokenResult) => {
-  return token.amount > 0n || (token.amountPostSimulation && token.amountPostSimulation > 0n)
+  return (
+    (token.amount > 0n || (token.amountPostSimulation && token.amountPostSimulation > 0n)) &&
+    !token.flags.isHidden
+  )
 }
 // if the token is on the gas tank and the network is not a relayer network (a custom network)
 // we should not show it on dashboard
 const isGasTankTokenOnCustomNetwork = (token: TokenResult, networks: Network[]) => {
   return token.flags.onGasTank && !networks.find((n) => n.chainId === token.chainId && n.hasRelayer)
+}
+
+const HIGH_VALUE_TOKEN_USD = 1
+const HIGH_VALUE_TOKEN_COUNT_THRESHOLD = 100
+const LOWER_VALUE_TOKEN_MAX_USD = 1
+const DUST_TOKEN_MAX_USD = 0.01
+
+const hasUSDPrice = (token: TokenResult) =>
+  token.priceIn.some((price) => price.baseCurrency === 'usd')
+
+const isCollapsibleToken = (token: TokenResult, isLargePortfolio: boolean): boolean => {
+  // Rewards and vesting tokens should never be hidden as lower-value tokens
+  if (
+    token.flags.rewardsType === 'wallet-rewards' ||
+    token.flags.rewardsType === 'wallet-vesting'
+  ) {
+    return false
+  }
+
+  // Simulated tokens should never be hidden as well, because the user may be
+  // sending the entire amount, which will make the post-simulation balance 0
+  if (typeof token.amountPostSimulation === 'bigint') {
+    return false
+  }
+
+  const tokenHasUSDPrice = hasUSDPrice(token)
+
+  // Custom tokens that don't have a price shouldn't be hidden as lower-value tokens
+  // because the user may be tracking it for other reasons
+  if (token.flags.isCustom && !tokenHasUSDPrice) {
+    return false
+  }
+
+  if (!tokenHasUSDPrice) {
+    return true
+  }
+
+  const balanceUSD = getTokenBalanceInUSD(token)
+
+  if (isLargePortfolio) {
+    return balanceUSD <= LOWER_VALUE_TOKEN_MAX_USD
+  }
+
+  return balanceUSD < DUST_TOKEN_MAX_USD
 }
 
 const { isPopup } = getUiType()
@@ -74,19 +124,21 @@ const Tokens = ({
   onScroll,
   animatedOverviewHeight,
   dashboardNetworkFilterName,
+  isSearchHidden,
+  refreshing,
+  onRefresh,
   style
 }: Props) => {
   const { t } = useTranslation()
   const { navigate } = useNavigation()
   const { theme } = useTheme()
-  const { networks } = useNetworksControllerState()
-  const { customTokens } = usePortfolioControllerState()
-  const { portfolio, dashboardNetworkFilter } = useSelectedAccountControllerState()
   const {
-    ref: addTokenBottomSheetRef,
-    open: openAddTokenBottomSheet,
-    close: closeAddTokenBottomSheet
-  } = useModalize()
+    state: { networks }
+  } = useController('NetworksController')
+  const { customTokens } = useController('PortfolioController').state
+  const {
+    state: { portfolio, balanceAffectingErrors, dashboardNetworkFilter }
+  } = useController('SelectedAccountController')
   const { control, watch, setValue } = useForm({
     mode: 'all',
     defaultValues: {
@@ -94,26 +146,40 @@ const Tokens = ({
     }
   })
 
+  const [isDustExpanded, setIsDustExpanded] = useState(false)
   const searchValue = watch('search')
 
-  const tokens = useMemo(
-    () =>
-      (portfolio?.tokens || [])
-        // Hide gas tank and borrowed defi tokens from the list
-        .filter((token) => !token.flags.onGasTank && token.flags.defiTokenType !== AssetType.Borrow)
-        .filter((token) => {
-          if (!dashboardNetworkFilter) return true
-          if (dashboardNetworkFilter === 'rewards') return token.flags.rewardsType
-          if (dashboardNetworkFilter === 'gasTank') return token.flags.onGasTank
+  const networkIdsWithPriceError = useMemo(() => {
+    const networkIds = new Set<string>()
 
-          return (
-            token?.chainId?.toString() === dashboardNetworkFilter.toString() &&
-            !token.flags.onGasTank
-          )
-        })
-        .filter((token) => tokenSearch({ search: searchValue, token, networks })),
-    [portfolio?.tokens, dashboardNetworkFilter, searchValue, networks]
-  )
+    const priceError = balanceAffectingErrors.find(
+      (error) => error.id === PORTFOLIO_LIB_ERROR_NAMES.PriceFetchError
+    )
+
+    priceError?.networkNames.forEach((networkName) => {
+      const network = networks.find((n) => n.name === networkName)
+
+      if (network) {
+        networkIds.add(network.chainId.toString())
+      }
+    })
+    return networkIds
+  }, [balanceAffectingErrors, networks])
+
+  const tokens = useMemo(() => {
+    const tokenList = (portfolio?.tokens || []).filter((token) => {
+      // Hide gas tank and borrowed defi tokens from the list
+      if (token.flags.onGasTank || token.flags.defiTokenType === AssetType.Borrow) return false
+
+      if (!dashboardNetworkFilter) return true
+      if (dashboardNetworkFilter === 'rewards') return token.flags.rewardsType
+      if (dashboardNetworkFilter === 'gasTank') return token.flags.onGasTank
+
+      return token?.chainId?.toString() === dashboardNetworkFilter.toString()
+    })
+
+    return tokenOrCollectionSearch({ networks, assets: tokenList, search: searchValue })
+  }, [portfolio?.tokens, networks, searchValue, dashboardNetworkFilter])
 
   const userHasNoBalance = useMemo(
     // Exclude gas tank tokens from the check
@@ -127,16 +193,22 @@ const Tokens = ({
       tokens
         .filter((token) => {
           if (isGasTankTokenOnCustomNetwork(token, networks)) return false
-          if (token?.flags.isHidden) return false
+          if (token?.flags.isHidden || token.flags.rewardsType === 'wallet-projected-rewards')
+            return false
 
           const hasTokenAmount = hasAmount(token)
           const isCustom = customTokens.find(
             ({ address, chainId }) =>
-              token.address.toLowerCase() === address.toLowerCase() && token.chainId === chainId
+              token.address.toLowerCase() === address.toLowerCase() &&
+              token.chainId === chainId &&
+              !token.flags.rewardsType // exclude rewards from custom tokens
           )
           const isPinned = PINNED_TOKENS.find(
             ({ address, chainId }) =>
-              token.address.toLowerCase() === address.toLowerCase() && token.chainId === chainId
+              token.address.toLowerCase() === address.toLowerCase() &&
+              token.chainId === chainId &&
+              // exclude projected rewards from pinned tokens
+              token.flags.rewardsType !== 'wallet-projected-rewards'
           )
 
           return (
@@ -193,14 +265,84 @@ const Tokens = ({
     [tokens, networks, customTokens, userHasNoBalance, portfolio?.isAllReady]
   )
 
+  const { visibleTokens, dustTokens } = useMemo(() => {
+    if (userHasNoBalance || searchValue.length > 0) {
+      return { visibleTokens: sortedTokens, dustTokens: [] }
+    }
+
+    const highValueTokensCount = sortedTokens.filter(
+      (token) => hasUSDPrice(token) && getTokenBalanceInUSD(token) > HIGH_VALUE_TOKEN_USD
+    ).length
+
+    const isLargePortfolio = highValueTokensCount > HIGH_VALUE_TOKEN_COUNT_THRESHOLD
+
+    return sortedTokens.reduce(
+      (acc, token) => {
+        // If there is a price fetch error for a network every token will be considered
+        // lower-value, so we need to show all tokens in that case, regardless of their balance
+        if (
+          isCollapsibleToken(token, isLargePortfolio) &&
+          !networkIdsWithPriceError.has(token.chainId.toString())
+        ) {
+          acc.dustTokens.push(token)
+        } else {
+          acc.visibleTokens.push(token)
+        }
+        return acc
+      },
+      { visibleTokens: [] as TokenResult[], dustTokens: [] as TokenResult[] }
+    )
+  }, [networkIdsWithPriceError, sortedTokens, userHasNoBalance, searchValue])
+
+  const dustTotalUSD = useMemo(
+    () => dustTokens.reduce((sum, token) => sum + getTokenBalanceInUSD(token), 0),
+    [dustTokens]
+  )
+
   const hiddenTokensCount = useMemo(
     () => tokens.filter((token) => token.flags.isHidden).length,
     [tokens]
   )
 
-  const navigateToAddCustomToken = useCallback(() => {
-    openAddTokenBottomSheet()
-  }, [openAddTokenBottomSheet])
+  const showTokens = initTab?.tokens
+  const hasAnyTokens = visibleTokens.length > 0 || dustTokens.length > 0
+
+  const listData = useMemo(() => {
+    const data: any[] = ['header']
+
+    // Skeleton 1, order matters
+    if (!hasAnyTokens && !portfolio?.isAllReady) {
+      data.push('skeleton')
+    }
+
+    if (showTokens) {
+      data.push(...visibleTokens)
+
+      if (dustTokens.length > 0) {
+        if (!isDustExpanded) {
+          data.push('dust-summary')
+        } else {
+          data.push(...dustTokens, 'dust-collapse')
+        }
+      }
+    }
+
+    // Skeleton 2, order matters, needs to be after the tokens to show the user partial results
+    // but also indicate that we are still loading
+    if (hasAnyTokens && !portfolio?.isAllReady) {
+      data.push('skeleton')
+    }
+
+    if (portfolio?.isAllReady && !hasAnyTokens) {
+      data.push('empty')
+    }
+
+    if (portfolio?.isAllReady) {
+      data.push('footer')
+    }
+
+    return data
+  }, [hasAnyTokens, portfolio?.isAllReady, showTokens, visibleTokens, dustTokens, isDustExpanded])
 
   const renderItem = useCallback(
     ({ item, index }: any) => {
@@ -210,25 +352,9 @@ const Tokens = ({
             <TabsAndSearch
               openTab={openTab}
               setOpenTab={setOpenTab}
-              searchControl={control}
+              currentTab="tokens"
               sessionId={sessionId}
             />
-            <View style={[flexbox.directionRow, spacings.mbTy, spacings.phTy]}>
-              <Text appearance="secondaryText" fontSize={14} weight="medium" style={{ flex: 1.5 }}>
-                {t('ASSET/AMOUNT')}
-              </Text>
-              <Text appearance="secondaryText" fontSize={14} weight="medium" style={{ flex: 0.7 }}>
-                {t('PRICE')}
-              </Text>
-              <Text
-                appearance="secondaryText"
-                fontSize={14}
-                weight="medium"
-                style={{ flex: 0.4, textAlign: 'right' }}
-              >
-                {t('USD VALUE')}
-              </Text>
-            </View>
           </View>
         )
       }
@@ -236,7 +362,7 @@ const Tokens = ({
       if (item === 'empty') {
         return (
           <View style={[flexbox.alignCenter, spacings.pv]}>
-            <Text fontSize={16} weight="medium" appearance="muted">
+            <Text testID="no-tokens-text" fontSize={16} weight="medium">
               {!searchValue && !dashboardNetworkFilterName && t("You don't have any tokens yet.")}
               {!searchValue &&
                 dashboardNetworkFilterName &&
@@ -256,7 +382,7 @@ const Tokens = ({
         return (
           <View style={spacings.ptTy}>
             {/* Display more skeleton items if there are no tokens */}
-            <Skeleton amount={3} withHeader={false} />
+            <Skeleton amount={3} />
           </View>
         )
 
@@ -264,7 +390,7 @@ const Tokens = ({
         return portfolio?.isAllReady &&
           // A trick to render the button once all tokens have been rendered. Otherwise
           // there will be layout shifts
-          index === sortedTokens.length + 4 ? (
+          index === listData.length - 1 ? (
           <View style={hiddenTokensCount ? spacings.ptTy : spacings.ptSm}>
             {!!hiddenTokensCount && (
               <Pressable
@@ -290,29 +416,39 @@ const Tokens = ({
                     count: hiddenTokensCount,
                     tokensLabel: hiddenTokensCount > 1 ? t('tokens') : t('token')
                   })}{' '}
-                  {dashboardNetworkFilter && t('on this network')}
+                  {!!dashboardNetworkFilter && t('on this network')}
                 </Text>
-                <RightArrowIcon height={12} color={theme.secondaryText} />
+                <RightArrowIcon height={12} color={theme.secondaryText as string} />
               </Pressable>
             )}
-            <Button
-              type="primary"
-              text={t('+ Add custom token')}
-              onPress={navigateToAddCustomToken}
-            />
           </View>
         ) : null
       }
 
-      if (
-        !initTab?.tokens ||
-        !item ||
-        item === 'keep-this-to-avoid-key-warning' ||
-        item === 'keep-this-to-avoid-key-warning-2'
-      )
-        return null
+      if (item === 'dust-summary') {
+        return (
+          <OtherTokensSummary
+            variant="summary"
+            count={dustTokens.length}
+            totalUSD={dustTotalUSD}
+            onPress={() => setIsDustExpanded(true)}
+          />
+        )
+      }
 
-      return <TokenItem token={item} style={style} />
+      if (item === 'dust-collapse') {
+        return (
+          <OtherTokensSummary
+            variant="collapse"
+            count={dustTokens.length}
+            onPress={() => setIsDustExpanded(false)}
+          />
+        )
+      }
+
+      if (!initTab?.tokens || !item) return null
+
+      return <TokenItem token={item} />
     },
     [
       initTab?.tokens,
@@ -321,17 +457,18 @@ const Tokens = ({
       theme.secondaryText,
       openTab,
       setOpenTab,
-      control,
       sessionId,
-      t,
       searchValue,
       dashboardNetworkFilterName,
-      portfolio?.isAllReady,
-      sortedTokens.length,
+      t,
+      listData.length,
       hiddenTokensCount,
+      portfolio?.isAllReady,
       dashboardNetworkFilter,
-      // navigateToAddCustomToken,
-      navigate
+      navigate,
+      dustTokens.length,
+      dustTotalUSD,
+      style
     ]
   )
 
@@ -354,29 +491,26 @@ const Tokens = ({
         openTab={openTab}
         ListHeaderComponent={<DashboardBanners />}
         animatedOverviewHeight={animatedOverviewHeight}
-        data={[
-          'header',
-          !sortedTokens.length && !portfolio?.isAllReady
-            ? 'skeleton'
-            : 'keep-this-to-avoid-key-warning',
-          ...(initTab?.tokens ? sortedTokens : []),
-          sortedTokens.length && !portfolio?.isAllReady
-            ? 'skeleton'
-            : 'keep-this-to-avoid-key-warning-2',
-          !sortedTokens.length && portfolio?.isAllReady ? 'empty' : '',
-          'footer'
-        ]}
+        data={listData}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         onEndReachedThreshold={isPopup ? 5 : 2.5}
         initialNumToRender={isPopup ? 10 : 20}
         windowSize={9} // Larger values can cause performance issues.
         onScroll={onScroll}
+        scrollEventThrottle={16}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
       />
-      <AddTokenBottomSheet
-        sheetRef={addTokenBottomSheetRef}
-        handleClose={closeAddTokenBottomSheet}
-      />
+      {openTab === 'tokens' && (
+        <FloatingBottomBar
+          control={control}
+          displayCurrentApp
+          displayNetworkFilter
+          isHidden={isSearchHidden}
+          searchPlaceholder={t('Search token')}
+        />
+      )}
     </>
   )
 }

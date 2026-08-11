@@ -1,7 +1,7 @@
 import { delayPromise } from '@common/utils/promises'
 import { RELAYER_URL } from '@env'
 import HumanReadableError from '@legends/classes/HumanReadableError'
-import { ERROR_MESSAGES } from '@legends/constants/errors/messages'
+import useProviderContext from '@legends/hooks/useProviderContext'
 
 export const ERRORS = {
   txFailed: 'tx-failed',
@@ -28,25 +28,29 @@ type Receipt = {
 }
 
 const useErc5792 = () => {
+  const { provider } = useProviderContext()
+
   // all fields below marked as string should be HEX!
   const sendCalls = async (
-    chainId: string,
+    chainId: bigint,
     accAddr: string,
     calls: { to: string; data: string; value?: string }[],
     useSponsorship = true
   ) => {
-    const sendCallsIdentifier: any = await window.ambire.request({
+    if (!provider) return ''
+
+    const sendCallsIdentifier: any = await provider.request({
       method: 'wallet_sendCalls',
       params: [
         {
           version: '1.0',
-          chainId,
+          chainId: '0x' + chainId.toString(16),
           from: accAddr,
           calls,
           capabilities: useSponsorship
             ? {
                 paymasterService: {
-                  [chainId]: {
+                  ['0x' + chainId.toString(16)]: {
                     url: `${RELAYER_URL}/v2/sponsorship`
                   }
                 }
@@ -62,14 +66,15 @@ const useErc5792 = () => {
   // the callsId should be an identifier return by the wallet
   // from wallet_sendCalls
   const getCallsStatus = async (
-    callsId: string,
-    is4337Required: boolean = true
-  ): Promise<Receipt> => {
+    callsId: string
+    // is4337Required: boolean = true
+  ): Promise<Receipt | undefined> => {
+    if (!provider) return
+
     let receipt = null
-    // eslint-disable-next-line no-constant-condition
+
     while (true) {
-      // eslint-disable-next-line no-await-in-loop
-      const callStatus: any = await window.ambire.request({
+      const callStatus: any = await provider.request({
         method: 'wallet_getCallsStatus',
         params: [callsId]
       })
@@ -82,26 +87,20 @@ const useErc5792 = () => {
         throw new Error('Error, try again')
       }
 
-      // eslint-disable-next-line no-await-in-loop
       await delayPromise(1500)
     }
 
     if (Number(receipt.status) === 0)
-      throw new HumanReadableError(
-        'The transaction failed and will not grant any XP. Please try signing again.',
-        {
-          cause: ERRORS.txFailed
-        }
-      )
+      throw new HumanReadableError('The transaction failed. Please try signing again.', {
+        cause: ERRORS.txFailed
+      })
 
     return receipt
   }
 
   return {
     getCallsStatus,
-    sendCalls,
-    // the correct format for chainId when using erc5792
-    chainId: '0x2105'
+    sendCalls
   }
 }
 

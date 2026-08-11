@@ -1,4 +1,4 @@
-import { BA_PASSPHRASE, KEYSTORE_PASS, SA_PASSPHRASE } from 'constants/env'
+import { KEYSTORE_PASS, SEED } from 'constants/env'
 import mainConstants from 'constants/mainConstants'
 import selectors from 'constants/selectors'
 import { test } from 'fixtures/pageObjects' // your extended test with auth
@@ -6,9 +6,16 @@ import { test } from 'fixtures/pageObjects' // your extended test with auth
 import { expect } from '@playwright/test'
 
 import { emulatorOptions } from '../../constants/trezor'
-import { getController, initTrezorConnect, setup } from '../../utils/trezorEmulator'
+import {
+  disposeTrezorConnect,
+  getController,
+  initTrezorConnect,
+  setup
+} from '../../utils/trezorEmulator'
 
-test.describe('auth', () => {
+test.describe('auth', { tag: '@auth' }, () => {
+  test.setTimeout(60000)
+
   test.beforeEach(async ({ pages }) => {
     await pages.initWithoutStorage()
   })
@@ -33,16 +40,17 @@ test.describe('auth', () => {
     await pages.auth.importExistingAccount()
   })
 
-  test('import one Basic Account from a 12 words seed phrase and personalize them', async ({
-    pages
-  }) => {
-    await pages.auth.importExistingAccountByRecoveryPhrase(BA_PASSPHRASE)
-  })
+  // TODO: duplicate; entering same seed phrase 2 times
+  // test('import one Basic Account from a 12 words seed phrase and personalize them', async ({
+  //   pages
+  // }) => {
+  //   await pages.auth.importExistingAccountByRecoveryPhrase(SEED)
+  // })
 
   test('import one Smart Account from a 12 words seed phrase and personalize them', async ({
     pages
   }) => {
-    await pages.auth.importExistingAccountByRecoveryPhrase(SA_PASSPHRASE)
+    await pages.auth.importExistingAccountByRecoveryPhrase(SEED)
   })
 
   test('import a couple of view-only accounts (at once) and personalize some of them', async ({
@@ -61,6 +69,8 @@ test.describe('auth', () => {
   })
 
   test('import account from different HD paths', async ({ pages }) => {
+    test.setTimeout(80000)
+
     await pages.auth.createAccountAndImportFromDifferentHDPath()
   })
 
@@ -69,38 +79,33 @@ test.describe('auth', () => {
   })
 })
 
-test.describe('trezor', () => {
+test.describe('trezor', { tag: '@trezorTests' }, () => {
+  test.describe.configure({ mode: 'serial' })
   const controller = getController()
 
-  test.beforeAll(async () => {
+  test.beforeEach(async ({ pages }) => {
     await setup(controller, emulatorOptions)
     await initTrezorConnect(controller)
-  })
-
-  test.beforeEach(async ({ pages }) => {
     await pages.initWithoutStorage()
   })
 
   test.afterEach(async ({ context }) => {
-    await context.close()
-  })
-
-  test.afterAll(async () => {
     // Cleanup emulator and dispose of resources
     try {
-      // Skip cleanup if WS is disconnected
-      if (!controller.ws || controller.ws.readyState !== WebSocket.OPEN) {
-        console.warn('TrezorUserEnvLink WS already disconnected. Skipping cleanup.')
-        return
+      if (controller.ws && controller.ws.readyState === WebSocket.OPEN) {
+        await controller.api.wipeEmu()
+        await controller.api.stopBridge()
+        await controller.api.stopEmu()
+      } else {
+        console.warn('TrezorUserEnvLink WS already disconnected. Skipping emulator cleanup.')
       }
-
-      await controller.api.wipeEmu()
-      await controller.api.stopBridge()
-      await controller.api.stopEmu()
-      controller.dispose()
     } catch (error) {
       console.error('Error during cleanup:', error)
+    } finally {
+      disposeTrezorConnect()
+      controller.dispose()
     }
+    await context.close()
   })
 
   test('should successfully authenticate using Trezor and import existing accounts', async ({
@@ -109,16 +114,16 @@ test.describe('trezor', () => {
     const page = pages.auth.page
 
     await test.step('start importing existing Trezor accounts in our Onboarding flow', async () => {
-      await page.getByTestId(selectors.importExistingAccBtn).click()
+      await page.getByTestId(selectors.getStarted.importExistingAccBtn).click()
       await page.getByTestId(selectors.importMethodTrezor).click()
 
-      await page.getByTestId(selectors.enterPassField).fill(KEYSTORE_PASS)
-      await page.getByTestId(selectors.repeatPassField).fill(KEYSTORE_PASS)
+      await page.getByTestId(selectors.getStarted.enterPassField).fill(KEYSTORE_PASS)
+      await page.getByTestId(selectors.getStarted.repeatPassField).fill(KEYSTORE_PASS)
     })
 
     await test.step('allow importing accounts from Trezor Connect', async () => {
       const trezorPage = await pages.auth.handleNewPage(
-        page.getByTestId(selectors.createKeystorePassBtn)
+        page.getByTestId(selectors.getStarted.createKeystorePassBtn)
       )
 
       await trezorPage.content()
@@ -142,20 +147,53 @@ test.describe('trezor', () => {
     })
 
     await test.step('import first 2 accounts', async () => {
-      await page.getByTestId(`add-account-${mainConstants.addresses.trezorAccount1}`).click()
+      const firstTrezorAccount = page.getByTestId(
+        `add-account-${mainConstants.addresses.trezorAccount1}`
+      )
+      await expect(firstTrezorAccount).toBeVisible({ timeout: 10000 })
+      await firstTrezorAccount.click()
       await page.getByTestId(`add-account-${mainConstants.addresses.trezorAccount2}`).click()
-
-      await page.getByTestId(selectors.buttonImportAccount).click()
-      await page.getByTestId(selectors.saveAndContinueBtn).click()
+      await page.getByTestId(selectors.getStarted.importAccountButton).click()
+      await page.getByTestId(selectors.getStarted.saveAndContinueBtn).click()
     })
 
     await test.step('make sure accounts are imported', async () => {
       await pages.auth.goToDashboard()
 
-      await page.getByTestId(selectors.accountSelectBtn).click()
+      // For some reason, the account select button is not visible in some of the runs,
+      // so we add a small wait to give the button a chance to be visible,
+      // and log a diagnostic error if the button is not clickable in order to debug the issue.
+      await page.waitForTimeout(5000)
+      const accountSelectBtn = page.getByTestId(selectors.accountSelectBtn)
 
-      await expect(page.getByText(mainConstants.addresses.trezorAccount1)).toBeVisible()
-      await expect(page.getByText(mainConstants.addresses.trezorAccount2)).toBeVisible()
+      const debugInfo = {
+        testId: selectors.accountSelectBtn,
+        currentUrl: page.url(),
+        count: await accountSelectBtn.count(),
+        isVisible: await accountSelectBtn.isVisible().catch(() => false),
+        isEnabled: await accountSelectBtn.isEnabled().catch(() => false),
+        viewport: page.viewportSize()
+      }
+
+      try {
+        await accountSelectBtn.click()
+      } catch (error) {
+        const htmlOutput = (await page.content()).slice(0, 10000)
+        console.error('Failed to find/click account selector button', {
+          ...debugInfo,
+          postClickVisible: await accountSelectBtn.isVisible().catch(() => false),
+          postClickEnabled: await accountSelectBtn.isEnabled().catch(() => false),
+          htmlOutput
+        })
+
+        throw error
+      }
+
+      const partAddress1 = mainConstants.addresses.trezorAccount1.slice(0, 10)
+      const partAddress2 = mainConstants.addresses.trezorAccount2.slice(0, 10)
+
+      await expect(page.getByText(partAddress1)).toBeVisible()
+      await expect(page.getByText(partAddress2)).toBeVisible()
     })
   })
 })

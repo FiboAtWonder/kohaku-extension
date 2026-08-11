@@ -7,27 +7,23 @@ import TokenIcon from '@common/components/TokenIcon'
 import { useTranslation } from '@common/config/localization'
 import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
-import useAccountsControllerState from '@web/hooks/useAccountsControllerState'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useNetworksControllerState from '@web/hooks/useNetworksControllerState'
 import { formatEther, formatUnits, parseUnits, zeroAddress } from 'viem'
 import { getTokenAmount } from '@ambire-common/libs/portfolio/helpers'
 import PrivacyIcon from '@common/assets/svg/PrivacyIcon'
 import Select from '@common/components/Select'
 import { SelectValue } from '@common/components/Select/types'
 import Avatar from '@common/components/Avatar'
-import { isSmartAccount } from '@ambire-common/libs/account/account'
 import Divider from '@common/components/Divider'
 import shortenAddress from '@ambire-common/utils/shortenAddress'
 import RailgunIcon from '@common/assets/svg/RailgunIcon'
 import useGetTokenSelectProps from '@common/hooks/useGetTokenSelectProps/useGetTokenSelectProps'
-import { getTokenId } from '@web/utils/token'
+import { getTokenId } from '@common/utils/token'
 import formatDecimals from '@ambire-common/utils/formatDecimals/formatDecimals'
 import PrivacyProtocolSelector from '@web/components/PrivacyProtocols'
 import { TokenResult } from '@ambire-common/libs/portfolio'
 import SendToken from '../SendToken'
 import styles from './styles'
+import useController from '@common/hooks/useController'
 
 const DepositForm = ({
   poolAvailable,
@@ -52,11 +48,12 @@ const DepositForm = ({
   privacyProvider?: string
   disabledForm?: boolean
 }) => {
-  const { account: selectedAccount, portfolio: selectedAccountPortfolio } =
-    useSelectedAccountControllerState()
-  const { accounts } = useAccountsControllerState()
-  const { networks } = useNetworksControllerState()
-  const { dispatch } = useBackgroundService()
+  const { account: selectedAccount, portfolio: selectedAccountPortfolio } = useController(
+    'SelectedAccountController'
+  ).state
+  const { accounts } = useController('AccountsController').state
+  const { networks } = useController('NetworksController').state
+  const { dispatch: mainDispatch } = useController('MainController')
   const { t } = useTranslation()
   const [displayAmount, setDisplayAmount] = useState('')
 
@@ -158,7 +155,14 @@ const DepositForm = ({
       return {
         label: account.preferences.label || shortenAddress(account.addr, 10),
         value: account.addr,
-        icon: <Avatar pfp={account.preferences.pfp} size={30} isSmart={isSmartAccount(account)} />
+        icon: (
+          <Avatar
+            address={account.addr}
+            pfp={account.preferences.pfp}
+            size={30}
+            smartAccountType={(account.creation && 'Ambire') || (account.safeCreation && 'Safe')}
+          />
+        )
       }
     })
   }, [regularAccounts])
@@ -173,9 +177,9 @@ const DepositForm = ({
 
       // Switch to the selected account immediately to load its portfolio
       if (selectedAccount?.addr !== newAccountAddr) {
-        dispatch({
-          type: 'MAIN_CONTROLLER_SELECT_ACCOUNT',
-          params: { accountAddr: newAccountAddr }
+        mainDispatch({
+          type: 'method',
+          params: { method: 'selectAccount', args: [newAccountAddr] }
         })
       }
 
@@ -183,7 +187,7 @@ const DepositForm = ({
       setDisplayAmount('')
       handleUpdateForm({ depositAmount: '', selectedToken: null })
     },
-    [handleUpdateForm, selectedAccount?.addr, dispatch]
+    [handleUpdateForm, selectedAccount?.addr, mainDispatch]
   )
 
   const handleChangeFromToken = useCallback(
@@ -250,7 +254,6 @@ const DepositForm = ({
           selectedToken: currentSelectedToken
         })
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.warn('Invalid token amount entered:', inputValue)
       }
     },
@@ -263,14 +266,14 @@ const DepositForm = ({
     if (!portfolio?.isReadyToVisualize || availableTokens.length === 0) return
 
     const tokenToSelect = defaultToken
-      ? availableTokens.find(
+      ? (availableTokens.find(
           (token) =>
             token.chainId === defaultToken.chainId &&
             token.address.toLowerCase() === defaultToken.address.toLowerCase()
         ) ??
         availableTokens.find((token) => token.address === zeroAddress) ??
-        availableTokens[0]
-      : availableTokens.find((token) => token.address === zeroAddress) ?? availableTokens[0]
+        availableTokens[0])
+      : (availableTokens.find((token) => token.address === zeroAddress) ?? availableTokens[0])
 
     if (!tokenToSelect) return
 
@@ -417,7 +420,7 @@ const DepositForm = ({
   return (
     <ScrollableWrapper contentContainerStyle={styles.container}>
       <View style={[spacings.mbMd]}>
-        <Text appearance="muted" fontSize={13} weight="light">
+        <Text appearance="tertiaryText" fontSize={13} weight="light">
           {t('From account')}
         </Text>
         <Select
@@ -435,7 +438,7 @@ const DepositForm = ({
       </View>
 
       <View>
-        <Text appearance="muted" fontSize={13} weight="light">
+        <Text appearance="tertiaryText" fontSize={13} weight="light">
           {t('Amount')}
         </Text>
         <SendToken

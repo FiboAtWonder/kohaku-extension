@@ -1,5 +1,4 @@
-import React, { useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import React, { useMemo, useState } from 'react'
 
 import { faBars } from '@fortawesome/free-solid-svg-icons/faBars'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -7,52 +6,57 @@ import AccountInfo from '@legends/components/AccountInfo'
 import Banner from '@legends/components/Banner'
 import Sidebar from '@legends/components/Sidebar'
 import useAccountContext from '@legends/hooks/useAccountContext'
-import { LEGENDS_ROUTES } from '@legends/modules/router/constants'
+import useLegendsContext from '@legends/hooks/useLegendsContext'
 
+import RewardsBadge from '../RewardsBadge/rb'
 import styles from './Page.module.scss'
 
 const Page = ({
   children,
   pageRef,
   style,
-  containerSize = 'md'
+  containerSize = 'md',
+  contentClassName,
+  showClaimRewardsModal
 }: {
   children: React.ReactNode | React.ReactNode[]
   pageRef?: React.RefObject<HTMLDivElement>
   style?: React.CSSProperties
-  containerSize?: 'md' | 'lg' | 'full'
+  containerSize?: 'md' | 'responsive' | 'lg' | 'full'
+  contentClassName?: string
+  showClaimRewardsModal?: boolean
 }) => {
   const customContainerSizeClass = styles[`container${containerSize}`] || ''
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const { pathname } = useLocation()
-
-  const { connectedAccount, nonV2Account } = useAccountContext()
+  const { legends } = useLegendsContext()
+  const { connectedAccount } = useAccountContext()
 
   const openSidebar = () => setIsSidebarOpen(true)
   const closeSidebar = () => setIsSidebarOpen(false)
-
+  const activeProposals = useMemo(
+    () => legends.find(({ id }) => id === 'vote')?.meta?.activeProposals || [],
+    [legends]
+  )
   return (
     <div>
       <div className={styles.wrapper}>
         <Sidebar handleClose={closeSidebar} isOpen={isSidebarOpen} />
 
         <div ref={pageRef} className={`${styles.scroll} ${styles.containerfull}`} style={style}>
-          <Banner />
+          <Banner activeProposals={activeProposals} />
           <div className={`${styles.container} ${customContainerSizeClass}`}>
             <div className={styles.header}>
               <button className={styles.sidebarButton} type="button" onClick={openSidebar}>
                 <FontAwesomeIcon icon={faBars} />
               </button>
-              {connectedAccount &&
-                !nonV2Account &&
-                pathname !== LEGENDS_ROUTES.home &&
-                pathname !== '/' && (
-                  <div className={styles.account}>
-                    <AccountInfo />
-                  </div>
-                )}
+              {showClaimRewardsModal && <RewardsBadge />}
+              {connectedAccount && (
+                <div className={styles.account}>
+                  <AccountInfo />
+                </div>
+              )}
             </div>
-            <div className={styles.content}>{children}</div>
+            <div className={`${styles.content} ${contentClassName || ''}`}>{children}</div>
           </div>
         </div>
       </div>

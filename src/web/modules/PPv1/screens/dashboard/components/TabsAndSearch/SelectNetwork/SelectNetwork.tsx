@@ -11,12 +11,11 @@ import useTheme from '@common/hooks/useTheme'
 import { WEB_ROUTES } from '@common/modules/router/constants/common'
 import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
-import { AnimatedPressable, DURATIONS, useMultiHover } from '@web/hooks/useHover'
-import useNetworksControllerState from '@web/hooks/useNetworksControllerState'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
-import { getUiType } from '@web/utils/uiType'
+import { AnimatedPressable, DURATIONS, useMultiHover } from '@common/hooks/useHover'
+import { getUiType } from '@common/utils/uiType'
 
 import getStyles from './styles'
+import useController from '@common/hooks/useController'
 
 const { isPopup } = getUiType()
 
@@ -28,9 +27,9 @@ const maxNetworkNameLengths = {
 const SelectNetwork = () => {
   const { styles } = useTheme(getStyles)
   const { t } = useTranslation()
-  const { dashboardNetworkFilter } = useSelectedAccountControllerState()
+  const { dashboardNetworkFilter } = useController('SelectedAccountController').state
   const { navigate } = useNavigation()
-  const { networks } = useNetworksControllerState()
+  const { networks } = useController('NetworksController').state
   const { theme } = useTheme()
   const [searchParams] = useSearchParams()
 

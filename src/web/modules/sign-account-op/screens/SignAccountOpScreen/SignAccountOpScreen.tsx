@@ -1,91 +1,85 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { NativeScrollEvent, Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { NativeScrollEvent, ScrollView, View } from 'react-native'
 
-import { AccountOpAction } from '@ambire-common/controllers/actions/actions'
-import { SigningStatus } from '@ambire-common/controllers/signAccountOp/signAccountOp'
+import { SigningStatus } from '@ambire-common/interfaces/signAccountOp'
 import { Key } from '@ambire-common/interfaces/keystore'
-import { getErrorCodeStringFromReason } from '@ambire-common/libs/errorDecoder/helpers'
-import CopyIcon from '@common/assets/svg/CopyIcon'
+import { CallsUserRequest } from '@ambire-common/interfaces/userRequest'
 import Alert from '@common/components/Alert'
-import AlertVertical from '@common/components/AlertVertical'
+import GlassView from '@common/components/GlassView'
+import NetworkBadge from '@common/components/NetworkBadge'
 import NoKeysToSignAlert from '@common/components/NoKeysToSignAlert'
+import useController from '@common/hooks/useController'
 import useSign from '@common/hooks/useSign'
 import useTheme from '@common/hooks/useTheme'
-import useToast from '@common/hooks/useToast'
+import ActionHeader from '@common/modules/action-requests/components/ActionHeader'
+import ErrorInformation from '@common/modules/sign-account-op/components/ErrorInformation'
+import Estimation from '@common/modules/sign-account-op/components/Estimation'
+import Footer from '@common/modules/sign-account-op/components/Footer'
+import PendingTransactions from '@common/modules/sign-account-op/components/PendingTransactions'
+import SafeEip712Data from '@common/modules/sign-account-op/components/SafeEip712Data'
+import SafeOwners from '@common/modules/sign-account-op/components/SafeOwners'
+import SafetyChecksOverlay from '@common/modules/sign-account-op/components/SafetyChecksOverlay'
+import SectionHeading from '@common/modules/sign-account-op/components/SectionHeading'
+import Simulation from '@common/modules/sign-account-op/components/Simulation'
+import TenderlySimulation from '@common/modules/sign-account-op/components/TenderlySimulation'
+import KeySelect from '@common/modules/sign-message/components/KeySelect'
 import spacings from '@common/styles/spacings'
-import { THEME_TYPES } from '@common/styles/themeConfig'
 import flexbox from '@common/styles/utils/flexbox'
-import { setStringAsync } from '@common/utils/clipboard'
-import HeaderAccountAndNetworkInfo from '@web/components/HeaderAccountAndNetworkInfo'
 import SmallNotificationWindowWrapper from '@web/components/SmallNotificationWindowWrapper'
 import {
   TabLayoutContainer,
   TabLayoutWrapperMainContent
 } from '@web/components/TabLayoutWrapper/TabLayoutWrapper'
 import { closeCurrentWindow } from '@web/extension-services/background/webapi/window'
-import useActionsControllerState from '@web/hooks/useActionsControllerState'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useMainControllerState from '@web/hooks/useMainControllerState'
 import useColibriSimulation from '@web/hooks/useColibriSimulation'
-import useSignAccountOpControllerState from '@web/hooks/useSignAccountOpControllerState'
+import useDappVerificationHoldButtonType from '@web/hooks/useDappVerificationHoldButtonType'
 import ColibriSimulationResult from '@web/modules/sign-account-op/components/ColibriSimulationResult'
-import Estimation from '@web/modules/sign-account-op/components/Estimation'
-import Footer from '@web/modules/sign-account-op/components/Footer'
 import Modals from '@web/modules/sign-account-op/components/Modals/Modals'
-import PendingTransactions from '@web/modules/sign-account-op/components/PendingTransactions'
-import SafetyChecksOverlay from '@web/modules/sign-account-op/components/SafetyChecksOverlay'
-import Simulation from '@web/modules/sign-account-op/components/Simulation'
-import SigningKeySelect from '@web/modules/sign-message/components/SignKeySelect'
-
-import getStyles from './styles'
 
 const isCloseToBottom = ({ layoutMeasurement, contentOffset, contentSize }: NativeScrollEvent) => {
-  const paddingToBottom = 20
+  const paddingToBottom = 40
   return layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom
 }
 
 const SignAccountOpScreen = () => {
-  const actionsState = useActionsControllerState()
-  const signAccountOpState = useSignAccountOpControllerState()
-  const mainState = useMainControllerState()
-  const { dispatch } = useBackgroundService()
+  const {
+    state: { currentUserRequest, visibleUserRequests },
+    dispatch: requestsDispatch
+  } = useController('RequestsController')
+  const { state: signAccountOpState, dispatch: signAccountOpDispatch } =
+    useController('SignAccountOpController')
   const { t } = useTranslation()
-  const { addToast } = useToast()
-  const { styles, theme, themeType } = useTheme(getStyles)
+  const { theme } = useTheme()
   const [containerHeight, setContainerHeight] = useState(0)
   const [contentHeight, setContentHeight] = useState(0)
   const [hasReachedBottom, setHasReachedBottom] = useState<boolean | null>(null)
 
   const handleUpdateStatus = useCallback(
     (status: SigningStatus) => {
-      dispatch({
-        type: 'MAIN_CONTROLLER_SIGN_ACCOUNT_OP_UPDATE_STATUS',
+      signAccountOpDispatch({
+        type: 'method',
         params: {
-          status
+          method: 'updateStatus',
+          args: [status]
         }
       })
     },
-    [dispatch]
+    [signAccountOpDispatch]
   )
   const updateController = useCallback(
     (params: { signingKeyAddr?: Key['addr']; signingKeyType?: Key['type'] }) => {
-      dispatch({
-        type: 'MAIN_CONTROLLER_SIGN_ACCOUNT_OP_UPDATE',
-        params
+      signAccountOpDispatch({
+        type: 'method',
+        params: {
+          method: 'update',
+          args: [params]
+        }
       })
     },
-    [dispatch]
+    [signAccountOpDispatch]
   )
 
-  const handleBroadcast = useCallback(() => {
-    dispatch({
-      type: 'MAIN_CONTROLLER_HANDLE_SIGN_AND_BROADCAST_ACCOUNT_OP',
-      params: {
-        updateType: 'Main'
-      }
-    })
-  }, [dispatch])
   const {
     renderedButNotNecessarilyVisibleModal,
     isViewOnly,
@@ -102,78 +96,73 @@ const SignAccountOpScreen = () => {
     isSignLoading,
     hasEstimation,
     warningModalRef,
+    gasFeeUpdatedModalRef,
+    handleAcceptGasFeeUpdate,
+    handleDismissGasFeeUpdate,
+    handleChangeFeePayerKeyType,
+    isChooseFeePayerKeyShown,
+    setIsChooseFeePayerKeyShown,
     signingKeyType,
     feePayerKeyType,
     shouldDisplayLedgerConnectModal,
     network,
-    initDispatchedForId,
-    setInitDispatchedForId,
     isSignDisabled,
     bundlerNonceDiscrepancy,
-    primaryButtonText
+    primaryButtonText,
+    signButtonText,
+    extremeGasFeeSignButtonType,
+    shouldHoldToProceed,
+    shouldDisplayQrSigningModal,
+    handleQrSigningFlowOnContinuePressed,
+    handleQrSigningFlowSubmitSignatureResponse,
+    handleQrSigningFlowOnClosePressed,
+    handleQrSigningFlowOnRejectPressed,
+    handleQrSigningFlowOnBackPressed,
+    currentRequest,
+    signingStep,
+    disabledReason,
+    showSafeSigners
   } = useSign({
     handleUpdateStatus,
     signAccountOpState,
     handleUpdate: updateController,
-    handleBroadcast
+    hasReachedBottom
   })
 
+  // Colibri stateless-RPC transaction simulation (kohaku)
   const {
     isLoading: isSimulating,
     result: simulationResult,
     error: simulationError,
     isColibriAvailable,
-    isSimulationEnabled,
-    simulate: handleSimulate
+    isSimulationEnabled
   } = useColibriSimulation(network, signAccountOpState?.accountOp)
 
-  const accountOpAction = useMemo(() => {
-    if (actionsState.currentAction?.type !== 'accountOp') return undefined
-    return actionsState.currentAction as AccountOpAction
-  }, [actionsState.currentAction])
-
-  useEffect(() => {
-    // Check if the action is already initialized to avoid double dispatching
-    // Without this check two dispatches occur for the same id:
-    // - one from the current window before it gets closed
-    // - one from the new window
-    // leading into two threads trying to initialize the same signAccountOp
-    // object which is a waste of resources + signAccountOp has an inner
-    // gasPrice controller that sets an interval for fetching gas price
-    // each 12s and that interval gets persisted into memory, causing double
-    // fetching
-    if (accountOpAction?.id && initDispatchedForId !== accountOpAction.id) {
-      setInitDispatchedForId(accountOpAction.id)
-      dispatch({
-        type: 'MAIN_CONTROLLER_SIGN_ACCOUNT_OP_INIT',
-        params: { actionId: accountOpAction.id }
-      })
-    }
-  }, [accountOpAction?.id, initDispatchedForId, dispatch, setInitDispatchedForId])
+  const accountOpRequest = useMemo(() => {
+    if (currentUserRequest?.kind !== 'calls') return undefined
+    return currentUserRequest as CallsUserRequest
+  }, [currentUserRequest])
 
   const handleRejectAccountOp = useCallback(() => {
-    if (!accountOpAction) return
+    if (!accountOpRequest) return
 
-    dispatch({
-      type: 'MAIN_CONTROLLER_REJECT_ACCOUNT_OP',
+    requestsDispatch({
+      type: 'method',
       params: {
-        err: 'User rejected the transaction request.',
-        actionId: accountOpAction.id,
-        shouldOpenNextAction: actionsState.visibleActionsQueue.length > 1
+        method: 'rejectUserRequests',
+        args: [
+          'User rejected the transaction request.',
+          [accountOpRequest.id],
+          { shouldOpenNextRequest: visibleUserRequests.length > 1 }
+        ]
       }
     })
-  }, [dispatch, accountOpAction, actionsState.visibleActionsQueue.length])
+  }, [requestsDispatch, accountOpRequest, visibleUserRequests.length])
 
   const handleAddToCart = useCallback(() => {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     closeCurrentWindow()
   }, [])
-
-  useEffect(() => {
-    return () => {
-      dispatch({ type: 'MAIN_CONTROLLER_SIGN_ACCOUNT_OP_DESTROY' })
-    }
-  }, [dispatch])
 
   useEffect(() => {
     if (isSignDisabled || !containerHeight || !contentHeight) return
@@ -189,73 +178,35 @@ const SignAccountOpScreen = () => {
     isSignDisabled
   ])
 
-  const copySignAccountOpError = useCallback(async () => {
-    if (!signAccountOpState?.errors?.length) return
-
-    const errorCode = signAccountOpState.errors[0].code
-
-    if (!errorCode) return
-
-    await setStringAsync(errorCode)
-    addToast(t('Error code copied to clipboard'))
-  }, [addToast, signAccountOpState?.errors, t])
-
-  const errorText = useMemo(() => {
-    const { code, text } = signAccountOpState?.errors?.[0] || {}
-
-    if (code) {
-      return (
-        <AlertVertical.Text type="warning" size="sm" style={styles.alertText}>
-          {getErrorCodeStringFromReason(code || '', false)}
-          <Pressable
-            // @ts-ignore web style
-            style={{ verticalAlign: 'middle', ...spacings.mlMi, ...spacings.mbMi }}
-            onPress={copySignAccountOpError}
-          >
-            <CopyIcon strokeWidth={1.5} width={20} height={20} color={theme.warningText} />
-          </Pressable>
-        </AlertVertical.Text>
-      )
-    }
-
-    if (text) {
-      return (
-        <AlertVertical.Text type="warning" size="sm" style={styles.alertText}>
-          {text}
-        </AlertVertical.Text>
-      )
-    }
-
-    return undefined
-  }, [copySignAccountOpError, signAccountOpState?.errors, styles.alertText, theme.warningText])
-
-  if (mainState.signAccOpInitError) {
-    return (
-      <View style={[StyleSheet.absoluteFill, flexbox.alignCenter, flexbox.justifyCenter]}>
-        <Alert type="error" title={mainState.signAccOpInitError} />
-      </View>
-    )
-  }
-
   const isAddToCartDisabled = useMemo(() => {
+    if (signAccountOpState?.account.safeCreation) return false
     const readyToSign = signAccountOpState?.readyToSign
 
     return isSignLoading || (!readyToSign && !isViewOnly)
-  }, [isSignLoading, isViewOnly, signAccountOpState?.readyToSign])
+  }, [
+    isSignLoading,
+    isViewOnly,
+    signAccountOpState?.readyToSign,
+    signAccountOpState?.account.safeCreation
+  ])
 
   const estimationFailed = signAccountOpState?.status?.type === SigningStatus.EstimationError
+  const holdToProceedButtonType = useDappVerificationHoldButtonType(signAccountOpState?.banners)
 
   return (
     <SmallNotificationWindowWrapper>
       <SafetyChecksOverlay
         shouldBeVisible={
-          !signAccountOpState?.estimation.estimation || !signAccountOpState?.isInitialized
+          !signAccountOpState?.isInitialized || !!signAccountOpState.safetyChecksLoading
         }
       />
       <Modals
         renderedButNotNecessarilyVisibleModal={renderedButNotNecessarilyVisibleModal}
         signAccountOpState={signAccountOpState}
         warningModalRef={warningModalRef}
+        gasFeeUpdatedModalRef={gasFeeUpdatedModalRef}
+        handleAcceptGasFeeUpdate={handleAcceptGasFeeUpdate}
+        handleDismissGasFeeUpdate={handleDismissGasFeeUpdate}
         feePayerKeyType={feePayerKeyType}
         signingKeyType={signingKeyType}
         slowPaymasterRequest={slowPaymasterRequest}
@@ -264,36 +215,47 @@ const SignAccountOpScreen = () => {
         warningToPromptBeforeSign={warningToPromptBeforeSign}
         acknowledgeWarning={acknowledgeWarning}
         dismissWarning={dismissWarning}
+        currentRequest={currentRequest}
+        signingStep={signingStep}
+        shouldDisplayQrSigningModal={shouldDisplayQrSigningModal}
+        handleQrSigningFlowOnContinuePressed={handleQrSigningFlowOnContinuePressed}
+        handleQrSigningFlowSubmitSignatureResponse={handleQrSigningFlowSubmitSignatureResponse}
+        handleQrSigningFlowOnClosePressed={handleQrSigningFlowOnClosePressed}
+        handleQrSigningFlowOnRejectPressed={handleQrSigningFlowOnRejectPressed}
+        handleQrSigningFlowOnBackPressed={handleQrSigningFlowOnBackPressed}
+        autoOpen={
+          renderedButNotNecessarilyVisibleModal === 'gas-fee-updated'
+            ? 'gas-fee-updated'
+            : undefined
+        }
       />
       <TabLayoutContainer
         width="full"
-        backgroundColor={theme.quinaryBackground}
+        backgroundColor={theme.primaryBackground}
         withHorizontalPadding={false}
         style={spacings.phMd}
-        header={
-          <HeaderAccountAndNetworkInfo
-            backgroundColor={
-              themeType === THEME_TYPES.DARK
-                ? (theme.tertiaryBackground as string)
-                : (theme.primaryBackground as string)
-            }
-          />
-        }
+        header={<ActionHeader />}
         renderDirectChildren={() => (
-          <View style={styles.footer}>
-            {!estimationFailed ? (
-              <>
-                <Estimation
-                  signAccountOpState={signAccountOpState}
-                  disabled={isSignLoading}
-                  hasEstimation={!!hasEstimation}
-                  slowRequest={slowRequest}
-                  isViewOnly={isViewOnly}
-                  isSponsored={signAccountOpState ? signAccountOpState.isSponsored : false}
-                  sponsor={signAccountOpState ? signAccountOpState.sponsor : undefined}
-                  updateType="Main"
-                  bundlerNonceDiscrepancy={bundlerNonceDiscrepancy}
-                />
+          <View style={[spacings.mh, spacings.mv]}>
+            <GlassView>
+              <View style={[spacings.ph, spacings.pv, flexbox.flex1]}>
+                {!estimationFailed &&
+                signAccountOpState?.canBroadcast &&
+                signAccountOpState?.status?.type !== SigningStatus.Queued ? (
+                  <View style={spacings.mb}>
+                    <Estimation
+                      signAccountOpState={signAccountOpState}
+                      disabled={isSignLoading}
+                      hasEstimation={!!hasEstimation}
+                      slowRequest={slowRequest}
+                      isViewOnly={isViewOnly}
+                      isSponsored={signAccountOpState ? signAccountOpState.isSponsored : false}
+                      sponsor={signAccountOpState ? signAccountOpState.sponsor : undefined}
+                      updateType="Requests"
+                      bundlerNonceDiscrepancy={bundlerNonceDiscrepancy}
+                    />
+                  </View>
+                ) : null}
 
                 {isSimulationEnabled && (
                   <ColibriSimulationResult
@@ -304,60 +266,83 @@ const SignAccountOpScreen = () => {
                   />
                 )}
 
-                <View
-                  style={{
-                    height: 1,
-                    backgroundColor:
-                      themeType === THEME_TYPES.DARK ? theme.primaryBorder : theme.secondaryBorder,
-                    ...spacings.mvLg
-                  }}
-                />
-              </>
-            ) : null}
+                {!isViewOnly &&
+                  signAccountOpState &&
+                  signAccountOpState?.errors.length === 0 &&
+                  !signAccountOpState.canBroadcast &&
+                  !!signAccountOpState.account.safeCreation &&
+                  showSafeSigners && (
+                    <SafeOwners
+                      account={signAccountOpState.account}
+                      onSign={handleChangeSigningKey}
+                      isSignLoading={isSignLoading}
+                      signingKeyAddr={signAccountOpState.accountOp.signingKeyAddr}
+                      chainId={signAccountOpState.accountOp.chainId.toString()}
+                      signed={signAccountOpState.accountOp.signed || []}
+                      importedKeys={signAccountOpState.accountKeyStoreKeys}
+                      threshold={signAccountOpState.threshold}
+                      style={spacings.mb}
+                    />
+                  )}
 
-            <Footer
-              onReject={handleRejectAccountOp}
-              onAddToCart={handleAddToCart}
-              isAddToCartDisplayed={
-                !!signAccountOpState &&
-                !!network &&
-                signAccountOpState.accountOp.meta?.setDelegation === undefined
-              }
-              isSignLoading={isSignLoading}
-              isSignDisabled={isSignDisabled || !hasReachedBottom}
-              onSimulate={handleSimulate}
-              isSimulating={isSimulating}
-              isSimulateDisabled={!hasEstimation || isSignLoading}
-              buttonTooltipText={
-                typeof hasReachedBottom === 'boolean' && !hasReachedBottom
-                  ? t('Scroll to the bottom of the transaction overview to sign.')
-                  : undefined
-              }
-              // Allow view only accounts or if no funds for gas to add to cart even if the txn is not ready to sign
-              // because they can't sign it anyway
-              isAddToCartDisabled={isAddToCartDisabled}
-              onSign={onSignButtonClick}
-              inProgressButtonText={
-                signAccountOpState?.status?.type === SigningStatus.WaitingForPaymaster
-                  ? t('Sending...')
-                  : t('Signing...')
-              }
-              buttonText={primaryButtonText}
-            />
+                <Footer
+                  onReject={handleRejectAccountOp}
+                  onAddToCart={handleAddToCart}
+                  isAddToCartDisplayed={
+                    !!signAccountOpState &&
+                    !!network &&
+                    signAccountOpState.accountOp.meta?.setDelegation === undefined
+                  }
+                  isSignLoading={isSignLoading}
+                  isSignDisabled={isSignDisabled || !hasReachedBottom}
+                  buttonTooltipText={disabledReason}
+                  // Allow view only accounts or if no funds for gas to add to cart even if the txn is not ready to sign
+                  // because they can't sign it anyway
+                  isAddToCartDisabled={isAddToCartDisabled}
+                  onSign={onSignButtonClick}
+                  inProgressButtonText={primaryButtonText}
+                  buttonText={signButtonText}
+                  shouldHoldToProceed={shouldHoldToProceed}
+                  holdToProceedButtonType={holdToProceedButtonType}
+                  signButtonType={extremeGasFeeSignButtonType}
+                />
+              </View>
+            </GlassView>
           </View>
         )}
       >
-        {signAccountOpState ? (
-          <SigningKeySelect
-            isVisible={isChooseSignerShown}
+        {signAccountOpState && (
+          <KeySelect
             isSigning={isSignLoading || !signAccountOpState.readyToSign}
-            handleClose={() => setIsChooseSignerShown(false)}
-            selectedAccountKeyStoreKeys={signAccountOpState.accountKeyStoreKeys}
-            handleChooseSigningKey={handleChangeSigningKey}
+            isChooseSignerShown={isChooseSignerShown}
+            isChooseFeePayerKeyShown={isChooseFeePayerKeyShown}
+            handleChooseKey={
+              isChooseFeePayerKeyShown ? handleChangeFeePayerKeyType : handleChangeSigningKey
+            }
             account={signAccountOpState.account}
+            selectedAccountKeyStoreKeys={
+              isChooseFeePayerKeyShown
+                ? signAccountOpState.feePayerKeyStoreKeys
+                : signAccountOpState.accountKeyStoreKeys
+            }
+            handleClose={() => {
+              setIsChooseSignerShown(false)
+              setIsChooseFeePayerKeyShown(false)
+            }}
           />
-        ) : null}
+        )}
         <TabLayoutWrapperMainContent withScroll={false}>
+          <View
+            style={[
+              flexbox.directionRow,
+              flexbox.alignCenter,
+              flexbox.justifySpaceBetween,
+              spacings.mb
+            ]}
+          >
+            <SectionHeading withMb={false}>{t('Overview')}</SectionHeading>
+            <NetworkBadge chainId={network?.chainId} withOnPrefix />
+          </View>
           {/* TabLayoutWrapperMainContent supports scroll but the logic that determines the height
           of the content doesn't work with it, so we use a ScrollView here */}
           <ScrollView
@@ -370,30 +355,50 @@ const SignAccountOpScreen = () => {
             onContentSizeChange={(_, height) => {
               setContentHeight(height)
             }}
-            scrollEventThrottle={400}
+            scrollEventThrottle={16}
             style={contentHeight > containerHeight ? spacings.prMi : {}}
           >
             <PendingTransactions
               network={network}
               setDelegation={signAccountOpState?.accountOp.meta?.setDelegation}
               delegatedContract={signAccountOpState?.delegatedContract}
+              hideDeleteIcon={!!signAccountOpState?.accountOp.signed?.length}
+              size="md"
             />
+
             {/* Display errors only if the user is not in view-only mode */}
             {signAccountOpState?.errors?.length && !isViewOnly ? (
-              <AlertVertical
-                type="warning"
-                size="sm"
-                title={signAccountOpState.errors[0].title}
-                text={errorText}
-              />
+              <ErrorInformation />
             ) : (
-              <Simulation
-                network={network}
-                isViewOnly={isViewOnly}
-                isEstimationComplete={!!signAccountOpState?.isInitialized && !!network}
+              <>
+                <Simulation
+                  network={network}
+                  isViewOnly={isViewOnly}
+                  isEstimationComplete={!!signAccountOpState?.isInitialized && !!network}
+                />
+                <SafeEip712Data
+                  accountAddr={signAccountOpState?.accountOp.accountAddr}
+                  chainId={signAccountOpState?.accountOp.chainId}
+                  safeEip712Data={signAccountOpState?.safeEip712Data}
+                />
+              </>
+            )}
+            <TenderlySimulation />
+            {signAccountOpState?.hasSafeApiFailed && (
+              <Alert
+                size="sm"
+                type="warning"
+                title={t('Safe API failure')}
+                text={t('Transaction was not sent to Safe Global due to a Safe API failure')}
+                style={spacings.mt}
               />
             )}
-            {isViewOnly && <NoKeysToSignAlert style={spacings.ptTy} />}
+            {isViewOnly && (
+              <NoKeysToSignAlert
+                style={spacings.mt}
+                chainId={signAccountOpState?.accountOp?.chainId}
+              />
+            )}
           </ScrollView>
         </TabLayoutWrapperMainContent>
       </TabLayoutContainer>

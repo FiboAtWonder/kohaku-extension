@@ -1,41 +1,63 @@
 import React from 'react'
 
-import { Key } from '@ambire-common/interfaces/keystore'
-import LatticeIcon from '@common/assets/svg/LatticeIcon'
-import LedgerLetterIcon from '@common/assets/svg/LedgerLetterIcon'
+import GridPlusIcon from '@common/assets/svg/GridPlusIcon'
+import LedgerBadgeIcon from '@common/assets/svg/LedgerBadgeIcon'
+import ReceiveIcon from '@common/assets/svg/ReceiveIcon'
+import SafeIcon from '@common/assets/svg/SafeIcon'
 import SingleKeyIcon from '@common/assets/svg/SingleKeyIcon'
-import TrezorLockIcon from '@common/assets/svg/TrezorLockIcon'
+import TrezorBadgeIcon from '@common/assets/svg/TrezorBadgeIcon'
+import { KeyType } from '@common/components/AccountKeyIcons/AccountKeyIcons'
 import useTheme from '@common/hooks/useTheme'
 
 import Wrapper from './Wrapper'
 
-const AccountKeyBanner = ({ type }: { type: Key['type'] }) => {
+const AccountKeyBanner = ({ type }: { type: KeyType }) => {
+  const { theme } = useTheme()
+
   if (type === 'none') return null
 
-  const { theme } = useTheme()
+  const iconProps = {
+    color: theme.secondaryAccent400,
+    width: 16,
+    height: 16
+  }
 
   if (type === 'lattice')
     return (
-      <Wrapper text="">
-        <LatticeIcon color={theme.secondaryText} width={32} height={32} />
+      <Wrapper text="GridPlus">
+        <GridPlusIcon {...iconProps} />
       </Wrapper>
     )
   if (type === 'trezor')
     return (
       <Wrapper text="Trezor">
-        <TrezorLockIcon width={14} height={14} />
+        <TrezorBadgeIcon {...iconProps} />
       </Wrapper>
     )
   if (type === 'ledger')
     return (
       <Wrapper text="Ledger">
-        <LedgerLetterIcon width={14} height={14} />
+        <LedgerBadgeIcon {...iconProps} />
+      </Wrapper>
+    )
+
+  if (type === 'safe')
+    return (
+      <Wrapper text="Safe">
+        <SafeIcon width={iconProps.width} height={iconProps.height} />
+      </Wrapper>
+    )
+
+  if (type === 'qr')
+    return (
+      <Wrapper text="Qr-based">
+        <ReceiveIcon {...iconProps} />
       </Wrapper>
     )
 
   return (
-    <Wrapper text="Internal">
-      <SingleKeyIcon color={theme.secondaryText} width={14} height={14} />
+    <Wrapper text="internal">
+      <SingleKeyIcon {...iconProps} />
     </Wrapper>
   )
 }

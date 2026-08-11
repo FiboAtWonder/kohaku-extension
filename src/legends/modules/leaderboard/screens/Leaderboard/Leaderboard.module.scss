@@ -22,71 +22,84 @@
   }
 
   .title {
-    font-size: 2.5rem;
-    font-weight: 400;
+    font-style: Medium;
+    font-size: 2.66rem;
+    font-weight: 500;
     line-height: 2.6375rem;
-    padding-bottom: 1rem;
+    padding-bottom: 3.2rem;
   }
 
-  .subtitle {
+  .intro {
+    max-width: 33.733rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .introParagraph {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.33rem;
+
     color: $mainText;
-    font-size: 1.125rem;
+  }
+
+  .introLead {
+    font-size: 1.06rem;
+    font-weight: 700;
+    font-style: bold;
+    color: #fff;
+  }
+
+  .introMuted {
     font-weight: 300;
-    line-height: 1.3931rem;
-    max-width: 44.5rem;
+    font-style: light;
+    font-size: 0.933rem;
+    color: $mainText;
+  }
+
+  .introEmphasis {
+    font-size: 1.06rem;
+    font-style: medium;
+    font-weight: 500;
+    color: #fff;
   }
 
   .tabs {
     display: flex;
-    justify-content: space-between;
-    gap: .5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
     margin: 0 auto 2.75rem auto;
     color: $mainText;
     position: relative;
+
     .tab {
-      position: relative;
-      flex: 1;
-      padding: .5rem 1rem;
       background: none;
       border: none;
+
+      position: relative;
+      width: 7.5rem;
+      height: 2.5rem;
+
       cursor: pointer;
       font-weight: 400;
       transition: all 0.2s ease;
-      font-size: 1rem;
-      width: 100%;
-      min-width: 7.6875rem;
-      height: 3.25rem;
-      background-color: rgba($icons, 0.24);
-      line-height: 2.25rem;
-      border-radius: .5rem; 
-    
-    }
-    
-    .ribbon {
-      position: absolute;
-      top: -0.2rem;
-      left: 50%;
-      transform: translateX(-50%);
-    }
+      font-size: 0.8125rem;
+      background-color: rgba($mainText, 0.1);
+      backdrop-filter: blur(0.25rem);
+      opacity: 0.5;
 
-    .current {
-      position: absolute;
-      bottom: 0.3rem;
-      left: 50%;
-      transform: translateX(-50%);
-      color: #FFFFFFA3;
-      font-size: .75rem;
-      font-weight: 300;
-      line-height: 100%;
+      border-radius: 1.5rem;
 
+      &.active {
+        opacity: 1;
+        font-weight: 600;
+        background-color: rgba($mainText, 0.5);
+      }
     }
-    
-    .active {
-      background-color: $purple-700;
-    }
-  
-   
   }
+
   .table {
     display: flex;
     flex-direction: column;
@@ -107,47 +120,48 @@
     font-weight: 300;
     line-height: 1.25rem;
     padding: 0.75rem 1rem;
-    margin-bottom: .5rem;
+    margin-bottom: 0.5rem;
     width: calc(100% - 2rem);
 
     .cell {
       display: flex;
       align-content: center;
-      
+      flex: 1;
+
       &:first-child {
-        flex: 5;
+        flex: 3;
       }
-      
-      &:nth-child(2),
-      &:nth-child(3) {
-        flex: 1.5;
-      }
+
       &:last-child {
         text-align: right;
-        flex: 1;
         justify-content: flex-end;
       }
-      .weightText {
-        margin-right: 0.25rem;
-        color: rgba($neutral-600, 0.639);
+
+      &.scoreCell {
+        text-transform: capitalize;
       }
     }
+
+    .scoreValue {
+      flex: 1;
+      justify-content: flex-end;
+      text-align: right;
+      font-weight: 400;
+    }
   }
+
   .header {
     padding-bottom: 0;
+
     .cell {
       text-transform: uppercase;
       font-size: 0.875rem;
       font-weight: 600;
       color: rgba($tertiaryText, 0.64);
+
       h5 {
         font-weight: 600;
         color: rgba($tertiaryText, 0.64);
-      }
-
-      &:first-child {
-        margin-left: .375rem;
-        flex: 4.8;
       }
     }
 
@@ -169,7 +183,6 @@
       justify-content: flex-end;
       font-weight: 400;
     }
-    
   }
 
   .rankWrapper {
@@ -180,47 +193,56 @@
     justify-content: center;
     margin-right: 1rem;
   }
+
   .rank {
     height: 1.25rem;
     width: 1.25rem;
     text-align: center;
   }
-  
+
   .rankedRow1 {
     background-color: rgba($neutral-600, 0.051);
-    .cell:last-child, .trophy {
+
+    .cell:last-child,
+    .trophy {
       color: $goldDecorative;
     }
-    
   }
 
   .currentUserRow {
     border-color: $accent;
-    border-width: .0625rem;
+    border-width: 0.0625rem;
     border-style: solid;
     background-color: rgba($tertiaryText, 0.1);
     z-index: 2;
     width: 100%;
 
-    backdrop-filter: blur(10px); 
+    backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-   
+
     .addressSkeleton {
       background-color: $secondaryBackground;
     }
 
+    .scoreValue {
+      color: $goldDecorative;
+    }
   }
 
   .rankedRow2 {
     background-color: rgba($neutral-600, 0.051);
-    .cell:last-child, .trophy {
+
+    .cell:last-child,
+    .trophy {
       color: $silverDecorative;
     }
   }
 
   .rankedRow3 {
     background-color: rgba($neutral-600, 0.051);
-    .cell:last-child, .trophy {
+
+    .cell:last-child,
+    .trophy {
       color: $bronzeDecorative;
     }
   }
@@ -263,8 +285,6 @@
   .address {
     font-weight: 400;
   }
-
-
 
   @include breakpoint-down-from(large-tablet) {
     .address {

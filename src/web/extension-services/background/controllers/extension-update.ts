@@ -1,7 +1,8 @@
-import EventEmitter, { ErrorRef } from '@ambire-common/controllers/eventEmitter/eventEmitter'
+import EventEmitter from '@ambire-common/controllers/eventEmitter/eventEmitter'
 import { Banner } from '@ambire-common/interfaces/banner'
+import { ErrorRef, IEventEmitterRegistryController } from '@ambire-common/interfaces/eventEmitter'
+import { logInfoWithPrefix } from '@common/utils/logger'
 import { browser, isSafari } from '@web/constants/browserapi'
-import { logInfoWithPrefix } from '@web/utils/logger'
 
 /**
  * The `ExtensionUpdateController` manages the lifecycle and notifications
@@ -22,8 +23,8 @@ export class ExtensionUpdateController extends EventEmitter {
 
   #isUpdateAvailable: boolean = false
 
-  constructor() {
-    super()
+  constructor(eventEmitterRegistry: IEventEmitterRegistryController) {
+    super(eventEmitterRegistry)
     this.#updateAvailableHandler = this.#onUpdateAvailable.bind(this)
     this.#init()
   }
@@ -57,13 +58,13 @@ export class ExtensionUpdateController extends EventEmitter {
   }
 
   /**
-   * Deprecated since v5.16.1, because the `browser.runtime.reload()` part was
-   * causing some funky Chrome glitches like:
+   * Deprecated in v5.16.1 because `browser.runtime.reload()` caused Chrome glitches:
    * 1) SOMETIMES bricking the extension due to service worker not starting
-   * property after update (causing infinite loading spinner)
+   * properly after update (causing infinite loading spinner)
    * 2) Might be the cause of extension storage being lost on Chrome after an
    * update. Although this could be related to a race condition with some other logic.
-   * @deprecated
+   *
+   * Reinstated in v6.10.0 after re-evaluation in Ambire Next — the above issues seems to be resolved.
    */
   applyUpdate() {
     this.#isUpdateAvailable = false
@@ -80,11 +81,13 @@ export class ExtensionUpdateController extends EventEmitter {
           id: 'update-available',
           type: 'info',
           title: 'Update Available',
-          text: 'A new version is ready! Please restart your browser to apply the update.',
-          // The "Reload" button was removed since v5.16.1, because `browser.runtime.reload()`
-          // was causing some funky Chrome glitches, see the deprecation notes in
-          // ExtensionUpdateController.applyUpdate() for more details.
-          actions: []
+          text: 'A new version is ready! It will be applied automatically on next reload. Reload now to update immediately.',
+          actions: [
+            {
+              actionName: 'update-extension-version',
+              label: 'Reload'
+            }
+          ]
         }
       ]
     }

@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { parseUnits } from 'viem'
 import { AccountOpStatus } from '@ambire-common/libs/accountOp/types'
 
-import { AddressStateOptional } from '@ambire-common/interfaces/domains'
+import { AddressState, AddressStateOptional } from '@ambire-common/interfaces/domains'
+import { Validation } from '@ambire-common/services/validations'
 import { ZERO_ADDRESS } from '@ambire-common/services/socket/constants'
 
 import BackButton from '@common/components/BackButton'
@@ -17,21 +18,19 @@ import { ROUTES } from '@common/modules/router/constants/common'
 import spacings from '@common/styles/spacings'
 // import Button from '@common/components/Button'
 
-import useActivityControllerState from '@web/hooks/useActivityControllerState'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useSyncedState from '@web/hooks/useSyncedState'
+import useSyncedState from '@common/hooks/useSyncedState'
 import useRailgunForm from '@web/modules/railgun/hooks/useRailgunForm'
 import Buttons from '@web/modules/PPv1/deposit/components/Buttons'
-// import TrackProgress from '@web/modules/sign-account-op/components/OneClick/TrackProgress'
-import Completed from '@web/modules/sign-account-op/components/OneClick/TrackProgress/ByStatus/Completed'
-import Failed from '@web/modules/sign-account-op/components/OneClick/TrackProgress/ByStatus/Failed'
-// import InProgress from '@web/modules/sign-account-op/components/OneClick/TrackProgress/ByStatus/InProgress'
-import useTrackAccountOp from '@web/modules/sign-account-op/hooks/OneClick/useTrackAccountOp'
-import { getUiType } from '@web/utils/uiType'
+// import TrackProgress from '@common/components/TrackProgress'
+import Completed from '@common/components/TrackProgress/ByStatus/Completed'
+import Failed from '@common/components/TrackProgress/ByStatus/Failed'
+// import InProgress from '@common/components/TrackProgress/ByStatus/InProgress'
+import useTrackAccountOp from '@common/modules/sign-account-op/hooks/OneClick/useTrackAccountOp'
+import { getUiType } from '@common/utils/uiType'
 
 import { View } from 'react-native'
 import flexbox from '@common/styles/utils/flexbox'
-import { Wrapper, Content, Form } from '@web/components/TransactionsScreen'
+import { Content, Form, Wrapper } from '../components/TransfersScreen'
 import PrivacyProtocolSelector, {
   getPrivacyProtocolOptions
 } from '@web/components/PrivacyProtocols'
@@ -39,8 +38,9 @@ import { usePrivacyPoolsDepositForm } from '@web/hooks/useDepositForm'
 import TransferForm from '../components/TransferForm/TransferForm'
 import RailgunTransferForm from '../components/RailgunTransferForm/RailgunTransferForm'
 import { TransferTabType } from '../components/Tabs/Tabs'
+import useController from '@common/hooks/useController'
 
-const { isActionWindow } = getUiType()
+const { isRequestWindow } = getUiType()
 
 const TERMINAL_STATUSES = [
   AccountOpStatus.Success,
@@ -60,10 +60,12 @@ const TransferScreen = () => {
   const hasRefreshedAccountRef = useRef(false)
   const [isSubmittingState, setIsSubmittingState] = useState(false)
   const [selectedPrivacyProtocol, setSelectedPrivacyProtocol] = useState<SelectValue>(
-    getPrivacyProtocolOptions(t)[protocolFromParams === 'privacy-pools' ? 1 : 0]
+    getPrivacyProtocolOptions(t)[protocolFromParams === 'privacy-pools' ? 1 : 0] as SelectValue
   )
   const activeProtocol = selectedPrivacyProtocol.value as TransferTabType
-  const { dispatch } = useBackgroundService()
+  const { dispatch: requestsDispatch } = useController('RequestsController')
+  const { dispatch: privacyPoolsDispatch } = useController('PrivacyPoolsController')
+  const { dispatch: railgunV2Dispatch } = useController('RailgunV2Controller')
   const {
     totalApprovedBalance,
     loadingSelectionAlgorithm,
@@ -82,7 +84,6 @@ const TransferScreen = () => {
     isRecipientAddressUnknownAgreed,
     maxAmount,
     relayerQuote,
-    updateQuoteStatus,
     isRefreshing,
     unshield,
     isUnshielding
@@ -93,7 +94,11 @@ const TransferScreen = () => {
     [activeProtocol, isSubmittingState, isUnshielding]
   )
 
-  const { accountsOps } = useActivityControllerState()
+  const {
+    state: { accountsOps },
+    dispatch: activityDispatch
+  } = useController('ActivityController')
+  const { account } = useController('SelectedAccountController').state
   const { addToast } = useToast()
 
   const railgunForm = useRailgunForm()
@@ -123,8 +128,9 @@ const TransferScreen = () => {
     if (newProtocol === selectedPrivacyProtocol.value) return
 
     if (newProtocol === 'railgun') {
-      dispatch({
-        type: 'RAILGUN_V2_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP'
+      railgunV2Dispatch({
+        type: 'method',
+        params: { method: 'destroyLatestBroadcastedAccountOp', args: [] }
       })
     }
 
@@ -133,30 +139,28 @@ const TransferScreen = () => {
 
   const cleanUp = useCallback(() => {
     // Clean up state before navigating - use the appropriate controller based on active protocol
-    dispatch({ type: 'RAILGUN_V2_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP' })
-    dispatch({ type: 'PRIVACY_POOLS_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP' })
+    railgunV2Dispatch({
+      type: 'method',
+      params: { method: 'destroyLatestBroadcastedAccountOp', args: [] }
+    })
+    privacyPoolsDispatch({
+      type: 'method',
+      params: { method: 'destroyLatestBroadcastedAccountOp', args: [] }
+    })
 
     // Reset hasProceeded for both controllers
     // to prevent double-click issue when withdrawing again
-    dispatch({
-      type: 'PRIVACY_POOLS_CONTROLLER_HAS_USER_PROCEEDED',
-      params: { proceeded: false }
-    })
-    dispatch({
-      type: 'RAILGUN_V2_CONTROLLER_HAS_USER_PROCEEDED',
-      params: { proceeded: false }
-    })
+    privacyPoolsDispatch({ type: 'method', params: { method: 'setUserProceeded', args: [false] } })
+    railgunV2Dispatch({ type: 'method', params: { method: 'setUserProceeded', args: [false] } })
 
     railgunForm.resetForm()
-    dispatch({
-      type: 'PRIVACY_POOLS_CONTROLLER_RESET_FORM'
-    })
-  }, [dispatch, railgunForm])
+    privacyPoolsDispatch({ type: 'method', params: { method: 'resetForm', args: [] } })
+  }, [privacyPoolsDispatch, railgunV2Dispatch, railgunForm])
 
   const hasInitializedAddressRef = useRef(false)
   if (!hasInitializedAddressRef.current && addressFromParams && !addressState.fieldValue) {
     hasInitializedAddressRef.current = true
-    handleUpdateForm({ addressState: { fieldValue: addressFromParams } })
+    handleUpdateForm({ addressState: { ...addressState, fieldValue: addressFromParams } })
   }
 
   const hasInitializedRailgunAddressRef = useRef(false)
@@ -191,7 +195,7 @@ const TransferScreen = () => {
   const [addressStateFieldValue, setAddressStateFieldValue] = useSyncedState<string>({
     backgroundState: addressState.fieldValue || addressFromParams,
     updateBackgroundState: (newAddress: string) => {
-      handleUpdateForm({ addressState: { fieldValue: newAddress } })
+      handleUpdateForm({ addressState: { ...addressState, fieldValue: newAddress } })
     },
     forceUpdateOnChangeList: [programmaticUpdateCounter]
   })
@@ -242,7 +246,7 @@ const TransferScreen = () => {
     }
 
     // For Privacy Pools withdrawals
-    if (latestBroadcastedAccountOp?.meta?.isPrivacyPoolsWithdrawal) {
+    if ((latestBroadcastedAccountOp?.meta as any)?.isPrivacyPoolsWithdrawal) {
       return latestBroadcastedAccountOp as any
     }
 
@@ -260,17 +264,17 @@ const TransferScreen = () => {
   ])
 
   const navigateOut = useCallback(() => {
-    if (isActionWindow) {
-      dispatch({
-        type: 'CLOSE_SIGNING_ACTION_WINDOW',
-        params: {
-          type: 'transfer'
-        }
-      })
+    if (isRequestWindow) {
+      if (account) {
+        requestsDispatch({
+          type: 'method',
+          params: { method: 'removeUserRequests', args: [[`${account.addr}-transfer-sign`]] }
+        })
+      }
     } else {
       navigate(ROUTES.mainDashboard)
     }
-  }, [dispatch, navigate, activeProtocol])
+  }, [account, requestsDispatch, navigate])
 
   const currentLatestBroadcastedAccountOp = useMemo(() => {
     return activeProtocol === 'railgun'
@@ -283,12 +287,10 @@ const TransferScreen = () => {
     return activeProtocol === 'railgun' ? 'transfer' : 'privacyPools'
   }, [activeProtocol])
 
-  const { sessionHandler, onPrimaryButtonPress } = useTrackAccountOp({
+  const { sessionHandler } = useTrackAccountOp({
     address: currentLatestBroadcastedAccountOp?.accountAddr,
     chainId: currentLatestBroadcastedAccountOp?.chainId,
-    sessionId,
-    submittedAccountOp,
-    navigateOut
+    sessionId
   })
 
   // Helper to check if the submittedAccountOp matches the expected withdrawal type
@@ -360,9 +362,7 @@ const TransferScreen = () => {
 
     return () => {
       cleanUp()
-      dispatch({
-        type: 'PRIVACY_POOLS_CONTROLLER_UNLOAD_SCREEN'
-      })
+      privacyPoolsDispatch({ type: 'method', params: { method: 'unloadScreen', args: [] } })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -370,55 +370,34 @@ const TransferScreen = () => {
   // Used to resolve ENS, not to update the field value
   const setAddressState = useCallback(
     (newPartialAddressState: AddressStateOptional) => {
-      dispatch({
-        type: 'PRIVACY_POOLS_CONTROLLER_UPDATE_FORM',
-        params: { addressState: newPartialAddressState }
-      })
-    },
-    [dispatch]
-  )
-
-  const handleCacheResolvedDomain = useCallback(
-    (address: string, domain: string, type: 'ens') => {
-      dispatch({
-        type: 'DOMAINS_CONTROLLER_SAVE_RESOLVED_REVERSE_LOOKUP',
+      privacyPoolsDispatch({
+        type: 'method',
         params: {
-          type,
-          address,
-          name: domain
+          method: 'update',
+          // The controller merges the partial into its current address state
+          args: [{ addressState: newPartialAddressState as AddressState }]
         }
       })
     },
-    [dispatch]
+    [privacyPoolsDispatch]
   )
+
+  // The recipient validation coming from the controller overrides the generic address checks
+  const recipientAddressValidation = useMemo<Validation | null>(() => {
+    if (!validationFormMsgs.recipientAddress.message) return null
+
+    return {
+      message: validationFormMsgs.recipientAddress.message,
+      severity: validationFormMsgs.recipientAddress.success ? 'success' : 'error'
+    }
+  }, [validationFormMsgs.recipientAddress.message, validationFormMsgs.recipientAddress.success])
 
   // Privacy Pools address input
   const addressInputState = useAddressInput({
     addressState,
     setAddressState,
-    overwriteError: !validationFormMsgs.recipientAddress.success
-      ? validationFormMsgs.recipientAddress.message
-      : '',
-    overwriteValidLabel: validationFormMsgs?.recipientAddress.success
-      ? validationFormMsgs.recipientAddress.message
-      : '',
-    handleCacheResolvedDomain
+    overwriteValidation: recipientAddressValidation
   })
-
-  // Railgun address state handlers
-  const handleRailgunCacheResolvedDomain = useCallback(
-    (address: string, domain: string, type: 'ens') => {
-      dispatch({
-        type: 'DOMAINS_CONTROLLER_SAVE_RESOLVED_REVERSE_LOOKUP',
-        params: {
-          type,
-          address,
-          name: domain
-        }
-      })
-    },
-    [dispatch]
-  )
 
   // Create a merged addressState that uses the synced field value
   // This ensures useAddressInput sees the current input value
@@ -433,11 +412,7 @@ const TransferScreen = () => {
   const railgunAddressInputState = useAddressInput({
     addressState: mergedRailgunAddressState,
     setAddressState: setRailgunAddressState,
-    // Don't use overwriteError/overwriteValidLabel from controller for now
     // Let useAddressInput handle validation internally
-    overwriteError: '',
-    overwriteValidLabel: '',
-    handleCacheResolvedDomain: handleRailgunCacheResolvedDomain,
     // Allow Railgun 0zk addresses on the Railgun protocol
     allowRailgunAddresses: true
   })
@@ -478,7 +453,7 @@ const TransferScreen = () => {
       amountFieldValue !== '0' &&
       selectedToken &&
       relayerQuote &&
-      !addressInputState.validation.isError &&
+      addressInputState.validation.severity !== 'error' &&
       !amountErrorMessage &&
       !isRefreshing &&
       !loadingSelectionAlgorithm
@@ -487,7 +462,7 @@ const TransferScreen = () => {
     amountFieldValue,
     amountErrorMessage,
     selectedToken,
-    addressInputState.validation.isError,
+    addressInputState.validation.severity,
     relayerQuote,
     isRefreshing,
     loadingSelectionAlgorithm
@@ -537,7 +512,7 @@ const TransferScreen = () => {
     // For address validation, check if the address input state says it's valid
     // OR if we have an address value and no explicit error
     const addressIsValid =
-      !railgunAddressInputState.validation.isError ||
+      railgunAddressInputState.validation.severity !== 'error' ||
       (hasAddress && !railgunAddressInputState.validation.message)
     const noAmountError = !railgunAmountErrorMessage
 
@@ -546,7 +521,7 @@ const TransferScreen = () => {
     railgunAmountFieldValue,
     railgunAmountErrorMessage,
     railgunSelectedToken,
-    railgunAddressInputState.validation.isError,
+    railgunAddressInputState.validation.severity,
     railgunAddressInputState.validation.message,
     railgunAddressStateFieldValue,
     railgunAddressState.fieldValue
@@ -584,12 +559,22 @@ const TransferScreen = () => {
       (submittedAccountOp.status === AccountOpStatus.Success ||
         submittedAccountOp.status === AccountOpStatus.UnknownButPastNonce)
     ) {
-      // Hide the banner first
-      dispatch({
-        type: 'ACTIVITY_CONTROLLER_HIDE_BANNER',
+      // Hide the completed withdrawal's banner. This screen runs its own activity session, so it
+      // has to opt in explicitly, otherwise the activity controller ignores non-dashboard sessions.
+      activityDispatch({
+        type: 'method',
         params: {
-          ...submittedAccountOp,
-          addr: submittedAccountOp.accountAddr
+          method: 'setDashboardBannersSeen',
+          args: [
+            sessionId,
+            submittedAccountOp.accountAddr,
+            {
+              accountOpIds: [submittedAccountOp.id],
+              emitUpdate: true,
+              hideImmediately: true,
+              allowNonDashboardSession: true
+            }
+          ]
         }
       })
 
@@ -603,30 +588,32 @@ const TransferScreen = () => {
       submittedAccountOp?.status === AccountOpStatus.Rejected
     ) {
       // Error states: clean up and navigate directly (no banner to hide)
-      dispatch({
-        type: 'RAILGUN_V2_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP'
+      railgunV2Dispatch({
+        type: 'method',
+        params: { method: 'destroyLatestBroadcastedAccountOp', args: [] }
       })
-      dispatch({
-        type: 'PRIVACY_POOLS_CONTROLLER_DESTROY_LATEST_BROADCASTED_ACCOUNT_OP'
+      privacyPoolsDispatch({
+        type: 'method',
+        params: { method: 'destroyLatestBroadcastedAccountOp', args: [] }
       })
-      dispatch({
-        type: 'PRIVACY_POOLS_CONTROLLER_HAS_USER_PROCEEDED',
-        params: {
-          proceeded: false
-        }
+      privacyPoolsDispatch({
+        type: 'method',
+        params: { method: 'setUserProceeded', args: [false] }
       })
-      dispatch({
-        type: 'RAILGUN_V2_CONTROLLER_HAS_USER_PROCEEDED',
-        params: {
-          proceeded: false
-        }
-      })
+      railgunV2Dispatch({ type: 'method', params: { method: 'setUserProceeded', args: [false] } })
       navigateOut()
     } else {
-      // For other states, use the original logic
-      onPrimaryButtonPress()
+      navigateOut()
     }
-  }, [submittedAccountOp, dispatch, navigateOut, onPrimaryButtonPress])
+  }, [
+    submittedAccountOp,
+    activityDispatch,
+    sessionId,
+    cleanUp,
+    privacyPoolsDispatch,
+    railgunV2Dispatch,
+    navigateOut
+  ])
 
   const handleWithdrawal = useCallback(() => {
     unshield()
@@ -691,15 +678,15 @@ const TransferScreen = () => {
               isResultPending || isSubmitting || railgunPrivateOpInFlight
                 ? t('Sending...')
                 : hasResult
-                ? t('Send new transaction')
-                : t('Send')
+                  ? t('Send new transaction')
+                  : t('Send')
             }
             isNotReadyToProceed={
               isResultPending || isSubmitting || railgunPrivateOpInFlight
                 ? true
                 : hasResult
-                ? false
-                : !isRailgunTransferFormValid
+                  ? false
+                  : !isRailgunTransferFormValid
             }
             signAccountOpErrors={[]}
             networkUserRequests={[]}
@@ -721,10 +708,10 @@ const TransferScreen = () => {
             isResultPending
               ? t('Sending...')
               : hasResult
-              ? t('Send new transaction')
-              : isRefreshing
-              ? t('Updating...')
-              : t('Send')
+                ? t('Send new transaction')
+                : isRefreshing
+                  ? t('Updating...')
+                  : t('Send')
           }
           isNotReadyToProceed={
             isResultPending ? true : hasResult ? false : !isTransferFormValid || isRefreshing
@@ -769,7 +756,6 @@ const TransferScreen = () => {
             setIsSubmittingState(false)
           })
           .catch((error) => {
-            // eslint-disable-next-line no-console
             console.error('Failed to refresh after Railgun withdrawal:', error)
             addToast('Failed to refresh your privacy account. Please try again.', { type: 'error' })
             setIsSubmittingState(false)
@@ -781,7 +767,6 @@ const TransferScreen = () => {
             setIsSubmittingState(false)
           })
           .catch((error) => {
-            // eslint-disable-next-line no-console
             console.error('Failed to refresh after withdrawal:', error)
             addToast('Failed to refresh your privacy account. Please try again.', { type: 'error' })
             setIsSubmittingState(false)
@@ -835,7 +820,6 @@ const TransferScreen = () => {
                   addressState={addressState}
                   controllerAmount={withdrawalAmount}
                   totalApprovedBalance={totalApprovedBalance}
-                  updateQuoteStatus={updateQuoteStatus}
                   disabled={isResultPending}
                 />
               ) : (

@@ -1,7 +1,6 @@
 import React from 'react'
 import { Animated, View } from 'react-native'
 
-import { isSmartAccount } from '@ambire-common/libs/account/account'
 import RightArrowIcon from '@common/assets/svg/RightArrowIcon'
 import Avatar from '@common/components/Avatar'
 import Text from '@common/components/Text'
@@ -11,17 +10,17 @@ import { WEB_ROUTES } from '@common/modules/router/constants/common'
 import spacings from '@common/styles/spacings'
 import { THEME_TYPES } from '@common/styles/themeConfig'
 import flexboxStyles from '@common/styles/utils/flexbox'
-import { AnimatedPressable, useCustomHover } from '@web/hooks/useHover'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
+import { AnimatedPressable, useCustomHover } from '@common/hooks/useHover'
 
 import { NEUTRAL_BACKGROUND_HOVERED } from '../../screens/styles'
 import getStyles from './styles'
+import useController from '@common/hooks/useController'
 
 const AccountButton = () => {
   const { navigate } = useNavigation()
   const { theme, styles, themeType } = useTheme(getStyles)
 
-  const { account } = useSelectedAccountControllerState()
+  const { account } = useController('SelectedAccountController').state
   const [bindAccountBtnAnim, accountBtnAnimStyle, isAccountBtnHovered] = useCustomHover({
     property: 'left',
     values: {
@@ -49,7 +48,12 @@ const AccountButton = () => {
       >
         <>
           <View style={styles.accountButtonInfo}>
-            <Avatar pfp="" size={32} isSmart={isSmartAccount(account)} />
+            <Avatar
+              address={account.addr}
+              pfp=""
+              size={32}
+              smartAccountType={(account.creation && 'Ambire') || (account.safeCreation && 'Safe')}
+            />
             <Text
               numberOfLines={1}
               weight="semiBold"

@@ -16,15 +16,14 @@ import spacings, { SPACING, SPACING_TY, SPACING_XL } from '@common/styles/spacin
 import { THEME_TYPES } from '@common/styles/themeConfig'
 import common from '@common/styles/utils/common'
 import flexbox from '@common/styles/utils/flexbox'
-import useHover, { AnimatedPressable } from '@web/hooks/useHover'
-import useMainControllerState from '@web/hooks/useMainControllerState'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
+import useHover, { AnimatedPressable } from '@common/hooks/useHover'
 import usePrivacyPools from '@web/hooks/usePrivacyPools/usePrivacyPools'
 import useRailgunForm from '@web/modules/railgun/hooks/useRailgunForm'
 
 import BalanceAffectingErrors from './BalanceAffectingErrors'
 import RefreshIcon from './RefreshIcon'
 import getStyles from './styles'
+import useController from '@common/hooks/useController'
 
 interface Props {
   openReceiveModal: () => void
@@ -54,8 +53,8 @@ const DashboardOverview: FC<Props> = ({
 }) => {
   const { t } = useTranslation()
   const { theme, styles, themeType } = useTheme(getStyles)
-  const { isOffline } = useMainControllerState()
-  const { portfolio } = useSelectedAccountControllerState()
+  const { isOffline } = useController('MainController').state
+  const { portfolio } = useController('SelectedAccountController').state
 
   const { isSynced, sync, totalPrivatePortfolio } = usePrivacyPools()
 
@@ -180,8 +179,8 @@ const DashboardOverview: FC<Props> = ({
                             networksWithErrors.length || isOffline
                               ? theme.warningDecorative2
                               : themeType === THEME_TYPES.DARK
-                              ? theme.primaryBackgroundInverted
-                              : theme.primaryBackground
+                                ? theme.primaryBackgroundInverted
+                                : theme.primaryBackground
                           }
                           selectable
                           testID="total-portfolio-amount-eth"

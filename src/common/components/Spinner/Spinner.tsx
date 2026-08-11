@@ -1,20 +1,31 @@
-import LottieView from 'lottie-react-native'
-import React from 'react'
+import React, { useMemo } from 'react'
 import { ViewStyle } from 'react-native'
 
+import LottieView from '@common/components/LottieView'
+
 import SpinnerAnimation from './spinner-animation.json'
+import BlackSpinnerAnimation from './spinner-black-animation.json'
+import InfoSpinnerAnimation from './spinner-info-animation.json'
 import WhiteSpinnerAnimation from './spinner-white-animation.json'
 import styles from './styles'
 
-const Spinner = ({ style, variant }: { style?: ViewStyle; variant?: 'gradient' | 'white' }) => {
-  return (
-    <LottieView
-      source={variant === 'gradient' ? SpinnerAnimation : WhiteSpinnerAnimation}
-      style={(styles.spinner, style)}
-      autoPlay
-      loop
-    />
-  )
+const Spinner = ({
+  style,
+  variant
+}: {
+  style?: ViewStyle
+  variant?: 'gradient' | 'white' | 'info' | 'black'
+}) => {
+  const animation = useMemo(() => {
+    if (variant === 'gradient') return SpinnerAnimation
+    if (variant === 'white') return WhiteSpinnerAnimation
+    if (variant === 'black') return BlackSpinnerAnimation
+    if (variant === 'info') return InfoSpinnerAnimation
+
+    return SpinnerAnimation
+  }, [variant])
+
+  return <LottieView animationData={animation} style={[styles.spinner, style]} autoPlay loop />
 }
 
 export default Spinner

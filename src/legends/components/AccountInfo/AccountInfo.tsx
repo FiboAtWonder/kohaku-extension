@@ -1,30 +1,26 @@
 import React from 'react'
 
+import Avatar from '@common/components/Avatar'
 import Tooltip from '@common/components/Tooltip'
 import DisconnectIcon from '@legends/common/assets/svg/DisconnectIcon'
 import Address from '@legends/components/Address'
 import useAccountContext from '@legends/hooks/useAccountContext'
-import useCharacterContext from '@legends/hooks/useCharacterContext'
-import useLeaderboardContext from '@legends/hooks/useLeaderboardContext'
+import useProviderContext from '@legends/hooks/useProviderContext'
 
 import styles from './AccountInfo.module.scss'
 
 // TODO: Add logic to handle account switching from the dropdown
 const AccountInfo = ({
-  removeAvatarAndLevel = false,
   wrapperClassName,
   addressClassName,
   displayTooltip = false
 }: {
-  removeAvatarAndLevel?: boolean
   wrapperClassName?: string
   addressClassName?: string
   displayTooltip?: boolean
 }) => {
-  const { connectedAccount, disconnectAccount } = useAccountContext()
-  const { season1LeaderboardData } = useLeaderboardContext()
-
-  const { character } = useCharacterContext()
+  const { disconnectProvider } = useProviderContext()
+  const { connectedAccount } = useAccountContext()
 
   return (
     <div
@@ -32,11 +28,7 @@ const AccountInfo = ({
         connectedAccount ? styles.connected : ''
       } ${wrapperClassName}`}
     >
-      {!removeAvatarAndLevel && (
-        <div className={styles.avatarWrapper}>
-          <img alt="avatar" className={styles.avatar} src={character!.image_avatar} />
-        </div>
-      )}
+      <Avatar size={32} address={connectedAccount!} pfp={connectedAccount || ''} />
       <div className={styles.account}>
         <div className={styles.accountAndArrowWrapper}>
           <Address
@@ -46,7 +38,7 @@ const AccountInfo = ({
             maxAddressLength={12}
           />
           <DisconnectIcon
-            onClick={disconnectAccount}
+            onPress={disconnectProvider}
             className={styles.disconnectIcon}
             data-tooltip-id="disconnect-info"
           />
@@ -68,11 +60,6 @@ const AccountInfo = ({
             />
           )}
         </div>
-        {!removeAvatarAndLevel && (
-          <p className={`${styles.levelAndRank} ${styles.activityDot}`}>
-            Level {season1LeaderboardData?.currentUser?.level}
-          </p>
-        )}
       </div>
     </div>
   )

@@ -1,10 +1,8 @@
-import React, { createContext, useEffect, useMemo, useRef, useCallback } from 'react'
+import React, { createContext, useCallback, useEffect, useMemo, useRef } from 'react'
 
-import useCharacterContext from '@legends/hooks/useCharacterContext'
-import useActivityContext from '@legends/hooks/useActivityContext'
 import useLeaderboardContext from '@legends/hooks/useLeaderboardContext'
 import useLegendsContext from '@legends/hooks/useLegendsContext'
-import usePortfolioControllerState from '@legends/hooks/usePortfolioControllerState/usePortfolioControllerState'
+import usePortfolio from '@legends/hooks/usePortfolio'
 
 type DataPollingContextType = {
   startPolling: () => void
@@ -29,7 +27,6 @@ const IS_DEBUGGING = false
 
 const log = (...args: any[]) => {
   if (IS_DEBUGGING) {
-    // eslint-disable-next-line no-console
     console.info('ℹ️ DataPollingContext:', ...args)
   }
 }
@@ -39,11 +36,9 @@ const log = (...args: any[]) => {
 // When the tab is hidden, we stop the timer/updates to avoid making unnecessary calls to the API.
 // Once the tab becomes active, we update the app state (if it hasn't been updated in the last VISIBLE_TAB_MIN_CACHE_TIME seconds).
 const DataPollingContextProvider: React.FC<any> = ({ children }) => {
-  const { getActivity } = useActivityContext()
-  const { character, getCharacter } = useCharacterContext()
   const { updateLeaderboard } = useLeaderboardContext()
   const { getLegends } = useLegendsContext()
-  const { updateAccountPortfolio } = usePortfolioControllerState()
+  const { updateAccountPortfolio } = usePortfolio()
 
   // Polling timeout id
   const pollingIntervalRef: any = useRef(null)
@@ -55,16 +50,10 @@ const DataPollingContextProvider: React.FC<any> = ({ children }) => {
   const isPollingRef = useRef<boolean>(false)
 
   const latestStateRef = useRef<{
-    character: typeof character
-    getCharacter: typeof getCharacter
-    getActivity: typeof getActivity
     updateLeaderboard: typeof updateLeaderboard
     getLegends: typeof getLegends
     updateAccountPortfolio: typeof updateAccountPortfolio
   }>({
-    character,
-    getCharacter,
-    getActivity,
     updateLeaderboard,
     getLegends,
     updateAccountPortfolio
@@ -83,14 +72,11 @@ const DataPollingContextProvider: React.FC<any> = ({ children }) => {
   // The `poll` closure then relies on the values in the reference, ensuring they are always up-to-date.
   useEffect(() => {
     latestStateRef.current = {
-      character,
-      getCharacter,
-      getActivity,
       updateLeaderboard,
       getLegends,
       updateAccountPortfolio
     }
-  }, [character, getCharacter, getActivity, updateLeaderboard, getLegends, updateAccountPortfolio])
+  }, [updateLeaderboard, getLegends, updateAccountPortfolio])
 
   // Activates polling.
   // If `forceStart` is set, it fetches the data immediately and schedules the next polling cycle.
@@ -99,12 +85,6 @@ const DataPollingContextProvider: React.FC<any> = ({ children }) => {
     const poll = async () => {
       const context = latestStateRef.current
 
-      if (!context.character?.address) {
-        log('Skipping this iteration, as character is not loaded yet!')
-        startPolling()
-        return
-      }
-
       if (isPollingRef.current) {
         log('Skipping this iteration, as polling is already active!')
         return
@@ -112,11 +92,9 @@ const DataPollingContextProvider: React.FC<any> = ({ children }) => {
 
       isPollingRef.current = true
 
-      log('Fetching data', { character: context.character?.address }, Date.now())
+      log('Fetching data', Date.now())
       try {
         await Promise.all([
-          context.getCharacter(),
-          context.getActivity(),
           context.updateLeaderboard(),
           context.getLegends(),
           context.updateAccountPortfolio()
@@ -126,7 +104,7 @@ const DataPollingContextProvider: React.FC<any> = ({ children }) => {
       } catch (error) {
         // For now, in case of a context update failure during polling, we simply reschedule the next polling,
         // as each context has its own error handling.
-        // eslint-disable-next-line no-console
+
         console.error('An error occurred while polling the latest character data:', error)
       }
 

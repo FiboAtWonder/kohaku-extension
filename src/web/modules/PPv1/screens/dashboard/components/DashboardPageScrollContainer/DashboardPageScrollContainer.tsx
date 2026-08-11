@@ -5,7 +5,7 @@ import { isWeb } from '@common/config/env'
 import { OVERVIEW_CONTENT_MAX_HEIGHT } from '@web/modules/PPv1/screens/dashboard/screens/DashboardScreen'
 import spacings from '@common/styles/spacings'
 import commonWebStyles from '@web/styles/utils/common'
-import { getUiType } from '@web/utils/uiType'
+import { getUiType } from '@common/utils/uiType'
 
 import useBanners from '../../hooks/useBanners'
 import DashboardBanners from '../DashboardBanners'

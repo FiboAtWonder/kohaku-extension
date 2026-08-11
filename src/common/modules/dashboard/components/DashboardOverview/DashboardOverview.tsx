@@ -1,34 +1,37 @@
-import React, { FC, useCallback, useEffect, useMemo, useState } from 'react'
+import React, { FC, useCallback, useMemo, useState } from 'react'
 import { Animated, Pressable, View } from 'react-native'
 
 import formatDecimals from '@ambire-common/utils/formatDecimals/formatDecimals'
 import SkeletonLoader from '@common/components/SkeletonLoader'
+// (kohaku)
+import Spinner from '@common/components/Spinner'
 import Text from '@common/components/Text'
+import { isiOS, isMobile, isWeb } from '@common/config/env'
 import { useTranslation } from '@common/config/localization'
+import { DashboardMode } from '@common/controllers/wallet-state'
+import useController from '@common/hooks/useController'
 import useTheme from '@common/hooks/useTheme'
 import DashboardHeader from '@common/modules/dashboard/components/DashboardHeader'
-import Gradients from '@common/modules/dashboard/components/Gradients/Gradients'
 import Routes from '@common/modules/dashboard/components/Routes'
 import useBalanceAffectingErrors from '@common/modules/dashboard/hooks/useBalanceAffectingErrors'
-import { OVERVIEW_CONTENT_MAX_HEIGHT } from '@common/modules/dashboard/screens/DashboardScreen'
-import { DASHBOARD_OVERVIEW_BACKGROUND } from '@common/modules/dashboard/screens/styles'
-import spacings, { SPACING, SPACING_TY, SPACING_XL } from '@common/styles/spacings'
-import { THEME_TYPES } from '@common/styles/themeConfig'
+import useDashboardReload from '@common/modules/dashboard/hooks/useDashboardReload'
+import spacings, { SPACING, SPACING_SM, SPACING_TY, SPACING_XL } from '@common/styles/spacings'
 import common from '@common/styles/utils/common'
 import flexbox from '@common/styles/utils/flexbox'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useHover, { AnimatedPressable } from '@web/hooks/useHover'
-import useMainControllerState from '@web/hooks/useMainControllerState'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
+import { privateValue } from '@common/utils/ui'
+import { isExtension } from '@web/constants/browserapi'
 
-import Spinner from '@common/components/Spinner'
 import NetworkVerificationBadge from '@web/components/NetworkVerificationBadge'
 import BalanceAffectingErrors from './BalanceAffectingErrors'
+import GasTankButton from './GasTankButton'
+import { OverviewBackground } from './OverviewBackground'
 import RefreshIcon from './RefreshIcon'
 import getStyles from './styles'
 
+const THRESHOLD_AMOUNT_TO_HIDE_BALANCE_DECIMALS = 10000
+export const OVERVIEW_CONTENT_MAX_HEIGHT = 162
+
 interface Props {
-  openReceiveModal: () => void
   openGasTankModal?: () => void
   animatedOverviewHeight: Animated.Value
   dashboardOverviewSize: {
@@ -36,42 +39,45 @@ interface Props {
     height: number
   }
   setDashboardOverviewSize: React.Dispatch<React.SetStateAction<{ width: number; height: number }>>
-  onGasTankButtonPosition: (position: {
-    x: number
-    y: number
-    width: number
-    height: number
-  }) => void
+  // (kohaku) private account (railgun/privacy) loading state
   isPrivateAccountLoading?: boolean
   isRailgunAccountLoading?: boolean
   privateAccountLoadingError?: string | null
   onRetryLoadPrivateAccount?: () => void
+  // (kohaku) only the merged (web) dashboard renders the private/public toggle
+  dashboardMode?: DashboardMode
+  onDashboardModeChange?: (mode: DashboardMode) => void
 }
 
-// We create a reusable height constant for both the Balance line-height and the Balance skeleton.
+// We create a reusable height constant for both the Balance amount height and the Balance skeleton.
 // We want both components to have the same height; otherwise, clicking on the RefreshIcon causes a layout shift.
-const BALANCE_HEIGHT = 34
+const BALANCE_HEIGHT = 40
 
 const DashboardOverview: FC<Props> = ({
-  openReceiveModal,
+  openGasTankModal,
   animatedOverviewHeight,
-  dashboardOverviewSize,
   setDashboardOverviewSize,
-  onGasTankButtonPosition,
+  // (kohaku)
   isPrivateAccountLoading,
   isRailgunAccountLoading,
   privateAccountLoadingError,
-  onRetryLoadPrivateAccount
+  onRetryLoadPrivateAccount,
+  dashboardMode,
+  onDashboardModeChange
 }) => {
-  const { dispatch } = useBackgroundService()
   const { t } = useTranslation()
-  const { theme, styles, themeType } = useTheme(getStyles)
-  const { isOffline } = useMainControllerState()
-  const { account, dashboardNetworkFilter, portfolio } = useSelectedAccountControllerState()
+  const { theme } = useTheme(getStyles)
+  const {
+    state: { isOffline }
+  } = useController('MainController')
+  const { account, portfolio } = useController('SelectedAccountController').state
+  const { areNetworksFetchingFromRelayer } = useController('NetworksController').state
+  const {
+    state: { isPrivacyModeEnabled },
+    dispatch: walletStateDispatch
+  } = useController('WalletStateController')
+  const [isBalanceHovered, setIsBalanceHovered] = useState(false)
 
-  const [bindRefreshButtonAnim, refreshButtonAnimStyle] = useHover({
-    preset: 'opacity'
-  })
   const {
     sheetRef,
     balanceAffectingErrorsSnapshot,
@@ -81,238 +87,93 @@ const DashboardOverview: FC<Props> = ({
     isLoadingTakingTooLong,
     networksWithErrors
   } = useBalanceAffectingErrors()
-
-  const totalPortfolioAmount = useMemo(() => {
-    if (!dashboardNetworkFilter) return portfolio?.totalBalance || 0
-
-    if (!account) return 0
-
-    return Number(portfolio.balancePerNetwork[dashboardNetworkFilter.toString()]) || 0
-  }, [portfolio, dashboardNetworkFilter, account])
-
-  const [totalPortfolioAmountInteger, totalPortfolioAmountDecimal] = formatDecimals(
-    totalPortfolioAmount,
-    'value'
-  ).split('.')
-
-  const reloadAccount = useCallback(() => {
-    dispatch({
-      type: 'MAIN_CONTROLLER_RELOAD_SELECTED_ACCOUNT',
-      params: {
-        chainId: dashboardNetworkFilter ?? undefined
-      }
-    })
-  }, [dashboardNetworkFilter, dispatch])
-
-  const [buttonPosition, setButtonPosition] = useState<{
-    x: number
-    y: number
-    width: number
-    height: number
-  } | null>(null)
-
-  const onGasTankButtonPositionWrapped = useCallback(
-    (position: { x: number; y: number; width: number; height: number }) => {
-      setButtonPosition(position)
-      onGasTankButtonPosition(position)
-    },
-    [onGasTankButtonPosition]
+  const totalPortfolioAmount = useMemo(() => portfolio?.totalBalance || 0, [portfolio])
+  const totalPortfolioAmountColor = useMemo(
+    () => (networksWithErrors.length || isOffline ? theme.warningDecorative2 : '#FFFFFF'),
+    [isOffline, networksWithErrors.length, theme.warningDecorative2]
   )
 
-  useEffect(() => {
-    if (buttonPosition) {
-      onGasTankButtonPositionWrapped(buttonPosition)
-    }
-  }, [buttonPosition, onGasTankButtonPositionWrapped])
+  // Display the button always on mobile
+  const shouldShowRefreshButton = isBalanceHovered || !portfolio?.isReadyToVisualize || !isExtension
+
+  const [totalPortfolioAmountIntegerFormattedPart, totalPortfolioAmountDecimalFormattedPart] =
+    formatDecimals(totalPortfolioAmount, 'value').split('.')
+
+  const { reloadAccount } = useDashboardReload()
+
+  const togglePrivacyMode = useCallback(() => {
+    walletStateDispatch({
+      type: 'method',
+      params: {
+        method: 'togglePrivacyMode',
+        args: []
+      }
+    })
+  }, [walletStateDispatch])
 
   return (
-    <View style={[spacings.phSm, spacings.mbMi]}>
-      <View style={[styles.contentContainer]}>
-        <Animated.View
-          style={[
-            common.borderRadiusPrimary,
-            spacings.ptTy,
-            spacings.phSm,
-            {
-              paddingBottom: animatedOverviewHeight.interpolate({
-                inputRange: [0, OVERVIEW_CONTENT_MAX_HEIGHT],
-                outputRange: [SPACING_TY, SPACING],
-                extrapolate: 'clamp'
-              }),
-              backgroundColor:
-                themeType === THEME_TYPES.DARK
-                  ? `${DASHBOARD_OVERVIEW_BACKGROUND}80`
-                  : DASHBOARD_OVERVIEW_BACKGROUND,
-              overflow: 'hidden'
-            }
-          ]}
-          onLayout={(e) => {
-            setDashboardOverviewSize({
-              width: e.nativeEvent.layout.width,
-              height: e.nativeEvent.layout.height
-            })
-          }}
-        >
-          <Gradients width={dashboardOverviewSize.width} height={dashboardOverviewSize.height} />
-          <View style={{ zIndex: 2 }}>
-            <DashboardHeader />
-            <Animated.View
-              style={{
-                ...styles.overview,
-                paddingTop: animatedOverviewHeight.interpolate({
-                  inputRange: [0, SPACING_XL],
-                  outputRange: [0, SPACING],
+    <View style={[spacings.phSm, spacings.mbTy]}>
+      <Animated.View
+        style={[
+          common.borderRadiusPrimary,
+          spacings.ptTy,
+          isWeb && spacings.phSm,
+          isMobile && spacings.phTy,
+          {
+            paddingBottom: isMobile
+              ? SPACING_SM
+              : animatedOverviewHeight.interpolate({
+                  inputRange: [0, OVERVIEW_CONTENT_MAX_HEIGHT],
+                  outputRange: [SPACING_TY, SPACING],
                   extrapolate: 'clamp'
                 }),
-                maxHeight: animatedOverviewHeight,
-                overflow: 'hidden'
-              }}
-            >
-              <View>
-                <View style={[flexbox.directionRow, flexbox.alignCenter, spacings.mbTy]}>
-                  {!portfolio?.isAllReady ? (
-                    <SkeletonLoader
-                      lowOpacity
-                      width={200}
-                      height={BALANCE_HEIGHT}
-                      borderRadius={8}
-                    />
-                  ) : (
-                    <Pressable
-                      onPress={onIconPress}
-                      disabled={!warningMessage || isLoadingTakingTooLong || isOffline}
-                      testID="full-balance"
-                      style={[flexbox.directionRow, flexbox.alignCenter]}
-                    >
-                      <Text selectable>
-                        <Text
-                          fontSize={32}
-                          shouldScale={false}
-                          style={{
-                            lineHeight: BALANCE_HEIGHT
-                          }}
-                          weight="number_bold"
-                          color={
-                            networksWithErrors.length || isOffline
-                              ? theme.warningDecorative2
-                              : themeType === THEME_TYPES.DARK
-                              ? theme.primaryBackgroundInverted
-                              : theme.primaryBackground
-                          }
-                          selectable
-                          testID="total-portfolio-amount-integer"
-                        >
-                          {totalPortfolioAmountInteger}
-                        </Text>
-                        <Text
-                          fontSize={20}
-                          shouldScale={false}
-                          weight="number_bold"
-                          color={
-                            networksWithErrors.length || isOffline
-                              ? theme.warningDecorative2
-                              : themeType === THEME_TYPES.DARK
-                              ? theme.primaryBackgroundInverted
-                              : theme.primaryBackground
-                          }
-                          selectable
-                        >
-                          {t('.')}
-                          {totalPortfolioAmountDecimal}
-                        </Text>
-                      </Text>
-                    </Pressable>
-                  )}
-                  <AnimatedPressable
-                    style={[spacings.mlTy, refreshButtonAnimStyle]}
-                    onPress={reloadAccount}
-                    {...bindRefreshButtonAnim}
-                    disabled={!portfolio?.isAllReady}
-                    testID="refresh-button"
-                  >
-                    <RefreshIcon
-                      spin={!portfolio?.isAllReady}
-                      color={
-                        themeType === THEME_TYPES.DARK
-                          ? theme.primaryBackgroundInverted
-                          : theme.primaryBackground
-                      }
-                      width={16}
-                      height={16}
-                    />
-                  </AnimatedPressable>
-                </View>
-
-                <View style={[flexbox.directionRow, flexbox.alignCenter, spacings.mbMi]}>
-                  {(isPrivateAccountLoading || isRailgunAccountLoading) &&
-                    !privateAccountLoadingError && (
-                      <>
-                        <Spinner
-                          variant="white"
-                          style={{
-                            width: 24,
-                            height: 24
-                          }}
-                        />
-                        <Text
-                          fontSize={16}
-                          shouldScale={false}
-                          weight="number_bold"
-                          color={theme.primaryBackground}
-                          style={spacings.mlTy}
-                        >
-                          Loading Private Account
-                        </Text>
-                      </>
-                    )}
-                  {privateAccountLoadingError && onRetryLoadPrivateAccount && (
-                    <Pressable
-                      onPress={onRetryLoadPrivateAccount}
-                      testID="retry-load-private-account-button"
-                    >
-                      {({ hovered }: any) => (
-                        <View
-                          style={{
-                            height: 32,
-                            paddingHorizontal: 12,
-                            borderRadius: 6,
-                            backgroundColor: hovered
-                              ? themeType === THEME_TYPES.DARK
-                                ? '#1b2b2c'
-                                : '#141833CC'
-                              : themeType === THEME_TYPES.DARK
-                              ? theme.primaryBackground
-                              : theme.primaryText,
-                            ...flexbox.directionRow,
-                            ...flexbox.alignCenter,
-                            ...flexbox.justifyCenter
-                          }}
-                        >
-                          <Text
-                            color={
-                              themeType === THEME_TYPES.DARK
-                                ? theme.primaryBackgroundInverted
-                                : theme.primaryBackground
-                            }
-                            weight="regular"
-                            fontSize={12}
-                            style={{ marginRight: 6 }}
-                          >
-                            Retry Loading Private Account
-                          </Text>
-                          <RefreshIcon
-                            color={
-                              themeType === THEME_TYPES.DARK
-                                ? theme.primaryBackgroundInverted
-                                : theme.primaryBackground
-                            }
-                            width={16}
-                            height={16}
-                          />
-                        </View>
-                      )}
-                    </Pressable>
-                  )}
+            overflow: 'hidden'
+          }
+        ]}
+        onLayout={(e) => {
+          setDashboardOverviewSize({
+            width: e.nativeEvent.layout.width,
+            height: e.nativeEvent.layout.height
+          })
+        }}
+      >
+        <OverviewBackground address={account?.addr || ''} />
+        <View style={{ zIndex: 2 }}>
+          <DashboardHeader
+            dashboardMode={dashboardMode}
+            onDashboardModeChange={onDashboardModeChange}
+          />
+          <Animated.View
+            style={{
+              ...flexbox.alignCenter,
+              paddingTop: animatedOverviewHeight.interpolate({
+                inputRange: [0, SPACING_XL],
+                outputRange: [0, isMobile ? SPACING_SM : SPACING],
+                extrapolate: 'clamp'
+              }),
+              maxHeight: animatedOverviewHeight,
+              overflow: isWeb ? 'hidden' : 'visible'
+            }}
+          >
+            {/* These width: 100%s are needed to make sure that hovering the entire row of the balance
+            displays the refresh button */}
+            <View style={[{ width: '100%' }, spacings.mb, flexbox.alignCenter]}>
+              <View
+                style={[
+                  flexbox.directionRow,
+                  flexbox.alignCenter,
+                  flexbox.justifyCenter,
+                  isWeb && spacings.mbMi,
+                  isMobile && spacings.mbTy,
+                  { height: BALANCE_HEIGHT, width: '100%' }
+                ]}
+                onMouseEnter={() => setIsBalanceHovered(true)}
+                onMouseLeave={() => setIsBalanceHovered(false)}
+              >
+                {/* Placeholder matching the refresh button size to keep the balance centered */}
+                <View
+                  style={{ width: 28, height: 28, ...flexbox.justifyCenter, ...flexbox.alignEnd }}
+                >
                   <BalanceAffectingErrors
                     reloadAccount={reloadAccount}
                     networksWithErrors={networksWithErrors}
@@ -324,13 +185,157 @@ const DashboardOverview: FC<Props> = ({
                     isLoadingTakingTooLong={isLoadingTakingTooLong}
                   />
                 </View>
+                <View style={[flexbox.alignCenter, spacings.mhTy]}>
+                  {/* Keep the balance in the skeleton state while the networks
+                  config is being refreshed from the relayer — an updated RPC may
+                  trigger a portfolio reload, and we want to show the fresh result
+                  rather than flashing a value computed from the stale RPC. */}
+                  {!portfolio?.isReadyToVisualize || areNetworksFetchingFromRelayer ? (
+                    <SkeletonLoader
+                      lowOpacity
+                      width={180}
+                      height={BALANCE_HEIGHT}
+                      borderRadius={8}
+                    />
+                  ) : (
+                    <View style={[flexbox.directionRow, flexbox.alignCenter]}>
+                      {/* (kohaku) the RPC verification state is surfaced by
+                      NetworkVerificationBadge below, which covers all verifier
+                      kinds (rpc/helios/colibri) */}
+                      <Pressable
+                        testID="full-balance"
+                        onPress={togglePrivacyMode}
+                        style={[flexbox.directionRow, flexbox.alignEnd]}
+                      >
+                        <Text
+                          fontSize={34}
+                          shouldScale={false}
+                          weight="number_bold"
+                          // Line height should be constant based on font size, not on parent height
+                          style={!isWeb ? { lineHeight: 36 } : { lineHeight: 28 }}
+                          color={totalPortfolioAmountColor}
+                          testID="total-portfolio-amount-integer"
+                        >
+                          {privateValue(
+                            totalPortfolioAmountIntegerFormattedPart,
+                            isPrivacyModeEnabled,
+                            7
+                          )}
+                        </Text>
+                        {totalPortfolioAmount < THRESHOLD_AMOUNT_TO_HIDE_BALANCE_DECIMALS &&
+                          !isPrivacyModeEnabled && (
+                            <Text
+                              fontSize={20}
+                              shouldScale={false}
+                              weight="number_bold"
+                              color={totalPortfolioAmountColor}
+                              style={!isWeb ? { lineHeight: isiOS ? 30 : 28 } : { lineHeight: 20 }}
+                            >
+                              {t('.')}
+                              {totalPortfolioAmountDecimalFormattedPart}
+                            </Text>
+                          )}
+                      </Pressable>
+                    </View>
+                  )}
+                </View>
+                {
+                  isWeb ? (
+                    <Pressable
+                      style={({ hovered }: any) => ({
+                        width: 28,
+                        height: 28,
+                        opacity: shouldShowRefreshButton ? (hovered ? 1 : 0.7) : 0
+                      })}
+                      onPress={reloadAccount}
+                      disabled={!portfolio.isAllReady || portfolio.isReloading}
+                      testID="refresh-button"
+                      onHoverIn={() => setIsBalanceHovered(true)}
+                      // Increase clickable area using prop
+                      hitSlop={10}
+                    >
+                      <RefreshIcon
+                        spin={!portfolio.isAllReady || portfolio.isReloading}
+                        color="#E3E6EB"
+                        width={28}
+                        height={28}
+                      />
+                    </Pressable>
+                  ) : (
+                    <View style={{ width: 28, height: 28 }} />
+                  ) /* Placeholder to keep balance centered on mobile */
+                }
                 <NetworkVerificationBadge testID="rpc-verification-badge" />
               </View>
-              <Routes openReceiveModal={openReceiveModal} />
-            </Animated.View>
-          </View>
-        </Animated.View>
-      </View>
+              <View style={[flexbox.directionRow, flexbox.justifyCenter, flexbox.alignCenter]}>
+                {/* (kohaku) private account loading / retry states — the deposit banner
+                    also waits on the railgun balance */}
+                {(isPrivateAccountLoading || isRailgunAccountLoading) &&
+                  !privateAccountLoadingError && (
+                  <>
+                    <Spinner
+                      variant="white"
+                      style={{
+                        width: 24,
+                        height: 24
+                      }}
+                    />
+                    <Text
+                      fontSize={16}
+                      shouldScale={false}
+                      weight="number_bold"
+                      color={theme.primaryBackground}
+                      style={spacings.mlTy}
+                    >
+                      {t('Loading Private Account')}
+                    </Text>
+                  </>
+                )}
+                {!!privateAccountLoadingError && !!onRetryLoadPrivateAccount && (
+                  <Pressable
+                    onPress={onRetryLoadPrivateAccount}
+                    testID="retry-load-private-account-button"
+                  >
+                    {({ hovered }: any) => (
+                      <View
+                        style={{
+                          height: 32,
+                          paddingHorizontal: 12,
+                          borderRadius: 6,
+                          backgroundColor: hovered ? theme.primaryLight : theme.primaryBackground,
+                          ...flexbox.directionRow,
+                          ...flexbox.alignCenter,
+                          ...flexbox.justifyCenter
+                        }}
+                      >
+                        <Text
+                          color={theme.primaryText}
+                          weight="regular"
+                          fontSize={12}
+                          style={{ marginRight: 6 }}
+                        >
+                          {t('Retry Loading Private Account')}
+                        </Text>
+                        <RefreshIcon color={theme.primaryText} width={16} height={16} />
+                      </View>
+                    )}
+                  </Pressable>
+                )}
+                {!isPrivateAccountLoading && !privateAccountLoadingError && (
+                  <GasTankButton
+                    onPress={() => openGasTankModal?.()}
+                    portfolio={portfolio}
+                    account={account}
+                  />
+                )}
+                {/* NOTE: this is commented out instead of deleted because we might wat to return it */}
+                {/* <RewardsButton /> */}
+              </View>
+            </View>
+            <Routes />
+          </Animated.View>
+        </View>
+      </Animated.View>
     </View>
   )
 }

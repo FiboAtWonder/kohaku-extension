@@ -1,5 +1,4 @@
-/* eslint-disable no-console */
-import { BrowserProvider, Contract, Interface, JsonRpcProvider } from 'ethers'
+import { Contract, Interface, JsonRpcProvider } from 'ethers'
 import React, { useCallback, useEffect, useState } from 'react'
 
 import { STK_WALLET, WALLET_TOKEN } from '@ambire-common/consts/addresses'
@@ -8,10 +7,12 @@ import { ERROR_MESSAGES } from '@legends/constants/errors/messages'
 import { ETHEREUM_CHAIN_ID } from '@legends/constants/networks'
 import useAccountContext from '@legends/hooks/useAccountContext'
 import useErc5792 from '@legends/hooks/useErc5792'
+import useProviderContext from '@legends/hooks/useProviderContext'
 import useSwitchNetwork from '@legends/hooks/useSwitchNetwork'
 import useToast from '@legends/hooks/useToast'
 import { useCardActionContext } from '@legends/modules/legends/components/ActionModal'
 import { humanizeError } from '@legends/modules/legends/utils/errors/humanizeError'
+import { getRewardsButtonText } from '@legends/utils/getRewardsButtonText'
 
 import CardActionWrapper from './CardActionWrapper'
 
@@ -25,13 +26,19 @@ const stkWalletIface = new Interface(['function enter(uint256 amount) external']
 const StakeWallet = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [isInProgress, setIsInProgress] = useState(false)
-  const { sendCalls, getCallsStatus, chainId } = useErc5792()
+  const { sendCalls, getCallsStatus } = useErc5792()
   const { onComplete, handleClose } = useCardActionContext()
 
   const { addToast } = useToast()
+  const { provider, browserProvider } = useProviderContext()
   const { connectedAccount, v1Account } = useAccountContext()
   const switchNetwork = useSwitchNetwork()
   const disabledButton = Boolean(!connectedAccount || v1Account)
+
+  const buttonText = getRewardsButtonText({
+    connectedAccount,
+    v1Account: !!v1Account
+  })
 
   const [walletBalance, setWalletBalance] = useState(null)
 
@@ -40,8 +47,7 @@ const StakeWallet = () => {
     const ethereumProvider = new JsonRpcProvider('https://invictus.ambire.com/ethereum')
     const walletContract = new Contract(WALLET_TOKEN, walletIface, ethereumProvider)
     // @TODO use the pending $WALLET balance in the future
-    walletContract
-      .balanceOf(connectedAccount)
+    walletContract.balanceOf!(connectedAccount)
       .then(setWalletBalance)
       .catch((e) => {
         console.error(e)
@@ -52,17 +58,18 @@ const StakeWallet = () => {
 
   const stakeWallet = useCallback(async () => {
     try {
+      if (!browserProvider) throw new HumanReadableError('No connected wallet.')
       if (!connectedAccount) throw new HumanReadableError('No connected account.')
       if (!walletBalance) throw new HumanReadableError('Insufficient $WALLET balance')
 
       setIsInProgress(true)
-      const provider = new BrowserProvider(window.ambire)
-      const signer = await provider.getSigner(connectedAccount)
+
+      const signer = await browserProvider.getSigner(connectedAccount)
 
       const useSponsorship = false
 
       const sendCallsIdentifier = await sendCalls(
-        chainId,
+        BigInt(ETHEREUM_CHAIN_ID),
         await signer.getAddress(),
         [
           {
@@ -77,6 +84,9 @@ const StakeWallet = () => {
         useSponsorship
       )
       const receipt = await getCallsStatus(sendCallsIdentifier)
+
+      if (!receipt) throw new HumanReadableError('Transaction failed.')
+
       onComplete(receipt.transactionHash)
       handleClose()
     } catch (e: any) {
@@ -88,10 +98,10 @@ const StakeWallet = () => {
       setIsInProgress(false)
     }
   }, [
+    browserProvider,
     connectedAccount,
     walletBalance,
     sendCalls,
-    chainId,
     getCallsStatus,
     onComplete,
     handleClose,
@@ -99,8 +109,9 @@ const StakeWallet = () => {
   ])
 
   const onButtonClick = useCallback(async () => {
+    if (!provider) return
     if (!walletBalance) {
-      await window.ambire
+      await provider
         .request({
           method: 'open-wallet-route',
           params: { route: 'swap-and-bridge' }
@@ -110,9 +121,12 @@ const StakeWallet = () => {
         })
       return
     }
+    // as of feb 2026 this is not needed for latest v's of the extension, because the wallet_sendCalls method handles the chainId
+    // but we are not removing it for now, becaus there are many users right now who have not yet updated their extension to latest
+    // same applies for most other such cases in rewards
     await switchNetwork(ETHEREUM_CHAIN_ID)
     await stakeWallet()
-  }, [switchNetwork, stakeWallet, walletBalance])
+  }, [provider, switchNetwork, stakeWallet, walletBalance])
 
   return (
     <CardActionWrapper
@@ -121,12 +135,12 @@ const StakeWallet = () => {
       disabled={disabledButton || isInProgress}
       buttonText={
         disabledButton
-          ? 'Switch to a new account to unlock Rewards quests. Ambire legacy Web accounts (V1) are not supported.'
+          ? buttonText
           : isLoading
-          ? 'Loading...'
-          : !walletBalance
-          ? 'Buy $WALLET'
-          : 'Stake'
+            ? 'Loading...'
+            : !walletBalance
+              ? 'Buy $WALLET'
+              : 'Stake'
       }
       onButtonClick={onButtonClick}
     />

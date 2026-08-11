@@ -1,0 +1,271 @@
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { View } from 'react-native'
+import { useModalize } from 'react-native-modalize'
+
+import AddIcon from '@common/assets/svg/AddIcon'
+import ChainlistIcon from '@common/assets/svg/ChainlistIcon'
+import BottomSheet from '@common/components/BottomSheet'
+import Button from '@common/components/Button'
+import NetworkAvailableFeatures from '@common/components/NetworkAvailableFeatures'
+import NetworkDetails from '@common/components/NetworkDetails'
+import ScrollableWrapper from '@common/components/ScrollableWrapper'
+import Search from '@common/components/Search'
+import Text from '@common/components/Text'
+import { useTranslation } from '@common/config/localization'
+import { isAmbireNext, isDev } from '@common/config/env'
+import useController from '@common/hooks/useController'
+import useRoute from '@common/hooks/useRoute'
+import useTheme from '@common/hooks/useTheme'
+import { ROUTES } from '@common/modules/router/constants/common'
+import Network from '@common/modules/settings/components/Networks/Network'
+import NetworkForm from '@common/modules/settings/components/Networks/NetworkForm'
+import spacings from '@common/styles/spacings'
+import common from '@common/styles/utils/common'
+import flexbox from '@common/styles/utils/flexbox'
+import text from '@common/styles/utils/text'
+import { openInTab } from '@common/utils/links'
+import { SettingsRoutesContext } from '@web/modules/settings/contexts/SettingsRoutesContext'
+
+import BatchingControlOption from './BatchingControlOption'
+
+// Kohaku's PoC runs on Sepolia only, so adding networks is turned off and a notice takes
+// the place of the "Add network" buttons. The upstream markup is kept behind this flag so
+// it can be re-enabled. (kohaku)
+const IS_ADDING_NETWORKS_SUPPORTED = false
+
+const NetworksSettings = () => {
+  const { t } = useTranslation()
+  const { theme } = useTheme()
+  const { search: searchParams, pathname } = useRoute()
+  const { control, watch } = useForm({ defaultValues: { search: '' } })
+  const { ref: sheetRef, open: openBottomSheet, close: closeBottomSheet } = useModalize()
+  const { allNetworks } = useController('NetworksController').state
+  const {
+    state: { providers }
+  } = useController('ProvidersController')
+
+  const { setCurrentSettingsPage } = useContext(SettingsRoutesContext)
+  const [selectedChainId, setSelectedChainId] = useState(() => {
+    const parsedSearchParams = new URLSearchParams(searchParams)
+    if (parsedSearchParams.has('chainId'))
+      return BigInt(parsedSearchParams.get('chainId') as string)
+
+    return undefined
+  })
+
+  const shouldOpenBottomSheet = useMemo(() => {
+    const parsedSearchParams = new URLSearchParams(searchParams)
+
+    return parsedSearchParams.has('addNetwork')
+  }, [searchParams])
+
+  // Deep link into a network's edit form: ?chainId=..&openEditForm (kohaku)
+  const shouldAutoOpenEditForm = useMemo(() => {
+    const parsedSearchParams = new URLSearchParams(searchParams)
+
+    return parsedSearchParams.has('chainId') && parsedSearchParams.has('openEditForm')
+  }, [searchParams])
+
+  const selectedNetwork = useMemo(
+    () => allNetworks.find((n) => n.chainId === selectedChainId),
+    [allNetworks, selectedChainId]
+  )
+
+  const selectedNetworkProvider = useMemo(() => {
+    if (!selectedNetwork) return undefined
+
+    return providers[selectedNetwork.chainId.toString()]
+  }, [providers, selectedNetwork])
+
+  const search = watch('search')
+
+  const isInitialConfig = useMemo(
+    () => pathname?.includes(ROUTES.networksConfiguration),
+    [pathname]
+  )
+
+  useEffect(() => {
+    setCurrentSettingsPage('networks')
+  }, [setCurrentSettingsPage])
+
+  const filteredNetworkBySearch = useMemo(
+    () =>
+      allNetworks.filter((network) => network.name.toLowerCase().includes(search.toLowerCase())),
+    [allNetworks, search]
+  )
+
+  const filteredEnabledNetworks = useMemo(
+    () => filteredNetworkBySearch.filter((network) => !network.disabled),
+    [filteredNetworkBySearch]
+  )
+
+  const filteredDisabledNetworks = useMemo(
+    () => filteredNetworkBySearch.filter((network) => network.disabled),
+    [filteredNetworkBySearch]
+  )
+
+  const handleSelectNetwork = useCallback((chainId: bigint) => {
+    setSelectedChainId(chainId)
+  }, [])
+
+  const navigateToChainlist = useCallback(async () => {
+    await openInTab({ url: 'https://chainlist.org/' })
+  }, [])
+
+  return (
+    <>
+      <View style={[flexbox.directionRow, flexbox.flex1]}>
+        <View style={[{ flex: 1 }]}>
+          <Search
+            placeholder={t('Search for network')}
+            control={control}
+            containerStyle={spacings.mb}
+            autoFocus
+          />
+          <ScrollableWrapper contentContainerStyle={{ flexGrow: 1 }}>
+            {filteredNetworkBySearch.length > 0 ? (
+              <>
+                {filteredEnabledNetworks.length > 0 && (
+                  <View style={spacings.mb}>
+                    {filteredEnabledNetworks.map((network) => (
+                      <Network
+                        key={network.chainId.toString()}
+                        network={network}
+                        selectedChainId={selectedChainId}
+                        handleSelectNetwork={handleSelectNetwork}
+                      />
+                    ))}
+                  </View>
+                )}
+                {filteredDisabledNetworks.length > 0 && (
+                  <>
+                    <Text weight="medium" fontSize={16} style={[spacings.mbTy]}>
+                      {t('Disabled networks')}
+                    </Text>
+
+                    {filteredDisabledNetworks.map((network) => (
+                      <Network
+                        key={network.chainId.toString()}
+                        network={network}
+                        selectedChainId={selectedChainId}
+                        handleSelectNetwork={handleSelectNetwork}
+                      />
+                    ))}
+                  </>
+                )}
+              </>
+            ) : (
+              <View style={[flexbox.flex1, flexbox.alignCenter, flexbox.justifyCenter]}>
+                <Text weight="regular" fontSize={14} style={[text.center]}>
+                  {t('No networks found.')}
+                </Text>
+                <Text weight="regular" fontSize={14} style={[text.center]}>
+                  {t('Try searching for a different network.')}
+                </Text>
+              </View>
+            )}
+          </ScrollableWrapper>
+          <View style={spacings.pt}>
+            {IS_ADDING_NETWORKS_SUPPORTED ? (
+              <>
+                {!isInitialConfig && (
+                  <Button
+                    type="primary"
+                    size="small"
+                    text={t('Add network from Chainlist')}
+                    testID="add-network-from-chainlist"
+                    onPress={navigateToChainlist}
+                    style={{ height: 48, ...spacings.mbTy }}
+                    childrenPosition="left"
+                  >
+                    <ChainlistIcon width={24} height={24} style={spacings.mrTy} />
+                  </Button>
+                )}
+                <Button
+                  type="secondary"
+                  size="small"
+                  text={t('Add network manually')}
+                  testID="add-network-manually"
+                  onPress={openBottomSheet as any}
+                  hasBottomSpacing={false}
+                  style={{ height: 48 }}
+                  childrenPosition="left"
+                >
+                  <AddIcon style={spacings.mrTy} />
+                </Button>
+              </>
+            ) : (
+              <View
+                style={[
+                  spacings.pvTy,
+                  spacings.phSm,
+                  common.borderRadiusPrimary,
+                  {
+                    borderWidth: 1,
+                    borderColor: theme.warningDecorative,
+                    backgroundColor: theme.warningBackground
+                  }
+                ]}
+              >
+                <Text
+                  weight="medium"
+                  fontSize={14}
+                  style={[text.center, { color: theme.warningText }]}
+                >
+                  {t('sepolia testnet ONLY, ethereum mainnet support coming soon')}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        <View style={[{ flex: 1.75 }, spacings.mlLg]}>
+          <ScrollableWrapper contentContainerStyle={{ flexGrow: 1 }}>
+            <View style={spacings.mb}>
+              <NetworkDetails
+                name={selectedNetwork?.name || '-'}
+                chainId={selectedNetwork?.chainId || '-'}
+                rpcUrls={selectedNetwork?.rpcUrls || ['-']}
+                selectedRpcUrl={selectedNetwork?.selectedRpcUrl || '-'}
+                nativeAssetSymbol={selectedNetwork?.nativeAssetSymbol || '-'}
+                nativeAssetName={selectedNetwork?.nativeAssetName || '-'}
+                explorerUrl={selectedNetwork?.explorerUrl || '-'}
+                batchMaxCount={selectedNetwork ? selectedNetworkProvider?.batchMaxCount : '-'}
+                allowRemoveNetwork
+                autoOpenEditForm={shouldAutoOpenEditForm}
+              />
+            </View>
+            {!!selectedNetwork && !!selectedChainId && (
+              <NetworkAvailableFeatures
+                features={selectedNetwork.features}
+                chainId={selectedChainId}
+              />
+            )}
+            {(isDev || isAmbireNext) && (
+              <View style={spacings.mtXl}>
+                <BatchingControlOption />
+              </View>
+            )}
+          </ScrollableWrapper>
+        </View>
+      </View>
+      <BottomSheet
+        id="add-new-network"
+        sheetRef={sheetRef}
+        closeBottomSheet={closeBottomSheet}
+        scrollViewProps={{
+          scrollEnabled: false,
+          contentContainerStyle: { flex: 1 }
+        }}
+        containerInnerWrapperStyles={{ flex: 1 }}
+        style={{ ...spacings.ph0, ...spacings.pv0, overflow: 'hidden', maxWidth: 880 }}
+        autoOpen={shouldOpenBottomSheet}
+      >
+        <NetworkForm onCancel={closeBottomSheet} onSaved={closeBottomSheet} />
+      </BottomSheet>
+    </>
+  )
+}
+
+export default React.memo(NetworksSettings)

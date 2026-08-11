@@ -1,24 +1,21 @@
-/* eslint-disable no-restricted-syntax */
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { NavigateOptions } from 'react-router-dom'
 
 import { Account } from '@ambire-common/interfaces/account'
 import { parse, stringify } from '@ambire-common/libs/richJson/richJson'
+import { ControllersStateLoadedContext } from '@common/contexts/controllersStateLoadedContext'
+import useController from '@common/hooks/useController'
+import useControllersMiddleware from '@common/hooks/useControllersMiddleware'
 import useNavigation from '@common/hooks/useNavigation'
 import usePrevious from '@common/hooks/usePrevious'
 import useRoute from '@common/hooks/useRoute'
 import { AUTH_STATUS } from '@common/modules/auth/constants/authStatus'
 import useAuth from '@common/modules/auth/hooks/useAuth'
 import { ONBOARDING_WEB_ROUTES, WEB_ROUTES } from '@common/modules/router/constants/common'
-import { ControllersStateLoadedContext } from '@web/contexts/controllersStateLoadedContext'
-import useAccountPickerControllerState from '@web/hooks/useAccountPickerControllerState'
-import useAccountsControllerState from '@web/hooks/useAccountsControllerState'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useKeystoreControllerState from '@web/hooks/useKeystoreControllerState'
-import useWalletStateController from '@web/hooks/useWalletStateController'
-import { getUiType } from '@web/utils/uiType'
+import { syncSessionStorage } from '@common/services/storage'
+import { getUiType } from '@common/utils/uiType'
 
-export type OnboardingRoute = typeof ONBOARDING_WEB_ROUTES[number]
+export type OnboardingRoute = (typeof ONBOARDING_WEB_ROUTES)[number]
 type HwWalletsNeedingRedirect = 'trezor' | 'lattice' | null
 
 const OnboardingNavigationContext = createContext<{
@@ -56,7 +53,7 @@ class RouteNode {
 
 const getAccountsToPersonalizeFromSession = (): Account[] => {
   try {
-    const stored = sessionStorage.getItem('accountsToPersonalize')
+    const stored = syncSessionStorage.get('accountsToPersonalize')
     return stored ? parse(stored) : []
   } catch {
     return []
@@ -64,15 +61,19 @@ const getAccountsToPersonalizeFromSession = (): Account[] => {
 }
 
 const OnboardingNavigationProvider = ({ children }: { children: React.ReactNode }) => {
-  const { hasPasswordSecret } = useKeystoreControllerState()
+  const { hasPasswordSecret } = useController('KeystoreController').state
+  const { statuses: emailVaultStatuses } = useController('EmailVaultController').state
   const { path, params } = useRoute()
   const prevPath: string | undefined = usePrevious(path)
   const { navigate } = useNavigation()
   const { authStatus } = useAuth()
-  const { dispatch } = useBackgroundService()
-  const { isSetupComplete } = useWalletStateController()
-  const { accounts } = useAccountsControllerState()
-  const { isInitialized, subType, initParams, type } = useAccountPickerControllerState()
+  const { dispatch } = useControllersMiddleware()
+  const { isSetupComplete } = useController('WalletStateController').state
+  const { accounts } = useController('AccountsController').state
+  const {
+    state: { isInitialized, subType, initParams, type },
+    dispatch: accountPickerDispatch
+  } = useController('AccountPickerController')
   const isOnboardingRoute = useMemo(
     () => ONBOARDING_WEB_ROUTES.includes((path || '').substring(1)),
     [path]
@@ -90,37 +91,37 @@ const OnboardingNavigationProvider = ({ children }: { children: React.ReactNode 
   useEffect(() => {
     const currentRoute = path?.substring(1)
     if (currentRoute === WEB_ROUTES.accountPersonalize)
-      sessionStorage.setItem('accountsToPersonalize', stringify(accountsToPersonalize))
+      syncSessionStorage.set('accountsToPersonalize', stringify(accountsToPersonalize))
   }, [accountsToPersonalize, path])
 
   useEffect(() => {
     const currentRoute = path?.substring(1)
     if (currentRoute !== WEB_ROUTES.accountPersonalize) {
-      sessionStorage.removeItem('accountsToPersonalize')
+      syncSessionStorage.remove('accountsToPersonalize')
       if (accountsToPersonalize.length) setAccountsToPersonalize([])
     }
   }, [path, accountsToPersonalize.length])
 
   const onboardingRoutesTree = useMemo(() => {
+    // on mobile, we skip onboardingCompleted and go straight to the dashboard ('/')
+    const afterPersonalizeRoutes = getUiType().isMobileApp
+      ? [new RouteNode('/')]
+      : [
+          new RouteNode(
+            WEB_ROUTES.onboardingCompleted,
+            [new RouteNode('/')],
+            isSetupComplete || !accounts?.length
+          ),
+          new RouteNode('/')
+        ]
+
     const nextAccountPickerRoutes =
       subType === 'hw'
         ? [
             new RouteNode(
               WEB_ROUTES.accountPicker,
               [
-                new RouteNode(
-                  WEB_ROUTES.accountPersonalize,
-                  [
-                    new RouteNode(
-                      WEB_ROUTES.onboardingCompleted,
-                      [new RouteNode('/')],
-                      isSetupComplete || !accounts?.length
-                    ),
-                    new RouteNode('/')
-                  ],
-                  false,
-                  false
-                ),
+                new RouteNode(WEB_ROUTES.accountPersonalize, afterPersonalizeRoutes, false, false),
                 new RouteNode('/')
               ],
               false,
@@ -131,19 +132,7 @@ const OnboardingNavigationProvider = ({ children }: { children: React.ReactNode 
             new RouteNode(
               WEB_ROUTES.accountPicker,
               [
-                new RouteNode(
-                  WEB_ROUTES.accountPersonalize,
-                  [
-                    new RouteNode(
-                      WEB_ROUTES.onboardingCompleted,
-                      [new RouteNode('/')],
-                      isSetupComplete || !accounts?.length
-                    ),
-                    new RouteNode('/')
-                  ],
-                  false,
-                  false
-                ),
+                new RouteNode(WEB_ROUTES.accountPersonalize, afterPersonalizeRoutes, false, false),
                 new RouteNode('/')
               ],
               false,
@@ -166,10 +155,13 @@ const OnboardingNavigationProvider = ({ children }: { children: React.ReactNode 
         new RouteNode(
           WEB_ROUTES.importExistingAccount,
           [
-            ...(common[0].disabled ? common[0].children : common),
+            ...(common && common[0] && common[0].disabled ? common[0].children : common),
             new RouteNode(WEB_ROUTES.importPrivateKey, common, false, false),
             new RouteNode(WEB_ROUTES.importSeedPhrase, common, false, false),
             new RouteNode(WEB_ROUTES.ledgerConnect, common, false, false),
+            new RouteNode(WEB_ROUTES.trezorConnect, common, false, false),
+            new RouteNode(WEB_ROUTES.safeImport, common, false, false),
+            new RouteNode(WEB_ROUTES.qrConnect, common, false, false),
             new RouteNode(WEB_ROUTES.importSmartAccountJson, common, false, false)
           ],
           false,
@@ -184,7 +176,7 @@ const OnboardingNavigationProvider = ({ children }: { children: React.ReactNode 
 
   const loadHistory = () => {
     try {
-      const savedHistory = sessionStorage.getItem('onboarding_history')
+      const savedHistory = syncSessionStorage.get('onboarding_history')
       if (savedHistory) return JSON.parse(savedHistory)
     } catch (error) {
       console.error('Failed to load navigation state:', error)
@@ -195,7 +187,7 @@ const OnboardingNavigationProvider = ({ children }: { children: React.ReactNode 
   const [history, setHistory] = useState<string[]>(loadHistory())
 
   useEffect(() => {
-    sessionStorage.setItem('onboarding_history', JSON.stringify(history))
+    syncSessionStorage.set('onboarding_history', JSON.stringify(history))
   }, [history])
 
   const deepSearchRouteNode = useCallback(
@@ -255,9 +247,8 @@ const OnboardingNavigationProvider = ({ children }: { children: React.ReactNode 
         if (!currentNode) return
         nextRoute = findNextEnabledRoute(currentNode.children, routeName)
       }
-
       if (nextRoute) {
-        if (nextRoute.name === '/') {
+        if (nextRoute.name === '/' && !getUiType().isMobileApp) {
           dispatch({ type: 'OPEN_EXTENSION_POPUP' })
         } else {
           navigate(nextRoute.name, {
@@ -291,7 +282,7 @@ const OnboardingNavigationProvider = ({ children }: { children: React.ReactNode 
 
     while (newHistory.length > 0) {
       const prevRouteName = newHistory[newHistory.length - 1]
-      const prevRoute = deepSearchRouteNode(onboardingRoutesTree, prevRouteName)
+      const prevRoute = deepSearchRouteNode(onboardingRoutesTree, prevRouteName!)
       newHistory.pop()
       if (!prevRoute) {
         navigate('/')
@@ -356,15 +347,21 @@ const OnboardingNavigationProvider = ({ children }: { children: React.ReactNode 
     ].some((r) => currentRoute.includes(r))
 
     if (shouldResetAccountPicker) {
-      dispatch({ type: 'MAIN_CONTROLLER_ACCOUNT_PICKER_RESET' })
+      accountPickerDispatch({
+        type: 'method',
+        params: {
+          method: 'reset',
+          args: []
+        }
+      })
     }
-  }, [onboardingInitialized, path, dispatch, isInitialized, history])
+  }, [onboardingInitialized, path, accountPickerDispatch, isInitialized, history])
 
   // Some routes are protected and should only be accessed through internal navigation.
   // If a user attempts to access one of these routes directly via the URL bar,
   // this hook should block the navigation and redirect them back to the previous route.
   useEffect(() => {
-    if (getUiType().isPopup) return
+    if (getUiType().isPopup || getUiType().isMobileApp) return
     const currentRoute = path?.substring(1)
     const prevRoute = prevPath?.substring(1)
     if (!currentRoute) return
@@ -391,7 +388,7 @@ const OnboardingNavigationProvider = ({ children }: { children: React.ReactNode 
   }, [history.length, path])
 
   useEffect(() => {
-    if (getUiType().isPopup) return
+    if (getUiType().isPopup || getUiType().isMobileApp) return
 
     const handleBackButton = () => {
       const changedRoute = window.location.hash.replace('#/', '')
@@ -415,6 +412,7 @@ const OnboardingNavigationProvider = ({ children }: { children: React.ReactNode 
     const currentRoute = path?.substring(1)
     if (!currentRoute) return
     if (!areControllerStatesLoaded) return
+    if (emailVaultStatuses?.recoverKeyStore !== 'INITIAL') return
 
     if (
       !hasPasswordSecret &&
@@ -423,7 +421,14 @@ const OnboardingNavigationProvider = ({ children }: { children: React.ReactNode 
     ) {
       goToNextRoute(WEB_ROUTES.keyStoreSetup)
     }
-  }, [authStatus, path, goToNextRoute, hasPasswordSecret, areControllerStatesLoaded])
+  }, [
+    authStatus,
+    path,
+    goToNextRoute,
+    hasPasswordSecret,
+    areControllerStatesLoaded,
+    emailVaultStatuses?.recoverKeyStore
+  ])
 
   const value = useMemo(
     () => ({

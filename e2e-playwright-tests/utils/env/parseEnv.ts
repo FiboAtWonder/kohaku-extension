@@ -1,8 +1,10 @@
-import mainConstants from 'constants/mainConstants'
+type Prefix = 'SA' | 'BA' | 'LEDGER_BA' | 'LEDGER_SA'
 
-const parseEnv = (envVariables, prefix: 'SA' | 'BA') => {
-  if (prefix !== 'SA' && prefix !== 'BA') {
-    throw new Error(`Invalid ${prefix}. Expected 'SA' or 'BA'`)
+const PREFIXES: Prefix[] = ['SA', 'BA', 'LEDGER_BA', 'LEDGER_SA']
+
+const parseEnv = (envVariables: Record<string, string>, prefix: Prefix) => {
+  if (!PREFIXES.includes(prefix)) {
+    throw new Error(`Invalid ${prefix}. Expected 'SA', 'BA', 'LEDGER_BA' or 'LEDGER_SA'`)
   }
 
   return {
@@ -10,17 +12,9 @@ const parseEnv = (envVariables, prefix: 'SA' | 'BA') => {
     parsedKeystoreUID: envVariables[`${prefix}_KEYSTORE_UID`],
     parsedKeystoreKeys: JSON.parse(envVariables[`${prefix}_KEYS`]),
     parsedKeystoreSecrets: JSON.parse(envVariables[`${prefix}_SECRETS`]),
-    parsedKeystoreSeeds: JSON.parse(envVariables[`${prefix}_SEEDS`]),
-    parsedNetworksWithAssetsByAccount: JSON.parse(envVariables[`${prefix}_NETWORK_WITH_ASSETS`]),
-    parsedNetworksWithPositionsByAccount: JSON.parse(
-      envVariables[`${prefix}_NETWORK_WITH_POSITIONS`]
-    ),
-    parsedOnboardingState: JSON.parse(envVariables[`${prefix}_ONBOARDING_STATE`]),
-    parsedPreviousHints: JSON.parse(envVariables[`${prefix}_PREVIOUSHINTS`]),
-    envSelectedAccount: envVariables[`${prefix}_SELECTED_ACCOUNT`],
-    envTermState: envVariables[`${prefix}_TERMSTATE`],
-    invite: JSON.stringify(mainConstants.inviteStorageItem),
-    ...(prefix === 'SA' && { parsedIsOnBoarded: envVariables[`${prefix}_IS_ONBOARDED`] })
+    parsedKeystoreSeeds: JSON.parse(envVariables[`${prefix}_SEEDS`] || '[]'), // TODO: remove || '[]' when all env variables are updated to include SEEDS (even if empty)
+    parsedLearnedAssets: JSON.parse(envVariables[`${prefix}_LEARNED_ASSETS`]),
+    envSelectedAccount: envVariables[`${prefix}_SELECTED_ACCOUNT`]
   }
 }
 

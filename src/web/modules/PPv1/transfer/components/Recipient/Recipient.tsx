@@ -3,16 +3,15 @@ import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import { useModalize } from 'react-native-modalize'
 
-import { TransferController } from '@ambire-common/controllers/transfer/transfer'
 import { TokenResult } from '@ambire-common/libs/portfolio'
-import { findAccountDomainFromPartialDomain } from '@ambire-common/utils/domains'
-import AccountsFilledIcon from '@common/assets/svg/AccountsFilledIcon'
+import { getSearchableNames } from '@ambire-common/services/nameResolvers'
+import { Validation } from '@ambire-common/services/validations'
+import AddressBookIcon from '@common/assets/svg/AddressBookIcon'
 import DownArrowIcon from '@common/assets/svg/DownArrowIcon'
 import SettingsIcon from '@common/assets/svg/SettingsIcon'
 import UpArrowIcon from '@common/assets/svg/UpArrowIcon'
-import WalletFilledIcon from '@common/assets/svg/WalletFilledIcon'
+import WalletIcon from '@common/assets/svg/WalletIcon'
 import AddressInput from '@common/components/AddressInput'
-import { AddressValidation } from '@common/components/AddressInput/AddressInput'
 import { InputProps } from '@common/components/Input'
 import Text from '@common/components/Text'
 import useNavigation from '@common/hooks/useNavigation'
@@ -20,10 +19,7 @@ import useTheme from '@common/hooks/useTheme'
 import { ROUTES } from '@common/modules/router/constants/common'
 import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
-import useAddressBookControllerState from '@web/hooks/useAddressBookControllerState'
-import useDomainsControllerState from '@web/hooks/useDomainsController/useDomainsController'
-import useHover, { AnimatedPressable } from '@web/hooks/useHover'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
+import useHover, { AnimatedPressable } from '@common/hooks/useHover'
 
 import AddressBookContact from '@common/components/AddressBookContact'
 import { SectionedSelect } from '@common/components/Select'
@@ -34,10 +30,11 @@ import {
 } from '@common/components/Select/types'
 import TitleAndIcon from '@common/components/TitleAndIcon'
 import AddContactBottomSheet from '@common/components/Recipient/AddContactBottomSheet'
-import ConfirmAddress from '@common/components/Recipient/ConfirmAddress'
+import AddToAddressBook from '@common/components/Recipient/AddToAddressBook'
 import styles from '@common/components/Recipient/styles'
 import useAccountsList from '@common/hooks/useAccountsList'
 import { zeroAddress } from 'viem'
+import useController from '@common/hooks/useController'
 
 interface Props extends InputProps {
   setAddress: (text: string) => void
@@ -46,25 +43,21 @@ interface Props extends InputProps {
   addressValidationMsg: string
   isRecipientHumanizerKnownTokenOrSmartContract: boolean
   isRecipientAddressUnknown: boolean
-  isRecipientAddressUnknownAgreed: TransferController['isRecipientAddressUnknownAgreed']
-  onRecipientCheckboxClick: () => void
-  validation: AddressValidation
+  validation: Validation
   isRecipientDomainResolving: boolean
-  isSWWarningVisible: boolean
-  isSWWarningAgreed: boolean
   recipientMenuClosedAutomaticallyRef: React.MutableRefObject<boolean>
   selectedTokenSymbol?: TokenResult['symbol']
   menuPosition?: 'top' | 'bottom'
 }
 
-const ADDRESS_BOOK_VISIBLE_VALIDATION = {
-  isError: true, // Don't let the user submit, just in case there is an error
+const ADDRESS_BOOK_VISIBLE_VALIDATION: Validation = {
+  severity: 'error', // Don't let the user submit, just in case there is an error
   message: ''
 }
 
 const SelectedMenuOption: React.FC<{
   selectRef: React.RefObject<any>
-  validation: AddressValidation
+  validation: Validation
   isMenuOpen: boolean
   ensAddress: string
   isRecipientDomainResolving: boolean
@@ -94,7 +87,7 @@ const SelectedMenuOption: React.FC<{
   useEffect(() => {
     if (isMenuOpen && !totalAvailableOptions) {
       toggleMenu()
-      // eslint-disable-next-line no-param-reassign
+
       recipientMenuClosedAutomaticallyRef.current = true
     } else if (
       recipientMenuClosedAutomaticallyRef.current &&
@@ -103,10 +96,10 @@ const SelectedMenuOption: React.FC<{
       // Reopen the menu only if the address is invalid
       // Otherwise we will reopen it while the user is done with this field
       // and wants to proceed
-      validation.isError
+      validation.severity === 'error'
     ) {
       toggleMenu()
-      // eslint-disable-next-line no-param-reassign
+
       recipientMenuClosedAutomaticallyRef.current = false
     }
   }, [
@@ -115,7 +108,7 @@ const SelectedMenuOption: React.FC<{
     isMenuOpen,
     recipientMenuClosedAutomaticallyRef,
     toggleMenu,
-    validation.isError
+    validation.severity
   ])
 
   return (
@@ -123,7 +116,8 @@ const SelectedMenuOption: React.FC<{
       inputBorderWrapperRef={selectRef}
       validation={isMenuOpen ? ADDRESS_BOOK_VISIBLE_VALIDATION : validation}
       containerStyle={styles.inputContainer}
-      ensAddress={ensAddress}
+      resolvedAddress={ensAddress}
+      resolvedAddressType={ensAddress ? 'ens' : null}
       isRecipientDomainResolving={isRecipientDomainResolving}
       label="Add recipient"
       value={address}
@@ -131,7 +125,7 @@ const SelectedMenuOption: React.FC<{
       disabled={disabled}
       onFocus={toggleMenu}
       childrenBeforeButtons={
-        <AccountsFilledIcon
+        <AddressBookIcon
           color={theme[isAddressInAddressBook ? 'primary' : 'secondaryText']}
           opacity={isAddressInAddressBook ? 1 : 0.25}
           style={spacings.mrTy}
@@ -144,7 +138,7 @@ const SelectedMenuOption: React.FC<{
         onPress: toggleMenu
       }}
       buttonStyle={{ ...spacings.pv0, ...spacings.ph, ...spacings.mr0, ...spacings.ml0 }}
-      inputWrapperStyle={{ backgroundColor: theme.surfaceInput }}
+      inputWrapperStyle={{ backgroundColor: theme.secondaryBackground }}
     />
   )
 }
@@ -154,29 +148,24 @@ const Recipient: React.FC<Props> = ({
   address,
   ensAddress,
   addressValidationMsg,
-  isRecipientAddressUnknownAgreed,
-  onRecipientCheckboxClick,
   isRecipientHumanizerKnownTokenOrSmartContract,
   isRecipientAddressUnknown,
   validation,
   isRecipientDomainResolving,
   disabled,
-  isSWWarningVisible,
-  isSWWarningAgreed,
-  selectedTokenSymbol,
   recipientMenuClosedAutomaticallyRef
 }) => {
-  const { account } = useSelectedAccountControllerState()
+  const { account } = useController('SelectedAccountController').state
   const actualAddress = ensAddress || address
   const { navigate } = useNavigation()
   const { t } = useTranslation()
   const { theme } = useTheme()
   const { ref: sheetRef, open: openBottomSheet, close: closeBottomSheet } = useModalize()
-  const { contacts } = useAddressBookControllerState()
+  const { contacts } = useController('AddressBookController').state
 
   const flatlistRef = useRef(null)
   const { accounts } = useAccountsList({ flatlistRef })
-  const { domains } = useDomainsControllerState()
+  const { domains } = useController('DomainsController').state
   const [bindManageBtnAnim, manageBtnAnimStyle] = useHover({
     preset: 'opacityInverted'
   })
@@ -204,11 +193,9 @@ const Recipient: React.FC<Props> = ({
         const lowercaseActualAddress = actualAddress.toLowerCase()
         const lowercaseName = contact.name.toLowerCase()
         const lowercaseAddress = contact.address.toLowerCase()
-        const doesDomainMatch = findAccountDomainFromPartialDomain(
-          contact.address,
-          actualAddress,
-          domains
-        )
+        const doesDomainMatch = getSearchableNames(domains[contact.address]?.names)
+          .toLowerCase()
+          .includes(lowercaseActualAddress)
 
         return (
           lowercaseAddress.includes(lowercaseActualAddress) ||
@@ -223,7 +210,7 @@ const Recipient: React.FC<Props> = ({
     ({ value: newAddress }: Pick<SelectValue, 'value'>) => {
       if (typeof newAddress !== 'string') return
 
-      const correspondingDomain = domains[newAddress]?.ens
+      const correspondingDomain = domains[newAddress]?.names.ens
 
       setAddress(correspondingDomain || newAddress)
     },
@@ -303,7 +290,7 @@ const Recipient: React.FC<Props> = ({
       if (section.data.length === 0) return null
 
       return section.key === 'contacts' ? (
-        <TitleAndIcon title={t('Address Book')} icon={AccountsFilledIcon}>
+        <TitleAndIcon title={t('Address Book')} icon={AddressBookIcon}>
           <AnimatedPressable
             style={[flexbox.directionRow, flexbox.alignCenter, manageBtnAnimStyle]}
             onPress={onManagePress}
@@ -316,7 +303,7 @@ const Recipient: React.FC<Props> = ({
           </AnimatedPressable>
         </TitleAndIcon>
       ) : (
-        <TitleAndIcon title={t('My wallets')} icon={WalletFilledIcon} />
+        <TitleAndIcon title={t('My wallets')} icon={WalletIcon} />
       )
     },
     [bindManageBtnAnim, manageBtnAnimStyle, onManagePress, t, theme.secondaryText]
@@ -372,19 +359,14 @@ const Recipient: React.FC<Props> = ({
         menuPosition="bottom"
       />
       <View style={styles.inputBottom}>
-        <ConfirmAddress
-          onRecipientCheckboxClick={onRecipientCheckboxClick}
+        <AddToAddressBook
           isRecipientHumanizerKnownTokenOrSmartContract={
             isRecipientHumanizerKnownTokenOrSmartContract
           }
           isRecipientAddressUnknown={isRecipientAddressUnknown}
-          isRecipientAddressUnknownAgreed={isRecipientAddressUnknownAgreed}
           isRecipientAddressSameAsSender={actualAddress === account?.addr}
           addressValidationMsg={addressValidationMsg}
-          onAddToAddressBook={openBottomSheet}
-          isSWWarningVisible={isSWWarningVisible}
-          isSWWarningAgreed={isSWWarningAgreed}
-          selectedTokenSymbol={selectedTokenSymbol}
+          onAddToAddressBookPress={openBottomSheet}
         />
       </View>
       <AddContactBottomSheet

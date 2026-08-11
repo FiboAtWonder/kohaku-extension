@@ -11,17 +11,14 @@ import DashboardPageScrollContainer from '@web/modules/PPv1/screens/dashboard/co
 import ActivityFilter from '@web/modules/PPv1/screens/dashboard/components/Activity/ActivityFilter'
 import { ActivityFilterType } from '@web/modules/PPv1/screens/dashboard/components/Activity/types'
 import { TabType } from '@web/modules/PPv1/screens/dashboard/components/TabsAndSearch/Tabs/Tab/Tab'
-import SubmittedTransactionSummary from '@web/modules/settings/components/TransactionHistory/SubmittedTransactionSummary'
+import SubmittedTransactionSummary from '@common/modules/settings/components/TransactionHistory/SubmittedTransactionSummary'
 import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
-import useActivityControllerState from '@web/hooks/useActivityControllerState'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
-import { getUiType } from '@web/utils/uiType'
+import { getUiType } from '@common/utils/uiType'
 import { humanizeAccountOp } from '@ambire-common/libs/humanizer'
-import useNetworksControllerState from '@web/hooks/useNetworksControllerState'
 
 import styles from './styles'
+import useController from '@common/hooks/useController'
 
 interface Props {
   openTab: TabType
@@ -48,10 +45,12 @@ const ActivityPositions: FC<Props> = ({
 }) => {
   const { t } = useTranslation()
 
-  const { dispatch } = useBackgroundService()
-  const { accountsOps } = useActivityControllerState()
-  const { account, dashboardNetworkFilter } = useSelectedAccountControllerState()
-  const { networks } = useNetworksControllerState()
+  const {
+    state: { accountsOps },
+    dispatch: activityDispatch
+  } = useController('ActivityController')
+  const { account, dashboardNetworkFilter } = useController('SelectedAccountController').state
+  const { networks } = useController('NetworksController').state
 
   const [filterType, setFilterType] = useState<ActivityFilterType>('all')
   const { control, watch } = useForm({
@@ -78,23 +77,26 @@ const ActivityPositions: FC<Props> = ({
     // Optimization: Don't apply filtration if we are not on Activity tab
     if (!account?.addr || openTab !== 'activity') return
 
-    dispatch({
-      type: 'MAIN_CONTROLLER_ACTIVITY_SET_ACC_OPS_FILTERS',
+    activityDispatch({
+      type: 'method',
       params: {
-        sessionId,
-        filters: {
-          account: account.addr,
-          ...(dashboardNetworkFilter && {
-            chainId: dashboardNetworkFilter ? BigInt(dashboardNetworkFilter) : undefined
-          })
-        },
-        pagination: {
-          itemsPerPage: ITEMS_PER_PAGE,
-          fromPage: 0
-        }
+        method: 'filterAccountsOps',
+        args: [
+          sessionId,
+          {
+            account: account.addr,
+            ...(dashboardNetworkFilter && {
+              chainId: dashboardNetworkFilter ? BigInt(dashboardNetworkFilter) : undefined
+            })
+          },
+          {
+            itemsPerPage: ITEMS_PER_PAGE,
+            fromPage: 0
+          }
+        ]
       }
     })
-  }, [openTab, account?.addr, dispatch, dashboardNetworkFilter, sessionId])
+  }, [openTab, account?.addr, activityDispatch, dashboardNetworkFilter, sessionId])
 
   // Filter activity items based on filter type and search value
   const filteredActivityItems = useMemo(() => {
@@ -120,7 +122,9 @@ const ActivityPositions: FC<Props> = ({
         }
 
         const network = networks.find((n) => n.chainId === item.chainId)
-        const humanizedCalls = humanizeAccountOp(item, { network })
+        const humanizedCalls = humanizeAccountOp(item, {
+          nativeAssetSymbol: network?.nativeAssetSymbol
+        })
 
         const hasMatchingAction = humanizedCalls.some((call) => {
           const actionElement = call.fullVisualization?.find((v) => v.type === 'action')
@@ -162,7 +166,9 @@ const ActivityPositions: FC<Props> = ({
         }
 
         const network = networks.find((n) => n.chainId === item.chainId)
-        const humanizedCalls = humanizeAccountOp(item, { network })
+        const humanizedCalls = humanizeAccountOp(item, {
+          nativeAssetSymbol: network?.nativeAssetSymbol
+        })
 
         const hasMatchingAction = humanizedCalls.some((call) => {
           const actionElement = call.fullVisualization?.find((v) => v.type === 'action')
@@ -220,20 +226,26 @@ const ActivityPositions: FC<Props> = ({
               size="small"
               style={[flexbox.alignSelfCenter, spacings.mbSm]}
               onPress={() => {
-                dispatch({
-                  type: 'MAIN_CONTROLLER_ACTIVITY_SET_ACC_OPS_FILTERS',
+                activityDispatch({
+                  type: 'method',
                   params: {
-                    sessionId,
-                    filters: {
-                      account: account!.addr,
-                      ...(dashboardNetworkFilter && {
-                        chainId: dashboardNetworkFilter ? BigInt(dashboardNetworkFilter) : undefined
-                      })
-                    },
-                    pagination: {
-                      itemsPerPage: accountsOps[sessionId].pagination.itemsPerPage + ITEMS_PER_PAGE,
-                      fromPage: 0
-                    }
+                    method: 'filterAccountsOps',
+                    args: [
+                      sessionId,
+                      {
+                        account: account!.addr,
+                        ...(dashboardNetworkFilter && {
+                          chainId: dashboardNetworkFilter
+                            ? BigInt(dashboardNetworkFilter)
+                            : undefined
+                        })
+                      },
+                      {
+                        itemsPerPage:
+                          (accountsOps[sessionId]?.pagination.itemsPerPage ?? 0) + ITEMS_PER_PAGE,
+                        fromPage: 0
+                      }
+                    ]
                   }
                 })
               }}
@@ -265,7 +277,7 @@ const ActivityPositions: FC<Props> = ({
       dashboardNetworkFilter,
       dashboardNetworkFilterName,
       accountsOps,
-      dispatch
+      activityDispatch
     ]
   )
 

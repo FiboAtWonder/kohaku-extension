@@ -1,60 +1,66 @@
-/* eslint-disable no-console */
-/* eslint-disable no-await-in-loop */
-/* eslint-disable no-restricted-syntax */
-/* eslint-disable @typescript-eslint/no-use-before-define */
-/* eslint-disable @typescript-eslint/no-shadow */
+// We include `setImmediate` because ethers / viem cryptographic operations
+// (e.g. scrypt keystore unlock) rely on it for fast cooperative scheduling —
+// without it they fall back to slower timers and performance drops significantly.
+//
+// It is imported in background for development builds, and injected via Webpack
+// plugin for production where LavaMoat + SES isolate modules and harden intrinsics.
 import 'setimmediate'
 
 import { nanoid } from 'nanoid'
 
 import EmittableError from '@ambire-common/classes/EmittableError'
 import ExternalSignerError from '@ambire-common/classes/ExternalSignerError'
-import {
-  ACCOUNT_STATE_PENDING_INTERVAL,
-  ACCOUNT_STATE_STAND_BY_INTERVAL,
-  ACTIVE_EXTENSION_DEFI_POSITIONS_UPDATE_INTERVAL,
-  ACTIVE_EXTENSION_PORTFOLIO_UPDATE_INTERVAL,
-  ACTIVITY_REFRESH_INTERVAL,
-  INACTIVE_EXTENSION_PORTFOLIO_UPDATE_INTERVAL,
-  UPDATE_SWAP_AND_BRIDGE_QUOTE_INTERVAL
-} from '@ambire-common/consts/intervals'
-import EventEmitter, { ErrorRef } from '@ambire-common/controllers/eventEmitter/eventEmitter'
+import { ProviderError } from '@ambire-common/classes/ProviderError'
+import EventEmitter from '@ambire-common/controllers/eventEmitter/eventEmitter'
+import { EventEmitterRegistryController } from '@ambire-common/controllers/eventEmitterRegistry/eventEmitterRegistry'
 import { MainController } from '@ambire-common/controllers/main/main'
-import { SwapAndBridgeFormStatus } from '@ambire-common/controllers/swapAndBridge/swapAndBridge'
+import { ErrorRef } from '@ambire-common/interfaces/eventEmitter'
 import { Fetch } from '@ambire-common/interfaces/fetch'
-import { SwapAndBridgeActiveRoute } from '@ambire-common/interfaces/swapAndBridge'
-import { WindowManager } from '@ambire-common/interfaces/window'
+import { IKeystoreController } from '@ambire-common/interfaces/keystore'
+import { ISelectedAccountController } from '@ambire-common/interfaces/selectedAccount'
+import { UiManager } from '@ambire-common/interfaces/ui'
 import { getAccountKeysCount } from '@ambire-common/libs/keys/keys'
 import { KeystoreSigner } from '@ambire-common/libs/keystoreSigner/keystoreSigner'
-import { getNetworksWithFailedRPC } from '@ambire-common/libs/networks/networks'
 import { parse, stringify } from '@ambire-common/libs/richJson/richJson'
-import {
-  getActiveRoutesLowestServiceTime,
-  getActiveRoutesUpdateInterval
-} from '@ambire-common/libs/swapAndBridge/swapAndBridge'
-import { createRecurringTimeout } from '@ambire-common/utils/timeout'
 import wait from '@ambire-common/utils/wait'
-import CONFIG, { isDev, isProd } from '@common/config/env'
+import { scrubSentryEventSecrets } from '@common/config/analytics/sentryDataScrubbing'
+import CONFIG, { APP_VERSION, isAmbireNext, isDev, isProd } from '@common/config/env'
+import { controllersNestedInMainMapping } from '@common/constants/controllersMapping'
+import { AutoLockController } from '@common/controllers/auto-lock'
+import { WalletStateController } from '@common/controllers/wallet-state'
+import LedgerSigner from '@common/modules/hardware-wallet/libs/LedgerSigner'
+import handleProviderRequests from '@common/modules/provider/handleProviderRequests'
+import { storage } from '@common/services/storage'
+import { Action, MethodAction } from '@common/types/actions'
+import { LOG_LEVELS, logInfoWithPrefix } from '@common/utils/logger'
 import {
+  ALCHEMY_API_KEY,
   BROWSER_EXTENSION_LOG_UPDATED_CONTROLLER_STATE_ONLY,
+  BROWSER_EXTENSION_MEMORY_INTENSIVE_LOGS,
+  BUNGEE_API_KEY,
+  HYPERSYNC_API_KEY,
   LI_FI_API_KEY,
-  RELAYER_URL,
-  VELCRO_URL,
   PRIVACY_POOLS_ASP_URL,
   PRIVACY_POOLS_RELAYER_URL,
-  HYPERSYNC_API_KEY,
-  RAILGUN_RELAYER_URL,
   RAILGUN_DELEGATING_SIGNER_PK,
-  ALCHEMY_API_KEY
+  RAILGUN_RELAYER_URL,
+  RELAYER_URL,
+  SQUID_INTEGRATOR_ID,
+  UNISWAP_API_KEY,
+  VELCRO_URL
 } from '@env'
-import * as Sentry from '@sentry/browser'
+// TODO(kohaku resync): the root `@kohaku-eth/railgun` dep is still pinned to the pre-SDK
+// 0.0.1-alpha.4 package (which has no `ensureInitialized`), while ambire-common depends on
+// 0.0.1-alpha.27 - the one the RailgunV2Controller actually drives. The root dep can only be
+// aligned once src/web/contexts/railgunControllerStateContext is migrated off alpha.4, so the
+// call below is a no-op (caught below) until then. Once the dep is aligned, the
+// `@ts-expect-error` starts failing the build - that is the signal to drop it. (kohaku)
+// @ts-expect-error - `ensureInitialized` only exists from 0.0.1-alpha.27 onwards
 import { ensureInitialized as ensureRailgunInitialized } from '@kohaku-eth/railgun'
+import * as Sentry from '@sentry/browser'
 import { browser, platform } from '@web/constants/browserapi'
-import { Action } from '@web/extension-services/background/actions'
-import AutoLockController from '@web/extension-services/background/controllers/auto-lock'
 import { BadgesController } from '@web/extension-services/background/controllers/badges'
 import ExtensionUpdateController from '@web/extension-services/background/controllers/extension-update'
-import { WalletStateController } from '@web/extension-services/background/controllers/wallet-state'
 import { handleActions } from '@web/extension-services/background/handlers/handleActions'
 import { handleCleanUpOnPortDisconnect } from '@web/extension-services/background/handlers/handleCleanUpOnPortDisconnect'
 import { handleKeepAlive } from '@web/extension-services/background/handlers/handleKeepAlive'
@@ -62,11 +68,7 @@ import {
   handleKeepBridgeContentScriptAcrossSessions,
   handleRegisterScripts
 } from '@web/extension-services/background/handlers/handleScripting'
-import handleProviderRequests from '@web/extension-services/background/provider/handleProviderRequests'
-import { providerRequestTransport } from '@web/extension-services/background/provider/providerRequestTransport'
-import { controllersNestedInMainMapping } from '@web/extension-services/background/types'
 import { notificationManager } from '@web/extension-services/background/webapi/notification'
-import { storage } from '@web/extension-services/background/webapi/storage'
 import windowManager from '@web/extension-services/background/webapi/window'
 import {
   initializeMessenger,
@@ -76,20 +78,23 @@ import {
 } from '@web/extension-services/messengers'
 import LatticeController from '@web/modules/hardware-wallet/controllers/LatticeController'
 import LedgerController from '@web/modules/hardware-wallet/controllers/LedgerController'
+import QrHardwareController from '@common/modules/hardware-wallets/controllers/QrHardwareController/QrHardwareController'
 import TrezorController from '@web/modules/hardware-wallet/controllers/TrezorController'
 import LatticeSigner from '@web/modules/hardware-wallet/libs/LatticeSigner'
-import LedgerSigner from '@web/modules/hardware-wallet/libs/LedgerSigner'
-import TrezorSigner from '@web/modules/hardware-wallet/libs/TrezorSigner'
+import TrezorSigner from '@common/modules/hardware-wallet/libs/TrezorSigner'
+import UrQrProtocolAdapter from '@common/modules/hardware-wallets/qr/protocol/UrQrProtocolAdapter'
+import QrHardwareSigner from '@common/modules/hardware-wallets/signers/QrHardwareSigner'
+import { providerRequestTransport } from '@web/modules/provider/providerRequestTransport'
 import { getExtensionInstanceId } from '@web/utils/analytics'
-import getOriginFromUrl from '@web/utils/getOriginFromUrl'
-import { LOG_LEVELS, logInfoWithPrefix } from '@web/utils/logger'
 
 import {
   captureBackgroundException,
-  CRASH_ANALYTICS_WEB_CONFIG,
+  CRASH_ANALYTICS_BACKGROUND_CONFIG,
   setBackgroundExtraContext,
   setBackgroundUserContext
 } from './CrashAnalytics'
+import { buildScrubFailureFallbackEvent } from './buildScrubFailureFallbackEvent'
+import { getReportableAction } from './getReportableAction'
 import { handleDappAccountSwitching } from './handlers/handleDappAccountSwitching'
 
 const debugLogs: {
@@ -111,15 +116,9 @@ function stateDebug(
   // Instead of logging with `logInfoWithPrefix` in production, we rely on EventEmitter.emitError() to log individual errors
   // (instead of the entire state) to the user console, which aids in debugging without significant performance costs.
   if (logLevel === LOG_LEVELS.PROD) return
+  if (!stateToLog) return
 
-  const args = parse(stringify(stateToLog))
-  let ctrlState = args
-
-  if (ctrlName === 'main' || !Object.keys(controllersNestedInMainMapping).includes(ctrlName)) {
-    ctrlState = args
-  } else {
-    ctrlState = args[ctrlName] || {}
-  }
+  const clonedState = parse(stringify(stateToLog))
 
   const now = new Date()
   const timeWithMs = `${now.toLocaleTimeString('en-US', { hour12: false })}.${now
@@ -132,9 +131,14 @@ function stateDebug(
       ? `${ctrlName} ctrl emitted an error at ${timeWithMs}`
       : `${ctrlName} ctrl emitted an update at ${timeWithMs}`
 
+  if (BROWSER_EXTENSION_MEMORY_INTENSIVE_LOGS === 'true' && isDev) {
+    logInfoWithPrefix(key, clonedState)
+    return
+  }
+
   debugLogs.unshift({
     key,
-    value: BROWSER_EXTENSION_LOG_UPDATED_CONTROLLER_STATE_ONLY === 'true' ? ctrlState : { ...args }
+    value: clonedState
   })
 
   if (debugLogs.length > 200) {
@@ -159,44 +163,178 @@ function captureBackgroundExceptionFromControllerError(error: ErrorRef, controll
   })
 }
 
+// THESE MUST BE LOWERCASE
+const IGNORED_SHORT_MESSAGE_SUBSTRINGS = ['missing revert data']
+const IGNORED_ERROR_SUBSTRINGS = ['failed to fetch', 'network error']
+
+const checkSubstrings = (text: string, substrings: string[]) =>
+  substrings.some((substring) => text.toLowerCase().includes(substring))
+
+const isIgnoredError = (error?: any) => {
+  const { message, shortMessage } = error || {}
+
+  return (
+    (!!message && checkSubstrings(message, IGNORED_ERROR_SUBSTRINGS)) ||
+    (!!shortMessage && checkSubstrings(shortMessage, IGNORED_SHORT_MESSAGE_SUBSTRINGS))
+  )
+}
+
+const getErrorType = (error: any) => {
+  const { statusCode, message, isProviderInvictus } = error
+
+  if (typeof statusCode === 'number') {
+    if (statusCode >= 200 && statusCode < 300) {
+      return '2xx'
+    }
+
+    if (typeof isProviderInvictus === 'boolean' && !isProviderInvictus) {
+      // No need to report custom RPC non-2xx errors
+      return 'ignored-error'
+    }
+
+    return 'non-2xx'
+  }
+
+  if (message.includes('rpc-timeout')) return 'rpc-timeout'
+
+  // Ethers doesn't return a status code for 2XX responses, so we treat undefined as 2XX
+  // and have handling just in case statusCode is explicitly set to 200-299
+  return isIgnoredError(error) ? 'ignored-error' : '2xx'
+}
+
+let isInitialized = false
 const bridgeMessenger = initializeMessenger({ connect: 'inpage' })
 let mainCtrl: MainController
 let walletStateCtrl: WalletStateController
+let autoLockCtrl: AutoLockController
+
+// Initialize Sentry early to set up global error handlers during initial script evaluation
+if (CONFIG.SENTRY_DSN_BROWSER_EXTENSION) {
+  Sentry.init({
+    ...CRASH_ANALYTICS_BACKGROUND_CONFIG,
+    integrations: [Sentry.extraErrorDataIntegration()],
+    beforeSend(event, hint) {
+      const error = hint.originalException
+
+      // Custom handling for ProviderError to adjust event data and fingerprinting
+      // Docs: https://docs.sentry.io/platforms/javascript/enriching-events/fingerprinting/#group-errors-with-greater-granularity
+      if (error instanceof ProviderError) {
+        const errorType = getErrorType(error)
+
+        if (errorType === 'ignored-error') {
+          // Drop ignored errors
+          return null
+        }
+
+        // Always delete breadcrumbs to reduce event size.
+        delete event.breadcrumbs
+
+        if (errorType !== '2xx') {
+          // We don't care about any data for non-2XX errors
+          // We only want to know how many of them happened and group them accordingly
+
+          delete event.user
+          delete event.extra
+          delete event.contexts
+        }
+
+        event.extra = {
+          ...(event.extra || {}),
+          providerUrl: error.providerUrl
+        }
+
+        event.fingerprint = [
+          '{{ default }}',
+          error.isProviderInvictus ? error.providerUrl || 'invictus' : 'custom-rpc',
+          errorType
+        ]
+
+        if (error.isProviderInvictus) {
+          event.tags = {
+            ...(event.tags || {}),
+            // Allows us to filter issues by provider in Sentry's UI
+            providerUrl: error.providerUrl || 'should-never-be-undefined',
+            providerType: 'invictus'
+          }
+        } else {
+          event.tags = {
+            ...(event.tags || {}),
+            providerType: 'custom-rpc'
+          }
+        }
+      }
+
+      // No explicit type annotation here: `event`'s type is inferred contextually
+      // as the narrower ErrorEvent (from Sentry.init's expected beforeSend
+      // signature), and both scrubSentryEventSecrets and
+      // buildScrubFailureFallbackEvent are generic in that same type, so
+      // scrubbedEvent stays ErrorEvent instead of widening to Sentry.Event.
+      let scrubbedEvent
+      try {
+        scrubbedEvent = scrubSentryEventSecrets(event)
+      } catch (scrubError) {
+        scrubbedEvent = buildScrubFailureFallbackEvent(event, scrubError)
+      }
+
+      // We don't want to miss errors that occur before the controllers are initialized.
+      // Scrubbing above still applies -- only the crashAnalyticsEnabled gate below,
+      // which depends on walletStateCtrl, can't run yet.
+      if (!walletStateCtrl) return scrubbedEvent
+
+      if (isDev) {
+        console.log(`Sentry event captured in background: ${event.event_id}`, scrubbedEvent)
+      }
+
+      // If the Sentry is disabled, we don't send any events
+      return walletStateCtrl?.crashAnalyticsEnabled ? scrubbedEvent : null
+    }
+  })
+}
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 handleRegisterScripts()
 handleKeepAlive()
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
-providerRequestTransport.reply(async ({ method, id, params }, meta) => {
+providerRequestTransport.reply(async ({ method, id, providerId, params }, meta) => {
   // wait for mainCtrl to be initialized before handling dapp requests
   while (!mainCtrl || !walletStateCtrl) await wait(200)
 
-  const tabId = meta.sender?.tab?.id
-  const windowId = meta.sender?.tab?.windowId
-  if (tabId === undefined || windowId === undefined || !meta.sender?.url) {
+  const senderTab = meta.sender?.tab
+  const tabId = senderTab?.id
+  const windowId = senderTab?.windowId
+  if (!senderTab || tabId === undefined || windowId === undefined || !meta.sender?.url) {
     return
   }
 
-  const origin = getOriginFromUrl(meta.sender.url)
-  const session = mainCtrl.dapps.getOrCreateDappSession({ tabId, windowId, origin })
+  const session = await mainCtrl.dapps.getOrCreateDappSession({
+    tabId,
+    windowId,
+    url: meta.sender.url,
+    // SECURITY: `frameId` and `tab.url` come from the browser, not from the page, so an embedded
+    // dApp cannot lie about sitting inside a phishing top-level document. `sender.url` is the
+    // requesting frame's URL, while `sender.tab.url` is the tab's top-level document URL.
+    // Default to the top frame when the browser omits `frameId`, so the frame context is always
+    // refreshed on the extension - leaving it undefined would preserve a previous visit's value.
+    frameId: meta.sender.frameId ?? 0,
+    topFrameUrl: senderTab.url
+  })
 
   await mainCtrl.dapps.initialLoadPromise
-  mainCtrl.dapps.setSessionMessenger(session.sessionId, bridgeMessenger)
+  mainCtrl.dapps.setSessionMessenger(session.sessionId, bridgeMessenger, isAmbireNext)
 
   try {
-    const res = await handleProviderRequests(
-      {
-        method,
-        params,
-        session,
-        origin
-      },
+    const res = await handleProviderRequests({
+      request: { method, params, session },
       mainCtrl,
       walletStateCtrl,
-      id
-    )
-    return { id, result: res }
+      autoLockCtrl,
+      requestId: id,
+      providerId,
+      notificationManager
+    })
+
+    return { id, providerId, result: res }
   } catch (error: any) {
     let errorRes
     try {
@@ -204,95 +342,32 @@ providerRequestTransport.reply(async ({ method, id, params }, meta) => {
     } catch (e) {
       errorRes = error
     }
-    return { id, error: errorRes }
+    return { id, providerId, error: errorRes }
   }
 })
 
 handleKeepBridgeContentScriptAcrossSessions()
 
-function getIntervalRefreshTime(constUpdateInterval: number, newestOpTimestamp: number): number {
-  // 5s + new Date().getTime() - timestamp of newest op / 10
-  // here are some example of what this means:
-  // 1s diff between now and newestOpTimestamp: 5.1s
-  // 10s diff between now and newestOpTimestamp: 6s
-  // 60s diff between now and newestOpTimestamp: 11s
-  // 5m diff between now and newestOpTimestamp: 35s
-  // 10m diff between now and newestOpTimestamp: 65s
-  return newestOpTimestamp === 0
-    ? constUpdateInterval
-    : constUpdateInterval + (new Date().getTime() - newestOpTimestamp) / 10
-}
+const init = async () => {
+  if (isInitialized) return
+  isInitialized = true
 
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
-; (async () => {
-  // Init sentry
-  if (CONFIG.SENTRY_DSN_BROWSER_EXTENSION) {
-    Sentry.init({
-      ...CRASH_ANALYTICS_WEB_CONFIG,
-      initialScope: {
-        tags: {
-          content: 'background'
-        }
-      },
-      beforeSend(event) {
-        // We don't want to miss errors that occur before the controllers are initialized
-        if (!walletStateCtrl) return event
+  if (process.env.IS_TESTING === 'true') await setupStorageForTesting()
 
-        if (isDev) {
-          console.log(`Sentry event captured in background: ${event.event_id}`, event)
-        }
-
-        // If the Sentry is disabled, we don't send any events
-        return walletStateCtrl.crashAnalyticsEnabled ? event : null
-      }
-    })
-  }
-
-  // In the testing environment, we need to slow down app initialization.
-  // This is necessary to predefine the chrome.storage testing values in our Playwright tests,
-  // ensuring that the Controllers are initialized with the storage correctly.
-  // Once the storage is configured in Playwright, we set the `isE2EStorageSet` flag to true.
-  // Here, we are waiting for its value to be set.
-  if (process.env.IS_TESTING === 'true') {
-    const checkE2EStorage = async (): Promise<void> => {
-      const isE2EStorageSet = !!(await storage.get('isE2EStorageSet', false))
-
-      if (isE2EStorageSet) {
-        return
-      }
-
-      await wait(100)
-      await checkE2EStorage()
+  if (browser.storage.local?.setAccessLevel) {
+    try {
+      await browser.storage.local.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' })
+    } catch (err) {
+      captureBackgroundException(err)
+      console.error(err)
     }
-
-    await checkE2EStorage()
   }
 
   const backgroundState: {
     isUnlocked: boolean
     ctrlOnUpdateIsDirtyFlags: { [key: string]: boolean }
-    accountStateIntervals: {
-      pending: number
-      standBy: number
-      retriedFastAccountStateReFetchForNetworks: string[]
-      fastAccountStateReFetchTimeout?: ReturnType<typeof setTimeout>
-    }
-    activityRefreshInterval: number
-    hasSignAccountOpCtrlInitialized: boolean
-    portfolioLastUpdatedByIntervalAt: number
-    updatePortfolioInterval?: ReturnType<typeof setTimeout>
-    updateDefiPositionsInterval?: ReturnType<typeof setTimeout>
     autoLockIntervalId?: ReturnType<typeof setInterval>
-    accountsOpsStatusesInterval?: ReturnType<typeof setTimeout>
-    updateActiveRoutesInterval?: ReturnType<typeof setTimeout>
-    updateSwapAndBridgeQuoteInterval?: ReturnType<typeof setTimeout>
-    swapAndBridgeQuoteStatus: 'INITIAL' | 'LOADING'
-    estimateTimeout?: { start: any; stop: any }
-    accountStateLatestInterval?: ReturnType<typeof setTimeout>
-    accountStatePendingInterval?: ReturnType<typeof setTimeout>
-    selectedAccountStateInterval?: number
-    networksLastUpdatedByIntervalAt: number
-    updateNetworksInterval?: ReturnType<typeof setTimeout>
+    userBalances: Record<string, number>
   } = {
     /**
       ctrlOnUpdateIsDirtyFlags will be set to true for a given ctrl when it receives an update in the ctrl.onUpdate callback.
@@ -300,28 +375,42 @@ function getIntervalRefreshTime(constUpdateInterval: number, newestOpTimestamp: 
     */
     isUnlocked: false,
     ctrlOnUpdateIsDirtyFlags: {},
-    accountStateIntervals: {
-      pending: ACCOUNT_STATE_PENDING_INTERVAL,
-      standBy: ACCOUNT_STATE_STAND_BY_INTERVAL,
-      retriedFastAccountStateReFetchForNetworks: []
-    },
-    activityRefreshInterval: ACTIVITY_REFRESH_INTERVAL,
-    hasSignAccountOpCtrlInitialized: false,
-    swapAndBridgeQuoteStatus: 'INITIAL',
-    portfolioLastUpdatedByIntervalAt: Date.now(), // Because the first update is immediate
-    networksLastUpdatedByIntervalAt: Date.now()
+    // used for caching the biggest seen user balance so we can later send it to cena
+    // further commented down below
+    userBalances: {}
   }
 
   const pm = new PortMessenger()
   const ledgerCtrl = new LedgerController()
-  const trezorCtrl = new TrezorController(windowManager as WindowManager)
+  const trezorCtrl = new TrezorController(windowManager as UiManager['window'])
   const latticeCtrl = new LatticeController()
 
-  // Extension-specific additional trackings
+  // Skip adding custom headers and URL modifications for 3rd party URLs
+  // (only internal Ambire APIs need the x-app-* headers and tracking params)
   // @ts-ignore
   const fetchWithAnalytics: Fetch = (url, init) => {
+    const urlString = url.toString()
+    try {
+      const urlObj = new URL(urlString)
+      if (!urlObj.hostname.endsWith('.ambire.com') && urlObj.hostname !== 'ambire.com') {
+        // @ts-ignore
+        return fetch(url, init)
+      }
+    } catch (error) {
+      console.error(error)
+      // If URL parsing fails, skip analytics for safety
+      // @ts-ignore
+      return fetch(url, init)
+    }
+
     // As of v4.26.0, custom extension-specific headers. TBD for the other apps.
-    const initWithCustomHeaders = init || { headers: { 'x-app-source': '' } }
+    const initWithCustomHeaders = init || {
+      headers: {
+        'x-app-source': '',
+        'x-app-version': '',
+        'x-app-env': isAmbireNext ? 'next' : isDev ? 'dev' : 'prod'
+      }
+    }
     initWithCustomHeaders.headers = initWithCustomHeaders.headers || {}
 
     // if the fetch method is called while the keystore is constructing the keyStoreUid won't be defined yet
@@ -333,29 +422,44 @@ function getIntervalRefreshTime(constUpdateInterval: number, newestOpTimestamp: 
       )
 
       initWithCustomHeaders.headers['x-app-source'] = instanceId
+      const versionHeader = `extension-${APP_VERSION}-${process.env.WEB_ENGINE}`
+      initWithCustomHeaders.headers['x-app-version'] = versionHeader
     }
 
-    // As of v4.36.0, for metric purposes, pass the account keys count as an
-    // additional param for the batched velcro discovery requests.
-    const shouldAttachKeyCountParam = url.toString().startsWith(`${VELCRO_URL}/multi-hints?`)
-    if (shouldAttachKeyCountParam) {
+    // we want to calculate the TVL of our users
+    // we can achieve this by making a relayer (server-side trusted environment) script that gets the balances of all our users
+    // but doing this with all our users would be 'expensive'.
+    // we already calculate the user balance in the extension, but is not 100% trusted as any user can modify it
+    // that why we will use the user balance from the extension as a 'hint' so we can determine
+    // on which accounts we should execute the 'expensive' script on the backend
+    // those addresses should be 1) loaded with key in the extension 2) have more than $0 balance
+    const currentAccount = mainCtrl.selectedAccount.account
+    const hasCurrentAccountKeys =
+      currentAccount &&
+      getAccountKeysCount({
+        accountAddr: currentAccount.addr,
+        keys: mainCtrl.keystore.keys,
+        accounts: mainCtrl.accounts.accounts
+      })
+    // we use any cena request, because if we narrow it down to one route we might not have the full balance loaded
+    // on the relayer side we will simply use middleware that captures all routes and looks for the specific params with balance
+    // we want to attach the data only if the user has keys for the account
+    const currentBalance = mainCtrl.selectedAccount.portfolio.totalBalance
+    if (
+      currentAccount &&
+      (backgroundState.userBalances[currentAccount?.addr] || 0) < currentBalance
+    )
+      backgroundState.userBalances[currentAccount?.addr] = currentBalance
+
+    const shouldAttachBalance =
+      url.toString().startsWith('https://cena.ambire.com/') && hasCurrentAccountKeys
+    if (shouldAttachBalance) {
       const urlObj = new URL(url.toString())
-      const accounts = urlObj.searchParams.get('accounts')
+      const balance = backgroundState.userBalances[currentAccount?.addr] || 0
 
-      if (accounts) {
-        const accountKeysCount = accounts.split(',').map((accountAddr) => {
-          return getAccountKeysCount({
-            accountAddr,
-            keys: mainCtrl.keystore.keys,
-            accounts: mainCtrl.accounts.accounts
-          })
-        })
+      urlObj.searchParams.append('panVal', JSON.stringify({ a: currentAccount.addr, b: balance }))
 
-        urlObj.searchParams.append('sigs', accountKeysCount.join(','))
-        // Override the URL and replace encoded commas (%2C) with actual commas
-        // eslint-disable-next-line no-param-reassign
-        url = urlObj.toString().replace(/%2C/g, ',')
-      }
+      url = decodeURIComponent(urlObj.toString())
     }
 
     // Use the native fetch (instead of node-fetch or whatever else) since
@@ -365,26 +469,98 @@ function getIntervalRefreshTime(constUpdateInterval: number, newestOpTimestamp: 
     return fetch(url, initWithCustomHeaders)
   }
 
+  const eventEmitterRegistry = new EventEmitterRegistryController(() => {
+    eventEmitterRegistry.values().forEach((ctrl) => {
+      const hasOnUpdateInitialized = ctrl.onUpdateIds.includes('background')
+      if (!hasOnUpdateInitialized) {
+        ctrl.onUpdate(async (forceEmit) => {
+          const res = debounceFrontEndEventUpdatesOnSameTick(ctrl.name, mainCtrl, forceEmit)
+          if (res === 'DEBOUNCED') return
+
+          if (ctrl.name === 'KeystoreController') {
+            const keystoreCtrl = ctrl as IKeystoreController
+            if (keystoreCtrl.isReadyToStoreKeys) {
+              setBackgroundUserContext({
+                id: getExtensionInstanceId(keystoreCtrl.keyStoreUid, mainCtrl.invite.verifiedCode)
+              })
+              if (backgroundState.isUnlocked && !keystoreCtrl.isUnlocked) {
+                await mainCtrl.dapps.broadcastDappSessionEvent('lock')
+              } else if (!backgroundState.isUnlocked && keystoreCtrl.isUnlocked) {
+                autoLockCtrl.setLastActiveTime()
+                // Note: the fork's mainCtrl.handleBroadcastUnlock() (per-dapp associated
+                // account on unlock) is superseded by upstream's dapps controller, which
+                // scopes broadcastDappSessionEvent per dapp session natively (kohaku)
+                await mainCtrl.dapps.broadcastDappSessionEvent('unlock', [
+                  mainCtrl.selectedAccount.account?.addr
+                ])
+              }
+              backgroundState.isUnlocked = keystoreCtrl.isUnlocked
+            }
+          }
+
+          if (ctrl.name === 'SelectedAccountController') {
+            const selectedAccountCtrl = ctrl as ISelectedAccountController
+
+            if (selectedAccountCtrl?.account?.addr) {
+              setBackgroundExtraContext('account', selectedAccountCtrl.account.addr)
+            }
+          }
+        }, 'background')
+      }
+    })
+
+    //
+    // Add onError listeners
+    //
+
+    eventEmitterRegistry.values().forEach((ctrl) => {
+      const hasOnErrorInitialized = ctrl.onErrorIds.includes('background')
+
+      if (!hasOnErrorInitialized) {
+        ctrl.onError((error) => {
+          if (!ctrl.isInRegistry()) return
+
+          stateDebug(walletStateCtrl.logLevel, ctrl, ctrl.name, 'error')
+          pm.send('> ui-error', {
+            method: ctrl.name,
+            params: { errors: ctrl.emittedErrors, controller: mainCtrl.name }
+          })
+          captureBackgroundExceptionFromControllerError(error, ctrl.name)
+        }, 'background')
+      }
+    })
+  })
+
+  const qrCtrl = new QrHardwareController(new UrQrProtocolAdapter(), eventEmitterRegistry)
+
+  // The Railgun SDK's default WASM loader goes through node:fs, which is dead code in
+  // the extension. Feed it the bundled asset (copied by webpack/extension.js) explicitly
+  // before any controller touches the SDK. (kohaku)
   try {
     const railgunWasm = await fetch(browser.runtime.getURL('assets/railgun/index_bg.wasm'))
     await ensureRailgunInitialized(railgunWasm)
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[BG] Railgun WASM init failed', err)
+  } catch (error) {
+    captureBackgroundException(error, { extra: { message: 'Railgun WASM init failed' } })
   }
 
   mainCtrl = new MainController({
+    eventEmitterRegistry,
+    appVersion: APP_VERSION,
     platform,
     storageAPI: storage,
     fetch: fetchWithAnalytics,
     relayerUrl: RELAYER_URL,
     velcroUrl: VELCRO_URL,
+    liFiApiKey: LI_FI_API_KEY,
+    bungeeApiKey: BUNGEE_API_KEY,
+    squidIntegratorId: SQUID_INTEGRATOR_ID,
+    uniswapApiKey: UNISWAP_API_KEY,
+    // Config for the privacy features - privacy pools and railgun (kohaku)
     privacyPoolsAspUrl: PRIVACY_POOLS_ASP_URL,
     privacyPoolsRelayerUrl: PRIVACY_POOLS_RELAYER_URL,
     railgunRelayerUrl: RAILGUN_RELAYER_URL,
     railgunDelegatingSignerPk: RAILGUN_DELEGATING_SIGNER_PK,
     alchemyApiKey: ALCHEMY_API_KEY,
-    swapApiKey: LI_FI_API_KEY,
     hypersyncApiKey: HYPERSYNC_API_KEY,
     featureFlags: {
       testnetMode: true
@@ -394,465 +570,126 @@ function getIntervalRefreshTime(constUpdateInterval: number, newestOpTimestamp: 
       // TODO: there is a mismatch in hw signer types, it's not a big deal
       ledger: LedgerSigner,
       trezor: TrezorSigner,
-      lattice: LatticeSigner
+      lattice: LatticeSigner,
+      qr: QrHardwareSigner
     } as any,
     externalSignerControllers: {
       ledger: ledgerCtrl,
       trezor: trezorCtrl,
-      lattice: latticeCtrl
+      lattice: latticeCtrl,
+      qr: qrCtrl
     } as any,
-    windowManager: {
-      ...windowManager,
-      remove: async (winId: number | 'popup') => {
-        if (winId === 'popup') {
-          return new Promise((resolve) => {
-            const popupPort = pm.ports.find((p) => p.name === 'popup')
-            if (!popupPort) {
-              resolve()
-              return
-            }
+    uiManager: {
+      window: {
+        ...windowManager,
+        remove: async (winId: number | 'popup') => {
+          if (winId === 'popup') {
+            return new Promise((resolve) => {
+              const popupPort = pm.ports.find((p) => p.name === 'popup')
+              if (!popupPort) {
+                resolve()
+                return
+              }
 
-            const timeout = setTimeout(() => {
-              resolve()
-            }, 1500)
+              const timeout = setTimeout(() => {
+                resolve()
+              }, 1500)
 
-            popupPort.onDisconnect.addListener(() => {
-              clearTimeout(timeout)
-              resolve()
+              popupPort.onDisconnect.addListener(() => {
+                clearTimeout(timeout)
+                resolve()
+              })
+              pm.send('> ui', { method: 'closePopup', params: {} })
             })
-            pm.send('> ui', { method: 'closePopup', params: {} })
-          })
+          }
+          await windowManager.remove(winId, pm)
         }
-        await windowManager.remove(winId, pm)
       },
-      sendWindowToastMessage: (text, options) => {
-        pm.send('> ui-toast', { method: 'addToast', params: { text, options } })
-      },
-      sendWindowUiMessage: (params) => {
-        pm.send('> ui', { method: 'receiveOneTimeData', params })
+      notification: notificationManager,
+      message: {
+        sendToastMessage: (text, options) => {
+          pm.send('> ui-toast', { method: 'addToast', params: { text, options } })
+        },
+        sendUiMessage: (params) => {
+          pm.send('> ui', { method: 'receiveOneTimeData', params })
+        },
+        sendNavigateMessage: () => {
+          // TODO:
+          // pm.send('> ui-navigate', ...)
+        }
       }
-    },
-    notificationManager
+    }
   })
 
   handleDappAccountSwitching(mainCtrl)
 
   walletStateCtrl = new WalletStateController({
+    eventEmitterRegistry,
     onLogLevelUpdateCallback: async (nextLogLevel: LOG_LEVELS) => {
       await mainCtrl.dapps.broadcastDappSessionEvent('logLevelUpdate', nextLogLevel)
-    }
+    },
+    storage
   })
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const badgesCtrl = new BadgesController(mainCtrl, walletStateCtrl)
-  const autoLockCtrl = new AutoLockController(() => {
-    // Prevents sending multiple notifications if the event is triggered multiple times
-    if (mainCtrl.keystore.isUnlocked) {
-      notificationManager
-        .create({
-          title: 'Ambire locked',
-          message: 'Your wallet has been locked due to inactivity.'
-        })
-        .catch((err) => {
-          console.error('Failed to create notification', err)
-        })
-    }
-    mainCtrl.keystore.lock()
-  })
-  const extensionUpdateCtrl = new ExtensionUpdateController()
-
-  /**
-   * Schedules periodic network synchronization.
-   *
-   * This function ensures that the `synchronizeNetworks` method runs every 8 hours
-   * to periodically refetch networks in case there are updates,
-   * since the extension relies on the config from relayer.
-   *
-   * Networks are also updated on NetworksController load and background process refresh,
-   * but this ensures they stay refreshed.
-   * Because of this, tt does **not** execute immediately at startup, only after the first interval.
-   */
-  function scheduleNetworkSync() {
-    if (backgroundState.updateNetworksInterval) {
-      clearTimeout(backgroundState.updateNetworksInterval)
-    }
-
-    backgroundState.updateNetworksInterval = setTimeout(async () => {
-      try {
-        await mainCtrl.networks.synchronizeNetworks()
-        backgroundState.networksLastUpdatedByIntervalAt = Date.now()
-      } catch (error) {
-        console.error('Failed to synchronize networks:', error)
+  autoLockCtrl = new AutoLockController(
+    eventEmitterRegistry,
+    () => {
+      // Prevents sending multiple notifications if the event is triggered multiple times
+      if (mainCtrl.keystore.isUnlocked) {
+        notificationManager
+          .create({
+            title: 'Ambire locked',
+            message: 'Your wallet has been locked due to inactivity.'
+          })
+          .catch((err) => {
+            console.error('Failed to create notification', err)
+          })
       }
-
-      scheduleNetworkSync()
-    }, 8 * 60 * 60 * 1000)
-  }
-
-  scheduleNetworkSync()
-
-  async function initPortfolioContinuousUpdate() {
-    if (backgroundState.updatePortfolioInterval)
-      clearTimeout(backgroundState.updatePortfolioInterval)
-
-    const isExtensionActive = pm.ports.length > 0 // (opened tab, popup, action-window)
-    const updateInterval = isExtensionActive
-      ? ACTIVE_EXTENSION_PORTFOLIO_UPDATE_INTERVAL
-      : INACTIVE_EXTENSION_PORTFOLIO_UPDATE_INTERVAL
-
-    async function updatePortfolio() {
-      // Postpone the portfolio update for the next interval
-      // if we have broadcasted but not yet confirmed acc op.
-      // Here's why:
-      // 1. On the Dashboard, we show a pending-to-be-confirmed token badge
-      //    if an acc op has been broadcasted but is still unconfirmed.
-      // 2. To display the expected balance change, we calculate it from the portfolio's pending simulation state.
-      // 3. When we sign and broadcast the acc op, we remove it from the Main controller.
-      // 4. If we trigger a portfolio update at this point, we will lose the pending simulation state.
-      // 5. Therefore, to ensure the badge is displayed, we pause the portfolio update temporarily.
-      //    Once the acc op is confirmed or failed, the portfolio interval will resume as normal.
-      // 6. Gotcha: If the user forcefully updates the portfolio, we will also lose the simulation.
-      //    However, this is not a frequent case, and we can make a compromise here.
-      if (mainCtrl.activity.broadcastedButNotConfirmed.length) {
-        backgroundState.updatePortfolioInterval = setTimeout(updatePortfolio, updateInterval)
-        return
-      }
-
-      await mainCtrl.updateSelectedAccountPortfolio()
-
-      backgroundState.portfolioLastUpdatedByIntervalAt = Date.now()
-      // Schedule the next update only when the previous one completes
-      backgroundState.updatePortfolioInterval = setTimeout(updatePortfolio, updateInterval)
-    }
-
-    const isAtLeastOnePortfolioUpdateMissed =
-      Date.now() - backgroundState.portfolioLastUpdatedByIntervalAt >
-      INACTIVE_EXTENSION_PORTFOLIO_UPDATE_INTERVAL
-
-    // If the extension is inactive and the last update was missed, update the portfolio immediately
-    if (isAtLeastOnePortfolioUpdateMissed) {
-      clearTimeout(backgroundState.updatePortfolioInterval)
-      await updatePortfolio()
-    } else {
-      // Start the first update
-      backgroundState.updatePortfolioInterval = setTimeout(updatePortfolio, updateInterval)
-    }
-  }
-
-  async function initDefiPositionsContinuousUpdate() {
-    async function updateDefiPositions() {
-      const isExtensionActive = pm.ports.length > 0 // (opened tab, popup, action-window)
-
-      if (!isExtensionActive) {
-        if (backgroundState.updateDefiPositionsInterval) {
-          clearTimeout(backgroundState.updateDefiPositionsInterval)
-        }
-
-        return
-      }
-
-      const FIVE_MINUTES = 1000 * 60 * 5
-      await mainCtrl.defiPositions.updatePositions({ maxDataAgeMs: FIVE_MINUTES })
-
-      // Schedule the next update only when the previous one completes
-      backgroundState.updateDefiPositionsInterval = setTimeout(
-        updateDefiPositions,
-        ACTIVE_EXTENSION_DEFI_POSITIONS_UPDATE_INTERVAL
-      )
-    }
-
-    // The onPopupOpen func in the MainController will update the defi positions on port init.
-    // Here, we only need to schedule the next update to avoid duplicate updates
-    backgroundState.updateDefiPositionsInterval = setTimeout(
-      updateDefiPositions,
-      ACTIVE_EXTENSION_DEFI_POSITIONS_UPDATE_INTERVAL
-    )
-  }
-
-  function initAccountsOpsStatusesContinuousUpdate(updateInterval: number) {
-    if (backgroundState.accountsOpsStatusesInterval)
-      clearTimeout(backgroundState.accountsOpsStatusesInterval)
-
-    async function updateStatuses() {
-      const { newestOpTimestamp } = await mainCtrl.updateAccountsOpsStatuses()
-
-      // Schedule the next update only when the previous one completes
-      const interval = getIntervalRefreshTime(updateInterval, newestOpTimestamp)
-      backgroundState.accountsOpsStatusesInterval = setTimeout(updateStatuses, interval)
-    }
-
-    backgroundState.accountsOpsStatusesInterval = setTimeout(updateStatuses, updateInterval)
-  }
-
-  function initActiveRoutesContinuousUpdate(activeRoutesInProgress?: SwapAndBridgeActiveRoute[]) {
-    if (!activeRoutesInProgress || !activeRoutesInProgress.length) {
-      !!backgroundState.updateActiveRoutesInterval &&
-        clearTimeout(backgroundState.updateActiveRoutesInterval)
-      delete backgroundState.updateActiveRoutesInterval
-      return
-    }
-    if (backgroundState.updateActiveRoutesInterval) return
-
-    let minServiceTime = getActiveRoutesLowestServiceTime(activeRoutesInProgress)
-
-    async function updateActiveRoutes() {
-      minServiceTime = getActiveRoutesLowestServiceTime(activeRoutesInProgress!)
-      await mainCtrl.swapAndBridge.checkForNextUserTxForActiveRoutes()
-
-      // Schedule the next update only when the previous one completes
-      backgroundState.updateActiveRoutesInterval = setTimeout(
-        updateActiveRoutes,
-        getActiveRoutesUpdateInterval(minServiceTime)
-      )
-    }
-
-    backgroundState.updateActiveRoutesInterval = setTimeout(
-      updateActiveRoutes,
-      getActiveRoutesUpdateInterval(minServiceTime)
-    )
-  }
-
-  function initSwapAndBridgeQuoteContinuousUpdate() {
-    if (mainCtrl.swapAndBridge.formStatus !== SwapAndBridgeFormStatus.ReadyToSubmit) {
-      !!backgroundState.updateSwapAndBridgeQuoteInterval &&
-        clearTimeout(backgroundState.updateSwapAndBridgeQuoteInterval)
-      delete backgroundState.updateSwapAndBridgeQuoteInterval
-      return
-    }
-
-    // This logic is triggered when the user manually refreshes the quotes,
-    // resetting the interval to synchronize with the UI.
-    if (
-      backgroundState.updateSwapAndBridgeQuoteInterval &&
-      backgroundState.swapAndBridgeQuoteStatus === 'LOADING' &&
-      mainCtrl.swapAndBridge.updateQuoteStatus === 'INITIAL'
-    ) {
-      clearTimeout(backgroundState.updateSwapAndBridgeQuoteInterval)
-      delete backgroundState.updateSwapAndBridgeQuoteInterval
-    }
-
-    if (backgroundState.updateSwapAndBridgeQuoteInterval) return
-
-    async function updateSwapAndBridgeQuote() {
-      if (mainCtrl.swapAndBridge.formStatus === SwapAndBridgeFormStatus.ReadyToSubmit)
-        await mainCtrl.swapAndBridge.updateQuote({
-          skipPreviousQuoteRemoval: true,
-          skipQuoteUpdateOnSameValues: false,
-          skipStatusUpdate: false
-        })
-
-      // Schedule the next update only when the previous one completes
-      backgroundState.updateSwapAndBridgeQuoteInterval = setTimeout(
-        updateSwapAndBridgeQuote,
-        UPDATE_SWAP_AND_BRIDGE_QUOTE_INTERVAL
-      )
-    }
-
-    backgroundState.updateSwapAndBridgeQuoteInterval = setTimeout(
-      updateSwapAndBridgeQuote,
-      UPDATE_SWAP_AND_BRIDGE_QUOTE_INTERVAL
-    )
-  }
-
-  /**
-   * Updates the account state for the selected account. Doesn't update the state for networks with failed RPC as this is handled by a different interval.
-   */
-  async function initLatestAccountStateContinuousUpdate(intervalLength: number) {
-    if (backgroundState.accountStateLatestInterval)
-      clearTimeout(backgroundState.accountStateLatestInterval)
-
-    const updateAccountState = async () => {
-      if (!mainCtrl.selectedAccount.account) {
-        console.error('No selected account to latest state')
-        return
-      }
-      const failedChainIds = getNetworksWithFailedRPC({
-        providers: mainCtrl.providers.providers
-      })
-      const networksToUpdate = mainCtrl.networks.networks
-        .filter(({ chainId }) => !failedChainIds.includes(chainId.toString()))
-        .map(({ chainId }) => chainId)
-
-      await mainCtrl.accounts.updateAccountState(
-        mainCtrl.selectedAccount.account.addr,
-        'latest',
-        networksToUpdate
-      )
-      backgroundState.accountStateLatestInterval = setTimeout(updateAccountState, intervalLength)
-    }
-
-    // Start the first update
-    backgroundState.accountStateLatestInterval = setTimeout(updateAccountState, intervalLength)
-  }
-
-  async function initPendingAccountStateContinuousUpdate(intervalLength: number) {
-    if (!mainCtrl.selectedAccount.account) {
-      console.error('No selected account to update pending state')
-      return
-    }
-
-    if (backgroundState.accountStatePendingInterval)
-      clearTimeout(backgroundState.accountStatePendingInterval)
-
-    const networksToUpdate = mainCtrl.activity.broadcastedButNotConfirmed
-      .map((op) => op.chainId)
-      .filter((chainId, index, self) => self.indexOf(chainId) === index)
-    // Switched to 'latest' instead of 'pending' because a light client can't fetch the pending state
-    await mainCtrl.accounts.updateAccountState(
-      mainCtrl.selectedAccount.account.addr,
-      'latest',
-      networksToUpdate
-    )
-
-    const updateAccountState = async (chainIds: bigint[]) => {
-      if (!mainCtrl.selectedAccount.account) {
-        console.error('No selected account to update pending state')
-        return
-      }
-
-      // Switched to 'latest' instead of 'pending' because a light client can't fetch the pending state.
-      await mainCtrl.accounts.updateAccountState(
-        mainCtrl.selectedAccount.account.addr,
-        'latest',
-        chainIds
-      )
-
-      // if there are no more broadcastedButNotConfirmed ops for the network,
-      // remove the timeout
-      const networksToUpdate = mainCtrl.activity.broadcastedButNotConfirmed
-        .map((op) => op.chainId)
-        .filter((chainId, index, self) => self.indexOf(chainId) === index)
-      if (!networksToUpdate.length) {
-        clearTimeout(backgroundState.accountStatePendingInterval)
-      } else {
-        // Schedule the next update
-        const newestOpTimestamp = mainCtrl.activity.broadcastedButNotConfirmed.reduce(
-          (newestTimestamp, accOp) => {
-            return accOp.timestamp > newestTimestamp ? accOp.timestamp : newestTimestamp
-          },
-          0
-        )
-        const interval = getIntervalRefreshTime(intervalLength, newestOpTimestamp)
-        backgroundState.accountStatePendingInterval = setTimeout(
-          () => updateAccountState(networksToUpdate),
-          interval
-        )
-      }
-    }
-
-    // Start the first update
-    backgroundState.accountStatePendingInterval = setTimeout(
-      () => updateAccountState(networksToUpdate),
-      intervalLength / 2
-    )
-  }
-
-  /** Update failed network states more often. If a network's first failed
-   *  update is just now, retry in 8s. If it's a repeated failure, retry in 20s.
-   */
-  function initFrequentLatestAccountStateContinuousUpdateIfNeeded() {
-    const isExtensionActive = pm.ports.length > 0
-
-    if (backgroundState.accountStateIntervals.fastAccountStateReFetchTimeout) {
-      clearTimeout(backgroundState.accountStateIntervals.fastAccountStateReFetchTimeout)
-    }
-
-    // If there are no open ports the account state will be updated
-    // automatically when the extension is opened.
-    if (!isExtensionActive) return
-
-    const updateAccountState = async () => {
-      const failedChainIds = getNetworksWithFailedRPC({
-        providers: mainCtrl.providers.providers
-      })
-
-      if (!failedChainIds.length) return
-
-      const retriedFastAccountStateReFetchForNetworks =
-        backgroundState.accountStateIntervals.retriedFastAccountStateReFetchForNetworks
-
-      // Delete the network ids that have been successfully re-fetched so the logic can be re-applied
-      // if the RPC goes down again
-      if (retriedFastAccountStateReFetchForNetworks.length) {
-        retriedFastAccountStateReFetchForNetworks.forEach((chainId, index) => {
-          if (!failedChainIds.includes(chainId)) {
-            delete retriedFastAccountStateReFetchForNetworks[index]
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
-
-            const network = mainCtrl.networks.networks.find((n) => n.chainId.toString() === chainId)
-            mainCtrl.updateSelectedAccountPortfolio({ networks: network ? [network] : undefined })
-          }
-        })
-      }
-
-      // Filter out the network ids that have already been retried
-      const recentlyFailedNetworks = failedChainIds.filter(
-        (id) =>
-          !backgroundState.accountStateIntervals.retriedFastAccountStateReFetchForNetworks.find(
-            (chainId) => chainId === id
-          )
-      )
-
-      const updateTime = recentlyFailedNetworks.length ? 8000 : 20000
-
-      await mainCtrl.accounts.updateAccountStates(
-        mainCtrl.selectedAccount.account?.addr,
-        'latest',
-        failedChainIds.map((id) => BigInt(id))
-      )
-      // Add the network ids that have been retried to the list
-      failedChainIds.forEach((id) => {
-        if (retriedFastAccountStateReFetchForNetworks.includes(id)) return
-
-        retriedFastAccountStateReFetchForNetworks.push(id)
-      })
-
-      if (!failedChainIds.length) return
-
-      backgroundState.accountStateIntervals.fastAccountStateReFetchTimeout = setTimeout(
-        updateAccountState,
-        updateTime
-      )
-    }
-
-    backgroundState.accountStateIntervals.fastAccountStateReFetchTimeout = setTimeout(
-      updateAccountState,
-      8000
-    )
-  }
-
-  function createEstimateRecurringTimeout() {
-    return createRecurringTimeout(() => {
-      if (mainCtrl.signAccountOp) return mainCtrl.signAccountOp.simulate()
-      return new Promise((resolve) => {
-        resolve()
-      })
-    }, 30000)
-  }
+      mainCtrl.lock()
+    },
+    storage
+  )
+  const extensionUpdateCtrl = new ExtensionUpdateController(eventEmitterRegistry)
 
   function debounceFrontEndEventUpdatesOnSameTick(
     ctrlName: string,
-    ctrl: any,
-    stateToLog: any,
+    mainCtrl: MainController | EventEmitter | undefined,
     forceEmit?: boolean
   ): 'DEBOUNCED' | 'EMITTED' {
     const sendUpdate = () => {
-      let stateToSendToFE
+      // Paused dynamic controllers may finish async work after being replaced.
+      const registeredCtrl = eventEmitterRegistry.values().find((ctrl) => ctrl.name === ctrlName)
+      if (!registeredCtrl) return
 
-      if (ctrlName === 'main') {
-        const state = { ...ctrl.toJSON() }
+      // Controller updates
+      const stateToSendToFE = registeredCtrl.toJSON()
+
+      if (ctrlName === 'MainController') {
         // We are removing the state of the nested controllers in main to avoid the CPU-intensive task of parsing + stringifying.
         // We should access the state of the nested controllers directly from their context instead of accessing them through the main ctrl state on the FE.
         // Keep in mind: if we just spread `ctrl` instead of calling `ctrl.toJSON()`, the getters won't be included.
-        Object.keys(controllersNestedInMainMapping).forEach((nestedCtrlName) => {
-          delete state[nestedCtrlName]
+        controllersNestedInMainMapping.forEach((nestedCtrlName) => {
+          delete (stateToSendToFE as any)[nestedCtrlName]
         })
-
-        stateToSendToFE = state
-      } else {
-        stateToSendToFE = ctrl
       }
 
       pm.send('> ui', { method: ctrlName, params: stateToSendToFE, forceEmit })
+
+      // Debug logs
+      const logOnlyUpdatedState = BROWSER_EXTENSION_LOG_UPDATED_CONTROLLER_STATE_ONLY === 'true'
+      let stateToLog: object = stateToSendToFE
+
+      if (
+        // If it's main we have to log the main controller itself and not the data that is sent to the UI
+        // as the latter is stripped from nested controllers' states.
+        ctrlName === 'MainController' ||
+        // Log main if not configured otherwise, the controller is nested in main and main exists
+        (!logOnlyUpdatedState && ctrlName in controllersNestedInMainMapping && mainCtrl)
+      ) {
+        stateToLog = mainCtrl as EventEmitter
+      }
+
       stateDebug(walletStateCtrl.logLevel, stateToLog, ctrlName, 'update')
     }
 
@@ -861,7 +698,7 @@ function getIntervalRefreshTime(constUpdateInterval: number, newestOpTimestamp: 
      * ensuring that the state update is immediately applied at the application level (React/Extension).
      *
      * For more info, please refer to:
-     * EventEmitter.forceEmitUpdate() or useControllerState().
+     * EventEmitter.forceEmitUpdate()
      */
     if (forceEmit) {
       sendUpdate()
@@ -874,7 +711,16 @@ function getIntervalRefreshTime(constUpdateInterval: number, newestOpTimestamp: 
     // Debounce multiple emits in the same tick and only execute one of them
     setTimeout(() => {
       if (backgroundState.ctrlOnUpdateIsDirtyFlags[ctrlName]) {
-        sendUpdate()
+        // If the toJSON method of a controller ever throws, we want to catch it here
+        // otherwise the ctrlOnUpdateIsDirtyFlags flag will remain true forever and no further updates
+        // will be sent to the UI for that controller
+        try {
+          sendUpdate()
+        } catch (err) {
+          ;(err as any).controllerName = ctrlName
+          console.error('Debug: Failed to send update to UI for ctrl', ctrlName, err)
+          captureBackgroundException(err)
+        }
       }
       backgroundState.ctrlOnUpdateIsDirtyFlags[ctrlName] = false
     }, 0)
@@ -882,296 +728,119 @@ function getIntervalRefreshTime(constUpdateInterval: number, newestOpTimestamp: 
     return 'EMITTED'
   }
 
-  /**
-    Initialize the onUpdate callback for the MainController. Once the mainCtrl load is ready,
-    initialize the rest of the onUpdate callbacks for the nested controllers of the main controller.
-   */
-  mainCtrl.onUpdate((forceEmit) => {
-    const res = debounceFrontEndEventUpdatesOnSameTick('main', mainCtrl, mainCtrl, forceEmit)
-    if (res === 'DEBOUNCED') return
-
-    // if the signAccountOp controller is active, reestimate at a set period of time
-    if (backgroundState.hasSignAccountOpCtrlInitialized !== !!mainCtrl.signAccountOp) {
-      if (mainCtrl.signAccountOp) {
-        backgroundState.estimateTimeout && backgroundState.estimateTimeout.stop()
-
-        backgroundState.estimateTimeout = createEstimateRecurringTimeout()
-        backgroundState.estimateTimeout.start()
-      } else {
-        backgroundState.estimateTimeout && backgroundState.estimateTimeout.stop()
-      }
-
-      backgroundState.hasSignAccountOpCtrlInitialized = !!mainCtrl.signAccountOp
-    }
-
-    if (mainCtrl.statuses.signAndBroadcastAccountOp === 'SUCCESS') {
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      initPendingAccountStateContinuousUpdate(backgroundState.accountStateIntervals.pending)
-      initAccountsOpsStatusesContinuousUpdate(backgroundState.activityRefreshInterval)
-    }
-
-    Object.keys(controllersNestedInMainMapping).forEach((ctrlName) => {
-      const controller = (mainCtrl as any)[ctrlName]
-      if (Array.isArray(controller?.onUpdateIds)) {
-        /**
-         * We have the capability to incorporate multiple onUpdate callbacks for a specific controller, allowing multiple listeners for updates in different files.
-         * However, in the context of this background service, we only need a single instance of the onUpdate callback for each controller.
-         */
-        const hasOnUpdateInitialized = controller.onUpdateIds.includes('background')
-
-        if (!hasOnUpdateInitialized) {
-          controller?.onUpdate(async (forceEmit?: boolean) => {
-            const res = debounceFrontEndEventUpdatesOnSameTick(
-              ctrlName,
-              controller,
-              mainCtrl,
-              forceEmit
-            )
-            if (res === 'DEBOUNCED') return
-
-            if (ctrlName === 'keystore') {
-              if (controller.isReadyToStoreKeys) {
-                setBackgroundUserContext({
-                  id: getExtensionInstanceId(controller.keyStoreUid, mainCtrl.invite.verifiedCode)
-                })
-                if (backgroundState.isUnlocked && !controller.isUnlocked) {
-                  await mainCtrl.dapps.broadcastDappSessionEvent('lock')
-                } else if (!backgroundState.isUnlocked && controller.isUnlocked) {
-                  await mainCtrl.handleBroadcastUnlock()
-                }
-                backgroundState.isUnlocked = controller.isUnlocked
-              }
-            }
-
-            if (ctrlName === 'activity') {
-              // Start the interval for updating the accounts ops statuses, only if there are broadcasted but not confirmed accounts ops
-              if (controller?.broadcastedButNotConfirmed.length) {
-                // If the interval is already set, then do nothing.
-                if (!backgroundState.accountsOpsStatusesInterval) {
-                  initAccountsOpsStatusesContinuousUpdate(backgroundState.activityRefreshInterval)
-                }
-              } else {
-                !!backgroundState.accountsOpsStatusesInterval &&
-                  clearTimeout(backgroundState.accountsOpsStatusesInterval)
-                delete backgroundState.accountsOpsStatusesInterval
-              }
-            }
-            if (ctrlName === 'providers') {
-              initFrequentLatestAccountStateContinuousUpdateIfNeeded()
-            }
-            // Swap & Bridge polling disabled for this build
-            if (ctrlName === 'selectedAccount') {
-              if (controller?.account?.addr) {
-                setBackgroundExtraContext('account', controller.account.addr)
-              }
-            }
-          }, 'background')
-        }
-      }
-    })
-    try {
-      setupMainControllerErrorListeners(mainCtrl, ['main'])
-    } catch (error) {
-      console.error('Failed to setup mainControllerErrorListeners')
-    }
-  }, 'background')
-
-  function setupMainControllerErrorListeners(ctrl: any, ctrlNamePath: any[] = []) {
-    if (!ctrl || typeof ctrl !== 'object') return
-
-    if (ctrl instanceof EventEmitter) {
-      const ctrlName = ctrlNamePath.join(' -> ')
-      const hasOnErrorInitialized = ctrl.onErrorIds.includes('background')
-
-      if (!hasOnErrorInitialized) {
-        ctrl.onError((error) => {
-          stateDebug(walletStateCtrl.logLevel, ctrl, ctrlName, 'error')
-          pm.send('> ui-error', {
-            method: ctrlName,
-            params: { errors: ctrl.emittedErrors, controller: ctrlName }
-          })
-          captureBackgroundExceptionFromControllerError(error, ctrlName)
-        }, 'background')
-      }
-    }
-
-    function hasEvents(prop: any) {
-      return prop && typeof prop === 'object' && prop instanceof EventEmitter
-    }
-
-    function hasChildControllers(prop: any) {
-      return (
-        prop &&
-        typeof prop === 'object' &&
-        Object.values(prop).some((p) => p && typeof p === 'object' && p instanceof EventEmitter)
-      )
-    }
-
-    for (const key of Object.keys(ctrl)) {
-      if (hasEvents(ctrl[key]) || hasChildControllers(ctrl[key])) {
-        setupMainControllerErrorListeners(ctrl[key], [...ctrlNamePath, key])
-      }
-    }
-  }
-
-  // Broadcast onUpdate for the wallet state controller
-  walletStateCtrl.onUpdate((forceEmit) => {
-    debounceFrontEndEventUpdatesOnSameTick(
-      'walletState',
-      walletStateCtrl,
-      walletStateCtrl,
-      forceEmit
-    )
-  })
-  walletStateCtrl.onError((error) => {
-    pm.send('> ui-error', {
-      method: 'walletState',
-      params: { errors: walletStateCtrl.emittedErrors, controller: 'walletState' }
-    })
-    captureBackgroundExceptionFromControllerError(error, 'walletState')
-  })
-
-  // Broadcast onUpdate for the auto-lock controller
-  autoLockCtrl.onUpdate((forceEmit) => {
-    debounceFrontEndEventUpdatesOnSameTick('autoLock', autoLockCtrl, autoLockCtrl, forceEmit)
-  })
-  autoLockCtrl.onError((error) => {
-    pm.send('> ui-error', {
-      method: 'autoLock',
-      params: { errors: autoLockCtrl.emittedErrors, controller: 'autoLock' }
-    })
-    captureBackgroundExceptionFromControllerError(error, 'autoLock')
-  })
-
-  // Broadcast onUpdate for the extension-update controller
-  extensionUpdateCtrl.onUpdate((forceEmit) => {
-    debounceFrontEndEventUpdatesOnSameTick(
-      'extensionUpdate',
-      extensionUpdateCtrl,
-      extensionUpdateCtrl,
-      forceEmit
-    )
-  })
-  extensionUpdateCtrl.onError((error) => {
-    pm.send('> ui-error', {
-      method: 'extensionUpdate',
-      params: { errors: extensionUpdateCtrl.emittedErrors, controller: 'extensionUpdate' }
-    })
-    captureBackgroundExceptionFromControllerError(error, 'extensionUpdate')
-  })
-
   // listen for messages from UI
   browser.runtime.onConnect.addListener(async (port: Port) => {
-    if (['popup', 'tab', 'action-window'].includes(port.name)) {
-      // eslint-disable-next-line no-param-reassign
-      port.id = nanoid()
-      pm.addPort(port)
+    const [name, id] = port.name.split(':') as [Port['name'], Port['id']]
+    if (['popup', 'tab', 'request-window'].includes(name)) {
+      port.id = id || nanoid()
 
-      initPortfolioContinuousUpdate()
-      initDefiPositionsContinuousUpdate()
+      port.name = name
+      pm.addOrUpdatePort(port, () => {
+        mainCtrl.ui.addView({ id: port.id, type: port.name })
 
-      mainCtrl.phishing.updateIfNeeded()
+        pm.addConnectListener(
+          port.id,
+          // @ts-ignore
+          async (messageType, action: MethodAction | Action, meta: MessageMeta = {}) => {
+            const { type } = action
+            const { windowId } = meta
 
-      pm.addListener(
-        port.id,
-        // @ts-ignore
-        async (messageType, action: Action, meta: MessageMeta = {}) => {
-          const { type } = action
-          const { windowId } = meta
+            try {
+              if (messageType === '> background' && type) {
+                await handleActions(action, { pm, port, eventEmitterRegistry, mainCtrl })
+              }
+            } catch (err: any) {
+              console.error(`${type} action failed:`, err)
+              captureBackgroundException(err, {
+                extra: {
+                  action: stringify(getReportableAction(action)),
+                  portId: port.id,
+                  windowId
+                }
+              })
+              const shortenedError =
+                err.message.length > 150 ? `${err.message.slice(0, 150)}...` : err.message
 
-          try {
-            if (messageType === '> background' && type) {
-              await handleActions(action, {
-                pm,
-                port,
-                mainCtrl,
-                walletStateCtrl,
-                autoLockCtrl,
-                extensionUpdateCtrl,
-                windowId
+              let message = `Something went wrong! Please contact support. Error: ${shortenedError}`
+              // Emit the raw error only if it's a custom error
+              if (err instanceof EmittableError || err instanceof ExternalSignerError) {
+                message = err.message
+              }
+
+              pm.send('> ui-error', {
+                method: type,
+                params: {
+                  errors: [
+                    {
+                      message,
+                      level: 'major',
+                      error: err
+                    }
+                  ]
+                }
               })
             }
-          } catch (err: any) {
-            console.error(`${type} action failed:`, err)
-            captureBackgroundException(err, {
-              extra: {
-                action: JSON.stringify(action),
-                portId: port.id,
-                windowId
-              }
-            })
-            const shortenedError =
-              err.message.length > 150 ? `${err.message.slice(0, 150)}...` : err.message
-
-            let message = `Something went wrong! Please contact support. Error: ${shortenedError}`
-            // Emit the raw error only if it's a custom error
-            if (err instanceof EmittableError || err instanceof ExternalSignerError) {
-              message = err.message
-            }
-
-            pm.send('> ui-error', {
-              method: type,
-              params: {
-                errors: [
-                  {
-                    message,
-                    level: 'major',
-                    error: err
-                  }
-                ]
-              }
-            })
           }
-        }
-      )
+        )
 
-      port.onDisconnect.addListener(() => {
-        pm.dispose(port.id)
-        pm.removePort(port.id)
-        initPortfolioContinuousUpdate()
-        handleCleanUpOnPortDisconnect({ port, mainCtrl })
+        pm.addDisconnectListener(port.id, (disconnectedPort) => {
+          mainCtrl.ui.removeView(port.id)
+          handleCleanUpOnPortDisconnect({ port, mainCtrl })
 
-        // The selectedAccount portfolio is reset onLoad of the popup
-        // (from the background) while the portfolio update is triggered
-        // by a useEffect. If that useEffect doesn't trigger, the portfolio
-        // state will remain reset until an automatic update is triggered.
-        // Example: the user has the dashboard opened in tab, opens the popup
-        // and closes it immediately.
-        if (port.name === 'popup') {
-          mainCtrl.portfolio.forceEmitUpdate()
-        }
-        if (port.name === 'tab' || port.name === 'action-window') {
-          // eslint-disable-next-line @typescript-eslint/no-floating-promises
-          ledgerCtrl.cleanUp()
-          trezorCtrl.cleanUp()
-        }
+          // The selectedAccount portfolio is reset onLoad of the popup
+          // (from the background) while the portfolio update is triggered
+          // by a useEffect. If that useEffect doesn't trigger, the portfolio
+          // state will remain reset until an automatic update is triggered.
+          // Example: the user has the dashboard opened in tab, opens the popup
+          // and closes it immediately.
+          if (disconnectedPort.name === 'popup') mainCtrl.portfolio.forceEmitUpdate()
+          if (disconnectedPort.name === 'tab' || disconnectedPort.name === 'request-window') {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+            ledgerCtrl.cleanUp()
+            trezorCtrl.cleanUp()
+            qrCtrl.signingCleanup()
+          }
+        })
       })
     }
   })
-
-  initPortfolioContinuousUpdate()
-  await initLatestAccountStateContinuousUpdate(backgroundState.accountStateIntervals.standBy)
-})()
-
-try {
-  browser.tabs.onRemoved.addListener(async (tabId: number) => {
-    // wait for mainCtrl to be initialized before handling dapp requests
-    while (!mainCtrl) {
-      // eslint-disable-next-line no-await-in-loop
-      await wait(200)
-    }
-    const sessionKeys = Object.keys(mainCtrl.dapps.dappSessions || {})
-    // eslint-disable-next-line no-restricted-syntax
-    for (const key of sessionKeys.filter((k) => k.startsWith(`${tabId}-`))) {
-      mainCtrl.dapps.deleteDappSession(key)
-    }
-  })
-} catch (error) {
-  console.error('Failed to register browser.tabs.onRemoved.addListener', error)
 }
 
-// Open the get-started screen in a new tab right after the extension is installed.
+const setupStorageForTesting = async () => {
+  // In the testing environment, we need to slow down app initialization.
+  // This is necessary to predefine the chrome.storage testing values in our Playwright tests,
+  // ensuring that the Controllers are initialized with the storage correctly.
+  // Once the storage is configured in Playwright, we set the `isE2EStorageSet` flag to true.
+  // Here, we are waiting for its value to be set.
+
+  const checkE2EStorage = async (): Promise<void> => {
+    const isE2EStorageSet = !!(await storage.get('isE2EStorageSet', false))
+    if (isE2EStorageSet) return
+
+    await wait(100)
+    await checkE2EStorage()
+  }
+
+  await checkE2EStorage()
+}
+
+// Ensures controllers are initialized when the browser starts.
+browser.runtime.onStartup.addListener(() => {
+  // init the ctrls if not already initialized
+  init().catch((err) => {
+    captureBackgroundException(err)
+    console.error(err)
+  })
+})
+
+// Ensures controllers are initialized whenever the service worker restarts, the extension is updated, or is installed for the first time.
 browser.runtime.onInstalled.addListener(({ reason }: any) => {
+  // init the ctrls if not already initialized
+  init().catch((err) => {
+    captureBackgroundException(err)
+    console.error(err)
+  })
+
   // It makes Playwright tests a bit slow (waiting the get-started tab to be loaded, switching back to the tab under the tests),
   // and we prefer to skip opening it for the testing.
   if (process.env.IS_TESTING === 'true') return
@@ -1186,9 +855,56 @@ browser.runtime.onInstalled.addListener(({ reason }: any) => {
   }
 })
 
+// Ensures controllers are initialized if the service worker is inactive and gets reactivated when the extension popup opens.
+browser.runtime.onMessage.addListener(async (message: any) => {
+  // init the ctrls if not already initialized
+  init().catch((err) => {
+    captureBackgroundException(err)
+    console.error(err)
+  })
+
+  // The extension UI periodically sends "ping" messages. Responding here wakes up
+  // the service worker and keeps it alive as long as a view (popup, window, or tab) remains open.
+  if (message === 'ambire-extension-ping') return 'ambire-extension-pong'
+
+  return null
+})
+
+try {
+  browser.tabs.onRemoved.addListener(async (tabId: number) => {
+    // wait for mainCtrl to be initialized before handling dapp requests
+    while (!mainCtrl) await wait(200)
+
+    // Sessions are matched by their own tabId: keys are `windowId-tabId-dappId`, so the
+    // old `${tabId}-` prefix never matched and leaked sessions past tab close.
+    mainCtrl.dapps.deleteDappSessionsForTab(tabId)
+  })
+} catch (error) {
+  console.error('Failed to register browser.tabs.onRemoved.addListener', error)
+}
+
 // FIXME: Without attaching an event listener (synchronous) here, the other `navigator.hid`
 // listeners that attach when the user interacts with Ledger, are not getting triggered for manifest v3.
 // TODO: Found the root cause of this! Event handler of 'disconnect' event must be added on the initial
 // evaluation of worker script. More info: https://developer.chrome.com/docs/extensions/mv3/service_workers/events/
 // Would be tricky to replace this workaround with different logic, but it's doable.
-if ('hid' in navigator) navigator.hid.addEventListener('disconnect', () => { })
+if ('hid' in navigator) navigator.hid.addEventListener('disconnect', () => {})
+
+// Reset the dashboard network filter when the user's computer wakes up or unlocks.
+// This prevents the confusing situation where the user returns to find only one network's
+// assets displayed because they had filtered before putting the computer to sleep.
+try {
+  browser.idle.onStateChanged.addListener((newState: chrome.idle.IdleState) => {
+    if (newState !== 'active') return
+    if (!mainCtrl || !mainCtrl.selectedAccount.account) {
+      console.error(
+        'Idle state changed to active but mainCtrl or selected account is not initialized',
+        mainCtrl
+      )
+      return
+    }
+    mainCtrl.selectedAccount.setDashboardNetworkFilter(null)
+  })
+} catch (error) {
+  console.error('Failed to register browser.idle.onStateChanged listener', error)
+}

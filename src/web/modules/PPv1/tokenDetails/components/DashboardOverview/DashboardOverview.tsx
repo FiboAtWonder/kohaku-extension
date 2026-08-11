@@ -13,14 +13,13 @@ import spacings, { SPACING, SPACING_TY, SPACING_XL } from '@common/styles/spacin
 import { THEME_TYPES } from '@common/styles/themeConfig'
 import common from '@common/styles/utils/common'
 import flexbox from '@common/styles/utils/flexbox'
-import useHover, { AnimatedPressable } from '@web/hooks/useHover'
-import useMainControllerState from '@web/hooks/useMainControllerState'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
+import useHover, { AnimatedPressable } from '@common/hooks/useHover'
 import NetworkVerificationBadge from '@web/components/NetworkVerificationBadge'
 
 import usePrivacyPools from '@web/hooks/usePrivacyPools/usePrivacyPools'
 import RefreshIcon from './RefreshIcon'
 import getStyles from './styles'
+import useController from '@common/hooks/useController'
 
 interface Props {
   openReceiveModal: () => void
@@ -49,8 +48,8 @@ const DashboardOverview: FC<Props> = ({
   onGasTankButtonPosition
 }) => {
   const { theme, styles, themeType } = useTheme(getStyles)
-  const { isOffline } = useMainControllerState()
-  const { portfolio } = useSelectedAccountControllerState()
+  const { isOffline } = useController('MainController').state
+  const { portfolio } = useController('SelectedAccountController').state
   const { isReady, isSynced, sync } = usePrivacyPools()
 
   const [bindRefreshButtonAnim, refreshButtonAnimStyle] = useHover({
@@ -151,8 +150,8 @@ const DashboardOverview: FC<Props> = ({
                             networksWithErrors.length || isOffline
                               ? theme.warningDecorative2
                               : themeType === THEME_TYPES.DARK
-                              ? theme.primaryBackgroundInverted
-                              : theme.primaryBackground
+                                ? theme.primaryBackgroundInverted
+                                : theme.primaryBackground
                           }
                           selectable
                           testID="total-portfolio-amount-eth"
@@ -168,8 +167,8 @@ const DashboardOverview: FC<Props> = ({
                             networksWithErrors.length || isOffline
                               ? theme.warningDecorative2
                               : themeType === THEME_TYPES.DARK
-                              ? theme.primaryBackgroundInverted
-                              : theme.primaryBackground
+                                ? theme.primaryBackgroundInverted
+                                : theme.primaryBackground
                           }
                           selectable
                         />

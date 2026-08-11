@@ -1,38 +1,36 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { TouchableOpacity, View } from 'react-native'
+import { Pressable, View } from 'react-native'
 import { useModalize } from 'react-native-modalize'
-import { zeroAddress } from 'viem'
 
 import { Account as AccountType } from '@ambire-common/interfaces/account'
-import AddIcon from '@common/assets/svg/AddIcon'
-// import BackButton from '@common/components/BackButton'
-import BottomSheet from '@common/components/BottomSheet'
+import AddCircularIcon from '@common/assets/svg/AddCircularIcon'
+import SettingsIcon from '@common/assets/svg/SettingsIcon'
 import Button from '@common/components/Button'
+import DownArrowIcon from '@common/assets/svg/DownArrowIcon'
+import FooterGlassView from '@common/components/FooterGlassView'
+import { createGlobalTooltipDataSet } from '@common/components/GlobalTooltip'
+import HoverablePressable from '@common/components/HoverablePressable'
+import LayoutWrapper from '@common/components/LayoutWrapper'
 import ScrollableWrapper, { WRAPPER_TYPES } from '@common/components/ScrollableWrapper'
 import Search from '@common/components/Search'
 import Text from '@common/components/Text'
-import Tooltip from '@common/components/Tooltip'
 import useAccountsList from '@common/hooks/useAccountsList'
+import useController from '@common/hooks/useController'
 import useNavigation from '@common/hooks/useNavigation'
 import useRoute from '@common/hooks/useRoute'
 import useTheme from '@common/hooks/useTheme'
-import DashboardSkeleton from '@common/modules/dashboard/screens/Skeleton'
-import Header from '@common/modules/header/components/Header'
-import { ROUTES } from '@common/modules/router/constants/common'
+import Account from '@common/modules/account-select/components/Account'
+import AddAccount from '@common/modules/account-select/components/AddAccount'
+import DashboardSkeleton from '@common/modules/dashboard/components/Skeleton'
+import { HeaderWithTitle } from '@common/modules/header/components/Header/Header'
+import { ROUTES, WEB_ROUTES } from '@common/modules/router/constants/common'
 import spacings from '@common/styles/spacings'
+import common from '@common/styles/utils/common'
 import flexbox from '@common/styles/utils/flexbox'
-import commnonStyles from '@common/styles/utils/common'
-import { TabLayoutContainer } from '@web/components/TabLayoutWrapper/TabLayoutWrapper'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
-import Account from '@web/modules/account-select/components/Account'
-import AddAccount from '@web/modules/account-select/components/AddAccount'
-import { getUiType } from '@web/utils/uiType'
-import DownArrowIcon from '@common/assets/svg/DownArrowIcon'
 
+import { zeroAddress } from 'viem'
 import getStyles from './styles'
-
-type AccountItem = { type: 'account'; account: AccountType }
 
 const extractTriggerAddAccountSheetParam = (search: string | undefined): boolean | null => {
   if (!search) return null
@@ -58,22 +56,19 @@ const AccountSelectScreen = () => {
   const { styles, theme } = useTheme(getStyles)
   const flatlistRef = useRef(null)
   const {
-    accounts: [privateAccount, ...filteredAccounts],
+    accounts,
     control,
+    keyExtractor,
     getItemLayout,
+    selectedAccountIndex,
     shouldDisplayAccounts
+    // The private account is listed first (kohaku)
   } = useAccountsList({ flatlistRef, privateFirst: true })
-
-  const listData = useMemo<AccountItem[]>(
-    () => filteredAccounts.map((acc): AccountItem => ({ type: 'account', account: acc })),
-    [filteredAccounts]
-  )
-
-  const keyExtractor = useCallback((item: AccountItem) => item.account.addr, [])
-
   const { search: routeParams } = useRoute()
   const { navigate } = useNavigation()
-  const { account } = useSelectedAccountControllerState()
+  const {
+    state: { account }
+  } = useController('SelectedAccountController')
   const { ref: sheetRef, open: openBottomSheet, close: closeBottomSheet } = useModalize()
   const { t } = useTranslation()
   const accountsContainerRef = useRef(null)
@@ -100,24 +95,25 @@ const AccountSelectScreen = () => {
     []
   )
 
-  const renderItem = useCallback(
-    // eslint-disable-next-line react/no-unused-prop-types
-    ({ item }: { item: AccountItem }) => (
+  const renderItem = ({ item: acc }: { item: AccountType }) => {
+    return (
       <Account
         onSelect={onAccountSelect}
-        key={item.account.addr}
-        account={item.account}
+        account={acc}
         withSettings={false}
+        options={{ markSelected: true }}
+        maxAccountAddrLength={32}
+        withReceive
       />
-    ),
-    [onAccountSelect]
-  )
+    )
+  }
 
   useEffect(() => {
     // Navigate to the dashboard after the account is selected to avoid showing the dashboard
     // of the previously selected account.
     if (!account || !pendingToBeSetSelectedAccount) return
 
+    // (kohaku) the synthetic zero-address account opens the privacy pools dashboard
     if (pendingToBeSetSelectedAccount === zeroAddress) {
       navigate(ROUTES.pp1Home)
       return
@@ -129,21 +125,16 @@ const AccountSelectScreen = () => {
   }, [account, navigate, pendingToBeSetSelectedAccount])
 
   return !pendingToBeSetSelectedAccount ? (
-    <TabLayoutContainer
-      header={<Header withAmbireLogo />}
-      // footer={<BackButton />}
-      // footer={null}
-      width="lg"
-      hideFooterInPopup
-    >
-      <View style={[flexbox.flex1, spacings.pv]} ref={accountsContainerRef}>
-        <Search
-          autoFocus
-          control={control}
-          placeholder="Search for account"
-          style={styles.searchBar}
-        />
-        <TouchableOpacity
+    <LayoutWrapper>
+      <HeaderWithTitle>
+        <HoverablePressable onPress={() => navigate(WEB_ROUTES.accountsSettings)}>
+          <SettingsIcon width={28} height={28} />
+        </HoverablePressable>
+      </HeaderWithTitle>
+      <View style={[spacings.pt, spacings.phSm, flexbox.flex1]} ref={accountsContainerRef}>
+        <Search autoFocus control={control} style={styles.searchBar} />
+        {/* (kohaku) shortcut back to the private dashboard */}
+        <HoverablePressable
           onPress={() => navigate(ROUTES.mainDashboard)}
           style={[
             flexbox.directionRow,
@@ -152,7 +143,7 @@ const AccountSelectScreen = () => {
             spacings.phSm,
             spacings.pvSm,
             spacings.mtSm,
-            commnonStyles.borderRadiusPrimary,
+            common.borderRadiusPrimary,
             { backgroundColor: theme.secondaryBackground }
           ]}
         >
@@ -160,35 +151,37 @@ const AccountSelectScreen = () => {
             {t('Back to Dashboard')}
           </Text>
           <DownArrowIcon color={theme.primary} style={{ transform: [{ rotate: '90deg' }] }} />
-        </TouchableOpacity>
-        <Account
-          onSelect={onAccountSelect}
-          account={privateAccount}
-          withSettings={false}
-          containerStyle={spacings.mtTy}
-        />
-        <View style={[flexbox.flex1, { opacity: shouldDisplayAccounts ? 1 : 0 }]}>
-          <ScrollableWrapper
-            type={WRAPPER_TYPES.FLAT_LIST}
-            wrapperRef={flatlistRef}
-            data={listData}
-            renderItem={renderItem}
-            getItemLayout={getItemLayout}
-            keyExtractor={keyExtractor}
-            ListEmptyComponent={
-              <Text style={{ textAlign: 'center' }}>{t('No accounts found')}</Text>
+        </HoverablePressable>
+        <ScrollableWrapper
+          type={WRAPPER_TYPES.FLAT_LIST}
+          style={[
+            styles.container,
+            {
+              opacity: shouldDisplayAccounts ? 1 : 0
             }
-          />
-        </View>
-        <View style={[spacings.ptSm, flexbox.directionRow, { width: '100%' }]}>
+          ]}
+          contentContainerStyle={{ paddingBottom: 88 }}
+          wrapperRef={flatlistRef}
+          data={accounts}
+          renderItem={renderItem}
+          getItemLayout={getItemLayout}
+          keyExtractor={keyExtractor}
+          ListEmptyComponent={<Text>{t('No accounts found')}</Text>}
+        />
+        <FooterGlassView isSimpleBlur={false}>
+          {/* (kohaku) entry point for importing an existing privacy pools balance.
+              Disabled until imports are supported. */}
           <View
-            style={[{ flex: 1 }, spacings.mrSm]}
-            // react-tooltip integrates with RN-web via `dataSet={{ tooltipId }}`.
-            dataSet={{ tooltipId: importPrivateBalanceTooltipId }}
+            style={{ ...spacings.mrSm, flex: 1 }}
+            dataSet={createGlobalTooltipDataSet({
+              id: importPrivateBalanceTooltipId,
+              content: t('Imports not yet supported')
+            })}
           >
             <Button
               testID="button-add-private-account"
               text={t('Import private balance')}
+              size="smaller"
               type="secondary"
               hasBottomSpacing={false}
               onPress={() => navigate(ROUTES.pp1Import)}
@@ -196,39 +189,29 @@ const AccountSelectScreen = () => {
               childrenPosition="left"
               style={{ flex: 1 }}
             >
-              <AddIcon color={theme.primary} style={spacings.mrTy} />
+              <AddCircularIcon
+                width={24}
+                height={24}
+                color={theme.primaryText}
+                style={spacings.mrTy}
+              />
             </Button>
           </View>
-          <Tooltip id={importPrivateBalanceTooltipId}>
-            <View>
-              <Text fontSize={14} appearance="secondaryText">
-                {t('Imports not yet supported')}
-              </Text>
-            </View>
-          </Tooltip>
           <Button
             testID="button-add-account"
             text={t('Add account')}
-            type="primary"
+            size="smaller"
             hasBottomSpacing={false}
             onPress={openBottomSheet as any}
             childrenPosition="left"
             style={{ flex: 1 }}
           >
-            <AddIcon color="#fff" style={spacings.mrTy} />
+            <AddCircularIcon width={24} height={24} color="#fff" style={spacings.mrTy} />
           </Button>
-        </View>
+        </FooterGlassView>
       </View>
-      <BottomSheet
-        id="account-select-add-account"
-        sheetRef={sheetRef}
-        adjustToContentHeight={!getUiType().isPopup}
-        closeBottomSheet={closeBottomSheet}
-        scrollViewProps={{ showsVerticalScrollIndicator: false }}
-      >
-        <AddAccount handleClose={closeBottomSheet as any} />
-      </BottomSheet>
-    </TabLayoutContainer>
+      <AddAccount sheetRef={sheetRef} closeBottomSheet={closeBottomSheet} />
+    </LayoutWrapper>
   ) : (
     <DashboardSkeleton />
   )

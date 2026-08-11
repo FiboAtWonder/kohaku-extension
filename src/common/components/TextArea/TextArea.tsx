@@ -1,13 +1,5 @@
-import React, { useState } from 'react'
-import {
-  NativeSyntheticEvent,
-  TextInput,
-  TextInputFocusEventData,
-  TextInputProps,
-  TextStyle,
-  View,
-  ViewStyle
-} from 'react-native'
+import React, { ReactNode, useState } from 'react'
+import { BlurEvent, TextInput, TextInputProps, TextStyle, View, ViewStyle } from 'react-native'
 
 import Text from '@common/components/Text'
 import { isWeb } from '@common/config/env'
@@ -28,7 +20,8 @@ export interface InputProps extends TextInputProps {
   inputWrapperStyle?: ViewStyle | ViewStyle[]
   bottomLabelStyle?: TextStyle | TextStyle[]
   nativeInputStyle?: TextStyle
-  leftIcon?: () => JSX.Element | JSX.Element
+  leftIcon?: () => ReactNode
+  value?: string
 }
 
 const TextArea = ({
@@ -46,26 +39,20 @@ const TextArea = ({
   bottomLabelStyle,
   nativeInputStyle,
   leftIcon,
+  value,
   ...rest
 }: InputProps) => {
   const [isFocused, setIsFocused] = useState<boolean>(false)
   const { theme, styles } = useTheme(getStyles)
 
-  const handleOnFocus = (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
+  const handleOnFocus = (e: BlurEvent) => {
     setIsFocused(true)
     return onFocus(e)
   }
-  const handleOnBlur = (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
+  const handleOnBlur = (e: BlurEvent) => {
     setIsFocused(false)
     return onBlur(e)
   }
-
-  const borderWrapperStyles = [
-    styles.borderWrapper,
-    isFocused && { borderColor: theme.infoBackground },
-    isValid && { borderColor: theme.successBackground },
-    !!error && { borderColor: theme.errorBackground }
-  ]
 
   const inputWrapperStyles = [
     styles.inputWrapper,
@@ -73,14 +60,11 @@ const TextArea = ({
       backgroundColor: theme.secondaryBackground,
       borderColor: theme.secondaryBorder
     },
-    isFocused && { borderColor: theme.primary },
     isValid && { borderColor: theme.successDecorative },
     !!error && { borderColor: theme.errorDecorative },
     disabled && styles.disabled,
     inputWrapperStyle
   ]
-
-  const inputStyles = [styles.input, inputStyle]
 
   return (
     <View style={[styles.inputContainer, containerStyle]}>
@@ -89,27 +73,27 @@ const TextArea = ({
           {label}
         </Text>
       )}
-      <View style={borderWrapperStyles}>
-        <View style={inputWrapperStyles}>
-          {!!leftIcon && <View style={styles.leftIcon}>{leftIcon()}</View>}
-          {/* TextInput doesn't support border styles so we wrap it in a View */}
-          <View style={inputStyles}>
-            <TextInput
-              placeholderTextColor={theme.secondaryText}
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!disabled}
-              onBlur={handleOnBlur}
-              onFocus={handleOnFocus}
-              {...rest}
-              style={{
-                ...styles.nativeInput,
-                // @ts-ignore outline: 'none'
-                outline: 'none',
-                ...nativeInputStyle
-              }}
-            />
-          </View>
+      <View style={inputWrapperStyles}>
+        {!!leftIcon && <View style={styles.leftIcon}>{leftIcon()}</View>}
+        {/* TextInput doesn't support border styles so we wrap it in a View */}
+        <View style={[styles.input, { height: '100%' }, inputStyle]}>
+          <TextInput
+            placeholderTextColor={theme.secondaryText}
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!disabled}
+            onBlur={handleOnBlur}
+            onFocus={handleOnFocus}
+            value={value}
+            {...rest}
+            style={{
+              textAlignVertical: 'top',
+              ...styles.nativeInput,
+              // @ts-ignore outline: 'none'
+              outline: 'none',
+              ...nativeInputStyle
+            }}
+          />
         </View>
       </View>
       {!!error && (

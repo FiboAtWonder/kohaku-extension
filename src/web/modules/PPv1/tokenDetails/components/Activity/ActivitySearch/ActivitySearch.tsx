@@ -76,7 +76,7 @@ const ActivitySearch = ({
         name="search"
         render={({ field: { onChange, onBlur, value } }) => (
           <Input
-            containerStyle={[spacings.mb0, containerStyle]}
+            containerStyle={[{ ...spacings.mb0 }, containerStyle]}
             leftIcon={hasLeftIcon ? () => <SearchIcon color={theme.secondaryText} /> : undefined}
             placeholder={placeholder}
             style={style}

@@ -3,15 +3,26 @@ import { createMessenger } from '@web/extension-services/messengers/internal/cre
 import { isValidReply } from '@web/extension-services/messengers/internal/isValidReply'
 import { isValidSend } from '@web/extension-services/messengers/internal/isValidSend'
 
+declare const globalIsAmbireNext: boolean
+
 /**
  * Send a message to either a specific tab or to the runtime. Needed since we
  * want to communicate between different parts of the extension,
  * like between a content script and the background script.
  */
-function sendMessage<TPayload>(message: SendMessage<TPayload>, { tabId }: { tabId?: number } = {}) {
+function sendMessage<TPayload>(
+  message: SendMessage<TPayload>,
+  { tabId, frameId, documentId }: { tabId?: number; frameId?: number; documentId?: string } = {}
+) {
   if (typeof tabId === 'undefined') return chrome?.runtime?.sendMessage?.(message)
 
-  return chrome.tabs?.sendMessage?.(tabId, message)
+  // SECURITY: target the exact document/frame that sent the request so replies
+  // never leak to other frames in the tab (broadcasts pass neither, stay tab-wide).
+  const options: { frameId?: number; documentId?: string } = {}
+  if (typeof documentId === 'string') options.documentId = documentId
+  else if (typeof frameId === 'number') options.frameId = frameId
+
+  return chrome.tabs?.sendMessage?.(tabId, message, options)
 }
 
 /**
@@ -31,7 +42,7 @@ export const tabMessenger = createMessenger({
     payload: TPayload,
     { id, tabId }: { id?: number | string; tabId?: number } = {}
   ) {
-    if (topic.includes('broadcast')) {
+    if (topic.includes(globalIsAmbireNext ? 'broadcast-next' : 'broadcast')) {
       sendMessage({ topic: `> ${topic}`, payload, id }, { tabId })
       return Promise.resolve(null) as any
     }
@@ -65,7 +76,7 @@ export const tabMessenger = createMessenger({
     ) => {
       if (!isValidSend({ message, topic })) return
 
-      if (topic.includes('broadcast')) {
+      if (topic.includes(globalIsAmbireNext ? 'broadcast-next' : 'broadcast')) {
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         callback(message.payload, {
           id: message.id,
@@ -75,6 +86,11 @@ export const tabMessenger = createMessenger({
         return
       }
       const repliedTopic = message.topic.replace('>', '<')
+
+      // documentId is present at runtime on modern browsers but not in the
+      // installed chrome type defs; read it via a narrow local cast.
+      const senderDocumentId = (sender as chrome.runtime.MessageSender & { documentId?: string })
+        .documentId
 
       try {
         const response = await callback(message.payload, {
@@ -88,13 +104,13 @@ export const tabMessenger = createMessenger({
             payload: { response },
             id: message.id
           },
-          { tabId: sender.tab?.id }
+          { tabId: sender.tab?.id, frameId: sender.frameId, documentId: senderDocumentId }
         )
       } catch (error_) {
         // Errors do not serialize properly over `chrome.runtime.sendMessage`, so
         // we are manually serializing it to an object.
         const error: Record<string, unknown> = {}
-        // eslint-disable-next-line no-restricted-syntax
+
         for (const key of Object.getOwnPropertyNames(error_)) {
           error[key] = (<Error>error_)[<keyof Error>key]
         }
@@ -105,7 +121,9 @@ export const tabMessenger = createMessenger({
             id: message.id
           },
           {
-            tabId: sender.tab?.id
+            tabId: sender.tab?.id,
+            frameId: sender.frameId,
+            documentId: senderDocumentId
           }
         )
       }

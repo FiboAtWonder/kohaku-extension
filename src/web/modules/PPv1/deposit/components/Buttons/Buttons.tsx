@@ -11,7 +11,7 @@ import flexbox from '@common/styles/utils/flexbox'
 type Props = {
   handleSubmitForm: () => void
   proceedBtnText?: string
-  proceedIcon?: ReactNode
+  icon?: ReactNode
   signAccountOpErrors: SignAccountOpError[]
   isNotReadyToProceed: boolean
   isLoading?: boolean
@@ -21,7 +21,7 @@ type Props = {
 const Buttons: FC<Props> = ({
   signAccountOpErrors,
   proceedBtnText = 'Proceed',
-  proceedIcon,
+  icon,
   handleSubmitForm,
   isNotReadyToProceed,
   isLoading,
@@ -31,7 +31,7 @@ const Buttons: FC<Props> = ({
 
   const oneClickDisabledReason = useMemo(() => {
     if (signAccountOpErrors.length > 0) {
-      return signAccountOpErrors[0].title
+      return signAccountOpErrors[0]?.title ?? ''
     }
 
     return ''
@@ -70,7 +70,7 @@ const Buttons: FC<Props> = ({
       >
         <ButtonWithLoader
           text={primaryButtonText}
-          proceedIcon={proceedIcon}
+          icon={icon}
           disabled={isNotReadyToProceed || isLoading || !!oneClickDisabledReason}
           isLoading={isLoading}
           onPress={handleSubmitForm}

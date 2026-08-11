@@ -1,5 +1,6 @@
-import React, { FC, useCallback } from 'react'
-import { View } from 'react-native'
+import { BlurView } from 'expo-blur'
+import React, { FC, useCallback, useMemo } from 'react'
+import { StyleSheet, View } from 'react-native'
 
 import CopyIcon from '@common/assets/svg/CopyIcon'
 import InvisibilityIcon from '@common/assets/svg/InvisibilityIcon'
@@ -7,6 +8,7 @@ import VisibilityIcon from '@common/assets/svg/VisibilityIcon'
 import Alert from '@common/components/Alert'
 import Button from '@common/components/Button'
 import Text from '@common/components/Text'
+import { isMobile, isWeb } from '@common/config/env'
 import { useTranslation } from '@common/config/localization'
 import useTheme from '@common/hooks/useTheme'
 import useToast from '@common/hooks/useToast'
@@ -16,6 +18,9 @@ import flexbox from '@common/styles/utils/flexbox'
 import { setStringAsync } from '@common/utils/clipboard'
 
 import getStyles from './styles'
+
+// Dummy value shown blurred before the real key is revealed, so the box doesn't look empty
+const PLACEHOLDER_PRIVATE_KEY = `0x${'0123456789abcdef'.repeat(4)}`
 
 interface Props {
   privateKey: string | null
@@ -27,8 +32,14 @@ interface Props {
 const PrivateKeyExport: FC<Props> = ({ privateKey, blurred, setBlurred, openConfirmPassword }) => {
   const { t } = useTranslation()
 
-  const { theme, styles, themeType } = useTheme(getStyles)
+  const { theme, themeType, styles } = useTheme(getStyles)
   const { addToast } = useToast()
+
+  const visibilityButtonText = useMemo(() => {
+    if (!privateKey) return t('Reveal key')
+
+    return blurred ? t('Show key') : t('Hide key')
+  }, [blurred, privateKey, t])
 
   const handleCopyText = useCallback(async () => {
     if (!privateKey) return
@@ -51,63 +62,74 @@ const PrivateKeyExport: FC<Props> = ({ privateKey, blurred, setBlurred, openConf
 
   return (
     <>
-      <View style={flexbox.flex1}>
+      <View style={[flexbox.flex1, isMobile && spacings.mb]}>
         <View
           style={[
             blurred ? styles.blurred : styles.notBlurred,
             spacings.pvMd,
             spacings.phMd,
             {
-              backgroundColor:
-                themeType === THEME_TYPES.DARK
-                  ? theme.tertiaryBackground
-                  : theme.secondaryBackground
+              backgroundColor: theme.secondaryBackground
             }
           ]}
         >
-          <Text fontSize={14} color={theme.secondaryText}>
-            {privateKey}
+          <Text testID="private-key-value" fontSize={14} color={theme.secondaryText}>
+            {/* Before the key is revealed, render a dummy hex so the blur (CSS filter on web,
+                BlurView on native) has something to obscure instead of showing a flat solid box */}
+            {privateKey || PLACEHOLDER_PRIVATE_KEY}
           </Text>
+          {/* On native `filter: blur()` is a no-op (web-only CSS), so overlay a real BlurView to hide the key */}
+          {isMobile && blurred && (
+            <BlurView
+              intensity={12}
+              tint={themeType === THEME_TYPES.DARK ? 'dark' : 'light'}
+              style={StyleSheet.absoluteFill}
+            />
+          )}
         </View>
         <View
           style={[
             flexbox.directionRow,
-            flexbox.alignCenter,
-            flexbox.justifySpaceBetween,
-            spacings.mtTy,
-            { marginHorizontal: -SPACING_SM }
+            isWeb && flexbox.alignCenter,
+            isWeb && flexbox.justifySpaceBetween,
+            isWeb ? spacings.mtTy : spacings.mtSm
           ]}
         >
-          <View style={{ opacity: privateKey ? 1 : 0 }}>
+          {((isMobile && privateKey) || isWeb) && (
+            <>
+              <View style={[isMobile && { flex: 1 }, { opacity: privateKey ? 1 : 0 }]}>
+                <Button
+                  testID="copy-private-key-button"
+                  onPress={handleCopyText}
+                  hasBottomSpacing={false}
+                  type={isWeb ? 'ghost' : 'outline'}
+                  size={isWeb ? 'small' : 'regular'}
+                  text={t('Copy key')}
+                  // @ts-ignore react-native-web supports `cursor`, but it's missing from React Native StyleProp<ViewStyle> types
+                  style={isWeb && { cursor: !privateKey ? 'default' : 'pointer' }}
+                >
+                  <CopyIcon style={spacings.mlTy} width={18} color={theme.iconPrimary} />
+                </Button>
+              </View>
+              {isMobile && <View style={{ width: SPACING_SM }} />}
+            </>
+          )}
+          <View style={isMobile && flexbox.flex1}>
             <Button
-              onPress={handleCopyText}
+              testID="reveal-private-key-button"
+              onPress={toggleKeyVisibility}
               hasBottomSpacing={false}
-              type="ghost"
-              size="small"
-              text={t('Copy key')}
-              style={{
-                // @ts-ignore
-                cursor: !privateKey ? 'default' : 'pointer'
-              }}
+              type={isWeb ? 'ghost' : 'outline'}
+              size={isWeb ? 'small' : 'regular'}
+              text={visibilityButtonText}
             >
-              <CopyIcon style={spacings.mlTy} width={18} color={theme.iconPrimary} />
+              {blurred ? (
+                <VisibilityIcon color={theme.iconPrimary} style={spacings.mlTy} width={18} />
+              ) : (
+                <InvisibilityIcon color={theme.iconPrimary} style={spacings.mlTy} width={18} />
+              )}
             </Button>
           </View>
-
-          <Button
-            onPress={toggleKeyVisibility}
-            hasBottomSpacing={false}
-            type="ghost"
-            size="small"
-            style={{ minWidth: 137 }}
-            text={blurred ? t('Reveal key') : t('Hide key')}
-          >
-            {blurred ? (
-              <VisibilityIcon color={theme.iconPrimary} style={spacings.mlTy} width={18} />
-            ) : (
-              <InvisibilityIcon color={theme.iconPrimary} style={spacings.mlTy} width={18} />
-            )}
-          </Button>
         </View>
       </View>
       <Alert

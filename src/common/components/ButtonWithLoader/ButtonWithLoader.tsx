@@ -1,48 +1,31 @@
-import React, { FC, ReactNode } from 'react'
-import { ViewStyle } from 'react-native'
+import React, { FC } from 'react'
+import { StyleProp, ViewStyle } from 'react-native'
 
-import spacings, { SPACING_TY, SPACING_XL } from '@common/styles/spacings'
+import spacings from '@common/styles/spacings'
 
 import Button, { Props as CommonButtonProps } from '../Button/Button'
 import Spinner from '../Spinner'
 
 type Props = Omit<CommonButtonProps, 'style' | 'children'> & {
-  style?: ViewStyle
+  style?: StyleProp<ViewStyle>
   isLoading?: boolean
-  proceedIcon?: ReactNode
+  icon?: React.ReactNode
 }
 
-const ButtonWithLoader: FC<Props> = ({
-  style,
-  isLoading,
-  childrenContainerStyle = {},
-  proceedIcon,
-  ...rest
-}) => {
+const ButtonWithLoader: FC<Props> = ({ style, isLoading, icon, ...rest }) => {
   return (
     <Button
       style={[
         {
-          minWidth: 160,
-          ...spacings.mlLg
-          // paddingHorizontal: SPACING_XL + SPACING_TY
+          minWidth: 104
         },
+        isLoading ? spacings.pr0 : {},
         style
       ]}
       hasBottomSpacing={false}
-      childrenContainerStyle={{
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        alignItems: 'center',
-        paddingRight: SPACING_TY,
-        ...childrenContainerStyle
-      }}
       {...rest}
     >
-      {isLoading ? (
+      {isLoading && (
         <Spinner
           variant="white"
           style={{
@@ -50,9 +33,8 @@ const ButtonWithLoader: FC<Props> = ({
             height: 32
           }}
         />
-      ) : (
-        proceedIcon ?? null
       )}
+      {!isLoading && icon}
     </Button>
   )
 }

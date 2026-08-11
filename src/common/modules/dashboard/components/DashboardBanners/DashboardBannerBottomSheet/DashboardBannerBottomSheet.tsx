@@ -4,11 +4,12 @@ import { View, ViewStyle } from 'react-native'
 
 import { getIsBridgeRoute } from '@ambire-common/libs/swapAndBridge/swapAndBridge'
 import BottomSheet from '@common/components/BottomSheet'
+import DualChoiceModal from '@common/components/DualChoiceModal'
 import Text from '@common/components/Text'
+import useController from '@common/hooks/useController'
+import ActiveRouteCard from '@common/modules/swap-and-bridge/components/ActiveRouteCard'
 import spacings from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
-import useSwapAndBridgeControllerState from '@web/hooks/useSwapAndBridgeControllerState'
-import ActiveRouteCard from '@web/modules/swap-and-bridge/components/ActiveRouteCard'
 
 type Props = {
   id: string
@@ -16,8 +17,8 @@ type Props = {
   closeBottomSheet: () => void
 }
 
-const WITH_BOTTOM_SHEET = ['bridge-in-progress']
-const RENDER_AS_MODAL: string[] = []
+const WITH_BOTTOM_SHEET = ['update-available', 'bridge-in-progress']
+const RENDER_AS_MODAL = ['update-available']
 
 const style: {
   [key: string]: ViewStyle
@@ -32,7 +33,8 @@ const style: {
 
 const DashboardBannerBottomSheet: FC<Props> = ({ id, sheetRef, closeBottomSheet }) => {
   const { t } = useTranslation()
-  const { activeRoutes } = useSwapAndBridgeControllerState()
+  const { dispatch: extensionUpdateDispatch } = useController('ExtensionUpdateController')
+  const { activeRoutes } = useController('SwapAndBridgeController').state
 
   if (!WITH_BOTTOM_SHEET.includes(id)) return null
 
@@ -41,10 +43,31 @@ const DashboardBannerBottomSheet: FC<Props> = ({ id, sheetRef, closeBottomSheet 
       id={`${id}-bottom-sheet`}
       sheetRef={sheetRef}
       closeBottomSheet={closeBottomSheet}
-      backgroundColor="secondaryBackground"
       style={style[id]}
       type={RENDER_AS_MODAL.includes(id) ? 'modal' : undefined}
     >
+      {id === 'update-available' && (
+        <DualChoiceModal
+          title={t('Are you sure you want to reload the extension?') as string}
+          description={
+            t(
+              'You have pending actions. Reloading the extension will discard all pending actions and unsaved changes.'
+            ) as string
+          }
+          primaryButtonText={t('Reload now')}
+          onPrimaryButtonPress={() =>
+            extensionUpdateDispatch({
+              type: 'method',
+              params: {
+                method: 'applyUpdate',
+                args: []
+              }
+            })
+          }
+          secondaryButtonText={t('Cancel')}
+          onSecondaryButtonPress={closeBottomSheet}
+        />
+      )}
       {id === 'bridge-in-progress' && (
         <View style={[flexbox.flex1, spacings.ptSm]}>
           <Text fontSize={16} weight="medium" style={spacings.mbLg}>

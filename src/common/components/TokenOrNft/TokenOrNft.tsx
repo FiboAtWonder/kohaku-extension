@@ -1,18 +1,13 @@
-import { Contract } from 'ethers'
 import React, { FC, memo, useCallback, useEffect, useMemo, useState } from 'react'
 
-import { RPCProvider } from '@ambire-common/interfaces/provider'
 import { CollectionResult, TokenResult } from '@ambire-common/libs/portfolio'
 import { resolveAssetInfo } from '@ambire-common/services/assetInfo'
 import useBenzinNetworksContext from '@benzin/hooks/useBenzinNetworksContext'
 import SkeletonLoader from '@common/components/SkeletonLoader'
 import { useTranslation } from '@common/config/localization'
+import useController from '@common/hooks/useController'
 import useToast from '@common/hooks/useToast'
 import { SPACING_TY } from '@common/styles/spacings'
-import { getRpcProviderForUI } from '@web/services/provider'
-import useBackgroundService from '@web/hooks/useBackgroundService'
-import useNetworksControllerState from '@web/hooks/useNetworksControllerState'
-import useSelectedAccountControllerState from '@web/hooks/useSelectedAccountControllerState'
 
 import HumanizerAddress from '../HumanizerAddress'
 import Nft from './components/Nft'
@@ -24,7 +19,8 @@ interface Props {
   sizeMultiplierSize?: number
   textSize?: number
   chainId: bigint
-  hideLinks?: boolean
+  tokenMarginRight?: number
+  tokenIconContainerSize?: number
 }
 
 const TokenOrNft: FC<Props> = ({
@@ -33,20 +29,25 @@ const TokenOrNft: FC<Props> = ({
   textSize = 16,
   chainId,
   sizeMultiplierSize = 1,
-  hideLinks = false
+  tokenMarginRight,
+  tokenIconContainerSize
 }) => {
-  const marginRight = SPACING_TY * sizeMultiplierSize
+  const marginRight =
+    tokenMarginRight !== undefined ? tokenMarginRight : SPACING_TY * sizeMultiplierSize
   const { addToast } = useToast()
   const [assetInfo, setAssetInfo] = useState<{
     tokenInfo?: TokenResult
     nftInfo?: CollectionResult
   }>({})
-  const [provider, setProvider] = useState<RPCProvider | null>(null)
-  const { portfolio } = useSelectedAccountControllerState()
-  const { dispatch } = useBackgroundService()
+  const {
+    state: { portfolio }
+  } = useController('SelectedAccountController')
+  const { dispatchAndWait } = useController('ProvidersController')
 
   const { t } = useTranslation()
-  const { networks: controllerNetworks } = useNetworksControllerState()
+  const {
+    state: { networks: controllerNetworks }
+  } = useController('NetworksController')
   const { benzinNetworks, addNetwork } = useBenzinNetworksContext()
   // Component used across Benzin and Extension, make sure to always set networks
   const networks = controllerNetworks ?? benzinNetworks
@@ -55,32 +56,29 @@ const TokenOrNft: FC<Props> = ({
     [networks, chainId]
   )
 
-  const [fallbackName, setFallbackName] = useState()
-
-  useEffect(() => {
-    if (!network) return
-    const rpcUrl = network.selectedRpcUrl || network.rpcUrls[0]
-    if (!provider)
-      setProvider(getRpcProviderForUI({ ...network, rpcUrls: [rpcUrl] }, dispatch) as any)
-    return () => {
-      if (provider && provider.destroy) provider.destroy()
-    }
-  }, [network, provider, dispatch])
+  const [fallbackName, setFallbackName] = useState<string | undefined>()
 
   const fetchFallbackNameIfNeeded = useCallback(
     async (_assetInfo: any) => {
-      if (!network) return
       if (_assetInfo.nftInfo || _assetInfo.tokenInfo) return
-      if (!provider) return
-      const contract = new Contract(
-        address,
-        ['function name() view returns(string)'],
-        provider as any
-      )
-      const name = await contract.name().catch(console.error)
-      setFallbackName(name)
+      const name = await dispatchAndWait({
+        type: 'method',
+        params: {
+          method: 'callContractAndSendResToUi',
+          args: [
+            {
+              chainId,
+              address,
+              method: 'name',
+              abi: 'function name() view returns(string)',
+              args: []
+            }
+          ]
+        }
+      }).catch(console.error)
+      if (name) setFallbackName(name)
     },
-    [network, address, provider]
+    [address, chainId, dispatchAndWait]
   )
 
   const [isLoading, setIsLoading] = useState(true)
@@ -104,16 +102,11 @@ const TokenOrNft: FC<Props> = ({
     )
     if (tokenFromPortfolio || nftFromPortfolio)
       setAssetInfo({ tokenInfo: tokenFromPortfolio, nftInfo: nftFromPortfolio })
-    else if (network && provider)
-      resolveAssetInfo(
-        address,
-        network,
-        (_assetInfo: any) => {
-          setAssetInfo(_assetInfo)
-          fetchFallbackNameIfNeeded(_assetInfo).catch(console.error)
-        },
-        provider
-      ).catch((e) => {
+    else if (network)
+      resolveAssetInfo(address, network, (_assetInfo: any) => {
+        setAssetInfo(_assetInfo)
+        fetchFallbackNameIfNeeded(_assetInfo).catch(console.error)
+      }).catch((e) => {
         fetchFallbackNameIfNeeded({}).catch(console.error)
         console.error(e)
       })
@@ -126,12 +119,12 @@ const TokenOrNft: FC<Props> = ({
     portfolio?.tokens,
     t,
     addNetwork,
-    chainId,
-    provider
+    chainId
   ])
 
   if (!assetInfo.nftInfo && !assetInfo.tokenInfo)
-    if (isLoading) return <SkeletonLoader width={140} height={24} appearance="tertiaryBackground" />
+    if (isLoading)
+      return <SkeletonLoader width={140} height={24} appearance="secondaryBackground" />
     // @NOTE: temporary solution as a fallback mechanism for ERC-1155 tokens which we do not support currently
     else if (fallbackName)
       return (
@@ -140,7 +133,6 @@ const TokenOrNft: FC<Props> = ({
           highestPriorityAlias={`${fallbackName} #${value}`}
           marginRight={marginRight}
           fontSize={textSize}
-          hideLinks={hideLinks}
           chainId={chainId}
         />
       )
@@ -153,8 +145,8 @@ const TokenOrNft: FC<Props> = ({
           amount={value}
           tokenInfo={assetInfo?.tokenInfo}
           marginRight={marginRight}
-          hideLinks={hideLinks}
           chainId={chainId}
+          tokenIconContainerSize={tokenIconContainerSize}
         />
       )
 
@@ -178,8 +170,8 @@ const TokenOrNft: FC<Props> = ({
       amount={value}
       tokenInfo={assetInfo?.tokenInfo}
       marginRight={marginRight}
-      hideLinks={hideLinks}
       chainId={chainId}
+      tokenIconContainerSize={tokenIconContainerSize}
     />
   )
 }

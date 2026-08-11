@@ -1,56 +1,12 @@
 // common routes between the mobile app and the extension(web)
 const COMMON_ROUTES = {
-  // TODO: move here the common routes between the mobile app and the extension
-}
-
-const MOBILE_ROUTES = {
-  ...COMMON_ROUTES
-  // TODO: add here mobile only routes
-}
-
-const WEB_ROUTES = {
-  ...COMMON_ROUTES,
-  keyStoreUnlock: 'keystore-unlock',
-  getStarted: 'get-started',
-  accountPicker: 'account-picker',
+  keyStoreUnlock: 'unlock',
   dashboard: 'dashboard',
+  // (kohaku) the privacy dashboard is the landing screen; `dashboard` is the public one
   mainDashboard: 'main-dashboard',
-  earn: 'earn',
-  transfer: 'transfer',
-  topUpGasTank: 'top-up-gas-tank',
-  signAccountOp: 'sign-account-op',
-  transactions: 'transactions',
-  signedMessages: 'signed-messages',
-  signMessage: 'sign-message',
-  menu: 'menu',
-  swap: 'swap',
-  noConnection: 'no-connection',
-  accounts: 'accounts',
-  appCatalog: 'app-catalog',
-  keyStoreSetup: 'keystore-setup',
-  keyStoreReset: 'keystore-reset',
-  getEncryptionPublicKeyRequest: 'get-encryption-public-key-request',
-  dappConnectRequest: 'dapp-connect-request',
-  watchAsset: 'watch-asset',
-  addChain: 'add-chain',
-  switchAccount: 'switch-account',
-  authEmailAccount: 'auth-email-account',
-  authEmailLogin: 'auth-email-login',
-  authEmailRegister: 'auth-email-register',
-  accountPersonalize: 'account-personalize',
-  accountSelect: 'account-select',
-  viewOnlyAccountAdder: 'view-only-account-adder',
-  networks: 'networks',
-  generalSettings: 'settings/general',
-  settingsTerms: 'settings/terms',
-  settingsAbout: 'settings/about',
-  networksSettings: 'settings/networks',
-  accountsSettings: 'settings/accounts',
-  devicePasswordSet: 'settings/device-password-set',
-  devicePasswordChange: 'settings/device-password-change',
-  devicePasswordRecovery: 'settings/device-password-recovery',
-  addressBook: 'settings/address-book',
-  manageTokens: 'settings/manage-tokens',
+  getStarted: 'get-started',
+  networksConfiguration: 'networks-configuration',
+  privacyOptOutsConfiguration: 'privacy-opt-outs-configuration',
   importPrivateKey: 'import-private-key',
   importSmartAccountJson: 'import-smart-account-json',
   importSeedPhrase: 'import-recovery-phrase',
@@ -58,15 +14,77 @@ const WEB_ROUTES = {
   createSeedPhrasePrepare: 'create-new-recovery-phrase',
   createSeedPhraseWrite: 'backup-recovery-phrase',
   ledgerConnect: 'ledger-connect',
-  benzin: 'benzin',
-  swapAndBridge: 'swap-and-bridge',
-  recoveryPhrasesSettings: 'settings/recovery-phrases',
-  securityAndPrivacy: 'settings/security-and-privacy',
+  trezorConnect: 'trezor-connect',
+  keyStoreSetup: 'set-extension-password',
+  accountPersonalize: 'account-personalize',
+  accountPicker: 'account-picker',
   onboardingCompleted: 'wallet-setup-completed',
+  viewOnlyAccountAdder: 'view-only-account-adder',
+  safeImport: 'safe-import',
+  qrConnect: 'qr-connect',
+  transfer: 'transfer',
+  topUpGasTank: 'top-up-gas-tank',
+  tokenDetails: 'token-details',
+  accountSelect: 'account-select',
+  receive: 'receive',
+  signAccountOp: 'sign-account-op',
+  benzin: 'benzin',
+  networks: 'networks',
+  swapAndBridge: 'swap-and-bridge',
+  menu: 'menu',
+  generalSettings: 'settings/general',
+  accountsSettings: 'settings/accounts',
+  networksSettings: 'settings/networks',
+  settingsAbout: 'settings/about',
+  settingsTerms: 'settings/terms',
+  explore: 'explore',
+  exploreSection: 'explore/section',
+  signMessage: 'sign-message',
+  addChain: 'add-chain',
+  watchAsset: 'watch-asset',
+  switchAccount: 'switch-account',
+  getEncryptionPublicKeyRequest: 'get-encryption-public-key-request',
+  decryptRequest: 'decryptRequest'
+}
+
+const MOBILE_ROUTES = {
+  ...COMMON_ROUTES,
+  dappWebView: 'explore/webview',
+  qrReader: 'qr-reader',
+  migrationOnboarding: 'migration-onboarding'
+}
+
+const WEB_ROUTES = {
+  ...COMMON_ROUTES,
+  rewards: 'rewards',
+  earn: 'earn',
+  transactions: 'transactions',
+  signedMessages: 'signed-messages',
+  swap: 'swap',
+  noConnection: 'no-connection',
+  accounts: 'accounts',
+  keyStoreEmailRecovery: 'extension-password-email-recovery',
+  keyStoreEmailRecoverySetNewPassword: 'set-new-extension-password',
+  dappConnectRequest: 'dapp-connect-request',
+  authEmailAccount: 'auth-email-account',
+  authEmailLogin: 'auth-email-login',
+  authEmailRegister: 'auth-email-register',
+  devicePasswordSet: 'settings/device-password-set',
+  devicePasswordChange: 'settings/device-password-change',
+  devicePasswordRecovery: 'settings/device-password-recovery',
+  addressBook: 'settings/address-book',
+  manageTokens: 'settings/manage-tokens',
+  recoveryPhrasesSettings: 'settings/recovery-phrases',
+  safeImport: 'safe-import',
+  optOuts: 'settings/opt-outs',
+  survey: 'survey',
+  qrPermission: 'qr-permission',
+  // INTERNAL ROUTES
+  internalLogs: 'internal/logs',
 
   public: 'public',
 
-  // Privacy Pools V1 routes
+  // (kohaku) Privacy Pools V1 routes
   pp1Home: 'PPv1Home',
   pp1Deposit: 'PPv1Deposit',
   pp1Transfer: 'PPv1Transfer',
@@ -75,7 +93,7 @@ const WEB_ROUTES = {
   pp1Settings: 'PPv1Settings',
   pp1TokenDetails: 'PPv1TokenDetails',
 
-  // Privacy Pools V2 routes
+  // (kohaku) Privacy Pools V2 routes
   pp2Home: 'PPv2Home',
   pp2Deposit: 'PPv2Deposit',
   pp2Transfer: 'PPv2Transfer',
@@ -85,19 +103,22 @@ const WEB_ROUTES = {
 const ROUTES = { ...MOBILE_ROUTES, ...WEB_ROUTES }
 
 const ONBOARDING_WEB_ROUTES = [
-  WEB_ROUTES.getStarted,
-  WEB_ROUTES.createSeedPhrasePrepare,
-  WEB_ROUTES.createSeedPhraseWrite,
-  WEB_ROUTES.importExistingAccount,
-  WEB_ROUTES.importPrivateKey,
-  WEB_ROUTES.importSeedPhrase,
-  WEB_ROUTES.importSmartAccountJson,
-  WEB_ROUTES.viewOnlyAccountAdder,
-  WEB_ROUTES.ledgerConnect,
-  WEB_ROUTES.keyStoreSetup,
-  WEB_ROUTES.accountPersonalize,
-  WEB_ROUTES.accountPicker,
-  WEB_ROUTES.onboardingCompleted
+  COMMON_ROUTES.getStarted,
+  COMMON_ROUTES.createSeedPhrasePrepare,
+  COMMON_ROUTES.createSeedPhraseWrite,
+  COMMON_ROUTES.importExistingAccount,
+  COMMON_ROUTES.importPrivateKey,
+  COMMON_ROUTES.importSeedPhrase,
+  COMMON_ROUTES.importSmartAccountJson,
+  COMMON_ROUTES.viewOnlyAccountAdder,
+  COMMON_ROUTES.ledgerConnect,
+  COMMON_ROUTES.trezorConnect,
+  COMMON_ROUTES.keyStoreSetup,
+  COMMON_ROUTES.accountPersonalize,
+  COMMON_ROUTES.accountPicker,
+  COMMON_ROUTES.onboardingCompleted,
+  COMMON_ROUTES.safeImport,
+  COMMON_ROUTES.qrConnect
 ] as const
 
 export { MOBILE_ROUTES, ONBOARDING_WEB_ROUTES, ROUTES, WEB_ROUTES }

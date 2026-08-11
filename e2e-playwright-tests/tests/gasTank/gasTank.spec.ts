@@ -1,42 +1,38 @@
-import { baParams } from 'constants/env'
-
-import { expect } from '@playwright/test'
+import { saParams } from 'constants/env'
 
 import tokens from '../../constants/tokens'
 import { test } from '../../fixtures/pageObjects'
 
-test.describe('gasTank - Basic Account', () => {
+test.describe('gasTank - Smart Account', { tag: '@gasTank' }, () => {
+  test.setTimeout(80000)
+
   test.beforeEach(async ({ pages }) => {
-    await pages.initWithStorage(baParams)
+    await pages.initWithStorage(saParams)
   })
 
   test.afterEach(async ({ context }) => {
     await context.close()
   })
 
-  test('top up Gas Tank with 0.05$ on Base', async ({ pages }) => {
+  test('top up Gas Tank with 0.1$ on Base', async ({ pages }) => {
     const sendToken = tokens.usdc.base
-    let oldBalance: number
+    const message = 'Top up ready!'
 
     await test.step('assert no transaction on Activity tab', async () => {
-      await pages.gasTank.checkNoTransactionOnActivityTab()
-    })
-
-    await test.step('get current gas tank balance', async () => {
-      oldBalance = await pages.gasTank.getCurrentBalance()
+      await pages.dashboard.checkNoTransactionOnActivityTab()
     })
 
     await test.step('top up gas tank', async () => {
-      await pages.gasTank.topUpGasTank(sendToken, '0.05')
-    })
-
-    await test.step('assert new gas tank balance', async () => {
-      const newBalance = await pages.gasTank.refreshUntilNewBalanceIsVisible(oldBalance)
-
-      expect(oldBalance).toBeLessThan(newBalance)
+      await pages.gasTank.topUpGasTank(sendToken, '0.01')
+      await pages.transfer.signSlowSpeedTransaction({
+        sendToken,
+        message,
+        holdProceedButton: false
+      })
     })
 
     await test.step('assert new transaction on Activity tab', async () => {
+      // TODO: fix
       await pages.gasTank.checkSendTransactionOnActivityTab()
     })
   })

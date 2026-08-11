@@ -1,18 +1,19 @@
 import React, { ReactNode } from 'react'
-import { Pressable, StyleProp, TextStyle, View, ViewProps, ViewStyle } from 'react-native'
+import { Pressable, TextStyle, View, ViewProps, ViewStyle } from 'react-native'
 
 import LeftArrowIcon from '@common/assets/svg/LeftArrowIcon'
 import Text from '@common/components/Text'
+import { isMobile } from '@common/config/env'
 import useTheme from '@common/hooks/useTheme'
 import useWindowSize from '@common/hooks/useWindowSize'
 import { WindowSizes } from '@common/hooks/useWindowSize/types'
-import spacings, { SPACING_3XL, SPACING_LG, SPACING_XL } from '@common/styles/spacings'
+import spacings, { SPACING_3XL, SPACING_LG, SPACING_SM, SPACING_XL } from '@common/styles/spacings'
 import flexbox from '@common/styles/utils/flexbox'
 import text from '@common/styles/utils/text'
 
 import getStyles from './styles'
 
-interface Props extends ViewProps {
+export interface PanelProps extends ViewProps {
   type?: 'default' | 'onboarding'
   title?: string | ReactNode
   spacingsSize?: 'small' | 'large'
@@ -22,8 +23,10 @@ interface Props extends ViewProps {
   totalSteps?: number
   panelWidth?: number
   panelRef?: React.MutableRefObject<any>
+  // Onboarding panels that are part of a flow but shouldn't advertise progress
+  // (e.g. the privacy/railgun screens) can opt out of the step indicator (kohaku)
   showProgress?: boolean
-  innerStyle?: StyleProp<ViewStyle>
+  innerStyle?: ViewStyle
 }
 
 export const getPanelPaddings = (
@@ -31,37 +34,45 @@ export const getPanelPaddings = (
   spacingsSize: 'small' | 'large' = 'large'
 ) => {
   return {
-    paddingHorizontal: maxWidthSize('xl') && spacingsSize === 'large' ? SPACING_3XL : SPACING_LG,
-    paddingVertical: maxWidthSize('xl') && spacingsSize === 'large' ? SPACING_XL : SPACING_LG
+    paddingHorizontal: isMobile
+      ? SPACING_SM
+      : maxWidthSize('xl') && spacingsSize === 'large'
+        ? SPACING_3XL
+        : SPACING_LG,
+    paddingVertical: isMobile
+      ? SPACING_SM
+      : maxWidthSize('xl') && spacingsSize === 'large'
+        ? SPACING_XL
+        : SPACING_LG
   }
 }
 
 const PanelBackButton = ({ onPress, style }: { onPress: () => void; style?: ViewStyle }) => {
   const { styles, theme } = useTheme(getStyles)
   return (
-    <Pressable testID="panel-back-btn" onPress={onPress} style={[spacings.pvTy, style]}>
+    <Pressable testID="panel-back-btn" onPress={onPress} style={style} hitSlop={8}>
       {({ hovered }: any) => (
-        <View
-          style={[
-            styles.backBtnWrapper,
-            hovered && { backgroundColor: theme.quaternaryBackground }
-          ]}
-        >
-          <LeftArrowIcon color={hovered ? theme.primaryBackgroundInverted : theme.iconPrimary} />
+        <View style={[styles.backBtnWrapper]}>
+          <LeftArrowIcon color={hovered ? theme.primaryText : theme.iconPrimary} />
         </View>
       )}
     </Pressable>
   )
 }
 
-const PanelTitle = ({ title, style }: { title: string | ReactNode; style?: TextStyle }) => {
-  const { maxWidthSize } = useWindowSize()
-
+const PanelTitle = ({
+  title,
+  size,
+  style
+}: {
+  title: string | ReactNode
+  size?: number
+  style?: TextStyle
+}) => {
   return (
     <Text
-      fontSize={maxWidthSize('xl') ? 20 : 18}
-      weight="semiBold"
-      appearance="primaryText"
+      fontSize={size || 20}
+      weight="medium"
       numberOfLines={1}
       style={[text.center, flexbox.flex1, style]}
     >
@@ -70,7 +81,7 @@ const PanelTitle = ({ title, style }: { title: string | ReactNode; style?: TextS
   )
 }
 
-const Panel: React.FC<Props> = ({
+const Panel: React.FC<PanelProps> = ({
   type = 'default',
   title,
   children,
@@ -114,14 +125,10 @@ const Panel: React.FC<Props> = ({
           styles.onboardingContainer,
           {
             width: '100%',
-            minHeight: minHeightSize(620) ? 444 : 486,
+            minHeight: minHeightSize(620) ? 520 : 560,
             maxWidth: panelWidth,
             alignSelf: 'center',
-            maxHeight: minHeightSize('l') ? '95%' : '92%',
-            borderWidth: 1,
-            borderStyle: 'solid',
-            borderColor: `${theme.accent.toString()}59`,
-            backgroundColor: '#04364D'
+            maxHeight: minHeightSize('l') ? '95%' : '92%'
           },
           style
         ]}
@@ -141,10 +148,10 @@ const Panel: React.FC<Props> = ({
           {...rest}
         >
           {(!!title || !!withBackButton) && (
-            <View style={[flexbox.directionRow, flexbox.alignCenter, spacings.mbMd]}>
+            <View style={[flexbox.directionRow, flexbox.alignCenter, spacings.mb2Xl]}>
               {!!withBackButton && <PanelBackButton onPress={onBackButtonPress} />}
               {!!title && <PanelTitle title={title} />}
-              <View style={{ width: 20 }} />
+              {!!withBackButton && <View style={{ width: 20 }} />}
             </View>
           )}
           {children}

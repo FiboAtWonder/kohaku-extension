@@ -1,58 +1,78 @@
+import Fuse from 'fuse.js'
+
 import { Network } from '@ambire-common/interfaces/network'
 import { TokenResult } from '@ambire-common/libs/portfolio'
 
-const getDoesNetworkMatch = ({
+const searchWithNetworkName = <T extends object>({
   networks,
-  itemChainId,
-  tokenFlags,
-  lowercaseSearch
+  items,
+  search,
+  keys
 }: {
   networks: Network[]
-  itemChainId: bigint
-  tokenFlags?: TokenResult['flags']
-  lowercaseSearch: string
+  items: T[]
+  search: string
+  keys: string[]
 }) => {
-  let isMatchingByFlag = false
-
-  if (tokenFlags) {
-    if ('gas tank'.includes(lowercaseSearch)) {
-      isMatchingByFlag = !!tokenFlags.onGasTank
-    } else if ('rewards'.includes(lowercaseSearch)) {
-      isMatchingByFlag = !!tokenFlags.rewardsType
-    }
+  if (!search) {
+    return items
   }
 
-  const networkName = networks.find((n) => n.chainId === itemChainId)?.name || ''
+  // Use this map to avoid searching the network name for every token using find
+  const networkChainIdToNameMap: { [chainId: string]: string } = {}
 
-  return networkName.toLowerCase().includes(lowercaseSearch) || isMatchingByFlag
-}
+  networks.forEach((network) => {
+    networkChainIdToNameMap[network.chainId.toString()] = network.name
+  })
 
-const tokenSearch = ({
-  search,
-  token,
-  networks
-}: {
-  search: string
-  token: TokenResult
-  networks: Network[]
-}) => {
-  if (!search) return true
+  const fuse = new Fuse(
+    items.map((item) => {
+      let networkName = ''
 
-  const lowercaseSearch = search.toLowerCase()
+      if (
+        'chainId' in item &&
+        (typeof item.chainId === 'bigint' ||
+          typeof item.chainId === 'string' ||
+          typeof item.chainId === 'number')
+      ) {
+        networkName = networkChainIdToNameMap[item.chainId.toString()] || ''
+      }
 
-  const doesAddressMatch = token.address.toLowerCase().includes(lowercaseSearch)
-  const doesSymbolMatch = token.symbol.toLowerCase().includes(lowercaseSearch)
-
-  return (
-    doesAddressMatch ||
-    doesSymbolMatch ||
-    getDoesNetworkMatch({
-      networks,
-      tokenFlags: token.flags,
-      itemChainId: token.chainId,
-      lowercaseSearch
-    })
+      return {
+        ...item,
+        networkName
+      }
+    }),
+    {
+      keys: [...keys, 'networkName'],
+      threshold: 0.3
+    }
   )
+
+  const result = fuse.search(search)
+
+  return result.map(({ item }) => item) as T[]
 }
 
-export { getDoesNetworkMatch, tokenSearch }
+const tokenOrCollectionSearch = ({
+  networks,
+  assets,
+  search,
+  searchType = 'token'
+}: {
+  networks: Network[]
+  assets: TokenResult[]
+  search: string
+  searchType?: 'token' | 'collection'
+}) => {
+  // Don't include network results if searching for tokens
+  // Otherwise searching for "ETH" would show all tokens on Ethereum network
+  return searchWithNetworkName({
+    networks: searchType === 'token' ? [] : networks,
+    items: assets,
+    search,
+    keys: searchType === 'token' ? ['symbol', 'address'] : ['name', 'address']
+  })
+}
+
+export { tokenOrCollectionSearch, searchWithNetworkName }

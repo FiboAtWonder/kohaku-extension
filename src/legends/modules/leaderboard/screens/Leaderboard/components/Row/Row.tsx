@@ -6,10 +6,15 @@ import Address from '@legends/components/Address'
 import useAccountContext from '@legends/hooks/useAccountContext'
 import styles from '@legends/modules/leaderboard/screens/Leaderboard/Leaderboard.module.scss'
 import { LeaderboardEntry } from '@legends/modules/leaderboard/types'
+import { formatIntegerWithSpaceThousands } from '@legends/modules/leaderboard/utils/formatIntegerWithSpaceThousands'
 
-type Props = LeaderboardEntry['currentUser'] & {
+type Props = Omit<
+  NonNullable<LeaderboardEntry['currentUser']>,
+  'projectedRewards' | 'projectedRewardsUsd'
+> & {
   stickyPosition: string | null
   currentUserRef: React.RefObject<HTMLDivElement>
+  image_avatar?: string
 }
 
 const calculateRowStyle = (isConnectedAccountRow: boolean, stickyPosition: string | null) => {
@@ -36,28 +41,17 @@ const getBadge = (rank: number) => {
   }
 }
 
-function prettifyWeight(weight: number) {
-  if (weight > 1_000) return `${(weight / 1_000).toFixed(2)}K`
-  if (weight > 1_000_000) return `${(weight / 1_000_000).toFixed(2)}M`
-  if (weight > 1_000_000_000) return `${(weight / 1_000_000_000).toFixed(2)}B`
-  return Math.floor(weight)
-}
-
 const Row: FC<Props> = ({
   account,
-  image_avatar,
   rank,
   xp,
-  weight,
-  level,
+  points,
+  image_avatar,
   stickyPosition,
   currentUserRef
 }) => {
   const { connectedAccount } = useAccountContext()
   const isConnectedAccountRow = account === connectedAccount
-  const formatXp = (xp: number) => {
-    return xp.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
-  }
 
   const [maxAddressLength, setMaxAddressLength] = React.useState(23)
 
@@ -67,16 +61,16 @@ const Row: FC<Props> = ({
       setMaxAddressLength(isMobile ? 8 : 23)
     }
 
-    // Set initial value
     handleResize()
-
-    // Add event listener
     window.addEventListener('resize', handleResize)
-
-    // Clean up
     return () => window.removeEventListener('resize', handleResize)
   }, [])
-  const formattedXp = formatXp(xp)
+
+  const displayScore =
+    typeof points === 'number'
+      ? formatIntegerWithSpaceThousands(points)
+      : formatIntegerWithSpaceThousands(xp || 0)
+
   return (
     <div
       key={account}
@@ -88,7 +82,7 @@ const Row: FC<Props> = ({
     >
       <div className={styles.cell}>
         <div className={styles.rankWrapper}>{rank > 3 ? rank : getBadge(rank)}</div>
-        <img src={image_avatar} alt="avatar" className={styles.avatar} />
+        {!!image_avatar && <img src={image_avatar} alt="avatar" className={styles.avatar} />}
         {isConnectedAccountRow ? (
           <>
             You (
@@ -109,11 +103,7 @@ const Row: FC<Props> = ({
           />
         )}
       </div>
-      <h5 className={styles.cell}>{level}</h5>
-      {typeof weight !== 'undefined' && (
-        <h5 className={`${styles.cell} ${styles.weight}`}>{prettifyWeight(weight || 0)}</h5>
-      )}
-      <h5 className={styles.cell}>{formattedXp}</h5>
+      <h5 className={`${styles.cell} ${styles.scoreValue}`}>{displayScore}</h5>
     </div>
   )
 }

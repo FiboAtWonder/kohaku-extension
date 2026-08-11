@@ -1,0 +1,42 @@
+import { ISignAccountOpController } from '@ambire-common/interfaces/signAccountOp'
+import { SwapAndBridgeRoute } from '@ambire-common/interfaces/swapAndBridge'
+import { Sponsor } from '@ambire-common/libs/erc7677/types'
+import { FeePaymentOption } from '@ambire-common/libs/estimate/interfaces'
+import { SelectValue } from '@common/components/Select/types'
+
+import type { TokenResult } from '@ambire-common/libs/portfolio'
+type FeeOption = Pick<SelectValue, 'value' | 'label' | 'disabled'> &
+  Pick<FeePaymentOption, 'paidBy'> & {
+    token: TokenResult | null
+    paidByAccountLabel?: string
+  }
+
+type Props = {
+  signAccountOpState: ISignAccountOpController | null
+  disabled: boolean
+  hasEstimation: boolean
+  slowRequest: boolean
+  isViewOnly: boolean
+  isSponsored: boolean
+  sponsor: Sponsor | undefined
+  // (kohaku) 'PrivacyPools', 'PrivacyPoolsV1', 'Railgun' and 'RailgunV2' added for the
+  // privacy flows
+  updateType:
+    | 'Requests'
+    | 'Swap&Bridge'
+    | 'Transfer&TopUp'
+    | 'PrivacyPools'
+    | 'PrivacyPoolsV1'
+    | 'Railgun'
+    | 'RailgunV2'
+  bundlerNonceDiscrepancy?: {
+    id: string
+    title: string
+  }
+  serviceFee?: SwapAndBridgeRoute['serviceFee']
+  withTitle?: boolean
+  isOneClick?: boolean
+  shouldShowTxnDetails?: boolean
+}
+
+export type { FeeOption, Props }

@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -34,7 +33,7 @@ const useSelect = (props?: { maxMenuHeight?: number; menuPosition?: 'top' | 'bot
         setSearch('search', '')
       }
     }
-    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('mousedown', handleClickOutside, { passive: true })
     return () => {
       if (!isWeb) return
       document.removeEventListener('mousedown', handleClickOutside)

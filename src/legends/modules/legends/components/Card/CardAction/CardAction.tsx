@@ -1,52 +1,56 @@
 import React, { FC, useCallback } from 'react'
 
 import useAccountContext from '@legends/hooks/useAccountContext'
+import useProviderContext from '@legends/hooks/useProviderContext'
 import CardActionButton from '@legends/modules/legends/components/Card/CardAction/actions/CardActionButton'
 import { CARD_PREDEFINED_ID } from '@legends/modules/legends/constants'
 import { CardAction, CardActionType, CardFromResponse } from '@legends/modules/legends/types'
+import { getRewardsButtonText } from '@legends/utils/getRewardsButtonText'
 
-import { InviteAcc, SendAccOp } from './actions'
+import { SendAccOp } from './actions'
+import BitrefillClaim from './actions/BitrefillClaim'
 import Feedback from './actions/Feedback'
+import MascotRevealLetter from './actions/MascotRevealLetter'
 
 export type CardActionComponentProps = {
   action: CardAction
-  buttonText: string
   meta: CardFromResponse['meta']
-  id: CardFromResponse['id']
 }
 
-const CardActionComponent: FC<CardActionComponentProps> = ({ meta, action, buttonText }) => {
+const CardActionComponent: FC<CardActionComponentProps> = ({ meta, action }) => {
   const { connectedAccount, v1Account } = useAccountContext()
   const disabledButton = Boolean(!connectedAccount || v1Account)
+  const { provider } = useProviderContext()
+
+  const getButtonText = () =>
+    getRewardsButtonText({
+      connectedAccount,
+      v1Account: !!v1Account
+    })
 
   const handleWalletRouteButtonPress = useCallback(async () => {
     if (action.type !== CardActionType.walletRoute) return
-
+    if (!provider) return
     try {
-      await window.ambire.request({
+      await provider.request({
         method: 'open-wallet-route',
         params: { route: action.route }
       })
     } catch (e) {
       console.error(e)
     }
-  }, [action])
+  }, [action, provider])
 
   if (action.type === CardActionType.predefined) {
-    if (action.predefinedId === CARD_PREDEFINED_ID.inviteAccount) {
-      return (
-        <InviteAcc
-          alreadyLinkedAccounts={meta?.alreadyLinkedAccounts || []}
-          alreadyInvitedAccounts={meta?.alreadyInvitedAccounts || []}
-          usedInvitationSlots={meta?.usedInvitationSlots || 0}
-          buttonText={buttonText}
-          usersInvitationHistory={meta?.usersInvitationHistory || []}
-        />
-      )
-    }
-
     if (action.predefinedId === CARD_PREDEFINED_ID.feedback) {
       return <Feedback meta={meta} />
+    }
+
+    if (action.predefinedId === CARD_PREDEFINED_ID.bitrefill) {
+      return <BitrefillClaim meta={meta} />
+    }
+    if (action.predefinedId === CARD_PREDEFINED_ID.mascot) {
+      return <MascotRevealLetter meta={meta} />
     }
 
     return null
@@ -59,11 +63,7 @@ const CardActionComponent: FC<CardActionComponentProps> = ({ meta, action, butto
   if (action.type === CardActionType.link) {
     return (
       <CardActionButton
-        buttonText={
-          disabledButton
-            ? 'Switch to a new account to unlock Rewards quests. Ambire legacy Web accounts (V1) are not supported.'
-            : 'Proceed'
-        }
+        buttonText={getButtonText()}
         onButtonClick={() => {
           window.open(action.link, '_blank')
         }}
@@ -73,14 +73,10 @@ const CardActionComponent: FC<CardActionComponentProps> = ({ meta, action, butto
     )
   }
 
-  if (action.type === CardActionType.walletRoute && window.ambire) {
+  if (action.type === CardActionType.walletRoute && provider) {
     return (
       <CardActionButton
-        buttonText={
-          disabledButton
-            ? 'Switch to a new account to unlock Rewards quests. Ambire legacy Web accounts (V1) are not supported.'
-            : 'Proceed'
-        }
+        buttonText={getButtonText()}
         onButtonClick={handleWalletRouteButtonPress}
         loadingText=""
         disabled={disabledButton}
