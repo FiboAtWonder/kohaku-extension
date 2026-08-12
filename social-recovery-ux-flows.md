@@ -218,7 +218,9 @@ Threshold selector inside a group: Safe's "M out of N owners" row.
 
 ## Flow D — Recover an account
 
-Precondition (Flow A1): fresh key exists.
+Preconditions — a key that will receive control, from either entry point:
+- fresh install → the fast-track onboarding creates it (Flow A1);
+- **logged-in** → an existing account is the new owner (see "Flow D additions" below).
 ⚠️ **Funding & execution: BLOCKER, unresolved.** `initiate/executeRecovery` are
 permissionless direct calls that bypass the 4337 flow — a 4337 paymaster cannot
 sponsor them, and the SDK design is backend-zero (no relayer exists today). "Who pays
@@ -301,6 +303,52 @@ Decisions:
 - ✅ End of recovery = **required cleanup checklist**, not a soft nudge: the surviving
   config still contains the lost device's methods; whoever holds that device can
   start a new recovery. Flag and walk through their removal.
+
+## Flow D additions — logged-in entry & interactive claims
+
+### Logged-in entry (Settings)
+
+Recovery does not require a fresh install. A logged-in user starts it from the
+**"Recover an account"** button on the Settings › Account recovery overview (Flow G).
+
+```mermaid
+flowchart TD
+    A["Settings › Account recovery:<br/>'Recover an account' (logged in)"] --> B{"Wallet has multiple accounts?"}
+    B -- Yes --> C["Choose the NEW OWNER:<br/>which of your accounts<br/>receives control"]
+    B -- No --> D["Single account —<br/>the step is skipped automatically"]
+    C --> E["→ Flow D chapter 1: identify the lost account"]
+    D --> E
+```
+
+Decisions:
+- ✅ Logged-in entry exists next to the fresh-install entry.
+- ✅ Multiple accounts → the user picks which account becomes the new owner.
+  A single account skips the step.
+
+### Interactive claim collection (refines Flow D chapter 2)
+
+The checklist is interactive per method of the selected path.
+
+```mermaid
+flowchart TD
+    A["Checklist — one row per method<br/>of the selected path"] --> B["VERIFY button on each row:<br/>explains how to obtain the proof<br/>+ offers the submit input in place"]
+    B --> C["Claim submitted →<br/>row marked complete"]
+    C --> D{"User goes back and<br/>selects another path?"}
+    D -- Yes --> E["Submitted claims are KEPT —<br/>methods shared between paths<br/>stay complete"]
+    E --> A
+    D -- No --> F["Path complete →<br/>confirmation screen"]
+    F -.-> G["On recovery-flow EXIT<br/>(finished or abandoned):<br/>ALL stored claims are WIPED"]
+```
+
+Decisions:
+- ✅ Each method row has a **verify button**: it explains how to get the proof and
+  gives the way to submit it, in place.
+- ✅ Claims **survive path switching**: going back and selecting another policy keeps
+  every claim already submitted.
+- ✅ Claims are **wiped when the recovery flow exits** — finished or abandoned.
+  Security rule: claims never persist beyond the flow.
+
+---
 
 ## Flow D2 — Cancel side (original owner's device)
 
@@ -488,6 +536,8 @@ Notes:
 | 31 | Guardian mutual approval | Best-effort stands; mutual approval noted as a considered path. |
 | 32 | Management flows | Mapped → Flow G. |
 | 33 | User-facing name | "Account recovery". |
+| 34 | Logged-in recovery entry | Settings button. Multiple accounts → choose the new owner; single account → step skipped. |
+| 35 | Claim handling in the checklist | Per-method verify button (explain + submit in place). Claims survive path switching; wiped on flow exit. |
 
 ---
 
