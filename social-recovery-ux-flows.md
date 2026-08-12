@@ -1,7 +1,8 @@
 # Social Recovery — UX Flow Diagrams (working doc)
 
 > Working document. Owner: Fibo. Status: **reviewed — 6-perspective review pass applied 2026-08-12**.
-> Sources: social-recovery prototype HTML (demo), Notion "Personas" page (Alice → Sam),
+> Sources: social-recovery prototype HTML (demo), the Notion
+> [Personas page](https://app.notion.com/p/36d9a4c092c780578f9dde36e69dfff5) (Alice → Sam),
 > Design Rationales R1–R13. Scope note: this document focuses on the **UX of the
 > initiative**; contract-level details live in the tech design and are only referenced
 > where a UX flow depends on them.
@@ -50,7 +51,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["'Recover an account' clicked"] --> S["Anti-scam interstitial:<br/>'No support agent will ever<br/>ask you to do this.'"]
+    A["'Recover an account' clicked"] --> S["Warning screen:<br/>'No support agent will ever<br/>ask you to do this.'"]
     S --> B[Set extension password]
     B --> C["New key generated — recovery-focused copy"]
     C --> D["Seed backup ceremony (kept, short)"]
@@ -60,7 +61,7 @@ flowchart TD
 ```
 
 Decisions:
-- ✅ Fast-track = **anti-scam interstitial + extension password + key creation + seed
+- ✅ Fast-track = **warning screen + extension password + key creation + seed
   backup**. Nothing else.
 - ✅ Seed backup is not deferred. It stays in the fast-track.
 - ✅ Copy at key creation (corrected): "**Your account stays at the same address.**
@@ -86,7 +87,10 @@ flowchart TD
 
 Decisions:
 - ✅ Trigger: each dashboard open until the user acts or opts out.
-- ✅ Permanent dismiss keeps the passive shield badge as re-entry point.
+- ✅ Permanent dismiss keeps the shield badge as re-entry point. Concretely: a small
+  shield icon in a warning state, shown permanently on the account row and on the
+  Settings › Account recovery entry while the account has no recovery path. It never
+  pops up and never blocks anything. Clicking it opens setup (Flow C).
 - ✅ Honesty note, concrete copy: "Recovery protects you if you **lose** your key.
   It cannot stop someone who already has it. And if your only method is a passkey on
   this device, losing the device also removes this recovery path."
@@ -103,14 +107,10 @@ Building blocks:
   must support this shape explicitly.
 - **Presets can be reduced to a single method** (Sam's floor). The builder must
   support one-method paths; the honesty note (Flow B copy) doubles as their warning.
-- **Mixed-method OR-groups** (`passkey AND [zk_email OR aadhaar]`): status **OPEN**
-  (downgraded from decided). Current contracts support a threshold only inside the
-  guardian method; the builder **compiles mixed OR-groups to expanded paths** for
-  now (Bob's 2-of-3 → 3 pair clauses). Question to kit team: the proposed policy
-  `threshold` field (review thread T10).
-- **R9 (trust orthogonality):** violations are **allowed for now** — the invariants
-  and tech design are being reworked. No blocking check ships in these flows.
-  Revisit once the invariants settle.
+- **Mixed-method OR-groups** (`passkey AND [zk_email OR aadhaar]`): **decided —
+  valid** (assumed). Works the same as the guardian case
+  `passkey AND [Guardian A OR Guardian B]`. The exact contract encoding sits with
+  the kit team (tech-dependencies table).
 
 ### Three setup modes
 
@@ -126,8 +126,8 @@ actions on top: **"Guide me"** (Express) and **"Customize"** (Advanced).
 **Starter presets (updated): three recovery paths shown by default**, 48h waiting
 period each, all starting in "needs setup" state with deep-links into enrollment:
 1. `passkey AND [guardians threshold group]` — your device + your people.
-2. `passkey AND zk_email` — your device + your email. (Nota: violates R9 when the
-   passkey is Google-synced and the email is Gmail — accepted for now, see R9 note.)
+2. `passkey AND zk_email` — your device + your email. (Note: violates R9 when the
+   passkey is Google-synced and the email is Gmail — accepted for now.)
 3. `guardians-only, M-of-N` — people only, no device or platform dependency
    (added for the Alice/paper-guardian profile; also the only preset with no passkey).
 
@@ -136,7 +136,7 @@ period each, all starting in "needs setup" state with deep-links into enrollment
 ```mermaid
 flowchart TD
     A[Express start] --> B["1 · How recovery works —<br/>one screen, three bullets"]
-    B --> C["2 · Inventory: what do you have?<br/>☐ another device (passkey-capable)<br/>☐ trusted contacts with wallets<br/>☐ long-lived email<br/>☐ Aadhaar ID (last, badged)"]
+    B --> C["2 · Inventory: what do you have?<br/>(four checkboxes — list below)"]
     C --> D["3 · Recommended preset shown as<br/>recovery-path cards<br/>(presets from ottie's persona research)"]
     D --> E["4 · Enroll each method:<br/>short explainer + 'Learn more' +<br/>mandatory access test (local, no chain)"]
     E --> F["5 · Waiting period — 48h default,<br/>changeable. Guardrails: minimum floor,<br/>dominated-path warning."]
@@ -144,6 +144,15 @@ flowchart TD
     G --> H["7 · Recovery Card download<br/>+ enable alerts opt-in"]
     H --> I["8 · Offer: apply to other accounts<br/>(never by default; see R10 constraints)"]
 ```
+
+Inventory items (step 2):
+- ☐ another device (passkey-capable)
+- ☐ trusted contacts with wallets
+- ☐ long-lived email
+- ☐ Aadhaar ID (last, badged)
+
+The recommended presets in step 3 come from the
+[persona research (Notion)](https://app.notion.com/p/36d9a4c092c780578f9dde36e69dfff5).
 
 Wizard state rules:
 - ✅ **Draft/resume:** progress persists locally; abandoning mid-wizard re-enters at
@@ -161,15 +170,7 @@ Mandatory for identity methods; a failing test blocks the save. Local only, no c
 | Passkey | Sign a test challenge right after creation. Instant. |
 | ZK Email | Generate a full test proof locally. Depends on Q16. Progress UI; doubles as dry run. |
 | Anon Aadhaar | Test proof against the current UIDAI key. |
-| Guardians | **Best effort** (decided, reaffirmed): checksum, ENS resolution, contract detection, same-seed check. A real signature test needs the guardian to act — optional. *Mutual guardian approval at enrollment is a path under consideration, not decided.* |
-
-### Guardian enrollment extra — the "guardian card"
-
-Optional step when adding a guardian: send them a small notice — the owner's account
-address, the canonical approval-page URL, and the rule "**we will always call you
-first**". Purpose: a guardian who knows they are a guardian, knows the page, and
-expects a call can tell a real recovery from a phishing attempt. Without it, their
-first contact with the system is indistinguishable from an attack.
+| Guardians | **Optional, open**: light checks (checksum, ENS resolution, contract detection, same-seed). A real signature test needs the guardian to act — also optional. |
 
 ### Recovery Card (step 7)
 
@@ -184,18 +185,23 @@ The address alone is public information anyway; the configuration is the secret.
 
 ### Multi-account "apply this setup" (R10 constraints)
 
-- ✅ ZK Email: the SDK **derives a fresh `accountCode` per account** automatically —
-  same email, unlinkable commitments.
-- ✅ Passkey and guardian reuse across accounts is observable on-chain. Show a
-  linkability warning and offer "create a fresh passkey for this account".
+- ZK Email `accountCode` derivation per account: **open question** (moved to the
+  tech-dependencies table).
+- ✅ Passkey and guardian reuse across accounts is observable on-chain (per R10).
+  Show a linkability warning and offer "create a fresh passkey for this account".
 - Never applied by default.
 
 Other decisions:
 - ✅ All 4 methods in v1. Aadhaar for everyone, listed last, badged.
 - ✅ Waiting period: 48h flat default, **confirmed to stand also for single-method
   paths**. Changeable per path. Builder guardrails: a minimum floor (zero-second
-  waiting periods must not be configurable) and a dominated-path warning (a strictly
-  weaker path with a shorter wait makes the stronger one pointless).
+  waiting periods must not be configurable) and a **dominated-path warning**.
+  Definition: path Y is dominated when another path X needs a **subset** of Y's
+  methods and has an equal-or-shorter waiting period — anyone who can complete Y can
+  always use the easier X instead, so Y adds zero security. Example: with
+  X = `passkey` (48h), Y = `passkey AND zk_email` (48h) is pointless. The warning
+  suggests giving the stronger path a shorter waiting period, or removing one of
+  the two.
 - ✅ Express presets and their contents come from **ottie's persona research**.
 - Advanced-builder helper (nice-to-have, from review): an "M-of-N across methods"
   macro that auto-expands pair clauses.
@@ -205,6 +211,8 @@ Other decisions:
 Grouped condition builder with "ALL of / ANY of" headers: Notion/Airtable advanced
 filters, Apple Smart Playlists, Zapier paths, Stripe Radar, `react-querybuilder`.
 Threshold selector inside a group: Safe's "M out of N owners" row.
+
+![UI patterns: grouped condition builder, recovery-path cards with OR divider, threshold selector](social-recovery-ux-assets/ui-patterns.svg)
 
 ---
 
@@ -217,11 +225,12 @@ sponsor them, and the SDK design is backend-zero (no relayer exists today). "Who
 and who executes" has no owner. The flow below names the intended UX; the
 infrastructure question is in the tech-dependencies table.
 
-**Config visibility (decided assumption):** the policy **structure** is readable
-on-chain ("passkey + zk_email"), the **values** are not (no guardian addresses, no
-email commitments in the clear). Additional case to design for: values encrypted
-with a **user password** — the recoverer enters it to decrypt and see the real
-values (e.g. which guardians to contact).
+**Config visibility:** the policy **structure** is readable on-chain
+("passkey + zk_email"). Value visibility is **OPEN**: in the current contracts,
+guardian addresses are natively public (R10 calls them observable); whether values
+can be hidden at all sits with the kit team. Case to design for either way: values
+encrypted with a **user password** — the recoverer enters it to decrypt and see the
+real values (e.g. which guardians to contact).
 
 ```mermaid
 flowchart TD
@@ -236,7 +245,7 @@ flowchart TD
     CC --> E{"Account has recovery paths?"}
     E -- No --> X["'This account has no recovery set up,<br/>so it cannot be recovered.'<br/>Primary action: try another address"]
     X --> B
-    E -- Yes --> V["Paths shown as STRUCTURE only.<br/>Optional: enter recovery password<br/>to decrypt and see real values<br/>(e.g. guardian identities)"]
+    E -- Yes --> V["Paths shown. Structure is always<br/>readable; value visibility is OPEN<br/>(see config-visibility note).<br/>Password-decrypt case: enter the<br/>recovery password to see real values"]
     V --> F["Pick the recovery path<br/>you can satisfy"]
     F --> G["Recovery checklist — persisted locally,<br/>resumable via a pending card<br/>on the home surface"]
     G --> G1[Get guardian approvals → Flow E1]
@@ -249,7 +258,8 @@ flowchart TD
     G3 --> H
     G4 --> H
     H -- No --> G
-    H -- Yes --> I["START RECOVERY — one atomic tx<br/>(funding/executor: see blocker note)"]
+    H -- Yes --> CF["Confirmation screen: the account,<br/>the new key that takes control,<br/>the chosen path, the waiting period.<br/>'The current owner can cancel during<br/>the waiting period.' Explicit consent."]
+    CF --> I["START RECOVERY — one atomic tx<br/>(funding/executor: see blocker note)"]
     I -->|Submit fails| I2["Plain-language error + retry<br/>+ self-pay-gas fallback"]
     I2 --> G
     I -->|Submitted| J["Waiting period countdown —<br/>persistent, resumable"]
@@ -307,9 +317,9 @@ Either way the recovery **trigger stays with one person** (the recoverer).
 
 ```mermaid
 flowchart TD
-    A["Recoverer shares link/QR<br/>with the guardian (any channel)"] --> B["Guardian opens the CANONICAL<br/>IPFS/IPNS page — the URL they<br/>already know from their<br/>guardian card / Recovery Card"]
-    B --> C["Page shows the EXACT signed payload:<br/>account, new owner, recovery nonce<br/>(read on-chain).<br/>NO expiry shown — none is enforced<br/>on-chain today."]
-    C --> W["BLOCKING step: 'Contact the owner<br/>on a channel you already had.<br/>Have them read the new-owner<br/>value to you.'"]
+    A["Recoverer shares link/QR<br/>with the guardian (any channel)"] --> B["Guardian opens the CANONICAL<br/>IPFS/IPNS page"]
+    B --> C["Page leads with plain language:<br/>who asks, what approving does.<br/>'Verify the details' expander holds<br/>the exact payload: account, new owner,<br/>recovery nonce (read on-chain).<br/>NO expiry shown — none is enforced."]
+    C --> W["Required acknowledgment: the sign<br/>button stays disabled until the guardian<br/>checks 'I contacted the owner on a<br/>channel I already had.'"]
     W -->|Something is off| DE["Decline — and tell the owner<br/>about this request anyway"]
     W -->|Confirmed| D["Connect wallet —<br/>injected AND WalletConnect.<br/>OFFLINE path: copy the raw payload,<br/>sign air-gapped, paste the<br/>signature back"]
     D --> E["Approve in the wallet prompt.<br/>Page copy: 'trust the values in your<br/>WALLET prompt, not this page'"]
@@ -319,10 +329,16 @@ flowchart TD
 ```
 
 Security rationale (why these steps exist):
+- Design principle for guardian-facing surfaces (decided): **"Information should be
+  ignorable but verifiable."** Guardians can be non-technical users. Plain language
+  leads; the technical detail collapses behind a "Verify the details" expander and
+  never blocks the main path.
 - The page renders whatever the URL says — an attacker who builds the link controls
   everything it displays. The page is **not** a trust anchor. The two real anchors
-  are: the out-of-band call to the owner (blocking step), and the wallet's own
-  signing prompt.
+  are: the out-of-band call to the owner, and the wallet's own signing prompt.
+- The acknowledgment checkbox is UI friction, not enforcement — a static page cannot
+  verify that the call happened. It still forces a deliberate pause at the exact
+  moment phishing relies on speed.
 - Guardians who decline should still tell the owner: off-chain proof collection is
   invisible on-chain, so guardians are the owner's only tripwire during that phase.
 - A guardian signature has **no expiry** — it dies only when its nonce is consumed or
@@ -421,7 +437,7 @@ Notes:
 
 | # | Question | Answer |
 |---|---|---|
-| 1 | Account creation in recovery entry | Explicit step, fast-tracked (Flow A1) + anti-scam interstitial. |
+| 1 | Account creation in recovery entry | Explicit step, fast-tracked (Flow A1) + warning screen. |
 | 2 | Nudge trigger + re-nudge | Modal each open + "Don't remind me again" + passive shield badge. |
 | 3 | Setup modes | Three: Express, Presets (landing state), Advanced. |
 | 4 | Method set v1 | All 4. Aadhaar for everyone, listed last, badged. |
@@ -442,14 +458,14 @@ Notes:
 | 19 | After waiting period | Notify + auto-execute — intended UX; **executor unresolved** (see #7). |
 | 20 | Config survives rotation? | Assume yes → makes the end-of-recovery cleanup checklist REQUIRED. |
 | 21 | Express presets | Owned by ottie's persona research. |
-| 22 | Mixed-method OR-groups | ⚠️ **Downgraded to OPEN.** Builder compiles to expanded paths meanwhile. Ask kit team re T10 threshold field. |
+| 22 | Mixed-method OR-groups | **Decided — assumed valid** (same as guardian OR case, PR #2 review). Encoding confirmation with kit team (T10). |
 | 23 | Guardian gas (E2) | Needs sponsorship; one of E2's three blockers. |
 | 24 | Multichain | Out of scope v1. |
-| 25 | Fast-track onboarding | Interstitial + password + key + seed backup. Corrected copy (address never changes). |
+| 25 | Fast-track onboarding | Warning screen + password + key + seed backup. Corrected copy (address never changes). |
 | 26 | Express wizard shape | Guided, short, inventory step; draft/resume; alerts opt-in. |
-| 27 | Verify-access | Mandatory for identity methods; guardians best-effort (reaffirmed). Mutual guardian approval = under consideration. |
+| 27 | Verify-access | Mandatory for identity methods; guardians optional, open. Mutual guardian approval = under consideration. |
 | 28 | Setup gas / batching | User pays if funded, else paymaster. Batching partially answered (thread T7: one batched UserOp — conceded, unwritten). |
-| 29 | Config visibility | Structure readable, values hidden; + password-decrypt case for values. |
+| 29 | Config visibility | Structure readable; value visibility OPEN (guardian addresses natively public today); password-decrypt case stays. |
 | 30 | R9 orthogonality gate | **Not now** — invariants/tech design under rework; violations allowed; revisit later. |
 | 31 | Guardian mutual approval | Best-effort stands; mutual approval noted as a considered path. |
 | 32 | Management flows | Mapped → Flow G. |
@@ -463,9 +479,10 @@ Notes:
 |---|---|---|
 | **Funding & execution**: who pays and who executes `initiate/executeRecovery` (bypass 4337; backend-zero = no relayer) | Flow D entirely; Decision 19 | Q7/19 |
 | ZK Email mechanics (user action; client vs hosted prover) | ZK Email sub-flows + verify-access | Q16 |
-| Mixed-type OR-group encoding; T10 policy `threshold` field | Builder + preset encoding | Q22 |
+| Confirm the encoding for mixed-method OR-groups (assumed valid; T10 `threshold` field) | Builder + preset encoding | Q22 |
+| ZK Email `accountCode` derivation per account (R10 unlinkability requirement) | Multi-account apply | — |
 | Exact guardian signed payload (nonce display; add `policyId`?; expiry — define or confirm none) | Flow E1 page | — |
-| Policy visibility: structure-public/values-hidden + password-encrypted values | Flow D entry + path display | Q29 |
+| Policy value visibility (guardian addresses are natively public today — can values be hidden at all?) + password-encrypted values case | Flow D entry + path display | Q29 |
 | R5 conflict (atomic vs incremental); E2 needs an approval function + indexing | Flow E2 | — |
 | Setup batching: write T7's one-UserOp answer into the spec | Wizard step 6 | Q28 |
 | Config survival after rotation (+ `onUninstall` nonce-reset issue) | Flow D end state | Q20 |
