@@ -42,19 +42,21 @@ flowchart TD
 
     D1 --> G[Dashboard]
     D2 --> G
+
+    click E href "#flow-a1--fast-track-onboarding-recovery-focused"
 ```
 
 ### Flow A1 — Fast-track onboarding (recovery-focused)
 
 ```mermaid
 flowchart TD
-    A["'Recover an account' clicked"] --> S["Anti-scam interstitial:
-    'No support agent will ever
-    ask you to do this.'"]
+    A["'Recover an account' clicked"] --> S["Anti-scam interstitial:<br/>'No support agent will ever<br/>ask you to do this.'"]
     S --> B[Set extension password]
     B --> C["New key generated — recovery-focused copy"]
     C --> D["Seed backup ceremony (kept, short)"]
     D --> E[→ Flow D]
+
+    click E href "#flow-d--recover-an-account"
 ```
 
 Decisions:
@@ -70,18 +72,16 @@ Decisions:
 
 ```mermaid
 flowchart TD
-    A[Account exists / dashboard] --> B{"Account has recovery
-    paths set up?"}
+    A[Account exists / dashboard] --> B{"Account has recovery<br/>paths set up?"}
     B -- Yes --> C[End. No action.]
-    B -- No --> D["Modal: 'You have no recovery path
-    set up yet. Protect your account.'
-    + honesty note (below)"]
+    B -- No --> D["Modal: 'You have no recovery path<br/>set up yet. Protect your account.'<br/>+ honesty note (below)"]
     D -->|Set up recovery| G[Settings › Account recovery → Flow C]
     D -->|Dismiss| F[Shows again next open]
     F --> A
-    D -->|☑ Don't remind me again| H["Passive 'unprotected' shield badge
-    (persistent, silent)"]
+    D -->|☑ Don't remind me again| H["Passive 'unprotected' shield badge<br/>(persistent, silent)"]
     H -. click .-> G
+
+    click G href "#flow-c--recovery-setup"
 ```
 
 Decisions:
@@ -135,28 +135,14 @@ period each, all starting in "needs setup" state with deep-links into enrollment
 
 ```mermaid
 flowchart TD
-    A[Express start] --> B["1 · How recovery works —
-    one screen, three bullets"]
-    B --> C["2 · Inventory: what do you have?
-    ☐ another device (passkey-capable)
-    ☐ trusted contacts with wallets
-    ☐ long-lived email
-    ☐ Aadhaar ID (last, badged)"]
-    C --> D["3 · Recommended preset shown as
-    recovery-path cards
-    (presets from ottie's persona research)"]
-    D --> E["4 · Enroll each method:
-    short explainer + 'Learn more' +
-    mandatory access test (local, no chain)"]
-    E --> F["5 · Waiting period — 48h default,
-    changeable. Guardrails: minimum floor,
-    dominated-path warning."]
-    F --> G["6 · Review → submit config
-    (batched: one confirmation — see Q28 note)"]
-    G --> H["7 · Recovery Card download
-    + enable alerts opt-in"]
-    H --> I["8 · Offer: apply to other accounts
-    (never by default; see R10 constraints)"]
+    A[Express start] --> B["1 · How recovery works —<br/>one screen, three bullets"]
+    B --> C["2 · Inventory: what do you have?<br/>☐ another device (passkey-capable)<br/>☐ trusted contacts with wallets<br/>☐ long-lived email<br/>☐ Aadhaar ID (last, badged)"]
+    C --> D["3 · Recommended preset shown as<br/>recovery-path cards<br/>(presets from ottie's persona research)"]
+    D --> E["4 · Enroll each method:<br/>short explainer + 'Learn more' +<br/>mandatory access test (local, no chain)"]
+    E --> F["5 · Waiting period — 48h default,<br/>changeable. Guardrails: minimum floor,<br/>dominated-path warning."]
+    F --> G["6 · Review → submit config<br/>(batched: one confirmation — see Q28 note)"]
+    G --> H["7 · Recovery Card download<br/>+ enable alerts opt-in"]
+    H --> I["8 · Offer: apply to other accounts<br/>(never by default; see R10 constraints)"]
 ```
 
 Wizard state rules:
@@ -243,34 +229,19 @@ flowchart TD
     B -->|Paste address| C["Lookup — loading state"]
     B -->|ENS name| C
     B -->|Same-install list 🔒| C
-    C -->|Lookup fails| C1["Specific error per cause — invalid
-    address / ENS not found / network error —
-    + retry + 'check your Recovery Card' hint"]
+    C -->|Lookup fails| C1["Specific error per cause — invalid<br/>address / ENS not found / network error —<br/>+ retry + 'check your Recovery Card' hint"]
     C1 --> B
-    C -->|Found| CC["Confirm identity card:
-    address + blockie + ENS +
-    recovery-path summary.
-    'This is my account'"]
+    C -->|Found| CC["Confirm identity card:<br/>address + blockie + ENS +<br/>recovery-path summary.<br/>'This is my account'"]
     CC -->|Not mine| B
     CC --> E{"Account has recovery paths?"}
-    E -- No --> X["'This account has no recovery set up,
-    so it cannot be recovered.'
-    Primary action: try another address"]
+    E -- No --> X["'This account has no recovery set up,<br/>so it cannot be recovered.'<br/>Primary action: try another address"]
     X --> B
-    E -- Yes --> V["Paths shown as STRUCTURE only.
-    Optional: enter recovery password
-    to decrypt and see real values
-    (e.g. guardian identities)"]
-    V --> F["Pick the recovery path
-    you can satisfy"]
-    F --> G["Recovery checklist — persisted locally,
-    resumable via a pending card
-    on the home surface"]
+    E -- Yes --> V["Paths shown as STRUCTURE only.<br/>Optional: enter recovery password<br/>to decrypt and see real values<br/>(e.g. guardian identities)"]
+    V --> F["Pick the recovery path<br/>you can satisfy"]
+    F --> G["Recovery checklist — persisted locally,<br/>resumable via a pending card<br/>on the home surface"]
     G --> G1[Get guardian approvals → Flow E1]
-    G --> G2["Confirm with your email
-    (mechanics TBD — Q16)"]
-    G --> G3["Confirm with your passkey —
-    platform sync + hybrid QR to phone"]
+    G --> G2["Confirm with your email<br/>(mechanics TBD — Q16)"]
+    G --> G3["Confirm with your passkey —<br/>platform sync + hybrid QR to phone"]
     G --> G4[Confirm with Aadhaar]
     G -->|Cannot complete this path| F
     G1 --> H{"Path satisfied?"}
@@ -278,22 +249,16 @@ flowchart TD
     G3 --> H
     G4 --> H
     H -- No --> G
-    H -- Yes --> I["START RECOVERY — one atomic tx
-    (funding/executor: see blocker note)"]
-    I -->|Submit fails| I2["Plain-language error + retry
-    + self-pay-gas fallback"]
+    H -- Yes --> I["START RECOVERY — one atomic tx<br/>(funding/executor: see blocker note)"]
+    I -->|Submit fails| I2["Plain-language error + retry<br/>+ self-pay-gas fallback"]
     I2 --> G
-    I -->|Submitted| J["Waiting period countdown —
-    persistent, resumable"]
-    J -->|Owner cancels| XC["Terminal: 'The account owner
-    cancelled this recovery.'
-    Explanation + start again"]
-    J -->|Ends| K["User is NOTIFIED + auto-execute
-    (executor: OPEN)"]
-    K --> L["Key rotated → account active.
-    REQUIRED cleanup checklist:
-    methods tied to the lost device
-    are flagged for removal (→ Flow G)"]
+    I -->|Submitted| J["Waiting period countdown —<br/>persistent, resumable"]
+    J -->|Owner cancels| XC["Terminal: 'The account owner<br/>cancelled this recovery.'<br/>Explanation + start again"]
+    J -->|Ends| K["User is NOTIFIED + auto-execute<br/>(executor: OPEN)"]
+    K --> L["Key rotated → account active.<br/>REQUIRED cleanup checklist:<br/>methods tied to the lost device<br/>are flagged for removal (→ Flow G)"]
+
+    click G1 href "#flow-e1--sync-off-chain-signature-passing--default"
+    click L href "#flow-g--recovery-paths--method-management"
 ```
 
 Decisions:
@@ -319,13 +284,10 @@ flowchart TD
     C --> E{"Owner action"}
     D --> E
     E -->|It's me| F[Dismiss banner]
-    E -->|NOT me| G["Cancel recovery —
-    owner-signed transaction"]
-    G --> T["Triage screen (required):
-    which path and which methods were
-    satisfied → replace them (→ Flow G)
-    → consider moving funds if the
-    compromised method is unclear"]
+    E -->|NOT me| G["Cancel recovery —<br/>owner-signed transaction"]
+    G --> T["Triage screen (required):<br/>which path and which methods were<br/>satisfied → replace them (→ Flow G)<br/>→ consider moving funds if the<br/>compromised method is unclear"]
+
+    click T href "#flow-g--recovery-paths--method-management"
 ```
 
 Decisions:
@@ -345,36 +307,15 @@ Either way the recovery **trigger stays with one person** (the recoverer).
 
 ```mermaid
 flowchart TD
-    A["Recoverer shares link/QR
-    with the guardian (any channel)"] --> B["Guardian opens the CANONICAL
-    IPFS/IPNS page — the URL they
-    already know from their
-    guardian card / Recovery Card"]
-    B --> C["Page shows the EXACT signed payload:
-    account, new owner, recovery nonce
-    (read on-chain).
-    NO expiry shown — none is enforced
-    on-chain today."]
-    C --> W["BLOCKING step: 'Contact the owner
-    on a channel you already had.
-    Have them read the new-owner
-    value to you.'"]
-    W -->|Something is off| DE["Decline — and tell the owner
-    about this request anyway"]
-    W -->|Confirmed| D["Connect wallet —
-    injected AND WalletConnect.
-    OFFLINE path: copy the raw payload,
-    sign air-gapped, paste the
-    signature back"]
-    D --> E["Approve in the wallet prompt.
-    Page copy: 'trust the values in your
-    WALLET prompt, not this page'"]
-    E --> F["Single-line signature blob,
-    pre-wrapped in backticks"]
+    A["Recoverer shares link/QR<br/>with the guardian (any channel)"] --> B["Guardian opens the CANONICAL<br/>IPFS/IPNS page — the URL they<br/>already know from their<br/>guardian card / Recovery Card"]
+    B --> C["Page shows the EXACT signed payload:<br/>account, new owner, recovery nonce<br/>(read on-chain).<br/>NO expiry shown — none is enforced<br/>on-chain today."]
+    C --> W["BLOCKING step: 'Contact the owner<br/>on a channel you already had.<br/>Have them read the new-owner<br/>value to you.'"]
+    W -->|Something is off| DE["Decline — and tell the owner<br/>about this request anyway"]
+    W -->|Confirmed| D["Connect wallet —<br/>injected AND WalletConnect.<br/>OFFLINE path: copy the raw payload,<br/>sign air-gapped, paste the<br/>signature back"]
+    D --> E["Approve in the wallet prompt.<br/>Page copy: 'trust the values in your<br/>WALLET prompt, not this page'"]
+    E --> F["Single-line signature blob,<br/>pre-wrapped in backticks"]
     F --> G[Guardian sends it to the recoverer]
-    G --> H["Recoverer pastes it — validated
-    on paste: malformed / wrong recovery /
-    wrong signer errors surface immediately"]
+    G --> H["Recoverer pastes it — validated<br/>on paste: malformed / wrong recovery /<br/>wrong signer errors surface immediately"]
 ```
 
 Security rationale (why these steps exist):
@@ -392,12 +333,10 @@ Security rationale (why these steps exist):
 ```mermaid
 flowchart TD
     A[Recoverer shares link/QR] --> B[Guardian opens the same page]
-    B --> C["Same payload display + blocking
-    out-of-band step as E1"]
+    B --> C["Same payload display + blocking<br/>out-of-band step as E1"]
     C --> D[Guardian connects wallet]
     D --> E["Guardian SUBMITS approval on-chain"]
-    E --> F["Recoverer's checklist picks it up —
-    no message back needed"]
+    E --> F["Recoverer's checklist picks it up —<br/>no message back needed"]
     F --> G[Recoverer starts the recovery — one tx]
 ```
 
@@ -413,24 +352,20 @@ Same machinery as the verify-access tests, run over time.
 
 ```mermaid
 flowchart TD
-    A["Trigger: opening the Account recovery tab
-    + periodic background check"] --> B[Run per enrolled method]
-    B --> C["Passkey: sign a test challenge
-    (no transaction)"]
-    B --> D["ZK Email: test proof against
-    live DKIM registry"]
-    B --> E["Guardians: no on-chain check —
-    prompt periodic self-audit /
-    ping guardian reachability"]
+    A["Trigger: opening the Account recovery tab<br/>+ periodic background check"] --> B[Run per enrolled method]
+    B --> C["Passkey: sign a test challenge<br/>(no transaction)"]
+    B --> D["ZK Email: test proof against<br/>live DKIM registry"]
+    B --> E["Guardians: no on-chain check —<br/>prompt periodic self-audit /<br/>ping guardian reachability"]
     B --> F["Aadhaar: proof against current UIDAI key"]
     C --> G{"All pass?"}
     D --> G
     E -. best effort .-> G
     F --> G
     G -- Yes --> H["Meter: 'Recovery ready'"]
-    G -- No --> I["Alert + per-method fix path
-    (re-enroll, replace guardian, …)"]
+    G -- No --> I["Alert + per-method fix path<br/>(re-enroll, replace guardian, …)"]
     I --> J[→ Flow G edit]
+
+    click J href "#flow-g--recovery-paths--method-management"
 ```
 
 Decisions:
@@ -448,10 +383,7 @@ configuration).
 
 ```mermaid
 flowchart TD
-    A["Settings › Account recovery — overview:
-    meter + recovery paths + enrolled methods
-    + 'Recover an account' entry
-    + pending-recovery notice when active"] --> B[Add recovery path / method → Flow C]
+    A["Settings › Account recovery — overview:<br/>meter + recovery paths + enrolled methods<br/>+ 'Recover an account' entry<br/>+ pending-recovery notice when active"] --> B[Add recovery path / method → Flow C]
     A --> C[Edit recovery path]
     A --> D[Remove recovery path]
     A --> E[Remove method]
@@ -460,19 +392,18 @@ flowchart TD
     C1 --> C2[Save → owner-signed tx]
 
     D --> D1{"Last remaining path?"}
-    D1 -- Yes --> D2["Explicit warning: account becomes
-    UNPROTECTED. Meter drops to zero.
-    Type-to-confirm or equivalent."]
+    D1 -- Yes --> D2["Explicit warning: account becomes<br/>UNPROTECTED. Meter drops to zero.<br/>Type-to-confirm or equivalent."]
     D1 -- No --> D3[Simple confirm]
     D2 --> D4[Remove → owner-signed tx]
     D3 --> D4
 
     E --> E1{"Method used by any path?"}
-    E1 -- Yes --> E2["Blocked by default: list the
-    paths that use it"]
+    E1 -- Yes --> E2["Blocked by default: list the<br/>paths that use it"]
     E2 -->|Edit those first| C
     E2 -->|Cascade-remove after warning| E3
     E1 -- No --> E3[Remove → owner-signed tx]
+
+    click B href "#flow-c--recovery-setup"
 ```
 
 Notes:
