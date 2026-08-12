@@ -379,6 +379,13 @@ Decisions:
 **E1 (sync) is the default for v1.** E2 (async) stays mapped as a future improvement.
 Either way the recovery **trigger stays with one person** (the recoverer).
 
+**Scope note (decided, Notion review):** the guardian approval page is an
+**extension-specific implementation**, not part of the kit/SDK — the product is the
+SDK; each wallet implements its own guardian-approval surface. Who hosts and
+maintains the page (IPFS/IPNS vs. an extension-relative MVP path that assumes the
+guardian uses the same wallet) is an open question, added to the invariant questions
+to share with the EF (tech-dependencies table).
+
 ### Flow E1 — Sync (off-chain signature passing) — DEFAULT
 
 ```mermaid
@@ -556,3 +563,4 @@ Notes:
 | Config survival after rotation (+ `onUninstall` nonce-reset issue) | Flow D end state | Q20 |
 | Same-install account history lookup, gated | Flow D identify step | Q8 |
 | Enforced minimum waiting period on-chain (zero-second currently legal) | Builder guardrails | — |
+| Guardian approval-page hosting: who maintains it (IPFS/IPNS vs. extension-relative MVP)? Extension-specific implementation — add to the invariant questions shared with the EF | Flow E1 | — |
