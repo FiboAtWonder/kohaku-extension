@@ -232,6 +232,10 @@ can be hidden at all sits with the kit team. Case to design for either way: valu
 encrypted with a **user password** — the recoverer enters it to decrypt and see the
 real values (e.g. which guardians to contact).
 
+The flow is chaptered into its three phases so each diagram stays readable.
+
+**Chapter 1 — Identify the account**
+
 ```mermaid
 flowchart TD
     A[Entry: Recover an account] --> B{"Identify the lost account"}
@@ -247,27 +251,41 @@ flowchart TD
     X --> B
     E -- Yes --> V["Paths shown. Structure is always<br/>readable; value visibility is OPEN<br/>(see config-visibility note).<br/>Password-decrypt case: enter the<br/>recovery password to see real values"]
     V --> F["Pick the recovery path<br/>you can satisfy"]
-    F --> G["Recovery checklist — persisted locally,<br/>resumable via a pending card<br/>on the home surface"]
+    F --> NEXT["→ Chapter 2: collect the approvals"]
+```
+
+**Chapter 2 — Collect the approvals**
+
+```mermaid
+flowchart TD
+    F["Recovery path chosen (chapter 1)"] --> G["Recovery checklist — persisted locally,<br/>resumable via a pending card<br/>on the home surface"]
     G --> G1[Get guardian approvals → Flow E1]
     G --> G2["Confirm with your email<br/>(mechanics TBD — Q16)"]
     G --> G3["Confirm with your passkey —<br/>platform sync + hybrid QR to phone"]
     G --> G4[Confirm with Aadhaar]
-    G -->|Cannot complete this path| F
+    G -->|Cannot complete this path| SW["→ back to path choice (chapter 1)"]
     G1 --> H{"Path satisfied?"}
     G2 --> H
     G3 --> H
     G4 --> H
     H -- No --> G
-    H -- Yes --> CF["Confirmation screen: the account,<br/>the new key that takes control,<br/>the chosen path, the waiting period.<br/>'The current owner can cancel during<br/>the waiting period.' Explicit consent."]
-    CF --> I["START RECOVERY — one atomic tx<br/>(funding/executor: see blocker note)"]
+    H -- Yes --> NEXT["→ Chapter 3: submit, wait, finish"]
+
+    click G1 href "#flow-e1--sync-off-chain-signature-passing--default"
+```
+
+**Chapter 3 — Submit, wait, finish**
+
+```mermaid
+flowchart TD
+    CF["Confirmation screen: the account,<br/>the new key that takes control,<br/>the chosen path, the waiting period.<br/>'The current owner can cancel during<br/>the waiting period.' Explicit consent."] --> I["START RECOVERY — one atomic tx<br/>(funding/executor: see blocker note)"]
     I -->|Submit fails| I2["Plain-language error + retry<br/>+ self-pay-gas fallback"]
-    I2 --> G
+    I2 --> BK["→ back to the checklist (chapter 2)"]
     I -->|Submitted| J["Waiting period countdown —<br/>persistent, resumable"]
     J -->|Owner cancels| XC["Terminal: 'The account owner<br/>cancelled this recovery.'<br/>Explanation + start again"]
     J -->|Ends| K["User is NOTIFIED + auto-execute<br/>(executor: OPEN)"]
     K --> L["Key rotated → account active.<br/>REQUIRED cleanup checklist:<br/>methods tied to the lost device<br/>are flagged for removal (→ Flow G)"]
 
-    click G1 href "#flow-e1--sync-off-chain-signature-passing--default"
     click L href "#flow-g--recovery-paths--method-management"
 ```
 
