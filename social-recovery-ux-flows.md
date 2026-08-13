@@ -93,7 +93,9 @@ Decisions:
   pops up and never blocks anything. Clicking it opens setup (Flow C).
 - ✅ Honesty note, concrete copy: "Recovery protects you if you **lose** your key.
   It cannot stop someone who already has it. And if your only method is a passkey on
-  this device, losing the device also removes this recovery path."
+  this device, losing the device also removes this recovery path." The passkey
+  sentence adapts to the detected type (synced passkeys depend on the platform
+  account instead of the device).
 
 ---
 
@@ -105,6 +107,9 @@ Building blocks:
 - **A path can be a lone OR-group** (no required rows): Alice's guardians-only
   `3-of-5` is one path with the threshold inside the guardian method. The builder
   must support this shape explicitly.
+- **A guardian group can be a single person** (1-of-1): Carl's case is
+  `passkey AND [Sara]`. The builder and the wizard support one-guardian setups;
+  no minimum guardian count.
 - **Presets can be reduced to a single method** (Sam's floor). The builder must
   support one-method paths; the honesty note (Flow B copy) doubles as their warning.
 - **Mixed-method OR-groups** (`passkey AND [zk_email OR aadhaar]`): **decided —
@@ -150,6 +155,7 @@ Inventory items (step 2):
 - ☐ trusted contacts with wallets
 - ☐ long-lived email
 - ☐ Aadhaar ID (last, badged)
+- ☐ keys you keep yourself — paper or hardware (routes to guardian-address entry)
 
 The recommended presets in step 3 come from the
 [persona research (Notion)](https://app.notion.com/p/36d9a4c092c780578f9dde36e69dfff5).
@@ -193,6 +199,13 @@ The address alone is public information anyway; the configuration is the secret.
 
 Other decisions:
 - ✅ All 4 methods in v1. Aadhaar for everyone, listed last, badged.
+- ✅ Two-method inventories (e.g. passkey + email only) get **two single-method
+  paths** recommended, not an AND pair — lockout is the larger risk at that level
+  (Diana's shape). The waiting period stays the flat 48h default.
+- ✅ Passkey enrollment detects **synced vs device-bound** (WebAuthn
+  backup-eligibility flag). Warnings and floor copy adapt to the type: device-bound
+  → "losing the device removes this path"; synced → "this path depends on your
+  Apple/Google account".
 - ✅ Waiting period: 48h flat default, **confirmed to stand also for single-method
   paths**. Changeable per path. Builder guardrails: a minimum floor (zero-second
   waiting periods must not be configurable) and a **dominated-path warning**.
@@ -313,7 +326,8 @@ Recovery does not require a fresh install. A logged-in user starts it from the
 
 ```mermaid
 flowchart TD
-    A["Settings › Account recovery:<br/>'Recover an account' (logged in)"] --> B{"Wallet has multiple accounts?"}
+    A["Settings › Account recovery:<br/>'Recover an account' (logged in)"] --> W["Condensed anti-scam warning:<br/>'No support agent will ever ask<br/>you to do this' + acknowledgment<br/>'Nobody asked me to do this'"]
+    W --> B{"Wallet has multiple accounts?"}
     B -- Yes --> C["Choose the NEW OWNER:<br/>which of your accounts<br/>receives control"]
     B -- No --> D["Single account —<br/>the step is skipped automatically"]
     C --> E["→ Flow D chapter 1: identify the lost account"]
@@ -324,6 +338,9 @@ Decisions:
 - ✅ Logged-in entry exists next to the fresh-install entry.
 - ✅ Multiple accounts → the user picks which account becomes the new owner.
   A single account skips the step.
+- ✅ The anti-scam warning also gates this entry (condensed): a support-scam script
+  ("open Settings, click Recover") must hit the same warning as the fresh-install
+  path.
 
 ### Interactive claim collection (refines Flow D chapter 2)
 
@@ -545,6 +562,11 @@ Notes:
 | 33 | User-facing name | "Account recovery". |
 | 34 | Logged-in recovery entry | Settings button. Multiple accounts → choose the new owner; single account → step skipped. |
 | 35 | Claim handling in the checklist | Per-method verify button (explain + submit in place). Claims survive path switching; wiped on flow exit. |
+| 36 | Single-guardian setups | Supported: one guardian, 1-of-1 groups. No minimum guardian count (wireframe review). |
+| 37 | Two-method inventories | Wizard recommends two single-method paths, not an AND pair. 48h default stays. |
+| 38 | Passkey type | Detect synced vs device-bound (WebAuthn backup-eligibility flag); warnings adapt. |
+| 39 | Self-held keys inventory | "Keys you keep yourself — paper or hardware" inventory item routes to guardian entry. |
+| 40 | Logged-in entry warning | Condensed anti-scam warning + acknowledgment gates the Settings entry too. |
 
 ---
 
