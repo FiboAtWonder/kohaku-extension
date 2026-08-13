@@ -104,18 +104,25 @@ Decisions:
 Building blocks:
 - **Methods:** passkey, guardians (people's wallets, EOA or SCW), ZK Email, Anon Aadhaar.
 - **Recovery paths:** OR of AND clauses. Each path has its own waiting period.
-- **A path can be a lone OR-group** (no required rows): Alice's guardians-only
-  `3-of-5` is one path with the threshold inside the guardian method. The builder
-  must support this shape explicitly.
-- **A guardian group can be a single person** (1-of-1): Carl's case is
-  `passkey AND [Sara]`. The builder and the wizard support one-guardian setups;
-  no minimum guardian count.
+- **ANY-of groups are generic (decided 2026-08-13):** a group's members can be ANY
+  method instances — guardians, passkeys, ZK Email, Aadhaar — mixed freely.
+  `passkey AND [Ana OR zk_email]` is one path. Guardians are not special:
+  "3 of 5 guardians" is simply a group whose five members happen to be guardians.
+  No guardian-specific threshold concept exists in the UX.
+- **Every group carries an M-of-N threshold** ("Require 2 ▾ of: passkey, Ana,
+  email"), not only 1-of-N.
+- **A path is a free mix** of required method rows and ANY-of groups, all combined
+  with AND — including a lone group (Alice: one group, any 3 of its 5 guardian
+  members) and a single method (Sam's floor). A group can have a single member
+  (Carl: `passkey AND [Sara]`, a 1-of-1 group). Waiting periods stay per-path,
+  never per-group.
 - **Presets can be reduced to a single method** (Sam's floor). The builder must
   support one-method paths; the honesty note (Flow B copy) doubles as their warning.
-- **Mixed-method OR-groups** (`passkey AND [zk_email OR aadhaar]`): **decided —
-  valid** (assumed). Works the same as the guardian case
-  `passkey AND [Guardian A OR Guardian B]`. The exact contract encoding sits with
-  the kit team (tech-dependencies table).
+- **Recoverer side:** the recovery checklist renders a group as "any M of N" — a
+  group header with progress ("1 of 2 done") — and the path completes when every
+  required row and every group threshold is met.
+- Contract encoding for generic M-of-N groups sits with the kit team
+  (tech-dependencies table; T10 `threshold` field).
 
 ### Three setup modes
 
@@ -130,7 +137,7 @@ actions on top: **"Guide me"** (Express) and **"Customize"** (Advanced).
 
 **Starter presets (updated): three recovery paths shown by default**, 48h waiting
 period each, all starting in "needs setup" state with deep-links into enrollment:
-1. `passkey AND [guardians threshold group]` — your device + your people.
+1. `passkey AND [any 1 of your people]` — your device + your people.
 2. `passkey AND zk_email` — your device + your email. (Note: violates R9 when the
    passkey is Google-synced and the email is Gmail — accepted for now.)
 3. `guardians-only, M-of-N` — people only, no device or platform dependency
@@ -216,8 +223,9 @@ Other decisions:
   suggests giving the stronger path a shorter waiting period, or removing one of
   the two.
 - ✅ Express presets and their contents come from **ottie's persona research**.
-- Advanced-builder helper (nice-to-have, from review): an "M-of-N across methods"
-  macro that auto-expands pair clauses.
+- ✅ Wizard "any M of your N methods" recommendations generate **one path with one
+  M-of-N group** (single waiting period) — not pairwise path expansions. Different
+  waiting periods per combination remain possible as separate paths in Advanced.
 
 ### UI pattern references (solved problem)
 
@@ -548,7 +556,7 @@ Notes:
 | 19 | After waiting period | Notify + auto-execute — intended UX; **executor unresolved** (see #7). |
 | 20 | Config survives rotation? | Assume yes → makes the end-of-recovery cleanup checklist REQUIRED. |
 | 21 | Express presets | Owned by ottie's persona research. |
-| 22 | Mixed-method OR-groups | **Decided — assumed valid** (same as guardian OR case, PR #2 review). Encoding confirmation with kit team (T10). |
+| 22 | Mixed-method OR-groups | **Decided — assumed valid** (PR #2 review); generalized by #41. Encoding confirmation with kit team (T10). |
 | 23 | Guardian gas (E2) | Needs sponsorship; one of E2's three blockers. |
 | 24 | Multichain | Out of scope v1. |
 | 25 | Fast-track onboarding | Warning screen + password + key + seed backup. Corrected copy (address never changes). |
@@ -567,6 +575,7 @@ Notes:
 | 38 | Passkey type | Detect synced vs device-bound (WebAuthn backup-eligibility flag); warnings adapt. |
 | 39 | Self-held keys inventory | "Keys you keep yourself — paper or hardware" inventory item routes to guardian entry. |
 | 40 | Logged-in entry warning | Condensed anti-scam warning + acknowledgment gates the Settings entry too. |
+| 41 | ANY-of groups generalized | M-of-N threshold over any mixed members; guardians are ordinary members (no special threshold); free mix of required rows + groups per path; wizard "any M of N" → one path, one group. |
 
 ---
 
@@ -576,7 +585,7 @@ Notes:
 |---|---|---|
 | **Funding & execution**: who pays and who executes `initiate/executeRecovery` (bypass 4337; backend-zero = no relayer) | Flow D entirely; Decision 19 | Q7/19 |
 | ZK Email mechanics (user action; client vs hosted prover) | ZK Email sub-flows + verify-access | Q16 |
-| Confirm the encoding for mixed-method OR-groups (assumed valid; T10 `threshold` field) | Builder + preset encoding | Q22 |
+| Confirm the encoding for generic ANY-of groups — mixed member types, M-of-N thresholds (T10 `threshold` field) | Builder + presets + recovery checklist | Q22/41 |
 | ZK Email `accountCode` derivation per account (R10 unlinkability requirement) | Multi-account apply | — |
 | Exact guardian signed payload (nonce display; add `policyId`?; expiry — define or confirm none) | Flow E1 page | — |
 | Policy value visibility (guardian addresses are natively public today — can values be hidden at all?) + password-encrypted values case | Flow D entry + path display | Q29 |
