@@ -191,8 +191,9 @@ Contents — **only**: the account address, a short "how to start recovery" guid
 the canonical approval-page URL. Plus the line "this card alone cannot move funds."
 
 Explicitly **kept off the card** (decided, with rationale): the method inventory,
-guardian names or contacts, the enrolled email address, thresholds, and waiting-period
-values. Reason: the card is designed to be stored insecurely — that is its job. A
+guardian addresses, the enrolled email address, thresholds, and waiting-period
+values. (Guardian *names* do not exist anywhere — decision 43: a guardian is an
+address, shown as blockie + address or ENS; the wallet stores no contact labels.) Reason: the card is designed to be stored insecurely — that is its job. A
 stolen or copied card must not become a **map of exactly which methods to phish**.
 The address alone is public information anyway; the configuration is the secret.
 
@@ -281,7 +282,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    F["Recovery path chosen (chapter 1)"] --> G["Recovery checklist — persisted locally,<br/>resumable via a pending card<br/>on the home surface"]
+    F["Recovery path chosen (chapter 1)"] --> G["Recovery checklist — persisted locally,<br/>resumable via a dedicated<br/>'Recovery in progress' screen<br/>(entry: home-surface pending card)"]
     G --> G1[Get guardian approvals → Flow E1]
     G --> G2["Confirm with your email<br/>(mechanics TBD — Q16)"]
     G --> G3["Confirm with your passkey —<br/>platform sync + hybrid QR to phone"]
@@ -318,12 +319,17 @@ Decisions:
 - ✅ Confirm-identity card before any proof collection (restored from the demo).
 - ✅ Checklist has an explicit "switch to a different recovery path" exit; reusable
   approvals are preserved.
+- ✅ Resuming an unfinished recovery lands on a dedicated **"Recovery in progress"**
+  screen — the account being recovered, per-row progress, resume and abandon actions.
+  The home-surface pending card is only the entry point (decision 44).
 - ✅ Submit failures get plain-language errors, retry, and a self-pay-gas fallback.
 - ✅ The countdown has a **cancelled** terminal state — the recoverer never waits
   into silence.
 - ✅ End of recovery = **required cleanup checklist**, not a soft nudge: the surviving
   config still contains the lost device's methods; whoever holds that device can
-  start a new recovery. Flag and walk through their removal.
+  start a new recovery. Flag and walk through their removal. Deferring is allowed,
+  but the deferral surfaces as a flagged banner on the management overview until
+  resolved (decision 46) — it is a state, not a separate screen.
 
 ## Flow D additions — logged-in entry & interactive claims
 
@@ -460,9 +466,11 @@ needs sponsorship; detection needs indexing that the backend-zero design removed
 
 ---
 
-## Flow F — Health checks (in scope)
+## Flow F — Health checks (optional capability)
 
-Same machinery as the verify-access tests, run over time.
+Same machinery as the verify-access tests, run over time. **Optional capability,
+not the v1 focus (decision 42)** — the flow stays mapped, but nothing else in this
+document depends on it shipping.
 
 ```mermaid
 flowchart TD
@@ -497,13 +505,13 @@ configuration).
 
 ```mermaid
 flowchart TD
-    A["Settings › Account recovery — overview:<br/>meter + recovery paths + enrolled methods<br/>+ 'Recover an account' entry<br/>+ pending-recovery notice when active"] --> B[Add recovery path / method → Flow C]
+    A["Settings › Account recovery — overview:<br/>status line + recovery paths ONLY<br/>+ 'Recover an account' entry<br/>+ pending-recovery notice when active<br/>(no methods section — decision 45)"] --> B[Add recovery path → Flow C]
     A --> C[Edit recovery path]
     A --> D[Remove recovery path]
-    A --> E[Remove method]
 
-    C --> C1[Builder opens with the path loaded]
-    C1 --> C2[Save → owner-signed tx]
+    C --> C1["Builder opens with the path loaded —<br/>members and methods are<br/>added/removed HERE"]
+    C1 --> E["Remove a member the path still needs"]
+    C1 --> C2["Review-changes diff →<br/>Save → owner-signed tx"]
 
     D --> D1{"Last remaining path?"}
     D1 -- Yes --> D2["Explicit warning: account becomes<br/>UNPROTECTED. Meter drops to zero.<br/>Type-to-confirm or equivalent."]
@@ -511,11 +519,9 @@ flowchart TD
     D2 --> D4[Remove → owner-signed tx]
     D3 --> D4
 
-    E --> E1{"Method used by any path?"}
-    E1 -- Yes --> E2["Blocked by default: list the<br/>paths that use it"]
-    E2 -->|Edit those first| C
-    E2 -->|Cascade-remove after warning| E3
-    E1 -- No --> E3[Remove → owner-signed tx]
+    E --> E2["Blocked: modal lists the paths<br/>that still need it"]
+    E2 -->|Lower the threshold /<br/>edit the other path first| C1
+    E2 -->|Cascade-remove after warning| C2
 
     click B href "#flow-c--recovery-setup"
 ```
@@ -528,6 +534,12 @@ Notes:
   post-cancel triage (Flow D2) both deep-link here as the fix path.
 - "Recover an account" is reachable from this overview too, not only from the
   fresh-install welcome.
+- Methods have no top-level list or "remove method" entry (decision 45): every
+  member/method change happens inside the path editor and ends in a review-changes
+  diff before one owner-signed transaction. The method-in-use block fires from the
+  editor, not from the overview.
+- A deferred post-recovery cleanup (decision 46) surfaces here as a flagged banner
+  ("a method from your last recovery is still flagged — replace it") until resolved.
 
 ---
 
@@ -548,7 +560,7 @@ Notes:
 | 11 | Pending-recovery alert | Banner + notification + alerts opt-in at setup. Polling caveat accepted. |
 | 12 | Waiting period default | 48h flat, changeable. **Confirmed also for single-method paths.** Guardrails: minimum floor + dominated-path warning. |
 | 13 | Multi-account | Offer "apply same setup" with R10 constraints (fresh accountCode auto; linkability warnings). Never by default. |
-| 14 | Health checks | In scope → Flow F. Meter = "Recovery ready". |
+| 14 | Health checks | In scope → Flow F. Meter = "Recovery ready". **Downgraded to optional capability by #42.** |
 | 15 | Chain scope | One chain per policy. Ethereum focus, Sepolia demo. Multichain out of scope v1. |
 | 16 | ZK Email mechanics | **Open** — blocks that method's sub-flows. |
 | 17 | Passkey on new device | Platform sync + WebAuthn hybrid. |
@@ -576,6 +588,11 @@ Notes:
 | 39 | Self-held keys inventory | "Keys you keep yourself — paper or hardware" inventory item routes to guardian entry. |
 | 40 | Logged-in entry warning | Condensed anti-scam warning + acknowledgment gates the Settings entry too. |
 | 41 | ANY-of groups generalized | M-of-N threshold over any mixed members; guardians are ordinary members (no special threshold); free mix of required rows + groups per path; wizard "any M of N" → one path, one group. |
+| 42 | Health checks priority | Optional capability, not the v1 focus (wireframe feedback). Flow F stays mapped; the meter is a status line, not a headline feature. Downgrades #14. |
+| 43 | Guardian display | No guardian names anywhere: a guardian **is** an address. UI shows blockie + address (or ENS). The wallet stores no names or contact labels — nothing extra to leak. |
+| 44 | Recovery-in-progress screen | Resuming an unfinished recovery lands on a dedicated "Recovery in progress" screen (account, per-row progress, resume / abandon) — the home-surface pending card is only the entry point. |
+| 45 | Method management | Methods are managed **inside path editing** (edit path → review-changes diff → one owner-signed tx). The management overview lists paths only — no separate methods section or top-level "remove method". |
+| 46 | Cleanup deferral | Deferring the post-recovery cleanup is allowed; it surfaces as a flagged banner state on the management overview until resolved — not a separate screen. |
 
 ---
 
