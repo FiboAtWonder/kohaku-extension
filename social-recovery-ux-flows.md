@@ -152,7 +152,7 @@ flowchart TD
     C --> D["3 · Recommended preset shown as<br/>recovery-path cards<br/>(presets from ottie's persona research)"]
     D --> E["4 · Enroll each method:<br/>short explainer + 'Learn more' +<br/>mandatory access test (local, no chain)"]
     E --> F["5 · Waiting period — 48h default,<br/>changeable. Guardrails: minimum floor,<br/>dominated-path warning."]
-    F --> G["6 · Review → submit config<br/>(batched: one confirmation — see Q28 note)"]
+    F --> G["6 · Review → optional DRY RUN<br/>(local rehearsal, decision 47)<br/>→ submit config (batched:<br/>one confirmation — see Q28 note)"]
     G --> H["7 · Recovery Card download<br/>+ enable alerts opt-in"]
     H --> I["8 · Offer: apply to other accounts<br/>(never by default; see R10 constraints)"]
 ```
@@ -189,6 +189,8 @@ Mandatory for identity methods; a failing test blocks the save. Local only, no c
 
 Contents — **only**: the account address, a short "how to start recovery" guide, and
 the canonical approval-page URL. Plus the line "this card alone cannot move funds."
+Addition (decision 48): the card may carry an optional **recovery-password hint**,
+chosen by the user; the hint must not itself reveal the configuration.
 
 Explicitly **kept off the card** (decided, with rationale): the method inventory,
 guardian addresses, the enrolled email address, thresholds, and waiting-period
@@ -330,6 +332,10 @@ Decisions:
   start a new recovery. Flag and walk through their removal. Deferring is allowed,
   but the deferral surfaces as a flagged banner on the management overview until
   resolved (decision 46) — it is a state, not a separate screen.
+- ✅ Synced passkeys are flagged too (decision 50): while a lost device stays signed
+  in to the platform account, it can still use the synced passkey. The fix path says
+  so: revoke the device or the passkey from the platform / password manager, add a
+  fresh one first, then remove the flagged method.
 
 ## Flow D additions — logged-in entry & interactive claims
 
@@ -413,9 +419,10 @@ Either way the recovery **trigger stays with one person** (the recoverer).
 **Scope note (decided, Notion review):** the guardian approval page is an
 **extension-specific implementation**, not part of the kit/SDK — the product is the
 SDK; each wallet implements its own guardian-approval surface. Who hosts and
-maintains the page (IPFS/IPNS vs. an extension-relative MVP path that assumes the
-guardian uses the same wallet) is an open question, added to the invariant questions
-to share with the EF (tech-dependencies table).
+maintains the page — **decided (demo-review meeting, decision 51): the
+extension-relative path ships first; IPFS/IPNS is the later upgrade.** The
+relative-path MVP assumption (the guardian uses the same wallet) is accepted for
+the starting point.
 
 ### Flow E1 — Sync (off-chain signature passing) — DEFAULT
 
@@ -573,7 +580,7 @@ Notes:
 | 24 | Multichain | Out of scope v1. |
 | 25 | Fast-track onboarding | Warning screen + password + key + seed backup. Corrected copy (address never changes). |
 | 26 | Express wizard shape | Guided, short, inventory step; draft/resume; alerts opt-in. |
-| 27 | Verify-access | Mandatory for identity methods; guardians optional, open. Mutual guardian approval = under consideration. |
+| 27 | Verify-access | Mandatory for identity methods; guardians optional, open. Mutual guardian approval = under consideration. **Guardian side confirmed optional by #52.** |
 | 28 | Setup gas / batching | User pays if funded, else paymaster. Batching partially answered (thread T7: one batched UserOp — conceded, unwritten). |
 | 29 | Config visibility | Structure readable; value visibility OPEN (guardian addresses natively public today); password-decrypt case stays. |
 | 30 | R9 orthogonality gate | **Not now** — invariants/tech design under rework; violations allowed; revisit later. |
@@ -593,6 +600,13 @@ Notes:
 | 44 | Recovery-in-progress screen | Resuming an unfinished recovery lands on a dedicated "Recovery in progress" screen (account, per-row progress, resume / abandon) — the home-surface pending card is only the entry point. |
 | 45 | Method management | Methods are managed **inside path editing** (edit path → review-changes diff → one owner-signed tx). The management overview lists paths only — no separate methods section or top-level "remove method". |
 | 46 | Cleanup deferral | Deferring the post-recovery cleanup is allowed; it surfaces as a flagged banner state on the management overview until resolved — not a separate screen. |
+| 47 | Dry run at setup | The wizard offers a local recovery rehearsal before the final save (demo-review meeting): complete each method's row as if the key were lost today. Optional, skippable; no chain interaction. |
+| 48 | Recovery password setup + hint | The password that encrypts recovery values needs an explicit setup moment (location: UX audit in progress); the Recovery Card may carry a **password hint** — the hint must not weaken the card's no-sensitive-data rule. |
+| 49 | Single-method recommendation | Never force a second method. Recommend one — explicitly including "a second passkey from another device". Copy on the single-method wizard states. |
+| 50 | Synced-passkey cleanup semantics | A synced passkey stays flagged after recovery while a lost device remains signed in to the platform account; the fix path includes revoking the device/passkey from the platform or password manager. Closes the v5 spec gap. |
+| 51 | Guardian page hosting | **Relative (extension-served) path first; IPFS/IPNS later.** Simpler for integrators as a starting point. Closes the hosting item in the tech-dependencies table. |
+| 52 | Guardian verification at setup | Confirmed optional (demo-review meeting) — no forced guardian signature during setup; reaffirms #27. |
+| 53 | Metadata encryption options | Three candidates: encrypt nothing / policy only / policy + metadata. Choice sits with the kit team; the schema must be fixed once (versioning possible, one standard preferred). Q29 stays open; UX must follow the choice. |
 
 ---
 
@@ -611,4 +625,4 @@ Notes:
 | Config survival after rotation (+ `onUninstall` nonce-reset issue) | Flow D end state | Q20 |
 | Same-install account history lookup, gated | Flow D identify step | Q8 |
 | Enforced minimum waiting period on-chain (zero-second currently legal) | Builder guardrails | — |
-| Guardian approval-page hosting: who maintains it (IPFS/IPNS vs. extension-relative MVP)? Extension-specific implementation — add to the invariant questions shared with the EF | Flow E1 | — |
+| Guardian approval-page hosting — **decided: relative path first, IPFS/IPNS later (decision 51)**; remaining question for the EF: long-term canonical hosting | Flow E1 | 51 |
