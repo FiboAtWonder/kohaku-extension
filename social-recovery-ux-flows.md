@@ -152,7 +152,8 @@ flowchart TD
     C --> D["3 · Recommended preset shown as<br/>recovery-path cards<br/>(presets from ottie's persona research)"]
     D --> E["4 · Enroll each method:<br/>short explainer + 'Learn more' +<br/>mandatory access test (local, no chain)"]
     E --> F["5 · Waiting period — 48h default,<br/>changeable. Guardrails: minimum floor,<br/>dominated-path warning."]
-    F --> G["6 · Review → optional DRY RUN<br/>(local rehearsal, decision 47)<br/>→ submit config (batched:<br/>one confirmation — see Q28 note)"]
+    F --> PW["5b · Recovery password — optional,<br/>skippable: hide the setup values<br/>(decisions 48/56; what is hidden: 53)"]
+    PW --> G["6 · Review → optional DRY RUN<br/>(local rehearsal, decision 47)<br/>→ submit config (batched:<br/>one confirmation — see Q28 note)"]
     G --> H["7 · Recovery Card download<br/>+ enable alerts opt-in"]
     H --> I["8 · Offer: apply to other accounts<br/>(never by default; see R10 constraints)"]
 ```
