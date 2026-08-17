@@ -181,7 +181,7 @@ Mandatory for identity methods; a failing test blocks the save. Local only, no c
 | Method | Test |
 |---|---|
 | Passkey | Sign a test challenge right after creation. Instant. |
-| ZK Email | Generate a full test proof locally. Depends on Q16. Progress UI; doubles as dry run. |
+| ZK Email | Send the prepared email, download the raw `.eml`, wallet verifies/proves locally (decision 55). Progress UI; doubles as dry run. Subject format and prover stack open (Q16). |
 | Anon Aadhaar | Test proof against the current UIDAI key. |
 | Guardians | **Optional, open**: light checks (checksum, ENS resolution, contract detection, same-seed). A real signature test needs the guardian to act — also optional. |
 
@@ -189,8 +189,9 @@ Mandatory for identity methods; a failing test blocks the save. Local only, no c
 
 Contents — **only**: the account address, a short "how to start recovery" guide, and
 the canonical approval-page URL. Plus the line "this card alone cannot move funds."
-Addition (decision 48): the card may carry an optional **recovery-password hint**,
-chosen by the user; the hint must not itself reveal the configuration.
+The password hint idea from the demo-review meeting was **dropped** (decision 48
+amended): a hint cannot be validated against leaking the configuration. The card
+stays hint-free; the dry run's password-recall row covers the forgetting risk.
 
 Explicitly **kept off the card** (decided, with rationale): the method inventory,
 guardian addresses, the enrolled email address, thresholds, and waiting-period
@@ -569,7 +570,7 @@ Notes:
 | 13 | Multi-account | Offer "apply same setup" with R10 constraints (fresh accountCode auto; linkability warnings). Never by default. |
 | 14 | Health checks | In scope → Flow F. Meter = "Recovery ready". **Downgraded to optional capability by #42.** |
 | 15 | Chain scope | One chain per policy. Ethereum focus, Sepolia demo. Multichain out of scope v1. |
-| 16 | ZK Email mechanics | **Open** — blocks that method's sub-flows. |
+| 16 | ZK Email mechanics | **Narrowed by #55**: transport is local `.eml` proving, no relayer. Still open: subject/command format, accountCode storage, prover stack + latency. |
 | 17 | Passkey on new device | Platform sync + WebAuthn hybrid. |
 | 18 | Guardian page wallets | Injected + WalletConnect + offline signing path. |
 | 19 | After waiting period | Notify + auto-execute — intended UX; **executor unresolved** (see #7). |
@@ -601,12 +602,15 @@ Notes:
 | 45 | Method management | Methods are managed **inside path editing** (edit path → review-changes diff → one owner-signed tx). The management overview lists paths only — no separate methods section or top-level "remove method". |
 | 46 | Cleanup deferral | Deferring the post-recovery cleanup is allowed; it surfaces as a flagged banner state on the management overview until resolved — not a separate screen. |
 | 47 | Dry run at setup | The wizard offers a local recovery rehearsal before the final save (demo-review meeting): complete each method's row as if the key were lost today. Optional, skippable; no chain interaction. |
-| 48 | Recovery password setup + hint | The password that encrypts recovery values needs an explicit setup moment (location: UX audit in progress); the Recovery Card may carry a **password hint** — the hint must not weaken the card's no-sensitive-data rule. |
+| 48 | Recovery password setup | The password that encrypts recovery values is set in an explicit, skippable wizard step between waiting period and review (audit result; wireframe C-06e; same control on the Advanced builder). **The card hint is DROPPED** — audit risk: a hint can leak configuration and cannot be validated. Forget-protection is the dry-run recall row instead. |
 | 49 | Single-method recommendation | Never force a second method. Recommend one — explicitly including "a second passkey from another device". Copy on the single-method wizard states. |
 | 50 | Synced-passkey cleanup semantics | A synced passkey stays flagged after recovery while a lost device remains signed in to the platform account; the fix path includes revoking the device/passkey from the platform or password manager. Closes the v5 spec gap. |
 | 51 | Guardian page hosting | **Relative (extension-served) path first; IPFS/IPNS later.** Simpler for integrators as a starting point. Closes the hosting item in the tech-dependencies table. |
 | 52 | Guardian verification at setup | Confirmed optional (demo-review meeting) — no forced guardian signature during setup; reaffirms #27. |
 | 53 | Metadata encryption options | Three candidates: encrypt nothing / policy only / policy + metadata. Choice sits with the kit team; the schema must be fixed once (versioning possible, one standard preferred). Q29 stays open; UX must follow the choice. |
+| 54 | Verify-access scope | The wizard's identity-method tests stay mandatory and blocking (#27). The **Advanced builder offers tests without enforcing them** — a power user may save untested methods (wireframes C-10d/C-10e). |
+| 55 | ZK Email transport direction | **Local, relayer-free**: the user sends the prepared email, downloads the raw `.eml` (Gmail: ⋮ → Show original → Download original), and the wallet verifies/proves from it on-device. Fits backend-zero. Open with the kit team: exact subject/command format, accountCode storage, in-extension proving latency (~15–60s). Redrawn in C-05e/D-07e; the 6-digit-code illustration is retired (it matched no real mechanic). |
+| 56 | Recovery password lifecycle | Set once at setup; **no change or removal surface**. A forgotten password never blocks recovery — it only keeps values hidden (D-06e). The dry run's recall row is the forget-protection. Note: editing guardians re-encrypts under the same password. |
 
 ---
 
@@ -615,7 +619,7 @@ Notes:
 | Item | Blocks | Ref |
 |---|---|---|
 | **Funding & execution**: who pays and who executes `initiate/executeRecovery` (bypass 4337; backend-zero = no relayer) | Flow D entirely; Decision 19 | Q7/19 |
-| ZK Email mechanics (user action; client vs hosted prover) | ZK Email sub-flows + verify-access | Q16 |
+| ZK Email — remaining after the .eml direction (decision 55): exact subject/command format; where the per-account `accountCode` lives without a backend; prover stack (circom WASM / halo2 / Noir) and whether ~15–60s in-extension proving is acceptable; DKIM registry choice (ZK Email's ICP-oracle default vs self-maintained ERC-7969); module timelock/expiry defaults vs our per-path waiting period | ZK Email sub-flows + verify-access | Q16/55 |
 | Confirm the encoding for generic ANY-of groups — mixed member types, M-of-N thresholds (T10 `threshold` field) | Builder + presets + recovery checklist | Q22/41 |
 | ZK Email `accountCode` derivation per account (R10 unlinkability requirement) | Multi-account apply | — |
 | Exact guardian signed payload (nonce display; add `policyId`?; expiry — define or confirm none) | Flow E1 page | — |
