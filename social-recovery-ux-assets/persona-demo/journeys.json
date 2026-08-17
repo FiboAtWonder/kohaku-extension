@@ -1,0 +1,1431 @@
+{
+ "personas": [
+  {
+   "id": "sam",
+   "name": "Sam",
+   "monogram": "S",
+   "tag": "One synced passkey — the floor, honestly stated",
+   "bio": "Sam wants zero homework: one synced passkey, done. Setup shows the wizard adapting to a one-item inventory; recovery shows that passkey surviving a lost laptop.",
+   "flows": [
+    "B",
+    "C",
+    "D"
+   ],
+   "steps": [
+    {
+     "screen": "B-01-nudge-modal",
+     "story": "Sam opens the wallet and gets the nudge: no recovery path yet. The honesty note is right there — recovery helps if you lose your key, it cannot stop someone who already has it.",
+     "act": "Setup",
+     "spec": "Flow B · decision 2 (nudge each open) · decision 6 (honest copy)",
+     "hitLabel": "Set up recovery",
+     "device": "popup",
+     "hit": [
+      58,
+      383,
+      101,
+      16
+     ]
+    },
+    {
+     "screen": "C-01-account-recovery-landing",
+     "story": "The tab lands on ready-made paths, but Sam wants his hand held. He picks “Guide me”.",
+     "act": "Setup",
+     "spec": "Flow C · decision 3 — no mode fork; presets landing + Guide me / Customize",
+     "hitLabel": "Guide me",
+     "hit": [
+      364,
+      249,
+      65,
+      17
+     ]
+    },
+    {
+     "screen": "C-02-how-recovery-works",
+     "story": "One screen of education, three bullets, no jargon. The key fact: his address never changes.",
+     "act": "Setup",
+     "spec": "Wizard step 1 of 8 · decision 26",
+     "hitLabel": "Start",
+     "hit": [
+      340,
+      376,
+      34,
+      17
+     ]
+    },
+    {
+     "screen": "C-03b-inventory-device-only",
+     "story": "The inventory: Sam ticks only “Another device” — and the single-method note appears: one method is allowed, but whatever removes it locks you out.",
+     "act": "Setup",
+     "spec": "Step 2 · the note renders only for one-item inventories · new state screen",
+     "hitLabel": "Continue",
+     "hit": [
+      340,
+      599,
+      63,
+      17
+     ]
+    },
+    {
+     "screen": "C-04c-recommended-path-single-method",
+     "story": "One method, one path: “Passkey alone”. The lockout note is permanent here — whatever removes that method locks you out.",
+     "act": "Setup",
+     "spec": "Step 3 · decision 37 philosophy at the floor · new screen from the persona round",
+     "hitLabel": "Use this path",
+     "hit": [
+      340,
+      503,
+      90,
+      17
+     ]
+    },
+    {
+     "screen": "C-05g-create-passkey-start",
+     "story": "No passkey exists yet. The wizard asks the device to create one.",
+     "act": "Setup",
+     "spec": "Step 4 · pre-dialog state · new screen",
+     "hitLabel": "Create passkey",
+     "hit": [
+      373,
+      453,
+      107,
+      17
+     ]
+    },
+    {
+     "screen": "C-05a-create-passkey",
+     "story": "The operating system takes over: Touch ID does the biometrics. The wallet never sees them.",
+     "act": "Setup",
+     "spec": "Frame C-05a — the OS sheet"
+    },
+    {
+     "screen": "C-05h-enroll-passkey-test-pending",
+     "story": "Created and detected: “Synced passkey — iCloud Keychain”. The access test is still required — nothing saves before it passes.",
+     "act": "Setup",
+     "spec": "Decision 27 · new pre-test state",
+     "hitLabel": "Run the test",
+     "hit": [
+      372,
+      601,
+      82,
+      17
+     ]
+    },
+    {
+     "screen": "C-05-enroll-passkey-test-pass",
+     "story": "Test passed. The synced detection matters: usable from any signed-in device — remember that line, it is Sam's whole recovery story.",
+     "act": "Setup",
+     "spec": "Decision 38",
+     "hitLabel": "Save and continue",
+     "hit": [
+      340,
+      700,
+      127,
+      17
+     ]
+    },
+    {
+     "screen": "C-07c-review-single-method-path",
+     "story": "One path, one method, 48 hours, one signature. Nothing touched the chain until now.",
+     "act": "Setup",
+     "spec": "Step 6 · atomic save · 48h default stands for single-method paths (decision 12)",
+     "hitLabel": "Confirm and save",
+     "hit": [
+      340,
+      502,
+      121,
+      17
+     ]
+    },
+    {
+     "screen": "C-07e-setup-saved",
+     "story": "One transaction, confirmed. His path is live from this moment.",
+     "act": "Setup",
+     "spec": "R5 — atomic save · new screen",
+     "hitLabel": "Continue",
+     "hit": [
+      340,
+      485,
+      63,
+      17
+     ]
+    },
+    {
+     "screen": "C-08-recovery-card-and-alerts",
+     "story": "The Recovery Card holds the address and instructions — nothing else. He turns alerts on: they are his cancel-window tripwire.",
+     "act": "Setup",
+     "spec": "Step 7 · card contents decided · decision 11",
+     "hitLabel": "Enable notifications",
+     "hit": [
+      928.75,
+      306,
+      127,
+      16
+     ]
+    },
+    {
+     "screen": "A-00-welcome",
+     "story": "Months later: the laptop is gone. On the new machine, a fresh install offers the third door.",
+     "act": "Recovery",
+     "spec": "Flow A — recovery is a first-class entry point",
+     "hitLabel": "Recover an account",
+     "hit": [
+      406,
+      480,
+      146,
+      18
+     ]
+    },
+    {
+     "screen": "A1-01-fast-track-warning",
+     "story": "The anti-scam gate: no support agent will ever ask you to do this.",
+     "act": "Recovery",
+     "spec": "Decision 1 · decision 40",
+     "hitLabel": "Continue",
+     "hit": [
+      372,
+      447,
+      61,
+      16
+     ]
+    },
+    {
+     "screen": "A1-02-extension-password",
+     "story": "Extension password for the new machine — the fast-track keeps all four steps.",
+     "act": "Recovery",
+     "spec": "Flow A1 · decision 25",
+     "hitLabel": "Continue",
+     "hit": [
+      372,
+      514,
+      61,
+      16
+     ]
+    },
+    {
+     "screen": "A1-03-seed-backup",
+     "story": "A new key, backed up. It will receive the account; the address never changes.",
+     "act": "Recovery",
+     "spec": "Decision 25 — corrected copy",
+     "hitLabel": "Continue to recovery",
+     "hit": [
+      372,
+      569,
+      139,
+      16
+     ]
+    },
+    {
+     "screen": "D-02b-identify-account-fresh-install",
+     "story": "He reads his address off the Recovery Card. Looking it up is harmless and starts nothing.",
+     "act": "Recovery",
+     "spec": "Flow D chapter 1 · decision 8",
+     "hitLabel": "Look up this account",
+     "hit": [
+      52,
+      669,
+      142,
+      17
+     ]
+    },
+    {
+     "screen": "D-04-confirm-identity",
+     "story": "Identity confirmed before anything is collected. His summary would read one path: Passkey · 48h.",
+     "act": "Recovery",
+     "spec": "Confirming starts nothing · single-path configs skip the choose-path step entirely",
+     "hitLabel": "Yes, this is the account",
+     "hit": [
+      340,
+      477,
+      158,
+      17
+     ]
+    },
+    {
+     "screen": "D-07h-checklist-single-passkey-new-device",
+     "story": "The whole checklist is one row. This device has no passkey — but his phone does, because the passkey is synced. He scans the QR; the phone signs.",
+     "act": "Recovery",
+     "spec": "Decision 17 (platform sync + hybrid QR) · new screen · same verify-in-place panel as D-07b"
+    },
+    {
+     "screen": "D-11-confirm-start-recovery",
+     "story": "The consent screen: the account, the new key, 48 hours. The owner can cancel — that is the protection.",
+     "act": "Recovery",
+     "spec": "Flow D chapter 3 · funding/executor still open (Q7/Q19)",
+     "hitLabel": "Start recovery",
+     "hit": [
+      340,
+      733,
+      99,
+      17
+     ]
+    },
+    {
+     "screen": "D-13-waiting-period-countdown",
+     "story": "The countdown runs on-chain. He closes the browser; nobody cancels.",
+     "act": "Recovery",
+     "spec": "Decision 44 — resumable",
+     "hitLabel": "Close — come back any time",
+     "hit": [
+      340,
+      629,
+      196,
+      17
+     ]
+    },
+    {
+     "screen": "D-15-recovery-done-cleanup",
+     "story": "His again. The old laptop is still signed in to iCloud, so the synced passkey stays reachable from it — flagged. Order matters: add a new passkey on this machine first, then remove the flagged one — never drop your only method.",
+     "act": "Recovery",
+     "spec": "Decision 20 · the add-first-then-remove order is why G-02's last-path warning exists"
+    }
+   ]
+  },
+  {
+   "id": "alice",
+   "name": "Alice",
+   "monogram": "A",
+   "tag": "Five paper guardians, zero platform dependence",
+   "bio": "Alice keeps keys on paper and hardware, air-gapped. Setup: the People-only preset, five addresses, 72 hours. Recovery: three approvals, one signed on a machine that never goes online.",
+   "flows": [
+    "B",
+    "C",
+    "D",
+    "E1"
+   ],
+   "steps": [
+    {
+     "screen": "B-01-nudge-modal",
+     "story": "Alice gets the same nudge as everyone. Her answer will look nothing like Sam's.",
+     "act": "Setup",
+     "spec": "Flow B",
+     "hitLabel": "Set up recovery",
+     "device": "popup",
+     "hit": [
+      58,
+      383,
+      101,
+      16
+     ]
+    },
+    {
+     "screen": "C-01-account-recovery-landing",
+     "story": "She goes straight for the only preset with no passkey: “People only”. Its “Set up ›” starts the guided setup from that path — she skips the inventory and lands at enrollment.",
+     "act": "Setup",
+     "spec": "Preset deep-link = “Guided setup, starting from this path” (C-01's own copy)",
+     "hitLabel": "People only",
+     "hit": [
+      338,
+      676,
+      83,
+      18
+     ]
+    },
+    {
+     "screen": "C-05f-enroll-guardians-people-only",
+     "story": "Five guardians, entered as addresses and one ENS. No names anywhere — the wallet stores nothing that could reveal who her people are. A paper key in a safe counts.",
+     "act": "Setup",
+     "spec": "Decision 43 (a guardian is an address) · decision 39 · new screen",
+     "hitLabel": "Save and continue",
+     "hit": [
+      340,
+      763,
+      127,
+      17
+     ]
+    },
+    {
+     "screen": "C-06c-waiting-period-people-only",
+     "story": "Her card, exactly: people only, any 3 of 5 members. She sets 72 hours — her paper keys live in a safe out of town; she wants time, not speed.",
+     "act": "Setup",
+     "spec": "Decision 12 · new people-only state",
+     "hitLabel": "Continue",
+     "hit": [
+      340,
+      328,
+      63,
+      17
+     ]
+    },
+    {
+     "screen": "C-07d-review-people-only-path",
+     "story": "The review is her exact shape: one path, one lone group, any 3 of these 5 members, 72 hours.",
+     "act": "Setup",
+     "spec": "Decision 41 — a lone ANY-of group is the whole path · new screen",
+     "hitLabel": "Confirm and save",
+     "hit": [
+      340,
+      525,
+      121,
+      17
+     ]
+    },
+    {
+     "screen": "C-07e-setup-saved",
+     "story": "One transaction, confirmed. Her lone-group path is live.",
+     "act": "Setup",
+     "spec": "R5 · new screen",
+     "hitLabel": "Continue",
+     "hit": [
+      340,
+      485,
+      63,
+      17
+     ]
+    },
+    {
+     "screen": "C-08-recovery-card-and-alerts",
+     "story": "She prints the card and files it with her paper keys. It deliberately omits her guardians — the configuration is the secret, the address is not.",
+     "act": "Setup",
+     "spec": "Card exclusion list · guardian addresses stay off the card"
+    },
+    {
+     "screen": "A-00-welcome",
+     "story": "Her laptop dies. New machine, fresh install, third door.",
+     "act": "Recovery",
+     "spec": "Flow A",
+     "hitLabel": "Recover an account",
+     "hit": [
+      406,
+      480,
+      146,
+      18
+     ]
+    },
+    {
+     "screen": "A1-01-fast-track-warning",
+     "story": "The anti-scam gate. Nobody asked her to do this.",
+     "act": "Recovery",
+     "spec": "Decision 40",
+     "hitLabel": "Continue",
+     "hit": [
+      372,
+      447,
+      61,
+      16
+     ]
+    },
+    {
+     "screen": "A1-02-extension-password",
+     "story": "Extension password for the new install.",
+     "act": "Recovery",
+     "spec": "Flow A1",
+     "hitLabel": "Continue",
+     "hit": [
+      372,
+      514,
+      61,
+      16
+     ]
+    },
+    {
+     "screen": "A1-03-seed-backup",
+     "story": "A new key; the words go on paper — her preferred material.",
+     "act": "Recovery",
+     "spec": "Decision 25",
+     "hitLabel": "Continue to recovery",
+     "hit": [
+      372,
+      569,
+      139,
+      16
+     ]
+    },
+    {
+     "screen": "D-02b-identify-account-fresh-install",
+     "story": "The address comes off her Recovery Card.",
+     "act": "Recovery",
+     "spec": "Decision 8",
+     "hitLabel": "Look up this account",
+     "hit": [
+      52,
+      669,
+      142,
+      17
+     ]
+    },
+    {
+     "screen": "D-04b-confirm-identity-people-only",
+     "story": "Right account — and the summary is hers exactly: one path, any 3 of 5 members, 72h.",
+     "act": "Recovery",
+     "spec": "New persona-accurate state",
+     "hitLabel": "Yes, this is the account",
+     "hit": [
+      340,
+      407,
+      158,
+      17
+     ]
+    },
+    {
+     "screen": "D-06d-your-recovery-path-people-only",
+     "story": "Her one path, confirmed — not chosen: there is nothing to choose. Five people, any 3 of them; the addresses stay hidden (Q29) — she knows who her people are.",
+     "act": "Recovery",
+     "spec": "Decision 41 · Q29 open · new screen",
+     "hitLabel": "Continue with this path",
+     "hit": [
+      340,
+      719,
+      159,
+      17
+     ]
+    },
+    {
+     "screen": "D-07f-checklist-group-only-people",
+     "story": "The checklist IS the group — no passkey row exists. She sends each guardian the link, the same way she talks to them anyway.",
+     "act": "Recovery",
+     "spec": "Decision 35 · new screen — no required rows"
+    },
+    {
+     "screen": "E1-01m-guardian-page-lead-mobile",
+     "story": "A guardian's phone. Plain language first, and one required pause: contact the owner on a channel you already had.",
+     "act": "Recovery",
+     "spec": "Flow E1 · decision 9 — ignorable but verifiable",
+     "hitLabel": "Verify the details",
+     "device": "mobile",
+     "hit": [
+      62,
+      495,
+      104,
+      15
+     ]
+    },
+    {
+     "screen": "E1-04-guardian-page-connect-wallet",
+     "story": "This guardian's key never touches the internet. The page has a path for exactly that.",
+     "act": "Recovery",
+     "spec": "Decision 18 · offline signing is first-class",
+     "hitLabel": "Advanced: sign offline",
+     "hit": [
+      342,
+      420.5,
+      143,
+      16
+     ]
+    },
+    {
+     "screen": "E1-04b-guardian-page-sign-offline-expanded",
+     "story": "Copy the message, sign it on the air-gapped machine, carry the signature back, paste it.",
+     "act": "Recovery",
+     "spec": "E1-04b — the air-gapped ceremony, step by step",
+     "hitLabel": "Add signature",
+     "hit": [
+      859,
+      827,
+      79,
+      14
+     ]
+    },
+    {
+     "screen": "E1-05-guardian-page-signed",
+     "story": "Signed. Nothing was sent anywhere — the guardian sends it back to Alice themselves.",
+     "act": "Recovery",
+     "spec": "E1 default: approvals travel person to person",
+     "hitLabel": "Copy message to send",
+     "hit": [
+      345,
+      234,
+      156,
+      17
+     ]
+    },
+    {
+     "screen": "D-07f-checklist-group-only-people",
+     "story": "Back on Alice's machine: she pastes the approval. Two done, one to go — the others land the same way, in any order.",
+     "act": "Recovery",
+     "spec": "Paste-time validation · approvals have no expiry",
+     "hitLabel": "Add approval",
+     "hit": [
+      768,
+      471,
+      75,
+      14
+     ]
+    },
+    {
+     "screen": "D-07i-checklist-group-only-people-complete",
+     "story": "The third approval lands the same way: 3 of 3 — the group is satisfied and Continue unlocks.",
+     "act": "Recovery",
+     "spec": "New satisfied state",
+     "hitLabel": "Continue",
+     "hit": [
+      340,
+      681,
+      63,
+      17
+     ]
+    },
+    {
+     "screen": "D-11-confirm-start-recovery",
+     "story": "Consent: the account, the new key, and — for her — 72 hours. (Bridge: the drawn rows read 48h and a passkey path.)",
+     "act": "Recovery",
+     "spec": "Flow D chapter 3",
+     "hitLabel": "Start recovery",
+     "hit": [
+      340,
+      733,
+      99,
+      17
+     ]
+    },
+    {
+     "screen": "D-13-waiting-period-countdown",
+     "story": "Three days of waiting is her choice working as designed.",
+     "act": "Recovery",
+     "spec": "Decision 12",
+     "hitLabel": "Close — come back any time",
+     "hit": [
+      340,
+      629,
+      196,
+      17
+     ]
+    },
+    {
+     "screen": "D-15c-recovered-nothing-flagged",
+     "story": "Hers again — and nothing to clean up: no method was tied to the dead laptop. Her five people stay exactly as they were.",
+     "act": "Recovery",
+     "spec": "Decision 20's empty case · new screen"
+    }
+   ]
+  },
+  {
+   "id": "carl",
+   "name": "Carl",
+   "monogram": "C",
+   "tag": "Synced passkey + Sara — both sides of one favor",
+   "bio": "Carl is not technical. His path: his passkey AND his friend Sara's wallet. He loses his laptop; his phone still holds the synced passkey — and Sara does the rest. This journey walks both sides.",
+   "flows": [
+    "C",
+    "D",
+    "E1"
+   ],
+   "steps": [
+    {
+     "screen": "C-01-account-recovery-landing",
+     "story": "The first suggested path is exactly Carl's shape: your device + your people. He taps “Set up ›” — guided setup, starting from this path.",
+     "act": "Setup",
+     "spec": "Flow C · preset deep-link",
+     "hitLabel": "Set up ›",
+     "hit": [
+      818,
+      420,
+      48,
+      15
+     ]
+    },
+    {
+     "screen": "C-05a-create-passkey",
+     "story": "Enrollment starts immediately. The OS draws the Touch ID sheet.",
+     "act": "Setup",
+     "spec": "Step 4 · frame C-05a",
+     "hitLabel": "Create passkey",
+     "hit": [
+      373,
+      453,
+      107,
+      17
+     ]
+    },
+    {
+     "screen": "C-05-enroll-passkey-test-pass",
+     "story": "“Synced passkey — iCloud Keychain.” That one detected line is the seed of his whole recovery.",
+     "act": "Setup",
+     "spec": "Decision 38 · decision 27",
+     "hitLabel": "Save and continue",
+     "hit": [
+      340,
+      700,
+      127,
+      17
+     ]
+    },
+    {
+     "screen": "C-05c-enroll-guardians",
+     "story": "One guardian row: Sara's wallet, entered as an address. The wallet checks the checksum and the ENS — and stores no name.",
+     "act": "Setup",
+     "spec": "Decision 43 · the screen is drawn with exactly one guardian",
+     "hitLabel": "Save and continue",
+     "hit": [
+      340,
+      618,
+      127,
+      17
+     ]
+    },
+    {
+     "screen": "C-07f-review-passkey-plus-one-person",
+     "story": "The review is his exact shape: passkey AND any 1 of 1 member — Sara's address — 48 hours.",
+     "act": "Setup",
+     "spec": "Decision 36 — 1-of-1 groups are legal · new screen",
+     "hitLabel": "Confirm and save",
+     "hit": [
+      340,
+      485,
+      121,
+      17
+     ]
+    },
+    {
+     "screen": "C-07e-setup-saved",
+     "story": "One transaction, confirmed. His path is live.",
+     "act": "Setup",
+     "spec": "R5 · new screen",
+     "hitLabel": "Continue",
+     "hit": [
+      340,
+      485,
+      63,
+      17
+     ]
+    },
+    {
+     "screen": "C-08-recovery-card-and-alerts",
+     "story": "The card goes in a drawer. It will matter.",
+     "act": "Setup",
+     "spec": "Card contents decided"
+    },
+    {
+     "screen": "A-00-welcome",
+     "story": "Carl's laptop is gone. On a borrowed machine: fresh install, third door.",
+     "act": "Recovery",
+     "spec": "Flow A",
+     "hitLabel": "Recover an account",
+     "hit": [
+      406,
+      480,
+      146,
+      18
+     ]
+    },
+    {
+     "screen": "A1-01-fast-track-warning",
+     "story": "No support agent will ever ask you to do this. Nobody did.",
+     "act": "Recovery",
+     "spec": "Decision 1 · 40",
+     "hitLabel": "Continue",
+     "hit": [
+      372,
+      447,
+      61,
+      16
+     ]
+    },
+    {
+     "screen": "A1-02-extension-password",
+     "story": "A quick password for this install.",
+     "act": "Recovery",
+     "spec": "Flow A1",
+     "hitLabel": "Continue",
+     "hit": [
+      372,
+      514,
+      61,
+      16
+     ]
+    },
+    {
+     "screen": "A1-03-seed-backup",
+     "story": "The new key that will receive the account.",
+     "act": "Recovery",
+     "spec": "Decision 25",
+     "hitLabel": "Continue to recovery",
+     "hit": [
+      372,
+      569,
+      139,
+      16
+     ]
+    },
+    {
+     "screen": "D-02b-identify-account-fresh-install",
+     "story": "The address comes off his Recovery Card.",
+     "act": "Recovery",
+     "spec": "Decision 8",
+     "hitLabel": "Look up this account",
+     "hit": [
+      52,
+      669,
+      142,
+      17
+     ]
+    },
+    {
+     "screen": "D-04-confirm-identity",
+     "story": "Right account, before anything is collected. (Bridge: his real summary is one path.)",
+     "act": "Recovery",
+     "spec": "Restored from the demo",
+     "hitLabel": "Yes, this is the account",
+     "hit": [
+      340,
+      477,
+      158,
+      17
+     ]
+    },
+    {
+     "screen": "D-06-choose-recovery-path",
+     "story": "His path needs the passkey AND Sara — and both are reachable today: the passkey is synced, Sara is a phone call away. (Bridge: the drawn group is 2-of-3; his is Sara alone.)",
+     "act": "Recovery",
+     "spec": "Decision 29 — values may be hidden",
+     "hitLabel": "Continue with this path",
+     "hit": [
+      340,
+      754,
+      159,
+      17
+     ]
+    },
+    {
+     "screen": "D-07b-passkey-verify-new-device",
+     "story": "“This device has no passkey for the account — use the phone that has it.” His phone is safe and signed in; he scans the QR and the phone signs.",
+     "act": "Recovery",
+     "spec": "Decision 17 — platform sync + hybrid QR · verify-in-place (decision 35)"
+    },
+    {
+     "screen": "D-07-checklist-pending",
+     "story": "The passkey row flips to Complete — signed from his phone. Now the group: he taps “Ask a guardian” and sends Sara the link, on the channel they already use. (Bridge: the drawn group has more members than his one.)",
+     "act": "Recovery",
+     "spec": "Decision 35 — the passkey step, now visibly done",
+     "hitLabel": "Ask a guardian",
+     "hit": [
+      766,
+      300.5,
+      88,
+      15
+     ]
+    },
+    {
+     "screen": "E1-01m-guardian-page-lead-mobile",
+     "story": "Sara's phone. She calls Carl first — the sign button stays locked until she confirms she did.",
+     "act": "Recovery",
+     "spec": "Flow E1 · decision 9",
+     "hitLabel": "Verify the details",
+     "device": "mobile",
+     "hit": [
+      62,
+      495,
+      104,
+      15
+     ]
+    },
+    {
+     "screen": "E1-05-guardian-page-signed",
+     "story": "Signed — and nothing sent anywhere. Sara copies the approval and sends it back on the same channel as the call.",
+     "act": "Recovery",
+     "spec": "E1 default · out-of-band on purpose",
+     "hitLabel": "Copy message to send",
+     "hit": [
+      345,
+      234,
+      156,
+      17
+     ]
+    },
+    {
+     "screen": "D-08-checklist-verify-in-place",
+     "story": "Carl pastes Sara's approval; it validates on paste. Her single approval completes his group. (Bridge: the drawn counter says one more is needed — not true for 1-of-1.)",
+     "act": "Recovery",
+     "spec": "Paste-time validation · D-08 footer flagged for a future wireframe pass",
+     "hitLabel": "Add approval",
+     "hit": [
+      768,
+      536,
+      75,
+      14
+     ]
+    },
+    {
+     "screen": "D-11-confirm-start-recovery",
+     "story": "“Both rows complete” — literally his path: one required row, one group. 48 hours start now.",
+     "act": "Recovery",
+     "spec": "Flow D chapter 3",
+     "hitLabel": "Start recovery",
+     "hit": [
+      340,
+      733,
+      99,
+      17
+     ]
+    },
+    {
+     "screen": "D-13-waiting-period-countdown",
+     "story": "He closes the borrowed browser. The state persists.",
+     "act": "Recovery",
+     "spec": "Decision 44",
+     "hitLabel": "Close — come back any time",
+     "hit": [
+      340,
+      629,
+      196,
+      17
+     ]
+    },
+    {
+     "screen": "D-15-recovery-done-cleanup",
+     "story": "His again. “MacBook passkey — on the device you lost · flagged”: the lost laptop is still signed in to his Apple account, so it can still use the synced passkey. Replace it, and the story cannot repeat.",
+     "act": "Recovery",
+     "spec": "Decision 20 · the synced-passkey cleanup semantic — flagged for the spec"
+    }
+   ]
+  },
+  {
+   "id": "diana",
+   "name": "Diana",
+   "monogram": "D",
+   "tag": "Two methods, 1-of-2 — lockout beats theft",
+   "bio": "Diana has a passkey and a long-lived email, and nobody she'd ask to be a guardian. The wizard gives her two single-method paths. When her device dies and her platform account is unreachable, the email path is her way back.",
+   "flows": [
+    "C",
+    "D"
+   ],
+   "steps": [
+    {
+     "screen": "C-01-account-recovery-landing",
+     "story": "Diana wants protection with no other people involved. Guided route.",
+     "act": "Setup",
+     "spec": "Flow C · decision 3",
+     "hitLabel": "Guide me",
+     "hit": [
+      364,
+      249,
+      65,
+      17
+     ]
+    },
+    {
+     "screen": "C-03c-inventory-device-and-email",
+     "story": "She ticks “Another device” and “A long-lived email”. Nothing else — and that is fine.",
+     "act": "Setup",
+     "spec": "Step 2 · new state screen",
+     "hitLabel": "Continue",
+     "hit": [
+      340,
+      531,
+      63,
+      17
+     ]
+    },
+    {
+     "screen": "C-04b-recommended-paths-two-methods",
+     "story": "The wizard does NOT recommend passkey AND email — at her level, locking herself out is the bigger risk. Two single-method paths: either alone recovers. This screen is her config verbatim.",
+     "act": "Setup",
+     "spec": "Decision 37 — the one exact persona/wireframe match",
+     "hitLabel": "Use these paths",
+     "hit": [
+      340,
+      643,
+      111,
+      17
+     ]
+    },
+    {
+     "screen": "C-05a-create-passkey",
+     "story": "The device creates her passkey; the OS sheet does the ceremony.",
+     "act": "Setup",
+     "spec": "Step 4",
+     "hitLabel": "Create passkey",
+     "hit": [
+      373,
+      453,
+      107,
+      17
+     ]
+    },
+    {
+     "screen": "C-05-enroll-passkey-test-pass",
+     "story": "Detected as synced (iCloud Keychain) — remember that for later. Test passed.",
+     "act": "Setup",
+     "spec": "Decision 38",
+     "hitLabel": "Save and continue",
+     "hit": [
+      340,
+      700,
+      127,
+      17
+     ]
+    },
+    {
+     "screen": "C-05e-enroll-email",
+     "story": "The email path: a code proves the inbox now, not during a crisis. (Illustrated as a code — the real ZK Email mechanics are Q16, open.)",
+     "act": "Setup",
+     "spec": "Decision 27 · Q16 open — illustrative only",
+     "hitLabel": "Verify",
+     "hit": [
+      358,
+      380,
+      42,
+      17
+     ]
+    },
+    {
+     "screen": "C-06-waiting-period",
+     "story": "48 hours on each path. (Bridge: her cards read “Passkey alone / Email alone”.)",
+     "act": "Setup",
+     "spec": "Decision 12",
+     "hitLabel": "Continue",
+     "hit": [
+      340,
+      445,
+      63,
+      17
+     ]
+    },
+    {
+     "screen": "C-07g-review-two-single-method-paths",
+     "story": "The review is her config verbatim: “Passkey alone” OR “Email alone”, 48 hours each, no forced pair.",
+     "act": "Setup",
+     "spec": "Decision 37 · new screen",
+     "hitLabel": "Confirm and save",
+     "hit": [
+      340,
+      485,
+      121,
+      17
+     ]
+    },
+    {
+     "screen": "C-07e-setup-saved",
+     "story": "One transaction saves both paths — confirmed and live.",
+     "act": "Setup",
+     "spec": "R5 · new screen",
+     "hitLabel": "Continue",
+     "hit": [
+      340,
+      485,
+      63,
+      17
+     ]
+    },
+    {
+     "screen": "C-08-recovery-card-and-alerts",
+     "story": "Recovery Card into a drawer; alerts on.",
+     "act": "Setup",
+     "spec": "Step 7"
+    },
+    {
+     "screen": "A-00-welcome",
+     "story": "Her device is gone, and her platform account is unreachable from the new machine — the phone that could confirm the sign-in was the lost device. Fresh install.",
+     "act": "Recovery",
+     "spec": "The synced-passkey trap: the platform account is the real root",
+     "hitLabel": "Recover an account",
+     "hit": [
+      406,
+      480,
+      146,
+      18
+     ]
+    },
+    {
+     "screen": "A1-01-fast-track-warning",
+     "story": "The gate. Nobody asked her to do this.",
+     "act": "Recovery",
+     "spec": "Decision 40",
+     "hitLabel": "Continue",
+     "hit": [
+      372,
+      447,
+      61,
+      16
+     ]
+    },
+    {
+     "screen": "A1-02-extension-password",
+     "story": "Password for the new install.",
+     "act": "Recovery",
+     "spec": "Flow A1",
+     "hitLabel": "Continue",
+     "hit": [
+      372,
+      514,
+      61,
+      16
+     ]
+    },
+    {
+     "screen": "A1-03-seed-backup",
+     "story": "New key, twelve words on paper.",
+     "act": "Recovery",
+     "spec": "Decision 25",
+     "hitLabel": "Continue to recovery",
+     "hit": [
+      372,
+      569,
+      139,
+      16
+     ]
+    },
+    {
+     "screen": "D-02b-identify-account-fresh-install",
+     "story": "Address from the Recovery Card.",
+     "act": "Recovery",
+     "spec": "Decision 8",
+     "hitLabel": "Look up this account",
+     "hit": [
+      52,
+      669,
+      142,
+      17
+     ]
+    },
+    {
+     "screen": "D-04-confirm-identity",
+     "story": "The chain answers: two paths exist. The email one is her way back.",
+     "act": "Recovery",
+     "spec": "Structure is always readable",
+     "hitLabel": "Yes, this is the account",
+     "hit": [
+      340,
+      477,
+      158,
+      17
+     ]
+    },
+    {
+     "screen": "D-06b-choose-path-one-unavailable",
+     "story": "The passkey path says “This device has no passkey for the account” — marked, never disabled: the wallet cannot know it is truly gone. She picks the email path; its value stays hidden (Q29) — she knows her own inbox.",
+     "act": "Recovery",
+     "spec": "Decision 29 · new screen — the unsatisfiable-path state",
+     "hitLabel": "Continue with this path",
+     "hit": [
+      340,
+      739,
+      159,
+      17
+     ]
+    },
+    {
+     "screen": "D-07e-recovery-email-code",
+     "story": "One row: a code to the enrolled address, six digits typed. Row complete — nothing else to collect. (Illustrative — Q16.)",
+     "act": "Recovery",
+     "spec": "Decision 35 — for a one-row path, the verify panel IS the checklist",
+     "hitLabel": "Verify",
+     "hit": [
+      358,
+      408,
+      42,
+      17
+     ]
+    },
+    {
+     "screen": "D-11-confirm-start-recovery",
+     "story": "Consent: the account, the new key, 48 hours. (Bridge: her path row reads Email · 1 row complete.)",
+     "act": "Recovery",
+     "spec": "Flow D chapter 3",
+     "hitLabel": "Start recovery",
+     "hit": [
+      340,
+      733,
+      99,
+      17
+     ]
+    },
+    {
+     "screen": "D-13-waiting-period-countdown",
+     "story": "The countdown is also her safety: if this were an attacker, she could cancel.",
+     "act": "Recovery",
+     "spec": "Owner-cancel window",
+     "hitLabel": "Close — come back any time",
+     "hit": [
+      340,
+      629,
+      196,
+      17
+     ]
+    },
+    {
+     "screen": "D-15-recovery-done-cleanup",
+     "story": "Recovered. The dead passkey is flagged — this screen fits her exactly: remove “MacBook passkey”, keep the email, add a passkey on the new machine. (Bridge: the guardians row is not hers.)",
+     "act": "Recovery",
+     "spec": "Decision 20 · D-15 drawn almost for Diana"
+    }
+   ]
+  },
+  {
+   "id": "bob",
+   "name": "Bob",
+   "monogram": "B",
+   "tag": "2-of-3 across distinct roots — recovery, then an attack",
+   "bio": "Bob is technical: one lone group, any 2 of 3 — passkey, email, hardware-wallet guardian. Three acts: he builds it, he uses it without the lost passkey, and when the lost laptop's holder strikes back, the design holds.",
+   "flows": [
+    "C",
+    "D",
+    "D2",
+    "G"
+   ],
+   "steps": [
+    {
+     "screen": "C-01-account-recovery-landing",
+     "story": "Bob skips the hand-holding.",
+     "act": "Setup",
+     "spec": "Flow C · Advanced is an action, not a mode",
+     "hitLabel": "Customize",
+     "hit": [
+      499,
+      249,
+      74,
+      17
+     ]
+    },
+    {
+     "screen": "C-10-advanced-builder",
+     "story": "The builder. Drawn path 1 is his config to the letter: a lone group, any 2 of 3 — passkey, email, a person. He adds the member — guardians are ordinary members.",
+     "act": "Setup",
+     "spec": "Decision 41 · the filter-builder pattern users already know",
+     "hitLabel": "Add member",
+     "hit": [
+      368,
+      378,
+      295,
+      15
+     ]
+    },
+    {
+     "screen": "C-10b-add-member",
+     "story": "The picker: “a hardware wallet or a paper key counts too.” He pastes his hardware wallet's address.",
+     "act": "Setup",
+     "spec": "Decision 41 · decision 43 — by address, no names",
+     "hitLabel": "Add to group",
+     "hit": [
+      420,
+      943,
+      86,
+      16
+     ]
+    },
+    {
+     "screen": "C-10-advanced-builder",
+     "story": "Group complete, 48h on the path. Advanced has its own terminal: “Save and sign” — one transaction, no wizard review.",
+     "act": "Setup",
+     "spec": "The advanced flow never routes through the wizard"
+    },
+    {
+     "screen": "C-10c-builder-saved",
+     "story": "Saved as one transaction — confirmed. The builder shows the result read-only.",
+     "act": "Setup",
+     "spec": "Advanced terminal state · new screen",
+     "hitLabel": "Done",
+     "hit": [
+      340,
+      993,
+      36,
+      17
+     ]
+    },
+    {
+     "screen": "G-01-management-overview",
+     "story": "The result: the overview lists paths only — members live inside path editing. (Bridge: his account shows the single group path.)",
+     "act": "Setup",
+     "spec": "Decision 45"
+    },
+    {
+     "screen": "D-01-choose-new-owner",
+     "story": "Months later his main laptop is stolen — but a second machine is logged in. Recovery starts from Settings: the condensed warning, then which account receives control.",
+     "act": "Recovery",
+     "spec": "Flow D additions · decision 34 · 40 — only Bob can demo the logged-in entry",
+     "hitLabel": "Continue",
+     "hit": [
+      340,
+      577,
+      63,
+      17
+     ]
+    },
+    {
+     "screen": "D-02-identify-account",
+     "story": "The lost account's address, from memory — he is Bob.",
+     "act": "Recovery",
+     "spec": "Decision 8",
+     "hitLabel": "Look up this account",
+     "hit": [
+      340,
+      669,
+      142,
+      17
+     ]
+    },
+    {
+     "screen": "D-04c-confirm-identity-lone-mixed-group",
+     "story": "Confirmed — and the summary is his: one path, any 2 of 3 members (passkey · person · email), 48h.",
+     "act": "Recovery",
+     "spec": "New persona-accurate state",
+     "hitLabel": "Yes, this is the account",
+     "hit": [
+      340,
+      426,
+      158,
+      17
+     ]
+    },
+    {
+     "screen": "D-06c-your-recovery-path-lone-group",
+     "story": "His one path, drawn exactly: the group alone, any 2 of 3. The passkey member is out of reach — and that is fine, any two work.",
+     "act": "Recovery",
+     "spec": "Decision 41 · new screen · Q29 values hidden",
+     "hitLabel": "Continue with this path",
+     "hit": [
+      340,
+      719,
+      159,
+      17
+     ]
+    },
+    {
+     "screen": "D-07e-recovery-email-code",
+     "story": "Member one: the email code. (Illustrative — Q16.)",
+     "act": "Recovery",
+     "spec": "Q16 open",
+     "hitLabel": "Verify",
+     "hit": [
+      358,
+      408,
+      42,
+      17
+     ]
+    },
+    {
+     "screen": "E1-01-guardian-page-lead",
+     "story": "Member two: the hardware-wallet guardian — himself, on the guardian page. Same rules: verify, confirm contact, sign.",
+     "act": "Recovery",
+     "spec": "Flow E1 — the page treats every guardian alike",
+     "hitLabel": "Connect wallet and sign",
+     "hit": [
+      322,
+      692,
+      164,
+      17
+     ]
+    },
+    {
+     "screen": "E1-05-guardian-page-signed",
+     "story": "Signed on the hardware wallet; the approval travels back by hand.",
+     "act": "Recovery",
+     "spec": "E1 default",
+     "hitLabel": "Copy message to send",
+     "hit": [
+      345,
+      234,
+      156,
+      17
+     ]
+    },
+    {
+     "screen": "D-07g-checklist-mixed-group-no-passkey",
+     "story": "The mixed checklist: email complete, passkey “not reachable — the device that holds it is lost”, the approval pasted. 2 of 3 — the group is satisfied without the passkey.",
+     "act": "Recovery",
+     "spec": "Decision 41 · new screen — an unreachable member is never removed, just not used",
+     "hitLabel": "Add approval",
+     "hit": [
+      768,
+      454,
+      75,
+      14
+     ]
+    },
+    {
+     "screen": "D-07j-checklist-mixed-group-complete",
+     "story": "2 of 2 — the group is satisfied without the passkey. The unreachable member stays listed, unused.",
+     "act": "Recovery",
+     "spec": "Decision 41 · new satisfied state",
+     "hitLabel": "Continue",
+     "hit": [
+      340,
+      662,
+      63,
+      17
+     ]
+    },
+    {
+     "screen": "D-11-confirm-start-recovery",
+     "story": "Consent, 48 hours. (Bridge: his row reads “any 2 of these 3 members — 2 of 2”.)",
+     "act": "Recovery",
+     "spec": "Flow D chapter 3",
+     "hitLabel": "Start recovery",
+     "hit": [
+      340,
+      733,
+      99,
+      17
+     ]
+    },
+    {
+     "screen": "D-13-waiting-period-countdown",
+     "story": "The countdown runs.",
+     "act": "Recovery",
+     "spec": "Decision 44",
+     "hitLabel": "Close — come back any time",
+     "hit": [
+      340,
+      629,
+      196,
+      17
+     ]
+    },
+    {
+     "screen": "D-15-recovery-done-cleanup",
+     "story": "Recovered. The stolen laptop's passkey is flagged — and Bob, in a hurry, defers the cleanup. Watch what that costs.",
+     "act": "Recovery",
+     "spec": "Decision 20 · the deferral is allowed — and tracked",
+     "hitLabel": "Do this later",
+     "hit": [
+      589,
+      637,
+      79,
+      16
+     ]
+    },
+    {
+     "screen": "G-01b-cleanup-deferred",
+     "story": "The overview will not let him forget: “Until you replace it, the account can be recovered again by whoever holds that device.” That sentence is about to come true.",
+     "act": "Recovery",
+     "spec": "Decision 46 — deferral is a state, not a screen"
+    },
+    {
+     "screen": "D2-01-pending-recovery-banner-and-alert",
+     "story": "Days later: somebody started recovering his account. The thief has the flagged passkey AND the laptop's logged-in inbox — two of three members. Banner + notification; Bob knows it wasn't him.",
+     "act": "Attack",
+     "spec": "Flow D2 · decision 11 · a 2-of-3 attack needs two members — both lived on the stolen laptop",
+     "hitLabel": "It wasn't me — cancel it",
+     "device": "popup",
+     "hit": [
+      176,
+      260.5,
+      145,
+      15
+     ]
+    },
+    {
+     "screen": "D2-02-post-cancel-triage",
+     "story": "Cancel is not resolution — the thief still holds working methods. The required triage shows what the request had satisfied. (Bridge: for Bob that was the passkey and the email.)",
+     "act": "Attack",
+     "spec": "Flow D2 — triage is required, not optional",
+     "hitLabel": "Replace the flagged methods",
+     "hit": [
+      357,
+      482,
+      193,
+      16
+     ]
+    },
+    {
+     "screen": "G-05-edit-path",
+     "story": "Replace means edit the path: swap the stolen members out, right in the editor. (Bridge: the drawn path shape differs.)",
+     "act": "Attack",
+     "spec": "Decision 45 — methods are managed inside path editing",
+     "hitLabel": "Save changes",
+     "hit": [
+      340,
+      554,
+      96,
+      17
+     ]
+    },
+    {
+     "screen": "G-01-management-overview",
+     "story": "One signed transaction later: clean overview, no flag. The design held.",
+     "act": "Attack",
+     "spec": "End of the attack — and of the demo"
+    }
+   ]
+  }
+ ]
+}

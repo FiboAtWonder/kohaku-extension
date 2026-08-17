@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kohaku · Social Recovery prototype</title>
+<style>
+  :root{
+    --ink:#1a1d26; --muted:#7a8194; --faint:#9aa0b0;
+    --line:#e9ebf1; --line2:#dfe2ea; --panel:#ffffff; --side:#f6f7f9; --wash:#f3f4f8;
+    --violet:#6a4bd6; --violet-2:#5a3ecb; --violet-bg:#efeafc;
+    --teal:#0f9d7a; --teal-bg:#d9f2ea;
+    --orange:#ef8f3c; --yellow:#e9b93a; --green:#22a55f;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:#0f1116;font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .topbar{height:34px;background:#191c22;display:flex;align-items:center;gap:7px;padding:0 14px}
+  .topbar i{width:11px;height:11px;border-radius:50%;display:block}
+  .topbar i.r{background:#ff5f57}.topbar i.y{background:#febc2e}.topbar i.g{background:#28c840}
+  .app{display:grid;grid-template-columns:288px 1fr;height:calc(100vh - 34px);background:var(--panel)}
+  @media(max-width:820px){.app{grid-template-columns:1fr}}
+
+  .side{background:var(--side);border-right:1px solid var(--line);padding:22px 16px;overflow:auto}
+  .brand{display:flex;align-items:center;gap:10px;padding:2px 8px 18px}
+  .brand b{font-size:16px;letter-spacing:-.01em}
+  .nav{display:flex;flex-direction:column;gap:2px}
+  .item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;font-size:14px;color:#4b5162;font-weight:600;cursor:default;user-select:none}
+  .item svg{flex:0 0 auto;stroke:#8b91a2}
+  .item.inert{opacity:.72}
+  .item.click{cursor:pointer;color:var(--ink)}
+  .item.click svg{stroke:var(--violet)}
+  .item.click:hover{background:#eceaf9}
+  .item.active{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(20,25,45,.08)}
+  .item.active svg{stroke:var(--violet)}
+  .item .new{margin-left:auto;font-size:9.5px;font-weight:800;color:#fff;background:var(--violet);border-radius:20px;padding:2px 7px;letter-spacing:.03em}
+
+  .main{overflow:auto;padding:30px 34px 60px}
+  .view{display:none}
+  .view.on{display:block}
+  .srscreen{display:none;animation:fade .16s ease}
+  .srscreen.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  /* accounts replica */
+  .h{display:flex;align-items:center;gap:18px;margin-bottom:22px}
+  .h h1{font-size:22px;margin:0}
+  .search{flex:1;max-width:520px;background:var(--wash);border:1px solid var(--line);border-radius:12px;padding:11px 14px;color:var(--faint);font-size:13.5px;display:flex;align-items:center;gap:9px}
+  .btn-add{margin-left:auto;background:linear-gradient(180deg,#7657e0,#6244d2);color:#fff;border:0;border-radius:12px;padding:11px 16px;font-size:13.5px;font-weight:700}
+  .acct{display:flex;align-items:center;gap:13px;background:var(--wash);border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:10px}
+  .acct .blob{width:38px;height:38px;border-radius:50%;flex:0 0 auto}
+  .acct .nm{font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px}
+  .acct .ad{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:2px}
+  .tag{font-size:10.5px;font-weight:700;color:var(--teal);background:var(--teal-bg);border-radius:20px;padding:2px 8px}
+  .dots{margin-left:auto;color:var(--faint);font-size:18px;letter-spacing:2px}
+
+  /* social */
+  .sr{max-width:560px}
+  .crumb{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .back{cursor:pointer;color:var(--violet);font-weight:700}
+  .sr h1{font-size:23px;margin:0 0 4px;letter-spacing:-.01em}
+  .sr .lead{color:var(--muted);font-size:14px;margin:0 0 22px;max-width:52ch}
+  .step{font-size:11.5px;color:var(--faint);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+
+  .meter{background:var(--wash);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:22px}
+  .meter .top{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+  .meter .lbl{font-size:15px;font-weight:800}
+  .meter .hint{font-size:12px;color:var(--muted);margin-left:auto;text-align:right;max-width:58%}
+  .bars{display:flex;gap:7px}
+  .bars span{height:8px;flex:1;border-radius:6px;background:#e4e7ef;transition:background .2s}
+  .l0 .lbl{color:var(--faint)}
+  .l1 .lbl{color:var(--orange)} .l1 .b1{background:var(--orange)}
+  .l2 .lbl{color:var(--yellow)} .l2 .b1,.l2 .b2{background:var(--yellow)}
+  .l3 .lbl{color:var(--green)} .l3 .b1,.l3 .b2,.l3 .b3{background:var(--green)}
+
+  .m{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px;background:#fff}
+  .m .mh{display:flex;align-items:center;gap:12px}
+  .mi{width:34px;height:34px;border-radius:10px;background:var(--violet-bg);display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:16px}
+  .m .mt b{font-size:14.5px;display:block}
+  .m .mt small{font-size:12px;color:var(--muted)}
+  .m .add{margin-left:auto;background:#fff;border:1px solid var(--line2);border-radius:10px;padding:7px 12px;font-size:12.5px;font-weight:700;color:var(--violet);cursor:pointer}
+  .m .add:hover{background:var(--violet-bg)}
+  .items{margin-top:11px;display:flex;flex-direction:column;gap:7px}
+  .items:empty{display:none}
+  .it{display:flex;align-items:center;gap:9px;background:var(--wash);border:1px solid var(--line);border-radius:10px;padding:8px 11px;font-size:12.5px}
+  .it b{font-weight:650}
+  .it .x{margin-left:auto;color:var(--faint);cursor:pointer;font-size:15px;line-height:1;padding:0 2px}
+  .it .x:hover{color:var(--orange)}
+
+  .edu{margin-top:26px;background:var(--wash);border:1px solid var(--line);border-radius:16px;padding:18px}
+  .edu h4{margin:0 0 12px;font-size:13px}
+  .edu .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:520px){.edu .cols{grid-template-columns:1fr}}
+  .edu .c{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
+  .edu .c .ci{font-size:20px;margin-bottom:8px}
+  .edu .c b{font-size:12.5px;display:block;margin-bottom:3px}
+  .edu .c small{font-size:11.5px;color:var(--muted);line-height:1.4}
+
+  .cta{margin-top:22px;display:flex;gap:10px}
+  .btn{border-radius:12px;padding:12px 18px;font-size:14px;font-weight:700;cursor:pointer;border:0}
+  .btn.p{background:linear-gradient(180deg,#7657e0,#6244d2);color:#fff}
+  .btn.p[disabled]{opacity:.5;cursor:not-allowed;background:#b9b2df}
+  .btn.g{background:#fff;border:1px solid var(--line2);color:var(--ink)}
+
+  /* sub-flow bits */
+  .card{border:1px solid var(--line);border-radius:16px;padding:22px;background:#fff;max-width:460px}
+  .card .big{font-size:34px;text-align:center;margin:4px 0 10px}
+  .card .ct{font-size:17px;font-weight:700;margin-bottom:6px}
+  .card .cs{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:18px}
+  .field{width:100%;border:1px solid var(--line2);border-radius:11px;padding:12px 13px;font-size:14px;margin-bottom:12px;font-family:inherit}
+  .field.mono{font-family:var(--mono);font-size:12.5px}
+  label.fl{font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px}
+  .glist{display:flex;flex-direction:column;gap:8px;margin:6px 0 16px}
+  .grow{display:flex;align-items:center;gap:9px;background:var(--wash);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:12.5px}
+  .grow .gx{margin-left:auto;color:var(--faint);cursor:pointer;font-size:15px}
+  .steprow{display:flex;align-items:center;gap:14px;margin:14px 0 4px}
+  .stepper{display:flex;align-items:center;gap:12px;background:var(--wash);border:1px solid var(--line);border-radius:11px;padding:8px 14px}
+  .stepper button{width:26px;height:26px;border-radius:8px;border:1px solid var(--line2);background:#fff;font-size:16px;cursor:pointer;line-height:1}
+  .stepper b{font-family:var(--mono);font-size:15px;min-width:54px;text-align:center}
+  .bio{width:70px;height:70px;border-radius:18px;background:#11141b;display:flex;align-items:center;justify-content:center;margin:6px auto 12px}
+  .chips{display:flex;gap:8px;margin:6px 0 4px}
+  .chip{border:1px solid var(--line2);border-radius:20px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;background:#fff}
+  .chip.on{background:var(--violet-bg);border-color:var(--violet);color:var(--violet-2)}
+  .rev{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:9px;background:#fff}
+  .rev .rx{margin-left:auto;font-size:11px;font-weight:700;color:var(--teal);background:var(--teal-bg);border-radius:20px;padding:2px 9px}
+  .okline{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--green);font-weight:600;margin:14px 0 2px}
+
+  /* wizard step indicator */
+  .wsteps{display:flex;align-items:center;gap:12px;margin:2px 0 16px}
+  .wsteps .step{margin:0}
+  .pgdots{display:flex;gap:6px}
+  .pgdots i{width:22px;height:4px;border-radius:3px;background:#e4e7ef;display:block;transition:background .2s}
+  .pgdots i.done{background:var(--violet);opacity:.4}
+  .pgdots i.on{background:var(--violet)}
+
+  /* small notes */
+  .note{display:flex;gap:8px;align-items:flex-start;background:var(--wash);border:1px solid var(--line);border-radius:11px;padding:10px 12px;font-size:11.5px;color:var(--muted);line-height:1.45;margin:2px 0 14px}
+  .note svg{flex:0 0 auto;margin-top:1px}
+  .tip{display:flex;gap:8px;align-items:flex-start;font-size:11.5px;color:var(--violet-2);background:var(--violet-bg);border-radius:11px;padding:10px 12px;line-height:1.45;margin:2px 0 0}
+  .linkbtn{background:none;border:0;color:var(--violet);font-weight:700;font-size:12.5px;cursor:pointer;padding:8px 2px}
+  .pkprov{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+  .prow{display:flex;align-items:center;gap:11px;border:1px solid var(--line2);border-radius:12px;padding:11px 13px;cursor:pointer;background:#fff}
+  .prow:hover{background:var(--wash)}
+  .prow.on{border-color:var(--violet);background:var(--violet-bg)}
+  .prow .pt{flex:1;min-width:0}
+  .prow .pt b{font-size:13.5px;display:block}
+  .prow .pt small{font-size:11.5px;color:var(--muted)}
+  .prow .rad{width:16px;height:16px;border-radius:50%;border:2px solid var(--line2);flex:0 0 auto}
+  .prow.on .rad{border-color:var(--violet);background:radial-gradient(circle,#6a4bd6 0 42%,#fff 46%)}
+  .linkbtn:hover{text-decoration:underline}
+
+  /* device / credential row */
+  .dev-row{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:14px;background:var(--wash)}
+  .dev-row .di{width:30px;height:30px;border-radius:8px;background:#fff;border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .dev-row b{font-size:13px;display:block}
+  .dev-row small{font-size:11.5px;color:var(--muted)}
+
+  /* Face ID OS sheet */
+  .fidwrap{background:#0d0f14;border-radius:18px;padding:20px 18px 22px;margin:2px 0 4px;position:relative;overflow:hidden}
+  .fidwrap .grab{width:40px;height:5px;border-radius:5px;background:#3a3f4a;margin:0 auto 18px}
+  .fidwrap .fapp{color:#e7e9ee;text-align:center}
+  .fidwrap .fapp small{color:#9aa0ad;font-size:11.5px}
+  .fidface{width:96px;height:96px;border-radius:24px;margin:14px auto 12px;position:relative;display:flex;align-items:center;justify-content:center;background:#161a22;border:1px solid #232833}
+  .fidface .scanline{position:absolute;left:8px;right:8px;height:2px;background:linear-gradient(90deg,transparent,#7f9cff,transparent);border-radius:2px;top:14%;animation:scan 1.6s ease-in-out infinite}
+  @keyframes scan{0%{top:16%;opacity:.4}50%{top:80%;opacity:1}100%{top:16%;opacity:.4}}
+  .fidface.ok{background:#0f2a1e;border-color:#1f5c40}
+  .fidface.ok .scanline{display:none}
+  .fbtn{width:100%;background:#2b6dff;color:#fff;border:0;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;margin-top:6px}
+  .fbtn.g2{background:#1b1f27;color:#c9cdda;border:1px solid #2a2f3a}
+
+  /* progress / proof */
+  .prog{height:9px;border-radius:6px;background:#e4e7ef;overflow:hidden;margin:16px 0 10px}
+  .prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7657e0,#6244d2);border-radius:6px;transition:width .18s linear}
+  .substep{font-family:var(--mono);font-size:12.5px;color:var(--violet-2);min-height:18px}
+  .proofmeta{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:4px}
+  .spin{width:44px;height:44px;margin:2px auto 12px;border-radius:50%;border:3px solid var(--violet-bg);border-top-color:var(--violet);animation:spin .9s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* mail client mock */
+  .mail{border:1px solid var(--line2);border-radius:12px;overflow:hidden;margin:4px 0 14px}
+  .mail .mbar{display:flex;align-items:center;gap:7px;background:var(--wash);border-bottom:1px solid var(--line);padding:9px 12px}
+  .mail .mbar i{width:9px;height:9px;border-radius:50%}
+  .mail .mbar .r{background:#ff5f57}.mail .mbar .y{background:#febc2e}.mail .mbar .g{background:#28c840}
+  .mail .mbar span{font-size:11px;color:var(--faint);margin-left:6px}
+  .mail .mhd{padding:12px 14px;border-bottom:1px solid var(--line)}
+  .mail .mhd .sub{font-size:13.5px;font-weight:700}
+  .mail .mhd .frm{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .mail .mbody{padding:14px;font-size:12.5px;color:#3c4152;line-height:1.5}
+  .mail .mbtn{display:inline-block;background:linear-gradient(180deg,#7657e0,#6244d2);color:#fff;border-radius:9px;padding:8px 16px;font-size:12.5px;font-weight:700;margin:6px 0 2px}
+
+  /* document picker */
+  .docopt{display:flex;align-items:center;gap:12px;border:1.5px solid var(--line2);border-radius:12px;padding:12px 14px;margin-bottom:10px;cursor:pointer;background:#fff}
+  .docopt:hover{border-color:var(--violet)}
+  .docopt.sel{border-color:var(--violet);background:var(--violet-bg)}
+  .docopt.dis{opacity:.55;cursor:not-allowed;background:var(--wash)}
+  .docopt.dis:hover{border-color:var(--line2)}
+  .docopt .flag{font-size:22px}
+  .docopt b{font-size:13.5px;display:block}
+  .docopt small{font-size:11.5px;color:var(--muted)}
+  .docopt .soon{margin-left:auto;font-size:10px;font-weight:800;color:var(--muted);background:var(--line);border-radius:20px;padding:3px 9px}
+  .docopt .radio{margin-left:auto;width:18px;height:18px;border-radius:50%;border:2px solid var(--line2);flex:0 0 auto}
+  .docopt.sel .radio{border-color:var(--violet);background:radial-gradient(circle,var(--violet) 0 5px,#fff 6px 20px)}
+
+  /* reveal fields (all hidden) */
+  .reveal{display:flex;flex-direction:column;gap:7px;margin:6px 0 4px}
+  .rvrow{display:flex;align-items:center;gap:10px;background:var(--wash);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:12.5px}
+  .rvrow .rk{color:var(--muted);min-width:96px}
+  .rvrow .rv{font-family:var(--mono);letter-spacing:2px;color:var(--faint)}
+  .rvrow .rh{margin-left:auto;font-size:10.5px;font-weight:700;color:var(--muted);background:var(--line);border-radius:20px;padding:2px 8px;display:flex;align-items:center;gap:4px}
+
+  /* guardian preview + rows */
+  .gprev{display:none;align-items:center;gap:10px;border:1px dashed var(--line2);border-radius:11px;padding:10px 12px;margin:0 0 12px;font-size:12.5px}
+  .gprev .gp-t b{font-size:12.5px;display:block}
+  .gprev .gp-t small{font-size:11px;color:var(--muted);font-family:var(--mono)}
+  .gp-flag{margin-left:auto;font-size:10.5px;font-weight:700;border-radius:20px;padding:3px 9px}
+  .gp-flag.ok{color:var(--teal);background:var(--teal-bg)}
+  .gp-flag.warn{color:var(--orange);background:#fdf0e3}
+  .gp-warn{color:var(--orange);font-weight:600}
+  .grow .gp-t b{font-size:12.5px;display:block}
+  .grow .gp-t small{font-size:11px;color:var(--muted);font-family:var(--mono)}
+  .blockie{flex:0 0 auto}
+
+  /* threshold sentence */
+  .thr-sentence{font-size:15px;font-weight:800;text-align:center;margin:14px 0 6px;color:var(--ink)}
+
+  /* review extras */
+  .rev .rt small{font-size:11.5px;color:var(--muted);display:block;margin-top:1px}
+  .gasln{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-top:6px}
+  .rootlist{font-size:12px;color:var(--muted);margin:2px 0 0;line-height:1.5}
+
+  /* done recap */
+  .drecap{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:6px 0 16px}
+  .dchip{display:flex;align-items:center;gap:6px;background:var(--wash);border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:650}
+  .btn.g.done{color:var(--teal);border-color:var(--teal-bg);background:var(--teal-bg)}
+
+  /* policy composition */
+  .mrow{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 24px}
+  .mchip{display:inline-flex;align-items:center;gap:6px;background:var(--wash);border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:650}
+  .mrow:empty::before{content:"No methods yet — add one first.";color:var(--faint);font-size:12.5px}
+  .pol{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;background:#fff}
+  .pol .ph{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+  .pol .pnum{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--faint)}
+  .pol .prem{margin-left:auto;color:var(--faint);cursor:pointer;font-size:16px;line-height:1;padding:0 3px}
+  .pol .prem:hover{color:var(--orange)}
+  .pol .ands{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+  .pol .op{font-size:10.5px;font-weight:800;color:var(--violet-2);letter-spacing:.04em}
+  .wbadge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--muted);background:var(--wash);border:1px solid var(--line);border-radius:20px;padding:4px 10px;margin-top:11px}
+  .orsep{display:flex;align-items:center;gap:10px;margin:0 0 10px;color:var(--faint);font-size:10.5px;font-weight:800;letter-spacing:.1em}
+  .orsep::before,.orsep::after{content:"";height:1px;background:var(--line);flex:1}
+  #pol-list:empty::before{content:"No policies yet — add one to recover with.";display:block;color:var(--faint);font-size:12.5px;padding:2px 0 12px}
+
+  /* landing flow cards */
+  .flow{display:flex;align-items:center;gap:16px;border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:14px;background:#fff;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .05s}
+  .flow:hover{border-color:var(--violet);box-shadow:0 4px 16px rgba(106,75,214,.1)}
+  .flow:active{transform:translateY(1px)}
+  .flow .flow-i{width:46px;height:46px;border-radius:13px;background:var(--violet-bg);display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto}
+  .flow .flow-t{flex:1;min-width:0}
+  .flow .flow-t b{font-size:15.5px;display:block;margin-bottom:3px}
+  .flow .flow-t small{font-size:12.5px;color:var(--muted);line-height:1.45}
+  .flow .flow-cta{color:var(--violet);font-size:26px;font-weight:700;flex:0 0 auto;line-height:1}
+
+  /* selectable policy card */
+  .pol.clk{cursor:pointer;transition:border-color .12s,background .12s}
+  .pol.clk:hover{border-color:var(--violet)}
+  .pol.sel{border-color:var(--violet);background:var(--violet-bg)}
+  .pol .psel{margin-left:auto;width:18px;height:18px;border-radius:50%;border:2px solid var(--line2);flex:0 0 auto}
+  .pol.sel .psel{border-color:var(--violet);background:radial-gradient(circle,var(--violet) 0 5px,#fff 6px 20px)}
+
+  /* progress ring */
+  .ring{position:relative;width:88px;height:88px;margin:2px auto 6px}
+  .ring .rt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .ring .rt b{font-size:20px;font-family:var(--mono);line-height:1}
+  .ring .rt small{font-size:10px;color:var(--muted);margin-top:3px}
+  #rc-ring-arc{transition:stroke-dashoffset .35s ease}
+
+  /* recover checklist + small progress */
+  .rcprog{display:flex;align-items:center;gap:12px;margin:0 0 16px;font-size:12.5px;color:var(--muted);font-weight:700}
+  .rcprog span{flex:0 0 auto;min-width:78px}
+  .rcprog .rcbar{flex:1;height:8px;border-radius:6px;background:#e4e7ef;overflow:hidden}
+  .rcprog .rcbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7657e0,#6244d2);transition:width .25s}
+  .rc-row.rc-done{border-color:var(--teal-bg);background:var(--teal-bg)}
+
+  /* share link + qr */
+  .shbox{display:flex;align-items:center;gap:8px;background:var(--wash);border:1px solid var(--line);border-radius:11px;padding:7px 8px 7px 12px;margin:4px 0 14px}
+  .shbox .sl{flex:1;min-width:0;font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .qr{width:132px;height:132px;margin:6px auto 16px;padding:8px;background:#fff;border:1px solid var(--line2);border-radius:12px;display:flex;align-items:center;justify-content:center}
+
+  /* guardian status rows */
+  .grow .gst{margin-left:auto;font-size:10.5px;font-weight:700;border-radius:20px;padding:3px 9px;flex:0 0 auto}
+  .gst.ok{color:var(--teal);background:var(--teal-bg)}
+  .gst.wait{color:var(--muted);background:var(--line)}
+  .grow.clk{cursor:pointer}
+  .grow.clk:hover{border-color:var(--violet)}
+
+  /* recovery timeline */
+  .tl{display:flex;align-items:flex-start;margin:16px 0 4px}
+  .tl .node{flex:1;text-align:center;position:relative;padding:0 2px}
+  .tl .node .dot{width:16px;height:16px;border-radius:50%;background:#e4e7ef;border:2px solid #e4e7ef;margin:0 auto 8px;position:relative;z-index:1;transition:background .2s,border-color .2s,box-shadow .2s}
+  .tl .node.done .dot{background:var(--green);border-color:var(--green)}
+  .tl .node.on .dot{background:var(--violet);border-color:var(--violet);box-shadow:0 0 0 4px var(--violet-bg)}
+  .tl .node b{font-size:11.5px;display:block}
+  .tl .node small{font-size:10.5px;color:var(--muted)}
+  .tl .node::before{content:"";position:absolute;top:7px;left:-50%;width:100%;height:2px;background:#e4e7ef;z-index:0}
+  .tl .node:first-child::before{display:none}
+  .tl .node.done::before,.tl .node.on::before{background:var(--green)}
+
+  /* big countdown */
+  .count{font-family:var(--mono);font-size:36px;font-weight:700;text-align:center;letter-spacing:.02em;color:var(--ink);margin:2px 0 2px}
+  .countlbl{text-align:center;font-size:11.5px;color:var(--muted);margin-bottom:14px}
+
+  @media (prefers-reduced-motion: reduce){ .scanline,.spin,.srscreen{animation:none !important} }
+  .txrow{background:var(--wash);border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin:16px 0 4px;text-align:left}
+  .txrow .txtop{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:7px}
+  .txrow .txok{font-size:10px;font-weight:800;color:var(--green);background:#e2f4ec;border-radius:20px;padding:2px 8px}
+  .txrow .txh{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .txrow .mono{font-family:var(--mono);font-size:12px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .txrow .txlink{font-size:11.5px;font-weight:700;color:var(--violet);cursor:pointer;white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="topbar"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2C8 7 6 9 6 13a6 6 0 0012 0c0-2-1-3.5-2.5-5C14 9.5 13 8 12 2z" fill="#e6a33a"/></svg>
+      <b>Settings</b>
+    </div>
+    <nav class="nav">
+      <div class="item inert"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 8h11M19 8h1M4 16h1M9 16h11" stroke-linecap="round"/><circle cx="17" cy="8" r="2.2"/><circle cx="7" cy="16" r="2.2"/></svg>General</div>
+      <div class="item inert"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0111 0M17 8v6M14 11h6" stroke-linecap="round"/></svg>Accounts</div>
+      <div class="item inert"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M9 3.5v17M13 9.5h3M13 13h3" stroke-linecap="round"/></svg>Address Book</div>
+      <div class="item inert"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="6" cy="7" r="2.3"/><circle cx="18" cy="7" r="2.3"/><circle cx="12" cy="17" r="2.3"/><path d="M7.6 8.6L11 15M16.4 8.6L13 15" stroke-linecap="round"/></svg>Networks</div>
+      <div class="item inert"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 12a8 8 0 1 0 2-5.3M4 4v3h3" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v4l3 2" stroke-linecap="round"/></svg>Transaction history</div>
+      <div class="item inert"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1z" stroke-linejoin="round"/></svg>Signed messages</div>
+      <div class="item inert"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke-linejoin="round"/><circle cx="12" cy="11" r="1.8"/><path d="M12 12.8V15" stroke-linecap="round"/></svg>Recovery phrases</div>
+      <div class="item inert"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="5" y="4" width="14" height="16" rx="2.5"/><circle cx="9" cy="9" r="1"/><circle cx="12" cy="9" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="13" r="1"/><circle cx="12" cy="13" r="1"/><circle cx="15" cy="13" r="1"/></svg>Extension password</div>
+      <div class="item inert"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 4l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V7l7-3z" stroke-linejoin="round"/><path d="M4 4l16 16" stroke-linecap="round"/></svg>Privacy opt-outs</div>
+      <div class="item inert"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><ellipse cx="12" cy="6.5" rx="7" ry="3"/><path d="M5 6.5v11c0 1.7 3.1 3 7 3s7-1.3 7-3v-11" stroke-linecap="round"/><path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3" stroke-linecap="round"/></svg>Custom tokens</div>
+
+      <div class="item click" id="nav-sr" onclick="show('social')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke-linejoin="round"/><circle cx="9.5" cy="10.5" r="1.6"/><circle cx="14.5" cy="10.5" r="1.6"/><path d="M7.5 15.5c.8-1.3 2-2 4.5-2s3.7.7 4.5 2" stroke-linecap="round"/></svg>
+        Social Recovery <span class="new">NEW</span>
+      </div>
+
+      <div class="item inert"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 2C8 7 6 9 6 13a6 6 0 0012 0c0-2-1-3.5-2.5-5C14 9.5 13 8 12 2z" stroke-linejoin="round"/></svg>About Ambire</div>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <!-- accounts replica -->
+    <section class="view on" id="view-accounts">
+      <div class="h">
+        <h1>Accounts</h1>
+        <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9aa0b0" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.2-3.2" stroke-linecap="round"/></svg> Search…</div>
+        <button class="btn-add">⊕ Add account</button>
+      </div>
+      <div class="acct"><div class="blob" style="background:conic-gradient(#f2994a,#eb5286,#6a4bd6,#27ae60,#f2994a)"></div><div><div class="nm">Account 1 <span class="tag">internal</span></div><div class="ad">0x2b0F5E98Ee98ADC9865745e98802F333f72F6ef5</div></div><div class="dots">⋮</div></div>
+      <div class="acct"><div class="blob" style="background:conic-gradient(#27ae60,#2f80ed,#eb5286,#f2994a,#27ae60)"></div><div><div class="nm">Account 2 <span class="tag">internal</span></div><div class="ad">0xc3b2309E158A914c9351B30973Ba177C2d4F6A5F</div></div><div class="dots">⋮</div></div>
+      <p style="color:var(--faint);font-size:12.5px;margin-top:26px">Only <b style="color:var(--violet)">Social Recovery</b> is clickable in this prototype.</p>
+    </section>
+
+    <!-- SOCIAL RECOVERY flow -->
+    <section class="view" id="view-social">
+      <div class="sr">
+
+        <!-- SCREEN: home / landing -->
+        <div class="srscreen on" id="sr-home">
+          <div class="crumb">Settings › Social Recovery</div>
+          <h1>Social recovery</h1>
+          <p class="lead">Protect this account so you're never locked out — or recover an account you've lost access to.</p>
+          <div class="flow" onclick="srGo('methods')">
+            <div class="flow-i">🛡️</div>
+            <div class="flow-t"><b>Set up recovery</b><small>Protect this account so you can regain access if you lose your key.</small></div>
+            <div class="flow-cta">›</div>
+          </div>
+          <div class="flow" onclick="rcStart()">
+            <div class="flow-i">🔓</div>
+            <div class="flow-t"><b>Recover an account</b><small>Lost access on a new device? Recover your account.</small></div>
+            <div class="flow-cta">›</div>
+          </div>
+          <div class="edu" style="margin-top:22px">
+            <h4>How recovery works</h4>
+            <div class="cols">
+              <div class="c"><div class="ci">🧩</div><b>Policies, not passwords</b><small>An account is recovered by satisfying one of its policies — a set of methods combined with AND.</small></div>
+              <div class="c"><div class="ci">⏱</div><b>Time to react</b><small>Every recovery waits out a timelock before it finalizes, so an unwanted one can be cancelled.</small></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCREEN: methods -->
+        <div class="srscreen" id="sr-methods">
+          <div class="crumb">Settings › Social Recovery</div>
+          <h1>Set up your recovery</h1>
+          <p class="lead">Pick the methods that can bring your account back if you lose your key. Combine independent ones to get stronger.</p>
+
+          <div class="meter l0" id="meter">
+            <div class="top"><span class="lbl" id="meter-lbl">Not protected</span><span class="hint" id="meter-hint">Add a method to begin.</span></div>
+            <div class="bars"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
+          </div>
+
+          <div class="m" data-cat="passkey"><div class="mh"><div class="mi">🔑</div><div class="mt"><b>Passkeys</b><small>Face ID or a security key on your device</small></div><button class="add" onclick="srGo('passkey')">+ Add</button></div><div class="items"></div></div>
+          <div class="m" data-cat="email"><div class="mh"><div class="mi">✉️</div><div class="mt"><b>Emails</b><small>Prove control of your inbox, no password</small></div><button class="add" onclick="srGo('email')">+ Add</button></div><div class="items"></div></div>
+          <div class="m" data-cat="gov"><div class="mh"><div class="mi">🪪</div><div class="mt"><b>Government ID</b><small>Prove you are a real person, privately</small></div><button class="add" onclick="srGo('gov')">+ Add</button></div><div class="items"></div></div>
+          <div class="m" data-cat="guardian"><div class="mh"><div class="mi">👥</div><div class="mt"><b>Guardians</b><small>People or wallets you trust to approve</small></div><button class="add" onclick="srGo('guardian')">+ Add</button></div><div class="items"></div></div>
+
+          <div class="cta"><button class="btn p" id="continue" disabled onclick="buildPolicies()">Continue</button></div>
+        </div>
+
+        <!-- ============ PASSKEY WIZARD (3 steps) ============ -->
+        <!-- passkey · step 1: name -->
+        <div class="srscreen" id="sr-passkey">
+          <div class="crumb"><span class="back" onclick="srGo('methods')">‹ Back</span> · Passkeys</div>
+          <div class="wsteps"><span class="step">Step 1 of 3</span><div class="pgdots"><i class="on"></i><i></i><i></i></div></div>
+          <div class="card">
+            <div class="ct">Name this passkey</div>
+            <div class="cs">A passkey is a key created and guarded by a passkey manager. You approve a recovery with your fingerprint or Face ID, nothing to remember.</div>
+            <label class="fl">Passkey name</label>
+            <input class="field" id="pk-name" value="MacBook passkey" placeholder="e.g. MacBook passkey">
+            <label class="fl" style="margin-top:4px">Where it lives</label>
+            <div class="dev-row"><div class="di">🫆</div><div><b>This device · fingerprint</b><small>Approve with your fingerprint. The key never leaves this device.</small></div></div>
+            <div class="tip">🛡️ <span>For real independence, add a second passkey on a different device later. Losing one device then won't lock you out.</span></div>
+            <button class="btn p" style="width:100%;margin-top:16px" onclick="pkStep1()">Continue</button>
+          </div>
+        </div>
+
+        <!-- passkey · step 2: Face ID sheet -->
+        <div class="srscreen" id="sr-passkey-2">
+          <div class="crumb"><span class="back" onclick="srGo('passkey')">‹ Back</span> · Passkeys</div>
+          <div class="wsteps"><span class="step">Step 2 of 3</span><div class="pgdots"><i class="done"></i><i class="on"></i><i></i></div></div>
+          <div class="card">
+            <div class="ct">Approve with your fingerprint</div>
+            <div class="cs">This device is creating the passkey. The private key is generated and kept on this device.</div>
+            <div class="fidwrap">
+              <div class="grab"></div>
+              <div class="fapp">
+                <div style="font-weight:700;font-size:14px">Fingerprint</div>
+                <small>Ambire Wallet wants to create a passkey</small>
+                <div class="fidface" id="fid-face"><div class="scanline"></div><div id="fid-icon"></div></div>
+                <small id="fid-status">Touch the sensor…</small>
+              </div>
+              <button class="fbtn" id="fid-go" onclick="passkeyScan()" style="margin-top:16px">Approve</button>
+            </div>
+            <button class="btn p" style="width:100%;margin-top:14px" id="pk-cont2" disabled onclick="srGo('passkey-3')">Continue</button>
+          </div>
+        </div>
+
+        <!-- passkey · step 3: success -->
+        <div class="srscreen" id="sr-passkey-3">
+          <div class="crumb">Passkeys</div>
+          <div class="wsteps"><span class="step">Step 3 of 3</span><div class="pgdots"><i class="done"></i><i class="done"></i><i class="on"></i></div></div>
+          <div class="card">
+            <div class="okline" style="margin:0 0 14px">✓ <span>Passkey created</span></div>
+            <div class="ct">Your passkey is ready</div>
+            <div class="cs">This credential can now approve a recovery on your account.</div>
+            <div class="rev"><div class="mi">🔑</div><div class="rt"><b id="pk-name-out" style="font-size:13.5px">MacBook passkey</b><small>Chrome on macOS · created just now</small></div><span class="rx">active</span></div>
+            <div class="tip" style="margin-top:12px">🛡️ <span>Add a second passkey on a different device later so a single lost or wiped device never locks you out.</span></div>
+            <button class="btn p" style="width:100%;margin-top:16px" onclick="finishPasskey()">Add to recovery</button>
+          </div>
+        </div>
+
+        <!-- ============ EMAIL (single screen) ============ -->
+        <div class="srscreen" id="sr-email">
+          <div class="crumb"><span class="back" onclick="srGo('methods')">‹ Back</span> · Emails</div>
+          <div class="card">
+            <div class="ct">Add a recovery email</div>
+            <div class="cs">Enter the address you want to use to recover this account. There's no password and no account with us.</div>
+            <label class="fl">Email address</label>
+            <input class="field" id="email-input" placeholder="you@gmail.com" value="recovery@gmail.com">
+            <div class="note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa0b0" stroke-width="2"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke-linejoin="round"/></svg><span>No password needed — this address is recorded now and proves control of the inbox at recovery time.</span></div>
+            <button class="btn p" style="width:100%" onclick="addEmail()">Add email</button>
+          </div>
+        </div>
+
+        <!-- ============ GOVERNMENT ID WIZARD (4 steps) ============ -->
+        <!-- gov · step 1: choose document -->
+        <div class="srscreen" id="sr-gov">
+          <div class="crumb"><span class="back" onclick="srGo('methods')">‹ Back</span> · Government ID</div>
+          <div class="wsteps"><span class="step">Step 1 of 4</span><div class="pgdots"><i class="on"></i><i></i><i></i><i></i></div></div>
+          <div class="card">
+            <div class="ct">Choose your document</div>
+            <div class="cs">Prove you're a real, unique person, privately. We check a government signature, not your details.</div>
+            <div class="docopt sel" onclick="pickDoc(this,'Aadhaar')"><span class="flag">🇮🇳</span><div><b>Aadhaar</b><small>India · secure QR</small></div><span class="radio"></span></div>
+            <div class="docopt dis"><span class="flag">🛂</span><div><b>Passport</b><small>NFC chip · most countries</small></div><span class="soon">COMING SOON</span></div>
+            <div class="note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa0b0" stroke-width="2"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke-linejoin="round"/></svg><span>Nothing personal is uploaded. Your name, age, gender and ID number never leave your device.</span></div>
+            <button class="btn p" style="width:100%" id="gov-cont1" onclick="srGo('gov-2')">Continue</button>
+          </div>
+        </div>
+
+        <!-- gov · step 2: scan instructions -->
+        <div class="srscreen" id="sr-gov-2">
+          <div class="crumb"><span class="back" onclick="srGo('gov')">‹ Back</span> · Government ID</div>
+          <div class="wsteps"><span class="step">Step 2 of 4</span><div class="pgdots"><i class="done"></i><i class="on"></i><i></i><i></i></div></div>
+          <div class="card">
+            <div class="ct">Hold your document to the device</div>
+            <div class="cs">Line up the secure QR on your Aadhaar (or the passport chip) with your device so it can be read.</div>
+            <div class="big" style="font-size:64px">📇</div>
+            <div class="reveal" style="margin-bottom:14px">
+              <div class="rvrow"><span class="rk">1 · Position</span><span>Flat, well lit, fully in frame</span></div>
+              <div class="rvrow"><span class="rk">2 · Hold still</span><span>Keep it steady while reading</span></div>
+            </div>
+            <button class="btn p" style="width:100%" onclick="govStep2()">Start scan</button>
+          </div>
+        </div>
+
+        <!-- gov · step 3: nfc + zk proof -->
+        <div class="srscreen" id="sr-gov-3">
+          <div class="crumb">Government ID</div>
+          <div class="wsteps"><span class="step">Step 3 of 4</span><div class="pgdots"><i class="done"></i><i class="done"></i><i class="on"></i><i></i></div></div>
+          <div class="card">
+            <div class="ct">Reading and proving</div>
+            <div class="cs">Reading the chip, then generating a proof, on your device. These fields stay hidden the whole time.</div>
+            <div class="spin"></div>
+            <div class="prog"><i id="gov-bar"></i></div>
+            <div class="substep" id="gov-sub">Reading secure chip…</div>
+            <div class="proofmeta"><span>Runs on your device</span><span id="gov-time">0.0s</span></div>
+            <div class="reveal" style="margin-top:14px">
+              <div class="rvrow"><span class="rk">Full name</span><span class="rv">••••••••</span><span class="rh">🔒 hidden</span></div>
+              <div class="rvrow"><span class="rk">Date of birth</span><span class="rv">••••••</span><span class="rh">🔒 hidden</span></div>
+              <div class="rvrow"><span class="rk">ID number</span><span class="rv">••••••••</span><span class="rh">🔒 hidden</span></div>
+            </div>
+            <button class="btn p" style="width:100%;margin-top:16px" id="gov-cont3" disabled onclick="srGo('gov-4')">Continue</button>
+          </div>
+        </div>
+
+        <!-- gov · step 4: success -->
+        <div class="srscreen" id="sr-gov-4">
+          <div class="crumb">Government ID</div>
+          <div class="wsteps"><span class="step">Step 4 of 4</span><div class="pgdots"><i class="done"></i><i class="done"></i><i class="done"></i><i class="on"></i></div></div>
+          <div class="card">
+            <div class="okline" style="margin:0 0 14px">✓ <span>Verified privately</span></div>
+            <div class="ct">You're verified as a real person</div>
+            <div class="cs">Nothing was revealed, no name, age, gender or ID number. Only a one-way tag was saved to prove personhood.</div>
+            <div class="reveal">
+              <div class="rvrow"><span class="rk">Name</span><span class="rv">not revealed</span><span class="rh">🔒</span></div>
+              <div class="rvrow"><span class="rk">Age / gender</span><span class="rv">not revealed</span><span class="rh">🔒</span></div>
+              <div class="rvrow"><span class="rk">ID number</span><span class="rv">not revealed</span><span class="rh">🔒</span></div>
+            </div>
+            <button class="btn p" style="width:100%;margin-top:16px" onclick="finishGov()">Add to recovery</button>
+          </div>
+        </div>
+
+        <!-- ============ GUARDIANS WIZARD (2 steps) ============ -->
+        <!-- guardians · step 1: add -->
+        <div class="srscreen" id="sr-guardian">
+          <div class="crumb"><span class="back" onclick="srGo('methods')">‹ Back</span> · Guardians</div>
+          <div class="wsteps"><span class="step">Step 1 of 2</span><div class="pgdots"><i class="on"></i><i></i></div></div>
+          <div class="card" style="max-width:500px">
+            <div class="ct">Add guardians</div>
+            <div class="cs">People or wallets you trust. They approve from their own wallet when you recover.</div>
+            <label class="fl">Address or ENS</label>
+            <input class="field mono" id="g-addr" placeholder="alex.eth or 0x…" oninput="gPreview()">
+            <div class="gprev" id="g-preview"></div>
+            <label class="fl">Nickname (optional)</label>
+            <input class="field" id="g-nick" placeholder="e.g. Sister">
+            <button class="btn g" style="width:100%;margin-bottom:14px" id="g-addbtn" disabled onclick="addGuardian()">+ Add guardian</button>
+            <div class="glist" id="g-list"></div>
+            <div class="note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa0b0" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01" stroke-linecap="round"/></svg><span>On-chain, guardians appear only as a reference. They never see each other or the others you picked.</span></div>
+            <button class="btn p" style="width:100%;margin-top:14px" id="g-cont" disabled onclick="goThreshold()">Continue</button>
+          </div>
+        </div>
+
+        <!-- guardians · step 2: threshold -->
+        <div class="srscreen" id="sr-guardian-2">
+          <div class="crumb"><span class="back" onclick="srGo('guardian')">‹ Back</span> · Guardians</div>
+          <div class="wsteps"><span class="step">Step 2 of 2</span><div class="pgdots"><i class="done"></i><i class="on"></i></div></div>
+          <div class="card" style="max-width:500px">
+            <div class="ct">How many must approve?</div>
+            <div class="cs">Set how many of your guardians have to sign before a recovery goes through.</div>
+            <div class="thr-sentence" id="thr-sentence">2 of 3 guardians must approve</div>
+            <div class="steprow" style="justify-content:center">
+              <div class="stepper"><button onclick="thr(-1)">−</button><b id="thr"><span id="thr-n">2</span> of <span id="thr-m">0</span></b><button onclick="thr(1)">+</button></div>
+            </div>
+            <div class="tip" style="margin-top:16px">🛡️ <span>A higher bar is harder for an attacker, but needs more people to reach you. A middle number (like 2 of 3) usually balances safety and convenience.</span></div>
+            <button class="btn p" style="width:100%;margin-top:16px" id="g-save" onclick="saveGuardians()">Save guardians</button>
+          </div>
+        </div>
+
+        <!-- SCREEN: policies -->
+        <div class="srscreen" id="sr-policies">
+          <div class="crumb"><span class="back" onclick="srGo('methods')">‹ Back</span> · Recovery policies</div>
+          <h1>Combine into recovery policies</h1>
+          <p class="lead">A policy joins methods with <b>AND</b> — all of them are needed together. Your account can hold several policies joined by <b>OR</b>, so any one policy is enough to recover.</p>
+
+          <div class="step">Methods you added</div>
+          <div class="mrow" id="pol-methods"></div>
+
+          <div class="step" style="display:flex;align-items:baseline;gap:8px">Your policies <span style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--faint)">satisfy any one to recover</span></div>
+          <div id="pol-list"></div>
+          <button class="btn g" style="width:100%;margin-top:2px" onclick="openPolicyEdit()">+ Add policy</button>
+
+          <div class="tip" style="margin-top:16px">🛡️ <span>A policy that mixes independent methods is stronger — if one method fails, that clause still can't be forced on its own.</span></div>
+
+          <div class="cta"><button class="btn p" id="pol-install" onclick="installRecovery()">Install recovery</button><button class="btn g" onclick="srGo('methods')">Back</button></div>
+        </div>
+
+        <!-- SCREEN: policy editor -->
+        <div class="srscreen" id="sr-policy-edit">
+          <div class="crumb"><span class="back" onclick="srGo('policies')">‹ Back</span> · New policy</div>
+          <div class="card" style="max-width:500px">
+            <div class="ct">Build a policy</div>
+            <div class="cs">Pick the methods that must <b>all</b> be satisfied together (AND) to recover with this policy. Combining independent methods makes a stronger clause.</div>
+            <label class="fl">Methods in this policy</label>
+            <div class="chips" id="pe-methods" style="flex-wrap:wrap"></div>
+            <div class="tip" id="pe-hint" style="margin:12px 0 4px">Pick one or more methods to combine.</div>
+            <label class="fl" style="margin-top:16px">Waiting period before this policy completes</label>
+            <div class="chips" id="pe-wait">
+              <div class="chip" data-w="24h" onclick="peWait(this,'24h')">24h</div>
+              <div class="chip on" data-w="48h" onclick="peWait(this,'48h')">48h</div>
+              <div class="chip" data-w="72h" onclick="peWait(this,'72h')">72h</div>
+            </div>
+            <p style="font-size:12px;color:var(--muted);margin:8px 0 0">A longer wait gives you more time to cancel a recovery you did not start.</p>
+            <button class="btn p" id="pe-save" style="width:100%;margin-top:16px" disabled onclick="savePolicy()">Save policy</button>
+          </div>
+        </div>
+
+        <!-- SCREEN: done -->
+        <div class="srscreen" id="sr-done">
+          <div class="card" style="text-align:center">
+            <div class="big">✅</div>
+            <div class="ct">All set up</div>
+            <div class="cs">Your recovery module and policies were installed in one transaction on your account.</div>
+            <div class="drecap" id="done-chips"></div>
+            <div class="cs" id="done-strength" style="margin-top:10px">Your setup is Robust. If you lose your key, open Ambire on any device, prove it's you, and switch keys after the wait.</div>
+            <div class="txrow">
+              <div class="txtop"><span>Recovery installed on-chain</span><span class="txok">✓ confirmed</span></div>
+              <div class="txh"><span class="mono" id="tx-hash">0x9f3c8a2e4d1b7c6a…c0a17e4b90</span><span class="txlink">View on explorer ↗</span></div>
+            </div>
+            <div class="cta" style="justify-content:center">
+              <button class="btn g" onclick="enableAlerts(this)">🔔 Enable alerts</button>
+              <button class="btn p" onclick="srGo('home')">Back to Social Recovery home</button>
+            </div>
+            <p style="font-size:11.5px;color:var(--muted);margin:12px 0 0">Alerts warn you the moment a recovery starts, so a malicious one can be cancelled during the wait.</p>
+          </div>
+        </div>
+
+        <!-- ============ RECOVER FLOW ============ -->
+        <!-- recover · step 1: look up account -->
+        <div class="srscreen" id="sr-recover">
+          <div class="crumb"><span class="back" onclick="srGo('home')">‹ Back</span> · Recover an account</div>
+          <h1>Recover an account</h1>
+          <p class="lead">Enter the account you've lost access to. We'll look up how this account can be recovered — you don't need your old key.</p>
+          <div class="card">
+            <label class="fl">Account address</label>
+            <input class="field mono" id="rc-addr" value="0x2b0F5E98Ee98ADC9865745e98802F333f72F6ef5" placeholder="0x…">
+            <div class="note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa0b0" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.2-3.2" stroke-linecap="round"/></svg><span>We'll look up how this account can be recovered. Recovery is permissionless — anyone can start one, but only your chosen methods can complete it.</span></div>
+            <button class="btn p" style="width:100%" onclick="rcLookup()">Look up account</button>
+          </div>
+        </div>
+
+        <!-- recover · step 2: recovery options -->
+        <div class="srscreen" id="sr-recover-policies">
+          <div class="crumb"><span class="back" onclick="srGo('recover')">‹ Back</span> · Recover an account</div>
+          <h1>How this account recovers</h1>
+          <p class="lead">Any one of these policies recovers the account. Pick the one you can satisfy.</p>
+          <div class="rev"><div class="mi">📇</div><div class="rt"><b style="font-size:13px">Account found</b><small style="font-family:var(--mono);font-size:11.5px" id="rc-acct-addr">0x…</small></div><span class="rx">recoverable</span></div>
+          <div class="step" style="margin-top:16px">Recovery options · satisfy any one</div>
+          <div id="rc-pol-list"></div>
+          <div class="cta"><button class="btn p" id="rc-pol-cont" disabled onclick="rcChoosePolicy()">Continue</button><button class="btn g" onclick="srGo('recover')">Back</button></div>
+        </div>
+
+        <!-- recover · step 3: new key -->
+        <div class="srscreen" id="sr-recover-newkey">
+          <div class="crumb"><span class="back" onclick="srGo('recover-policies')">‹ Back</span> · Recover an account</div>
+          <div class="card">
+            <div class="okline" style="margin:0 0 14px">✓ <span>New key created on this device</span></div>
+            <div class="ct">A new signer key for this device</div>
+            <div class="cs">Your account address stays exactly the same — only the key that controls it changes. Recovery hands control to this key once your proofs clear.</div>
+            <div class="dev-row"><div class="di">🔑</div><div><b>New signer · this device</b><small style="font-family:var(--mono)" id="rc-newkey-val">0x…</small></div></div>
+            <div class="tip">🛡️ <span>Every proof you gather next is bound to this new key, so no one can hijack your recovery with a key of their own.</span></div>
+            <button class="btn p" style="width:100%;margin-top:16px" onclick="rcOpenCollect()">Continue</button>
+          </div>
+        </div>
+
+        <!-- recover · step 4: collect hub -->
+        <div class="srscreen" id="sr-recover-collect">
+          <div class="crumb"><span class="back" onclick="srGo('recover-newkey')">‹ Back</span> · Recover an account</div>
+          <h1>Gather your proofs</h1>
+          <p class="lead">Complete each requirement of your chosen policy. Nothing is submitted until all are ready.</p>
+          <div class="rcprog"><span id="rc-collect-n">0 of 2 ready</span><div class="rcbar"><i id="rc-collect-bar"></i></div></div>
+          <div id="rc-checklist"></div>
+          <div class="note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa0b0" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01" stroke-linecap="round"/></svg><span>Each proof is gathered on this device and held locally. They're bundled and submitted together in one step.</span></div>
+          <div class="cta"><button class="btn p" id="rc-collect-cont" disabled onclick="rcOpenSubmit()">Continue</button></div>
+        </div>
+
+        <!-- recover · sub: passkey (WebAuthn assertion) -->
+        <div class="srscreen" id="sr-recover-passkey">
+          <div class="crumb"><span class="back" onclick="srGo('recover-collect')">‹ Back</span> · Recover · Passkey</div>
+          <div class="card">
+            <div class="ct">Approve with your fingerprint</div>
+            <div class="cs">Your passkey signs a WebAuthn assertion proving you can approve this recovery. It's bound to your new key.</div>
+            <div class="fidwrap">
+              <div class="grab"></div>
+              <div class="fapp">
+                <div style="font-weight:700;font-size:14px">Fingerprint</div>
+                <small>Ambire Wallet wants to approve a recovery</small>
+                <div class="fidface" id="rfid-face"><div class="scanline"></div><div id="rfid-icon"></div></div>
+                <small id="rfid-status">Touch the sensor…</small>
+              </div>
+              <button class="fbtn" id="rfid-go" onclick="rcPasskeyScan()" style="margin-top:16px">Approve</button>
+            </div>
+            <button class="btn p" style="width:100%;margin-top:14px" id="rc-pk-cont" disabled onclick="rcMethodDone('passkey')">Mark passkey ready</button>
+          </div>
+        </div>
+
+        <!-- recover · sub: guardians (collect signatures) -->
+        <div class="srscreen" id="sr-recover-guardians">
+          <div class="crumb"><span class="back" onclick="srGo('recover-collect')">‹ Back</span> · Recover · Guardians</div>
+          <h1>Ask your guardians</h1>
+          <p class="lead">Share the link below. Each guardian opens it and signs from their own wallet — their signatures are collected here.</p>
+          <div class="card" style="max-width:500px">
+            <div class="ring" id="rc-ring">
+              <svg width="88" height="88" viewBox="0 0 88 88"><circle cx="44" cy="44" r="38" fill="none" stroke="#e4e7ef" stroke-width="8"/><circle id="rc-ring-arc" cx="44" cy="44" r="38" fill="none" stroke="#6a4bd6" stroke-width="8" stroke-linecap="round" stroke-dasharray="238.76" stroke-dashoffset="119.38" transform="rotate(-90 44 44)"/></svg>
+              <div class="rt"><b id="rc-ring-n">1/2</b><small>signed</small></div>
+            </div>
+            <div style="text-align:center;font-size:12.5px;color:var(--muted);margin-bottom:14px" id="rc-g-status">1 of 2 signatures collected</div>
+            <label class="fl">Recovery link</label>
+            <div class="shbox"><span class="sl" id="rc-share">https://ambire.com/r/0x2b0f…6ef5</span><button class="add" onclick="rcCopy(this)">Copy</button></div>
+            <div class="qr" id="rc-qr"></div>
+            <label class="fl">Guardians</label>
+            <div class="glist" id="rc-glist"></div>
+            <div class="note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa0b0" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01" stroke-linecap="round"/></svg><span>Each guardian signs an EIP-712 approval from their own wallet. Tap a waiting guardian to simulate their signature arriving.</span></div>
+            <button class="linkbtn" onclick="srGo('guardian-approve')">Preview a guardian's view ›</button>
+            <button class="btn p" style="width:100%;margin-top:6px" id="rc-g-cont" disabled onclick="rcMethodDone('guardians')">Mark guardians ready</button>
+          </div>
+        </div>
+
+        <!-- recover · sub: email (DKIM + ZK proof) -->
+        <div class="srscreen" id="sr-recover-email">
+          <div class="crumb"><span class="back" onclick="srGo('recover-collect')">‹ Back</span> · Recover · Email</div>
+          <div class="card">
+            <div class="ct">Confirm your inbox</div>
+            <div class="cs">We'll email a code to your recovery address. Entering it lets your device build a zero-knowledge proof from the email's DKIM signature.</div>
+            <div class="dev-row"><div class="di">✉️</div><div><b>recovery@gmail.com</b><small>the address on file for this account</small></div></div>
+            <button class="btn g" style="width:100%" id="rc-email-send" onclick="rcEmailSend()">Send recovery email</button>
+            <div id="rc-email-stage2" style="display:none">
+              <div class="mail" style="margin-top:14px">
+                <div class="mbar"><i class="r"></i><i class="y"></i><i class="g"></i><span>Inbox</span></div>
+                <div class="mhd"><div class="sub">Your Ambire recovery code</div><div class="frm">Ambire · no-reply@ambire.com</div></div>
+                <div class="mbody">Use this code to confirm your inbox: <b>834-192</b></div>
+              </div>
+              <label class="fl">Enter the code</label>
+              <input class="field mono" id="rc-email-code" value="834-192">
+              <button class="btn g" style="width:100%" onclick="rcEmailVerify()">Verify &amp; build proof</button>
+            </div>
+            <div id="rc-email-proof" style="display:none">
+              <div class="prog"><i id="rc-email-bar"></i></div>
+              <div class="substep" id="rc-email-sub">Checking DKIM signature…</div>
+              <div class="proofmeta"><span>Runs on your device</span><span id="rc-email-time">0.0s</span></div>
+            </div>
+            <button class="btn p" style="width:100%;margin-top:14px" id="rc-email-cont" disabled onclick="rcMethodDone('email')">Mark email ready</button>
+          </div>
+        </div>
+
+        <!-- recover · sub: passport (scan + ZK proof) -->
+        <div class="srscreen" id="sr-recover-passport">
+          <div class="crumb"><span class="back" onclick="srGo('recover-collect')">‹ Back</span> · Recover · Passport</div>
+          <div class="card">
+            <div class="ct">Scan your passport</div>
+            <div class="cs">Hold your passport to the device to read its chip, then build a zero-knowledge proof — no personal details are revealed.</div>
+            <div class="big" style="font-size:64px">🛂</div>
+            <button class="btn g" style="width:100%" id="rc-pp-scan" onclick="rcPassportScan()">Start scan</button>
+            <div id="rc-pp-proof" style="display:none">
+              <div class="prog"><i id="rc-pp-bar"></i></div>
+              <div class="substep" id="rc-pp-sub">Reading passport chip…</div>
+              <div class="proofmeta"><span>Runs on your device</span><span id="rc-pp-time">0.0s</span></div>
+              <div class="reveal" style="margin-top:14px">
+                <div class="rvrow"><span class="rk">Full name</span><span class="rv">••••••••</span><span class="rh">🔒 hidden</span></div>
+                <div class="rvrow"><span class="rk">Passport no.</span><span class="rv">••••••••</span><span class="rh">🔒 hidden</span></div>
+              </div>
+            </div>
+            <button class="btn p" style="width:100%;margin-top:14px" id="rc-pp-cont" disabled onclick="rcMethodDone('passport')">Mark passport ready</button>
+          </div>
+        </div>
+
+        <!-- recover · step 5: submit -->
+        <div class="srscreen" id="sr-recover-submit">
+          <div class="crumb"><span class="back" onclick="srGo('recover-collect')">‹ Back</span> · Recover an account</div>
+          <h1>Submit your recovery</h1>
+          <p class="lead">Every requirement is ready. Submitting bundles your proofs and signatures into one on-chain request.</p>
+          <div id="rc-sum"></div>
+          <div class="note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa0b0" stroke-width="2"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke-linejoin="round"/></svg><span>This request is locked to your new key — the proofs only validate for the key created on this device, so no one can redirect the recovery.</span></div>
+          <div class="cta"><button class="btn p" id="rc-submit-btn" onclick="rcSubmit()">Submit recovery</button></div>
+        </div>
+
+        <!-- recover · step 6: wait / timelock -->
+        <div class="srscreen" id="sr-recover-wait">
+          <div class="crumb">Recover an account</div>
+          <h1>Recovery in progress</h1>
+          <p class="lead">Your request is on-chain and waiting out its timelock. When it's ready, you can finalize.</p>
+          <div class="card">
+            <div class="count" id="rc-count">23:12:40</div>
+            <div class="countlbl">until your recovery can finalize</div>
+            <div class="prog"><i id="rc-wait-bar" style="width:0"></i></div>
+            <div class="tl" id="rc-timeline">
+              <div class="node on"><div class="dot"></div><b>Submitted</b><small>request on-chain</small></div>
+              <div class="node"><div class="dot"></div><b>Executable</b><small>timelock passed</small></div>
+              <div class="node"><div class="dot"></div><b>Done</b><small>key rotated</small></div>
+            </div>
+            <div class="note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa0b0" stroke-width="2"><path d="M12 3a6 6 0 00-6 6c0 5-2 6-2 6h16s-2-1-2-6a6 6 0 00-6-6z"/><path d="M10 20a2 2 0 004 0" stroke-linecap="round"/></svg><span>We'll notify you the moment this becomes executable — you don't have to keep this open. (Demo: fast-forwarded.)</span></div>
+            <div class="tip">🛡️ <span>Didn't start this? As the account owner you can cancel the recovery any time before it finalizes.</span></div>
+            <button class="btn p" style="width:100%;margin-top:14px" id="rc-wait-fin" disabled onclick="rcOpenFinalize()">Continue to finalize</button>
+          </div>
+        </div>
+
+        <!-- recover · step 7: finalize -->
+        <div class="srscreen" id="sr-recover-finalize">
+          <div class="crumb"><span class="back" onclick="srGo('recover-wait')">‹ Back</span> · Recover an account</div>
+          <div class="card">
+            <div class="okline" style="margin:0 0 14px">✓ <span>Waiting period elapsed</span></div>
+            <div class="ct">Finalize your recovery</div>
+            <div class="cs">This rotates the signer on your smart account to your new key. After this, the key on this device controls the account.</div>
+            <div class="dev-row"><div class="di">🔑</div><div><b>Rotate to new signer</b><small style="font-family:var(--mono)" id="rc-fin-key">0x…</small></div></div>
+            <button class="btn p" style="width:100%;margin-top:6px" onclick="rcFinalize()">Finalize recovery</button>
+          </div>
+        </div>
+
+        <!-- recover · step 8: done -->
+        <div class="srscreen" id="sr-recover-done">
+          <div class="card" style="text-align:center">
+            <div class="big">✅</div>
+            <div class="ct">You're back in</div>
+            <div class="drecap">
+              <span class="dchip">🏠 Same account · <span style="font-family:var(--mono)" id="rc-done-addr">0x…</span></span>
+            </div>
+            <div class="drecap">
+              <span class="dchip">🔑 New signer · <span style="font-family:var(--mono)" id="rc-done-key">0x…</span></span>
+              <span class="dchip">💰 Funds intact</span>
+            </div>
+            <div class="cs">Your account address and balances are unchanged — only the key that controls it was replaced. Consider setting up recovery again for this new key.</div>
+            <div class="cta" style="justify-content:center">
+              <button class="btn p" onclick="show('social')">Done</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- other side: a guardian approves the request -->
+        <div class="srscreen" id="sr-guardian-approve">
+          <div class="crumb"><span class="back" onclick="srGo('recover-guardians')">‹ Back</span> · Guardian request</div>
+          <h1>Approve recovery for a friend</h1>
+          <p class="lead">Someone who named you as a guardian is recovering their account. If it's really them, sign to approve.</p>
+          <div class="card">
+            <div class="rev"><div class="mi">📇</div><div class="rt"><b style="font-size:13px">Account</b><small style="font-family:var(--mono)">0x2b0F…6ef5</small></div></div>
+            <div class="rev"><div class="mi">🔑</div><div class="rt"><b style="font-size:13px">New key requested</b><small style="font-family:var(--mono)">0x9c4a…12bd</small></div><span class="rx">this recovery</span></div>
+            <div class="note" style="border-color:#fde3d0;background:#fdf3ea"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ef8f3c" stroke-width="2"><path d="M12 3l9 16H3z" stroke-linejoin="round"/><path d="M12 10v4M12 17h.01" stroke-linecap="round"/></svg><span style="color:#b56a25">Confirm through a trusted channel first — call or message your friend to be sure they really started this before you sign.</span></div>
+            <div class="okline" id="rc-ga-msg" style="display:none">✓ <span>Approval signed and sent — your signature was collected.</span></div>
+            <div class="cta"><button class="btn p" onclick="rcGuardianSign()">Sign approval</button><button class="btn g" onclick="srGo('recover-guardians')">Decline</button></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  function show(v){
+    document.querySelectorAll('.view').forEach(function(el){el.classList.remove('on')});
+    document.getElementById('view-'+v).classList.add('on');
+    document.querySelectorAll('.item').forEach(function(el){el.classList.remove('active')});
+    if(v==='social'){ document.getElementById('nav-sr').classList.add('active'); srGo('home'); }
+  }
+  function srGo(id){
+    document.querySelectorAll('.srscreen').forEach(function(el){el.classList.remove('on')});
+    document.getElementById('sr-'+id).classList.add('on');
+    document.querySelector('.main').scrollTop=0;
+  }
+  function addItem(cat,label,ico){
+    var wrap=document.querySelector('.m[data-cat="'+cat+'"] .items');
+    var row=document.createElement('div');
+    row.className='it';
+    row.innerHTML='<span>'+ico+'</span><b>'+label+'</b><span class="x" title="remove">&times;</span>';
+    row.querySelector('.x').onclick=function(){row.remove();refresh();};
+    wrap.appendChild(row); refresh();
+  }
+  function $(s){ return document.querySelector(s); }
+
+  /* generic on-device proof animation (shared by email + gov) */
+  function startProof(barSel,subSel,timeSel,steps,contSel){
+    var bar=$(barSel), sub=$(subSel), tm=$(timeSel), cont=$(contSel);
+    bar.style.width='0%'; cont.disabled=true; sub.textContent=steps[0];
+    var t0=Date.now(), pct=0;
+    clearInterval(window._pf);
+    window._pf=setInterval(function(){
+      pct=Math.min(100, pct+(2+Math.random()*3.5));
+      bar.style.width=pct.toFixed(1)+'%';
+      tm.textContent=((Date.now()-t0)/1000).toFixed(1)+'s';
+      var idx=Math.min(steps.length-1, Math.floor(pct/(100/steps.length)));
+      sub.textContent = pct>=100 ? 'Proof ready ✓' : steps[idx];
+      if(pct>=100){ clearInterval(window._pf); cont.disabled=false; }
+    },140);
+  }
+
+  /* PASSKEY wizard (fingerprint only) */
+  var pkName='MacBook passkey';
+  var PK_FINGER='<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#8fa6ff" stroke-width="1.6"><path d="M12 5c3.9 0 7 2.9 7 7M5.5 11.5A7 7 0 0112 5M8 12a4 4 0 018 0v2.5M12 12v4.5M16 14.5c0 2-.4 3.4-1 4.6M8.4 15c.3 2 .1 3.2-.5 4.3" stroke-linecap="round"/></svg>';
+  function pkStep1(){
+    pkName=($('#pk-name').value||'').trim()||'this device';
+    $('#pk-name-out').textContent=pkName;
+    $('#pk-name-out').nextElementSibling.textContent='This device · fingerprint · created just now';
+    $('#fid-status').textContent='Touch the sensor…';
+    $('#fid-go').style.display='block';
+    $('#fid-face').classList.remove('ok');
+    $('#fid-icon').innerHTML=PK_FINGER;
+    $('#pk-cont2').disabled=true;
+    srGo('passkey-2');
+  }
+  function passkeyScan(){
+    $('#fid-status').textContent='…';
+    $('#fid-go').style.display='none';
+    setTimeout(function(){
+      $('#fid-face').classList.add('ok');
+      $('#fid-icon').innerHTML='<svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#43d18a" stroke-width="2.4"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      $('#fid-status').textContent='Fingerprint verified';
+      $('#pk-cont2').disabled=false;
+    },700);
+  }
+  function finishPasskey(){ addItem('passkey','Passkey · '+pkName,'🔑'); srGo('methods'); }
+
+  /* EMAIL (single screen — record only) */
+  function addEmail(){
+    var v=($('#email-input').value||'recovery@gmail.com').trim();
+    addItem('email','Email · '+v,'✉️');
+    srGo('methods');
+  }
+
+  /* GOVERNMENT ID wizard */
+  var govDoc='Aadhaar';
+  function pickDoc(el,name){ if(el.classList.contains('dis'))return; document.querySelectorAll('.docopt').forEach(function(o){o.classList.remove('sel')}); el.classList.add('sel'); govDoc=name; $('#gov-cont1').disabled=false; }
+  function govStep2(){
+    srGo('gov-3');
+    startProof('#gov-bar','#gov-sub','#gov-time',['Reading secure chip…','Verifying issuer signature…','Generating ZK proof…'],'#gov-cont3');
+  }
+  function finishGov(){ addItem('gov',govDoc+' · verified privately','🪪'); srGo('methods'); }
+
+  function refresh(){
+    var cats=0;
+    document.querySelectorAll('.m').forEach(function(m){ if(m.querySelector('.items').children.length>0) cats++; });
+    var m=document.getElementById('meter'),lbl=document.getElementById('meter-lbl'),hint=document.getElementById('meter-hint'),cont=document.getElementById('continue');
+    m.className='meter l'+Math.min(cats,3);
+    if(cats===0){lbl.textContent='Not protected';hint.textContent='Add a method to begin.';}
+    else if(cats===1){lbl.textContent='Light';hint.textContent='Add another independent method to strengthen your recovery.';}
+    else if(cats===2){lbl.textContent='Partial';hint.textContent='One more independent method maximizes your protection.';}
+    else {lbl.textContent='Robust';hint.textContent="Your setup is strong. You're covered if one method fails.";}
+    cont.disabled = cats<1;
+  }
+
+  /* guardians sub-flow */
+  var guardians=[], thrN=2;
+  var OWN='0x2b0f5e98ee98adc9865745e98802f333f72f6ef5'; // Account 1 signer
+
+  function blockie(seed,size){
+    size=size||22;
+    var s=(seed||'').toLowerCase();
+    function hash(t){ var h=2166136261; for(var i=0;i<t.length;i++){ h^=t.charCodeAt(i); h=(h*16777619)>>>0; } return h; }
+    var base=hash(s);
+    var hue=base%360, bg='hsl('+hue+',60%,90%)', fg='hsl('+((hue+150)%360)+',58%,45%)', spot='hsl('+((hue+40)%360)+',72%,55%)';
+    var cell=size/5, rects='';
+    for(var y=0;y<5;y++){ for(var x=0;x<3;x++){
+      var on=(hash(s+':'+x+','+y)&3)>1;
+      if(on){ var c=(hash(s+'!'+x+y)&7)===0?spot:fg; var mx=4-x;
+        rects+='<rect x="'+(x*cell)+'" y="'+(y*cell)+'" width="'+cell+'" height="'+cell+'" fill="'+c+'"/>';
+        if(mx!==x) rects+='<rect x="'+(mx*cell)+'" y="'+(y*cell)+'" width="'+cell+'" height="'+cell+'" fill="'+c+'"/>';
+      }
+    }}
+    return '<svg class="blockie" width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'" style="background:'+bg+'">'+rects+'</svg>';
+  }
+  function resolveAddr(name){
+    var s=name.toLowerCase(), out='';
+    for(var k=0;k<40;k++){ var h=2166136261, t=s+':'+k; for(var i=0;i<t.length;i++){ h^=t.charCodeAt(i); h=(h*16777619)>>>0; } out+='0123456789abcdef'[h&0xf]; }
+    return '0x'+out;
+  }
+  function trunc(a){ return a.slice(0,6)+'…'+a.slice(-4); }
+
+  function gPreview(){
+    var v=$('#g-addr').value.trim(), box=$('#g-preview'), add=$('#g-addbtn');
+    if(!v){ box.style.display='none'; add.disabled=true; box._addr=null; return; }
+    var isEns=/\.eth$/i.test(v);
+    var addr = isEns ? resolveAddr(v) : (/^0x[0-9a-fA-F]{6,}$/.test(v) ? v.toLowerCase() : null);
+    box.style.display='flex';
+    if(!addr){ box.innerHTML='<span class="gp-warn">Enter a valid ENS name or 0x address</span>'; add.disabled=true; box._addr=null; return; }
+    var norm = isEns ? addr : (v.toLowerCase().length<42 ? addr : v.toLowerCase());
+    var dup=guardians.some(function(g){return g.addr===norm;});
+    var own=(norm===OWN);
+    var html=blockie(norm,26)+'<div class="gp-t"><b>'+(isEns?v:trunc(norm))+'</b><small>'+(isEns?('→ '+trunc(norm)):'address')+'</small></div>';
+    if(own){ html+='<span class="gp-flag warn">This is your own signer</span>'; add.disabled=true; }
+    else if(dup){ html+='<span class="gp-flag warn">Already added</span>'; add.disabled=true; }
+    else { html+='<span class="gp-flag ok">Looks good</span>'; add.disabled=false; }
+    box.innerHTML=html; box._addr=(own||dup)?null:norm; box._label=isEns?v:trunc(norm);
+  }
+  function addGuardian(){
+    var box=$('#g-preview'); if(!box._addr) return;
+    guardians.push({addr:box._addr, label:box._label, nick:$('#g-nick').value.trim()});
+    $('#g-addr').value=''; $('#g-nick').value='';
+    box.style.display='none'; $('#g-addbtn').disabled=true; box._addr=null;
+    renderGuardians();
+  }
+  function renderGuardians(){
+    var list=$('#g-list'); list.innerHTML='';
+    guardians.forEach(function(g,i){
+      var r=document.createElement('div'); r.className='grow';
+      r.innerHTML=blockie(g.addr,22)+'<div class="gp-t"><b>'+(g.nick||('Guardian '+(i+1)))+'</b><small>'+g.label+'</small></div><span class="gx">&times;</span>';
+      r.querySelector('.gx').onclick=function(){ guardians.splice(i,1); renderGuardians(); };
+      list.appendChild(r);
+    });
+    var m=guardians.length; if(thrN>m) thrN=Math.max(1,m); if(m>0&&thrN<1) thrN=1;
+    $('#g-cont').disabled = m<1;
+    updThr();
+  }
+  function updThr(){
+    var m=guardians.length, n=m?thrN:0;
+    var a=$('#thr-n'); if(a) a.textContent=n;
+    var b=$('#thr-m'); if(b) b.textContent=m;
+    var s=$('#thr-sentence'); if(s) s.textContent = m ? (n+' of '+m+' guardian'+(m>1?'s':'')+' must approve') : 'Add a guardian first';
+  }
+  function thr(d){ var m=guardians.length; if(!m) return; thrN=Math.min(m,Math.max(1,thrN+d)); updThr(); }
+  function goThreshold(){ if(!guardians.length) return; srGo('guardian-2'); updThr(); }
+  function saveGuardians(){
+    if(!guardians.length) return;
+    var wrap=document.querySelector('.m[data-cat="guardian"] .items'); wrap.innerHTML='';
+    addItem('guardian','Guardians · '+thrN+' of '+guardians.length,'👥');
+    srGo('methods');
+  }
+
+  /* POLICY composition
+     A policy = one AND clause (all its methods needed together).
+     Account holds several policies joined by OR (any one recovers).
+     Methods can be reused across policies; each policy has its own timelock. */
+  var CAT={passkey:['🔑','Passkeys'],email:['✉️','Emails'],gov:['🪪','Government ID'],guardian:['👥','Guardians']};
+  var methods=[], policies=[];
+
+  function collectMethods(){
+    methods=[];
+    document.querySelectorAll('.m').forEach(function(m){
+      var cat=m.getAttribute('data-cat');
+      m.querySelectorAll('.items .it').forEach(function(it){
+        methods.push({cat:cat, label:it.querySelector('b').textContent, icon:it.querySelector('span').textContent});
+      });
+    });
+  }
+  function seedPolicies(){
+    policies=[];
+    if(!methods.length) return;
+    if(methods.length===1){ policies.push({m:[0],wait:'48h'}); return; }
+    var pairs=[];
+    for(var i=0;i<methods.length;i++){ for(var j=i+1;j<methods.length;j++){
+      if(methods[i].cat!==methods[j].cat) pairs.push([i,j]);   // independent pair
+    }}
+    if(!pairs.length) pairs.push([0,1]);   // no independent pair available, pair first two
+    pairs.slice(0,3).forEach(function(p){ policies.push({m:p.slice(),wait:'48h'}); });
+  }
+  function buildPolicies(){
+    collectMethods();
+    seedPolicies();
+    renderMethodRow();
+    renderPolicies();
+    srGo('policies');
+  }
+  function renderMethodRow(){
+    var row=$('#pol-methods'); row.innerHTML='';
+    methods.forEach(function(mth){ row.innerHTML+='<span class="mchip">'+mth.icon+' '+mth.label+'</span>'; });
+  }
+  function renderPolicies(){
+    var list=$('#pol-list'); list.innerHTML='';
+    policies.forEach(function(p,pi){
+      if(pi>0){ var sep=document.createElement('div'); sep.className='orsep'; sep.textContent='OR'; list.appendChild(sep); }
+      var card=document.createElement('div'); card.className='pol';
+      var ands='', cats={};
+      p.m.forEach(function(mi,k){
+        var mth=methods[mi]; if(!mth) return;
+        cats[mth.cat]=1;
+        if(k>0) ands+='<span class="op">AND</span>';
+        ands+='<span class="mchip">'+mth.icon+' '+mth.label+'</span>';
+      });
+      var indep=Object.keys(cats).length>=2;
+      card.innerHTML='<div class="ph"><span class="pnum">Policy '+(pi+1)+'</span>'+
+        (indep?'<span class="wbadge" style="margin-top:0;color:var(--teal);background:var(--teal-bg);border-color:var(--teal-bg)">independent</span>':'')+
+        '<span class="prem" title="remove policy">&times;</span></div>'+
+        '<div class="ands">'+ands+'</div><span class="wbadge">⏱ '+p.wait+' wait</span>';
+      card.querySelector('.prem').onclick=function(){ policies.splice(pi,1); renderPolicies(); };
+      list.appendChild(card);
+    });
+    $('#pol-install').disabled = policies.length<1;
+  }
+
+  /* policy editor */
+  var editSel=[], editWait='48h';
+  function openPolicyEdit(){
+    editSel=[]; editWait='48h';
+    document.querySelectorAll('#pe-wait .chip').forEach(function(c){ c.classList.toggle('on', c.getAttribute('data-w')==='48h'); });
+    renderEditor();
+    srGo('policy-edit');
+  }
+  function renderEditor(){
+    var box=$('#pe-methods'); box.innerHTML='';
+    methods.forEach(function(mth,i){
+      var c=document.createElement('div');
+      c.className='chip'+(editSel.indexOf(i)>=0?' on':'');
+      c.innerHTML=mth.icon+' '+mth.label;
+      c.onclick=(function(idx){ return function(){ toggleEdit(idx); }; })(i);
+      box.appendChild(c);
+    });
+    var cats={}; editSel.forEach(function(i){ cats[methods[i].cat]=1; });
+    var hint=$('#pe-hint');
+    if(editSel.length===0) hint.textContent='Pick one or more methods to combine.';
+    else if(Object.keys(cats).length>=2) hint.innerHTML='🛡️ These methods are independent — a strong clause. All of them are required together.';
+    else if(editSel.length===1) hint.innerHTML='One method — simple, but a single point of failure. Add an independent one to strengthen it.';
+    else hint.innerHTML='⚠️ These share a trust root. Mixing independent methods makes the clause stronger.';
+    $('#pe-save').disabled = editSel.length<1;
+  }
+  function toggleEdit(i){ var k=editSel.indexOf(i); if(k>=0) editSel.splice(k,1); else editSel.push(i); renderEditor(); }
+  function peWait(el,v){ document.querySelectorAll('#pe-wait .chip').forEach(function(c){c.classList.remove('on')}); el.classList.add('on'); editWait=v; }
+  function savePolicy(){
+    if(!editSel.length) return;
+    policies.push({m:editSel.slice().sort(function(a,b){return a-b;}), wait:editWait});
+    renderPolicies();
+    srGo('policies');
+  }
+
+  function installRecovery(){
+    if(!policies.length) return;
+    var chipsEl=$('#done-chips'); chipsEl.innerHTML='';
+    var cats={};
+    document.querySelectorAll('.m').forEach(function(m){
+      var items=m.querySelector('.items').children; if(!items.length) return;
+      var cat=m.getAttribute('data-cat'); cats[cat]=1;
+      chipsEl.innerHTML+='<span class="dchip">'+CAT[cat][0]+' '+CAT[cat][1]+'</span>';
+    });
+    var catN=Object.keys(cats).length;
+    var strength = catN>=3?'Robust':(catN===2?'Partial':'Light');
+    var n=policies.length;
+    $('#done-strength').textContent='Your setup is '+strength+'. Any one of your '+n+' '+(n===1?'policy':'policies')+' can recover you — open Ambire on any device, satisfy that policy, and switch keys after its waiting period.';
+    srGo('done');
+  }
+  function enableAlerts(btn){ btn.textContent='🔔 Alerts enabled'; btn.disabled=true; btn.classList.add('done'); }
+
+  /* ============ RECOVER FLOW ============
+     initiateRecovery(account, policyId, newOwner, proofs[]) — permissionless.
+     proofs[i] matches method i of the chosen policy:
+       guardians → collected EIP-712 signatures
+       passkey   → WebAuthn assertion
+       email / passport → zero-knowledge proof
+     All bundled + bound to the new key, then timelock, then finalize rotates the signer. */
+  var RC_POLICIES={
+    A:{name:'Policy A', wait:'24h', methods:['passkey','guardians']},
+    B:{name:'Policy B', wait:'48h', methods:['email','passport']}
+  };
+  var RC_METHOD={
+    passkey:{icon:'🔑',title:'Passkey',sub:'Approve with your fingerprint',done:'WebAuthn assertion captured'},
+    guardians:{icon:'👥',title:'Guardians · 2 of 3',sub:'Collect signatures from your guardians',done:'2 of 3 signatures collected'},
+    email:{icon:'✉️',title:'Email',sub:'Confirm your inbox, then build a proof',done:'ZK proof ready'},
+    passport:{icon:'🛂',title:'Passport',sub:'Scan your passport, then build a proof',done:'ZK proof ready'}
+  };
+  var RC={account:'', policyId:null, done:{}, newKey:''};
+  var RC_GUARD, RC_GTHRESH=2, RC_CIRC=238.76;
+
+  function rcRandKey(){ var h='0x'; for(var i=0;i<40;i++) h+='0123456789abcdef'[Math.floor(Math.random()*16)]; return h; }
+
+  function rcStart(){
+    RC={account:'', policyId:null, done:{}, newKey:''};
+    $('#rc-addr').value='0x2b0F5E98Ee98ADC9865745e98802F333f72F6ef5';
+    srGo('recover');
+  }
+  function rcLookup(){
+    RC.account=($('#rc-addr').value||'').trim()||'0x2b0F5E98Ee98ADC9865745e98802F333f72F6ef5';
+    $('#rc-acct-addr').textContent=RC.account;
+    RC.policyId=null;
+    rcRenderPolicies();
+    $('#rc-pol-cont').disabled=true;
+    srGo('recover-policies');
+  }
+  function rcRenderPolicies(){
+    var list=$('#rc-pol-list'); list.innerHTML='';
+    Object.keys(RC_POLICIES).forEach(function(pid,idx){
+      var p=RC_POLICIES[pid];
+      if(idx>0){ var sep=document.createElement('div'); sep.className='orsep'; sep.textContent='OR'; list.appendChild(sep); }
+      var card=document.createElement('div'); card.className='pol clk'+(RC.policyId===pid?' sel':'');
+      var ands='';
+      p.methods.forEach(function(mk,k){
+        if(k>0) ands+='<span class="op">AND</span>';
+        ands+='<span class="mchip">'+RC_METHOD[mk].icon+' '+RC_METHOD[mk].title+'</span>';
+      });
+      card.innerHTML='<div class="ph"><span class="pnum">'+p.name+'</span><span class="psel"></span></div>'+
+        '<div class="ands">'+ands+'</div><span class="wbadge">⏱ '+p.wait+' wait</span>';
+      card.onclick=(function(id){ return function(){ RC.policyId=id; rcRenderPolicies(); $('#rc-pol-cont').disabled=false; }; })(pid);
+      list.appendChild(card);
+    });
+  }
+  function rcChoosePolicy(){
+    if(!RC.policyId) return;
+    RC.done={};
+    RC.newKey=rcRandKey();
+    $('#rc-newkey-val').textContent=trunc(RC.newKey);
+    srGo('recover-newkey');
+  }
+  function rcOpenCollect(){ rcRenderChecklist(); srGo('recover-collect'); }
+  function rcRenderChecklist(){
+    var box=$('#rc-checklist'); box.innerHTML='';
+    var meths=RC_POLICIES[RC.policyId].methods, done=0;
+    meths.forEach(function(mk){
+      var def=RC_METHOD[mk], isDone=!!RC.done[mk]; if(isDone) done++;
+      var row=document.createElement('div'); row.className='m rc-row'+(isDone?' rc-done':'');
+      row.innerHTML='<div class="mh"><div class="mi">'+def.icon+'</div><div class="mt"><b>'+def.title+'</b><small>'+(isDone?def.done:def.sub)+'</small></div>'+
+        (isDone?'<span class="rx">ready</span>':'<button class="add">Open</button>')+'</div>';
+      if(!isDone) row.querySelector('.add').onclick=(function(s){ return function(){ rcOpenMethod(s); }; })(mk);
+      box.appendChild(row);
+    });
+    var total=meths.length;
+    $('#rc-collect-n').textContent=done+' of '+total+' ready';
+    $('#rc-collect-bar').style.width=(done/total*100)+'%';
+    $('#rc-collect-cont').disabled = done<total;
+  }
+  function rcOpenMethod(mk){
+    if(mk==='passkey') rcOpenPasskey();
+    else if(mk==='guardians') rcOpenGuardians();
+    else if(mk==='email') rcOpenEmail();
+    else if(mk==='passport') rcOpenPassport();
+  }
+  function rcMethodDone(mk){ RC.done[mk]=true; rcRenderChecklist(); srGo('recover-collect'); }
+
+  /* passkey → WebAuthn assertion */
+  function rcOpenPasskey(){
+    $('#rfid-status').textContent='Touch the sensor…';
+    $('#rfid-go').style.display='block';
+    $('#rfid-face').classList.remove('ok');
+    $('#rfid-icon').innerHTML=PK_FINGER;
+    $('#rc-pk-cont').disabled=true;
+    srGo('recover-passkey');
+  }
+  function rcPasskeyScan(){
+    $('#rfid-status').textContent='…';
+    $('#rfid-go').style.display='none';
+    setTimeout(function(){
+      $('#rfid-face').classList.add('ok');
+      $('#rfid-icon').innerHTML='<svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#43d18a" stroke-width="2.4"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      $('#rfid-status').textContent='Assertion signed';
+      $('#rc-pk-cont').disabled=false;
+    },700);
+  }
+
+  /* guardians → collected EIP-712 signatures */
+  function qrMock(seed){
+    var s=(seed||'x').toLowerCase(), N=11, cell=112/N, rects='';
+    function h(t){ var x=2166136261; for(var i=0;i<t.length;i++){ x^=t.charCodeAt(i); x=(x*16777619)>>>0; } return x; }
+    for(var y=0;y<N;y++){ for(var x=0;x<N;x++){ if((h(s+':'+x+','+y)&3)===0) rects+='<rect x="'+(x*cell).toFixed(2)+'" y="'+(y*cell).toFixed(2)+'" width="'+cell.toFixed(2)+'" height="'+cell.toFixed(2)+'" rx="1"/>'; } }
+    function finder(px,py){ return '<rect x="'+px+'" y="'+py+'" width="'+(cell*3).toFixed(2)+'" height="'+(cell*3).toFixed(2)+'" rx="2" fill="none" stroke="#1a1d26" stroke-width="'+(cell*0.9).toFixed(2)+'"/>'; }
+    return '<svg width="116" height="116" viewBox="0 0 112 112" fill="#1a1d26">'+rects+finder(0,0)+finder((112-cell*3).toFixed(2),0)+finder(0,(112-cell*3).toFixed(2))+'</svg>';
+  }
+  function rcOpenGuardians(){
+    RC_GUARD=[
+      {name:'Mom', sub:'mom.eth', status:'approved'},
+      {name:'Alex', sub:'0x7f3a…3ac1', status:'waiting'},
+      {name:'Sara', sub:'sara.eth', status:'waiting'}
+    ];
+    $('#rc-share').textContent='https://ambire.com/r/'+trunc(RC.account);
+    $('#rc-qr').innerHTML=qrMock(RC.account);
+    rcRenderGuardians();
+    srGo('recover-guardians');
+  }
+  function rcApprovedCount(){ return RC_GUARD.filter(function(g){ return g.status==='approved'; }).length; }
+  function rcRenderGuardians(){
+    var list=$('#rc-glist'); list.innerHTML='';
+    RC_GUARD.forEach(function(g,i){
+      var appr=g.status==='approved';
+      var r=document.createElement('div'); r.className='grow'+(appr?'':' clk');
+      r.innerHTML=blockie(g.sub,22)+'<div class="gp-t"><b>'+g.name+'</b><small>'+g.sub+'</small></div><span class="gst '+(appr?'ok':'wait')+'">'+(appr?'Approved':'Waiting')+'</span>';
+      if(!appr) r.onclick=(function(idx){ return function(){ RC_GUARD[idx].status='approved'; rcRenderGuardians(); }; })(i);
+      list.appendChild(r);
+    });
+    var n=Math.min(rcApprovedCount(),RC_GTHRESH), met=rcApprovedCount()>=RC_GTHRESH;
+    $('#rc-ring-arc').style.strokeDashoffset = (RC_CIRC*(1-n/RC_GTHRESH)).toFixed(2);
+    $('#rc-ring-n').textContent=n+'/'+RC_GTHRESH;
+    $('#rc-g-status').textContent = met ? 'Threshold met — signatures collected' : (rcApprovedCount()+' of '+RC_GTHRESH+' signatures collected');
+    $('#rc-g-cont').disabled=!met;
+  }
+  function rcCopy(btn){ var t=btn.textContent; btn.textContent='Copied'; setTimeout(function(){ btn.textContent=t; },1200); }
+  /* guardian "other side" */
+  function rcGuardianSign(){
+    if(RC_GUARD){ for(var i=0;i<RC_GUARD.length;i++){ if(RC_GUARD[i].status==='waiting'){ RC_GUARD[i].status='approved'; break; } } rcRenderGuardians(); }
+    $('#rc-ga-msg').style.display='flex';
+  }
+
+  /* email → DKIM + ZK proof */
+  function rcOpenEmail(){
+    $('#rc-email-stage2').style.display='none';
+    $('#rc-email-proof').style.display='none';
+    $('#rc-email-cont').disabled=true;
+    $('#rc-email-code').value='834-192';
+    srGo('recover-email');
+  }
+  function rcEmailSend(){ $('#rc-email-stage2').style.display='block'; }
+  function rcEmailVerify(){
+    $('#rc-email-proof').style.display='block';
+    startProof('#rc-email-bar','#rc-email-sub','#rc-email-time',['Checking DKIM signature…','Verifying inbox control…','Generating ZK proof…'],'#rc-email-cont');
+  }
+
+  /* passport → scan + ZK proof */
+  function rcOpenPassport(){
+    $('#rc-pp-proof').style.display='none';
+    $('#rc-pp-cont').disabled=true;
+    srGo('recover-passport');
+  }
+  function rcPassportScan(){
+    $('#rc-pp-proof').style.display='block';
+    startProof('#rc-pp-bar','#rc-pp-sub','#rc-pp-time',['Reading passport chip…','Verifying issuer signature…','Generating ZK proof…'],'#rc-pp-cont');
+  }
+
+  /* submit → initiateRecovery(account, policyId, newOwner, proofs[]) */
+  function rcOpenSubmit(){
+    var p=RC_POLICIES[RC.policyId], el=$('#rc-sum'); el.innerHTML='';
+    el.innerHTML+='<div class="rev"><div class="mi">🔑</div><div class="rt"><b style="font-size:13.5px">New signer key</b><small style="font-family:var(--mono)">'+trunc(RC.newKey)+'</small></div><span class="rx">this device</span></div>';
+    var ands='';
+    p.methods.forEach(function(mk,k){ if(k>0) ands+='<span class="op">AND</span>'; ands+='<span class="mchip">'+RC_METHOD[mk].icon+' '+RC_METHOD[mk].title+'</span>'; });
+    el.innerHTML+='<div class="pol"><div class="ph"><span class="pnum">'+p.name+'</span></div><div class="ands">'+ands+'</div><span class="wbadge">⏱ '+p.wait+' wait</span></div>';
+    srGo('recover-submit');
+  }
+  var _rcWaitTimer, _rcCountTimer;
+  function rcSetTimeline(stage){
+    var n=document.querySelectorAll('#rc-timeline .node');
+    n[0].className='node '+(stage>=1?'done':'on');
+    n[1].className='node '+(stage>=1?'on':'');
+    n[2].className='node';
+  }
+  function rcSubmit(){ rcStartWait(); srGo('recover-wait'); }
+  function rcStartWait(){
+    clearInterval(_rcWaitTimer); clearInterval(_rcCountTimer);
+    rcSetTimeline(0);
+    var bar=$('#rc-wait-bar'); bar.style.width='0%';
+    $('#rc-wait-fin').disabled=true;
+    var pct=0;
+    _rcWaitTimer=setInterval(function(){
+      pct+=4; bar.style.width=Math.min(100,pct)+'%';
+      if(pct>=100){ clearInterval(_rcWaitTimer); rcSetTimeline(1); $('#rc-wait-fin').disabled=false; }
+    },160);
+    var secs=23*3600+12*60+40;
+    function fmt(s){ var h=Math.floor(s/3600), m=Math.floor(s%3600/60), c=s%60; return (h<10?'0':'')+h+':'+(m<10?'0':'')+m+':'+(c<10?'0':'')+c; }
+    $('#rc-count').textContent=fmt(secs);
+    _rcCountTimer=setInterval(function(){ secs=Math.max(0,secs-1); $('#rc-count').textContent=fmt(secs); },1000);
+  }
+  function rcOpenFinalize(){
+    clearInterval(_rcWaitTimer); clearInterval(_rcCountTimer);
+    $('#rc-fin-key').textContent=trunc(RC.newKey);
+    srGo('recover-finalize');
+  }
+  function rcFinalize(){
+    $('#rc-done-addr').textContent=trunc(RC.account);
+    $('#rc-done-key').textContent=trunc(RC.newKey);
+    srGo('recover-done');
+  }
+</script>
+</body>
+</html>

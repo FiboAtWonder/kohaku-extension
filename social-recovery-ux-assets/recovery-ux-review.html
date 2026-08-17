@@ -1,0 +1,703 @@
+<title>Kohaku · Account Recovery UX — Review Deck</title>
+<style>
+  :root{
+    --paper:#fbfbfd; --panel:#ffffff; --wash:#f3f4f8; --ink:#1b1e28; --muted:#6b7284;
+    --line:#e5e7ee; --accent:#6a4bd6; --accent-ink:#5a3ecb; --accent-soft:#efeafc;
+    --ok:#0f7d63; --ok-soft:#e2f4ee; --open:#a86410; --open-soft:#fdf3e4;
+    --block:#bb4040; --block-soft:#fbeaea; --diagram-bg:#ffffff;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --paper:#13151b; --panel:#1a1d25; --wash:#21252f; --ink:#e8eaf2; --muted:#98a0b4;
+      --line:#2b3040; --accent:#9c86ec; --accent-ink:#b3a1f2; --accent-soft:#2a2444;
+      --ok:#43c79e; --ok-soft:#16302a; --open:#e0a04a; --open-soft:#332818;
+      --block:#e07575; --block-soft:#392023; --diagram-bg:#eceef4;
+    }
+  }
+  :root[data-theme="light"]{
+    --paper:#fbfbfd; --panel:#ffffff; --wash:#f3f4f8; --ink:#1b1e28; --muted:#6b7284;
+    --line:#e5e7ee; --accent:#6a4bd6; --accent-ink:#5a3ecb; --accent-soft:#efeafc;
+    --ok:#0f7d63; --ok-soft:#e2f4ee; --open:#a86410; --open-soft:#fdf3e4;
+    --block:#bb4040; --block-soft:#fbeaea; --diagram-bg:#ffffff;
+  }
+  :root[data-theme="dark"]{
+    --paper:#13151b; --panel:#1a1d25; --wash:#21252f; --ink:#e8eaf2; --muted:#98a0b4;
+    --line:#2b3040; --accent:#9c86ec; --accent-ink:#b3a1f2; --accent-soft:#2a2444;
+    --ok:#43c79e; --ok-soft:#16302a; --open:#e0a04a; --open-soft:#332818;
+    --block:#e07575; --block-soft:#392023; --diagram-bg:#eceef4;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0; height:100%}
+  body{
+    background:var(--paper); color:var(--ink); overflow:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent-ink); text-decoration:none}
+  a:hover{text-decoration:underline}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:6px}
+
+  /* ---------- deck mechanics ---------- */
+  .deck{position:fixed; inset:0 0 58px 0; display:flex; transition:transform .35s cubic-bezier(.4,0,.2,1)}
+  @media (prefers-reduced-motion: reduce){ .deck{transition:none} }
+  .slide{flex:0 0 100vw; height:100%; overflow-y:auto; padding:40px 28px; scrollbar-width:thin; scrollbar-color:var(--line) transparent}
+  .slide::-webkit-scrollbar{width:10px}
+  .slide::-webkit-scrollbar-thumb{background:var(--line); border-radius:6px; border:2px solid var(--paper)}
+  .slide::-webkit-scrollbar-thumb:hover{background:var(--accent)}
+  .inner{max-width:980px; margin:0 auto; min-height:100%; display:flex; flex-direction:column; justify-content:center}
+  .inner.wide{max-width:1360px}
+
+  /* ---------- nav bar ---------- */
+  .bar{
+    position:fixed; left:0; right:0; bottom:0; height:58px;
+    display:flex; align-items:center; gap:16px; padding:0 20px;
+    background:var(--panel); border-top:1px solid var(--line); z-index:10;
+  }
+  .bar .prog{flex:1; height:4px; border-radius:3px; background:var(--wash); overflow:hidden}
+  .bar .prog i{display:block; height:100%; width:0; background:var(--accent); border-radius:3px; transition:width .25s}
+  @media (prefers-reduced-motion: reduce){ .bar .prog i{transition:none} }
+  .bar .count{font-family:"SF Mono",ui-monospace,Menlo,monospace; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; min-width:64px; text-align:center}
+  .bar button{
+    background:var(--wash); border:1px solid var(--line); color:var(--ink);
+    border-radius:10px; width:40px; height:36px; font-size:16px; cursor:pointer;
+  }
+  .bar button:hover{border-color:var(--accent); color:var(--accent-ink)}
+  .bar .slidetitle{font-size:12.5px; font-weight:650; color:var(--muted); max-width:34vw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .kbd-hint{font-size:11.5px; color:var(--muted)}
+  @media(max-width:700px){ .bar .slidetitle,.kbd-hint{display:none} }
+
+  /* ---------- typography ---------- */
+  .eyebrow{
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+    font-size:11px; font-weight:700; letter-spacing:.15em; text-transform:uppercase;
+    color:var(--accent-ink); margin:0 0 12px;
+  }
+  h1{font-size:clamp(34px,5vw,54px); line-height:1.08; letter-spacing:-.025em; margin:0 0 16px; text-wrap:balance}
+  h2{font-size:clamp(24px,3.2vw,34px); line-height:1.15; letter-spacing:-.02em; margin:0 0 14px; text-wrap:balance}
+  .lede{color:var(--muted); font-size:clamp(15px,1.6vw,18px); max-width:60ch; margin:0}
+  p{max-width:66ch}
+  code{font-family:"SF Mono",ui-monospace,Menlo,monospace; font-size:.85em; color:var(--accent-ink)}
+
+  /* ---------- components ---------- */
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px 20px}
+  .chip{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:650; border-radius:20px; padding:3px 11px; white-space:nowrap}
+  .chip.ok{color:var(--ok); background:var(--ok-soft)}
+  .chip.open{color:var(--open); background:var(--open-soft)}
+  .chip.block{color:var(--block); background:var(--block-soft)}
+  .chip i{width:7px; height:7px; border-radius:50%; background:currentColor}
+
+  .decisions{display:flex; flex-direction:column; gap:9px; margin:20px 0 0}
+  .drow{display:flex; gap:12px; align-items:baseline; font-size:15px}
+  .drow .tag{flex:0 0 auto; font-size:11px; font-weight:750; letter-spacing:.06em; text-transform:uppercase; border-radius:5px; padding:1px 8px}
+  .drow .tag.ok{color:var(--ok); background:var(--ok-soft)}
+  .drow .tag.open{color:var(--open); background:var(--open-soft)}
+  .drow .tag.block{color:var(--block); background:var(--block-soft)}
+  .drow span{max-width:62ch}
+
+  .focus{
+    border-left:3px solid var(--accent); background:var(--accent-soft);
+    border-radius:0 12px 12px 0; padding:14px 20px; margin:22px 0 0; font-size:15px; max-width:760px;
+  }
+  .focus b{display:block; font-size:11px; font-weight:750; letter-spacing:.12em; text-transform:uppercase; color:var(--accent-ink); margin-bottom:5px}
+  .focus p{margin:0}
+
+  .diagram{
+    background:var(--diagram-bg); border:1px solid var(--line); border-radius:14px;
+    padding:10px 14px; margin:20px 0 0;
+  }
+  .diagram pre.mermaid{margin:0; background:transparent; display:flex; justify-content:center}
+  .diagram svg{max-width:100%; height:auto}
+
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:20px}
+  @media(max-width:720px){.cols{grid-template-columns:1fr}}
+  .cols b.hd{font-size:12px; letter-spacing:.09em; text-transform:uppercase; display:block; margin-bottom:8px; color:var(--accent-ink)}
+  ul.tight{margin:8px 0 0; padding-left:20px}
+  ul.tight li{margin:6px 0; max-width:62ch}
+
+  .vocab{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px}
+  .vocab span{background:var(--wash); border:1px solid var(--line); border-radius:9px; padding:7px 13px; font-size:14px}
+
+  .bigfive{counter-reset:n; display:flex; flex-direction:column; gap:12px; margin-top:22px}
+  .bigfive .item{
+    display:flex; gap:16px; align-items:flex-start;
+    background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:14px 18px;
+  }
+  .bigfive .item::before{
+    counter-increment:n; content:counter(n);
+    font-family:"SF Mono",ui-monospace,Menlo,monospace; font-size:14px; font-weight:700;
+    color:var(--accent-ink); background:var(--accent-soft); border-radius:8px;
+    min-width:30px; height:30px; display:flex; align-items:center; justify-content:center; margin-top:2px;
+  }
+  .bigfive .item div{font-size:14.5px; max-width:64ch}
+  .bigfive .item b{display:block; font-size:15px}
+
+  table{border-collapse:collapse; width:100%; font-size:13.5px}
+  .tablewrap{overflow:auto; border:1px solid var(--line); border-radius:12px; margin-top:20px; max-height:60vh; background:var(--panel)}
+  th,td{text-align:left; padding:9px 14px; border-bottom:1px solid var(--line); vertical-align:top}
+  th{font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); background:var(--wash); position:sticky; top:0}
+  tr:last-child td{border-bottom:0}
+  td:first-child{white-space:nowrap; font-family:"SF Mono",ui-monospace,Menlo,monospace; font-size:12px; color:var(--muted)}
+
+  .scrollhint{
+    position:fixed; left:50%; bottom:74px; transform:translateX(-50%) translateY(8px);
+    background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent-ink);
+    font-size:12.5px; font-weight:650; border-radius:20px; padding:7px 16px;
+    opacity:0; pointer-events:none; cursor:pointer; user-select:none;
+    transition:opacity .25s, transform .25s; z-index:9;
+  }
+  .scrollhint.on{opacity:1; pointer-events:auto; transform:translateX(-50%) translateY(0); animation:bob 1.6s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(5px)}}
+  @media (prefers-reduced-motion: reduce){ .scrollhint.on{animation:none} }
+  .fadeout{
+    position:fixed; left:0; right:0; bottom:58px; height:64px;
+    background:linear-gradient(to bottom, transparent, var(--paper));
+    opacity:0; transition:opacity .25s; pointer-events:none; z-index:8;
+  }
+  .fadeout.on{opacity:1}
+
+  .imgwrap{border:1px solid var(--line); border-radius:14px; overflow:hidden; margin-top:22px; background:#f6f7f9}
+  .imgwrap svg{display:block; width:100%; height:auto}
+  .metaline{display:flex; flex-wrap:wrap; gap:8px 22px; margin:26px 0 0; font-size:14px; color:var(--muted)}
+  .metaline b{color:var(--ink); font-weight:600}
+</style>
+
+<div class="deck" id="deck">
+
+  <!-- ============ S1 · TITLE ============ -->
+  <section class="slide" data-title="Title"><div class="inner">
+    <p class="eyebrow">Kohaku · Social Recovery Kit · UX review</p>
+    <h1>Account recovery —<br>the UX flows, ready for your review</h1>
+    <p class="lede">Eight flows cover the full life of a recovery setup: from “you have no protection” to “your account is back”. This deck is standalone and mirrors the working doc in the repo.</p>
+    <div class="metaline">
+      <span>Owner: <b>Fibo</b></span>
+      <span>Status: <b>draft for team review · wireframes v1 reviewed</b></span>
+      <span>Updated: <b>2026-08-13</b></span>
+      <span>Line comments: <b><a href="https://github.com/FiboAtWonder/kohaku-extension/pull/2">PR #2</a></b></span>
+    </div>
+    <p style="margin-top:34px; font-size:13px; color:var(--muted)">Navigate with <b>→</b> and <b>←</b>, or the buttons below.</p>
+  </div></section>
+
+  <!-- ============ S2 · HOW TO REVIEW ============ -->
+  <section class="slide" data-title="How to review"><div class="inner">
+    <p class="eyebrow">Before you start</p>
+    <h2>How to review this deck</h2>
+    <p class="lede">Everything carries one of three states. Challenge anything — the highest-value feedback targets the open and blocked items.</p>
+    <div class="decisions">
+      <div class="drow"><span class="tag ok">Decided</span><span>Agreed in working sessions. Push back only if you see a real problem — and say why.</span></div>
+      <div class="drow"><span class="tag open">Open</span><span>No decision yet. Opinions wanted.</span></div>
+      <div class="drow"><span class="tag block">Blocker</span><span>Unresolved dependency that gates a whole flow. Needs an owner.</span></div>
+    </div>
+    <div class="focus"><b>Where feedback goes</b><p>Line comments on <a href="https://github.com/FiboAtWonder/kohaku-extension/pull/2">PR #2</a> (source of truth: <code>social-recovery-ux-flows.md</code>), or directly to Fibo.</p></div>
+  </div></section>
+
+  <!-- ============ S3 · THE FIVE ============ -->
+  <section class="slide" data-title="Top 5 inputs needed"><div class="inner">
+    <p class="eyebrow">Where we need you most</p>
+    <h2>Five things this review must answer</h2>
+    <div class="bigfive">
+      <div class="item"><div><b>Funding &amp; execution <span class="chip block" style="margin-left:6px"><i></i>blocker</span></b>Recovery calls bypass the 4337 flow — no paymaster can sponsor them, and the SDK is backend-zero (no relayer). Who pays, and who executes after the waiting period?</div></div>
+      <div class="item"><div><b>ZK Email mechanics <span class="chip block" style="margin-left:6px"><i></i>blocker</span></b>What does the user physically do, and where does the proof generate? Gates enrollment, the access test, and the recovery step for that method.</div></div>
+      <div class="item"><div><b>Config value visibility <span class="chip open" style="margin-left:6px"><i></i>open</span></b>Guardian addresses are natively public in the current contracts. Can values be hidden at all? Flows assume structure-public + a password-decrypt case.</div></div>
+      <div class="item"><div><b>Mixed-method OR-groups <span class="chip open" style="margin-left:6px"><i></i>open encoding</span></b>We assume <code>passkey AND [zk_email OR aadhaar]</code> is valid, like the guardian case. The contract encoding needs confirmation.</div></div>
+      <div class="item"><div><b>The starter presets <span class="chip open" style="margin-left:6px"><i></i>open fit</span></b>Three ship by default. Do they fit the persona spread — and is a single-method floor acceptable as an edit of a preset?</div></div>
+    </div>
+  </div></section>
+
+  <!-- ============ S4 · MODEL ============ -->
+  <section class="slide" data-title="The model"><div class="inner">
+    <p class="eyebrow">Foundations</p>
+    <h2>The model in one minute</h2>
+    <p class="lede">An account is protected by <b>recovery paths</b>. A path is a set of <b>methods</b> completed together; any one completed path recovers the account after a per-path <b>waiting period</b> (48h default), during which the current owner can cancel.</p>
+    <div class="vocab">
+      <span><code>recovery path</code> = one AND clause of methods</span>
+      <span><code>method</code> = one credential</span>
+      <span><code>waiting period</code> = timelock</span>
+      <span>paths combine with <code>OR</code></span>
+      <span>ANY-of groups mix methods, M-of-N: <code>passkey AND [Ana OR email]</code></span>
+    </div>
+    <div class="decisions">
+      <div class="drow"><span class="tag ok">Decided</span><span>Users see <b>“Account recovery”</b> — “Social Recovery Kit” stays internal.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>Four methods in v1: passkey, guardians, ZK Email, Anon Aadhaar (listed last, badged “India”).</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>One chain per policy; multichain out of scope for v1. Personas ground every choice — <a href="https://app.notion.com/p/36d9a4c092c780578f9dde36e69dfff5">persona research</a>.</span></div>
+    </div>
+  </div></section>
+
+  <!-- ============ S5 · UI PATTERNS ============ -->
+  <section class="slide" data-title="UI patterns"><div class="inner">
+    <p class="eyebrow">Foundations</p>
+    <h2>The builder uses a solved pattern</h2>
+    <p class="lede">Grouped condition builders ship in products non-technical people already use. We show structure, not boolean jargon.</p>
+    <div class="imgwrap" role="img" aria-label="Three UI patterns: grouped condition builder with ALL-of and ANY-of sections, recovery-path cards separated by an OR divider, and a threshold selector row">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 400" font-family="-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+        <rect width="1080" height="400" fill="#f6f7f9"/>
+        <text x="30" y="42" font-size="15" font-weight="700" fill="#1a1d26">1 · Grouped condition builder</text>
+        <text x="30" y="62" font-size="12" fill="#7a8194">ALL-of rows + ANY-of group — members mix method types</text>
+        <rect x="30" y="80" width="320" height="240" rx="14" fill="#ffffff" stroke="#dfe2ea"/>
+        <text x="50" y="112" font-size="13" font-weight="700" fill="#1a1d26">Recovery path #1</text>
+        <text x="50" y="132" font-size="11.5" font-weight="700" fill="#6a4bd6">NEEDS ALL OF:</text>
+        <rect x="50" y="146" width="280" height="40" rx="9" fill="#f3f4f8" stroke="#e9ebf1"/>
+        <text x="66" y="171" font-size="12.5" fill="#1a1d26">🔑  Passkey — this device</text>
+        <rect x="50" y="196" width="280" height="104" rx="9" fill="#efeafc" stroke="#c9bcf2"/>
+        <text x="66" y="220" font-size="11.5" font-weight="700" fill="#5a3ecb">ANY 1 OF:</text>
+        <rect x="66" y="232" width="248" height="26" rx="13" fill="#ffffff" stroke="#dfe2ea"/>
+        <text x="80" y="249" font-size="11.5" fill="#1a1d26">👤  Ana's wallet · 0x8a…41</text>
+        <rect x="66" y="264" width="248" height="26" rx="13" fill="#ffffff" stroke="#dfe2ea"/>
+        <text x="80" y="281" font-size="11.5" fill="#1a1d26">✉️  recovery@gmail.com</text>
+        <text x="395" y="42" font-size="15" font-weight="700" fill="#1a1d26">2 · Paths combined with OR</text>
+        <text x="395" y="62" font-size="12" fill="#7a8194">Any one path recovers the account</text>
+        <rect x="395" y="80" width="300" height="92" rx="14" fill="#ffffff" stroke="#dfe2ea"/>
+        <text x="413" y="108" font-size="13" font-weight="700" fill="#1a1d26">Path 1</text>
+        <text x="413" y="130" font-size="12" fill="#1a1d26">🔑 Passkey <tspan font-weight="700" fill="#6a4bd6">AND</tspan> [👤 Ana <tspan font-weight="700" fill="#6a4bd6">OR</tspan> ✉️ Email]</text>
+        <text x="413" y="152" font-size="11" fill="#7a8194">⏱ waiting period: 48h</text>
+        <line x1="415" y1="196" x2="510" y2="196" stroke="#dfe2ea" stroke-width="1.5"/>
+        <text x="545" y="201" font-size="11.5" font-weight="800" fill="#7a8194" text-anchor="middle" letter-spacing="2">OR</text>
+        <line x1="580" y1="196" x2="675" y2="196" stroke="#dfe2ea" stroke-width="1.5"/>
+        <rect x="395" y="220" width="300" height="92" rx="14" fill="#ffffff" stroke="#dfe2ea"/>
+        <text x="413" y="248" font-size="13" font-weight="700" fill="#1a1d26">Path 2</text>
+        <text x="413" y="270" font-size="12" fill="#1a1d26">One group — any <tspan font-weight="700" fill="#6a4bd6">3 of 5</tspan> members</text>
+        <text x="413" y="292" font-size="11" fill="#7a8194">⏱ waiting period: 48h</text>
+        <text x="740" y="42" font-size="15" font-weight="700" fill="#1a1d26">3 · Threshold selector</text>
+        <text x="740" y="62" font-size="12" fill="#7a8194">Every group has one — no boolean words needed</text>
+        <rect x="740" y="80" width="310" height="120" rx="14" fill="#ffffff" stroke="#dfe2ea"/>
+        <text x="758" y="112" font-size="12.5" fill="#1a1d26">Require</text>
+        <rect x="812" y="94" width="52" height="28" rx="8" fill="#f3f4f8" stroke="#dfe2ea"/>
+        <text x="826" y="113" font-size="12.5" font-weight="700" fill="#1a1d26">2 ▾</text>
+        <text x="874" y="112" font-size="12.5" fill="#1a1d26">of these 3 members</text>
+        <text x="758" y="146" font-size="11" fill="#7a8194">🔑 Passkey — this device</text>
+        <text x="758" y="166" font-size="11" fill="#7a8194">👤 Ana's wallet</text>
+        <text x="758" y="186" font-size="11" fill="#7a8194">✉️ recovery@gmail.com</text>
+        <rect x="740" y="220" width="310" height="100" rx="14" fill="#efeafc" stroke="#c9bcf2"/>
+        <text x="758" y="248" font-size="11.5" font-weight="700" fill="#5a3ecb">SAME PATTERN IN THE WILD</text>
+        <text x="758" y="270" font-size="11" fill="#3c4152">Notion / Airtable filter groups · Apple Smart</text>
+        <text x="758" y="287" font-size="11" fill="#3c4152">Playlists · Zapier paths · Stripe Radar ·</text>
+        <text x="758" y="304" font-size="11" fill="#3c4152">react-querybuilder · Safe owner threshold</text>
+      </svg>
+    </div>
+  </div></section>
+
+  <!-- ============ S6 · FLOW A ============ -->
+  <section class="slide" data-title="Flow A · First open"><div class="inner wide">
+    <p class="eyebrow">Flow A + A1</p>
+    <h2>First open — three doors, one fast-track</h2>
+    <p class="lede">Recovery needs a new local key first, so “Recover” runs a minimal onboarding: warning screen → password → key → seed backup. Copy is address-accurate: “Your account stays at the same address.”</p>
+    <div class="cols">
+      <div class="diagram" style="margin-top:0"><pre class="mermaid">
+flowchart TD
+    A[Install extension] --> B[Welcome screen]
+    B --> C1[Create a new account]
+    B --> C2[Add an existing account]
+    B --> C3[Recover an account]
+    C1 --> D1[Standard create flow]
+    C2 --> D2[Standard import flow]
+    C3 --> E[→ Flow A1 fast-track]
+    D1 --> G[Dashboard]
+    D2 --> G
+      </pre></div>
+      <div class="diagram" style="margin-top:0"><pre class="mermaid">
+flowchart TD
+    A["'Recover an account' clicked"] --> S["Warning screen:<br/>'No support agent will ever<br/>ask you to do this.'"]
+    S --> B[Set extension password]
+    B --> C["New key generated"]
+    C --> D["Seed backup ceremony (kept, short)"]
+    D --> E[→ Flow D]
+      </pre></div>
+    </div>
+    <div class="focus"><b>Review focus</b><p>Is the seed backup in the right place for a stressed, locked-out user — and is a warning screen enough against a scammer on a live call?</p></div>
+  </div></section>
+
+  <!-- ============ S7 · FLOW B ============ -->
+  <section class="slide" data-title="Flow B · Nudge"><div class="inner wide">
+    <p class="eyebrow">Flow B</p>
+    <h2>The nudge — unprotected accounts get told</h2>
+    <div class="diagram"><pre class="mermaid">
+flowchart TD
+    A[Account exists / dashboard] --> B{"Account has recovery<br/>paths set up?"}
+    B -- Yes --> C[End. No action.]
+    B -- No --> D["Modal: 'You have no recovery path<br/>set up yet. Protect your account.'<br/>+ honesty note"]
+    D -->|Set up recovery| G[Settings › Account recovery → Flow C]
+    D -->|Dismiss| F[Shows again next open]
+    F --> A
+    D -->|☑ Don't remind me again| H["Passive 'unprotected' shield badge<br/>(persistent, silent)"]
+    H -. click .-> G
+    </pre></div>
+    <div class="decisions">
+      <div class="drow"><span class="tag ok">Decided</span><span>The badge: a small warning-state shield on the account row and settings entry. Never pops up; click opens setup.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>Honest copy: “Recovery protects you if you lose your key. It cannot stop someone who already has it.” The passkey caveat adapts to synced vs device-bound.</span></div>
+    </div>
+    <div class="focus"><b>Review focus</b><p>Is a modal on every open too aggressive — and is the badge enough of a road back for a day-one opt-out?</p></div>
+  </div></section>
+
+  <!-- ============ S8 · FLOW C SETUP ============ -->
+  <section class="slide" data-title="Flow C · Setup model"><div class="inner">
+    <p class="eyebrow">Flow C · 1 of 2</p>
+    <h2>Setup — presets first, guidance and power on top</h2>
+    <p class="lede">No mode-picker fork. The tab lands on the <b>Presets</b> state with three starter paths visible and editable. “Guide me” → Express wizard. “Customize” → Advanced builder.</p>
+    <div class="cols">
+      <div class="panel"><b class="hd">Starter presets (48h each)</b>
+        <ul class="tight" style="font-size:14.5px">
+          <li><code>passkey AND [guardians]</code> — your device + your people</li>
+          <li><code>passkey AND zk_email</code> — your device + your email</li>
+          <li><code>guardians-only M-of-N</code> — people only, no platform dependency</li>
+        </ul>
+      </div>
+      <div class="panel"><b class="hd">Builder rules</b>
+        <ul class="tight" style="font-size:14.5px">
+          <li><b>ANY-of groups are generic:</b> members mix guardians, passkeys, email, Aadhaar; every group has an M-of-N threshold. Guardians are ordinary members.</li>
+          <li>A path = required rows + groups, freely mixed; a lone group, a single method, and 1-of-1 groups are all valid.</li>
+          <li>Wizard "any M of your N methods" → one path with one group. Two-method inventories still get two single-method paths.</li>
+          <li>Passkey enrollment detects synced vs device-bound; warnings adapt.</li>
+          <li>Guardrails: no zero-second waits; dominated-path warning. Group encoding with the kit team.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="decisions">
+      <div class="drow"><span class="tag ok">Decided</span><span>Dominated-path warning: if path X needs a subset of Y's methods with an equal-or-shorter wait, Y adds zero security.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>No guardian names anywhere — a guardian <b>is</b> an address, shown as blockie + address or ENS. The wallet stores no contact labels; nothing extra to leak (decision 43).</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>Guardian checks stay optional — confirmed in the demo-review meeting (decision 52); mutual guardian approval still under consideration.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>The wizard ends with an optional <b>dry run</b>: rehearse the recovery locally before the save (decision 47).</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>Single-method setups are never forced to add more — the copy recommends a second method, including <b>a second passkey from another device</b> (decision 49).</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>The Recovery Card may carry an optional <b>recovery-password hint</b>; the password's setup moment is under UX audit (decision 48).</span></div>
+    </div>
+  </div></section>
+
+  <!-- ============ S9 · FLOW C WIZARD ============ -->
+  <section class="slide" data-title="Flow C · Wizard"><div class="inner wide">
+    <p class="eyebrow">Flow C · 2 of 2</p>
+    <h2>The Express wizard — eight steps</h2>
+    <div class="diagram"><pre class="mermaid">
+flowchart TD
+    A[Express start] --> B["1 · How recovery works —<br/>one screen, three bullets"]
+    B --> C["2 · Inventory: what do you have?<br/>☐ another device (passkey-capable)<br/>☐ trusted contacts with wallets<br/>☐ long-lived email<br/>☐ keys you keep yourself (paper/hardware)<br/>☐ Aadhaar ID (last, badged)"]
+    C --> D["3 · Recommended preset shown as<br/>recovery-path cards<br/>(from the persona research)"]
+    D --> E["4 · Enroll each method:<br/>short explainer + 'Learn more' +<br/>mandatory access test (local, no chain)"]
+    E --> F["5 · Waiting period — 48h default,<br/>changeable. Guardrails apply."]
+    F --> G["6 · Review → optional DRY RUN<br/>(local rehearsal, decision 47)<br/>→ submit config (one confirmation)"]
+    G --> H["7 · Recovery Card download<br/>+ enable alerts opt-in"]
+    H --> I["8 · Offer: apply to other accounts<br/>(never by default)"]
+    </pre></div>
+    <div class="decisions">
+      <div class="drow"><span class="tag ok">Decided</span><span>Access tests are mandatory for identity methods — a failing test blocks the save.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>The Recovery Card holds only address + how-to + page URL. A stolen card must not be a phishing map.</span></div>
+    </div>
+    <div class="focus"><b>Review focus</b><p>Do the presets fit our persona spread? Is mandatory testing the right friction? Is flat 48h right — even for single-method paths?</p></div>
+  </div></section>
+
+  <!-- ============ S10 · FLOW D CH1 ============ -->
+  <section class="slide" data-title="Flow D · Identify"><div class="inner wide">
+    <p class="eyebrow">Flow D · 1 of 4</p>
+    <h2>Recover, chapter 1 — identify the account</h2>
+    <p class="lede">Three ways in, every lookup failure has an exit, and nothing proceeds before the user confirms “this is my account”.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart TD
+    A[Entry: Recover an account] --> B{"Identify the lost account"}
+    B -->|Paste address| C["Lookup — loading state"]
+    B -->|ENS name| C
+    B -->|Same-install list 🔒| C
+    C -->|Lookup fails| C1["Specific error per cause<br/>+ retry + 'check your Recovery Card'"]
+    C1 --> B
+    C -->|Found| CC["Confirm identity card:<br/>address + blockie + ENS + path summary.<br/>'This is my account'"]
+    CC -->|Not mine| B
+    CC --> E{"Account has recovery paths?"}
+    E -- No --> X["'No recovery set up — cannot recover.'<br/>Primary action: try another address"]
+    X --> B
+    E -- Yes --> V["Paths shown. Structure always readable;<br/>value visibility OPEN.<br/>Password-decrypt case for values."]
+    V --> F["Pick the recovery path you can satisfy"]
+    F --> NEXT["→ Chapter 2: collect the approvals"]
+    </pre></div>
+  </div></section>
+
+  <!-- ============ S10b · FLOW D CH2 ============ -->
+  <section class="slide" data-title="Flow D · Collect"><div class="inner wide">
+    <p class="eyebrow">Flow D · 2 of 4</p>
+    <h2>Recover, chapter 2 — collect the approvals</h2>
+    <p class="lede">The checklist persists locally and resumes; a path that cannot be completed is never a trap.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart TD
+    F["Recovery path chosen (chapter 1)"] --> G["Recovery checklist — persisted locally,<br/>resumable via a dedicated<br/>'Recovery in progress' screen"]
+    G --> G1[Get guardian approvals → Flow E1]
+    G --> G2["Confirm with your email (TBD)"]
+    G --> G3["Confirm with your passkey —<br/>platform sync + hybrid QR"]
+    G --> G4[Confirm with Aadhaar]
+    G -->|Cannot complete this path| SW["→ back to path choice (chapter 1)"]
+    G1 --> H{"Path satisfied?"}
+    G2 --> H
+    G3 --> H
+    G4 --> H
+    H -- No --> G
+    H -- Yes --> NEXT["→ Chapter 3: submit, wait, finish"]
+    </pre></div>
+  </div></section>
+
+  <!-- ============ S10c · FLOW D CH3 ============ -->
+  <section class="slide" data-title="Flow D · Finish"><div class="inner wide">
+    <p class="eyebrow">Flow D · 3 of 4</p>
+    <h2>Recover, chapter 3 — submit, wait, finish</h2>
+    <p class="lede">Explicit consent before the transaction; a cancelled recovery ends loudly, not silently; cleanup is required.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart TD
+    CF["Confirmation screen: the account,<br/>the new key that takes control,<br/>the chosen path, the waiting period.<br/>'The current owner can cancel.'"] --> I["START RECOVERY — one atomic tx<br/>(funding/executor: BLOCKER)"]
+    I -->|Submit fails| I2["Plain-language error + retry<br/>+ self-pay-gas fallback"]
+    I2 --> BK["→ back to the checklist (chapter 2)"]
+    I -->|Submitted| J["Waiting period countdown —<br/>persistent, resumable"]
+    J -->|Owner cancels| XC["Terminal: 'The account owner<br/>cancelled this recovery.'"]
+    J -->|Ends| K["User is NOTIFIED + auto-execute<br/>(executor: OPEN)"]
+    K --> L["Key rotated → account active.<br/>REQUIRED cleanup checklist:<br/>lost-device methods flagged (→ Flow G)"]
+    </pre></div>
+  </div></section>
+
+  <!-- ============ S11 · FLOW D STATE ============ -->
+  <section class="slide" data-title="Flow D · Decisions"><div class="inner">
+    <p class="eyebrow">Flow D · 4 of 4</p>
+    <h2>Recover — what's decided, what blocks it</h2>
+    <div class="decisions">
+      <div class="drow"><span class="tag block">Blocker</span><span><b>Funding &amp; execution.</b> Recovery calls bypass 4337 — no paymaster can sponsor them; no relayer exists (backend-zero). The intended UX (sponsored + auto-execute) has no infrastructure owner.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>Identity confirmation before proof collection; explicit consent screen before the transaction.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>Recovery ends with a <b>required</b> cleanup checklist — the lost device's methods survive rotation and must be replaced. Deferring is allowed; the deferral shows as a flagged banner on the management overview until resolved (decision 46).</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>Synced passkeys are flagged too while the lost device stays signed in; the fix includes revoking it from the platform / password manager (decision 50).</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>Checklist state persists locally and resumes into a dedicated <b>“Recovery in progress”</b> screen — account, per-row progress, resume/abandon (decision 44). A “switch path” exit exists.</span></div>
+      <div class="drow"><span class="tag open">Open</span><span>Value visibility during path display — guardian addresses are natively public today.</span></div>
+    </div>
+    <div class="focus"><b>Review focus</b><p>The identify step assumes the user knows their address or ENS — the personas least likely to know it are exactly the ones recovering. Is the Recovery Card + same-install list enough?</p></div>
+  </div></section>
+
+  <!-- ============ S11b · FLOW D ADDITIONS ============ -->
+  <section class="slide" data-title="Flow D · Additions"><div class="inner wide">
+    <p class="eyebrow">Flow D · additions</p>
+    <h2>Logged-in entry & the interactive checklist</h2>
+    <p class="lede">Recovery does not require a fresh install — and every claim is submitted in place, kept across path switches, and wiped when the flow ends.</p>
+    <div class="cols">
+      <div class="diagram" style="margin-top:0"><pre class="mermaid">
+flowchart TD
+    A["Settings › Account recovery:<br/>'Recover an account' (logged in)"] --> W["Condensed anti-scam warning<br/>+ 'Nobody asked me to do this'<br/>acknowledgment"]
+    W --> B{"Wallet has multiple accounts?"}
+    B -- Yes --> C["Choose the NEW OWNER:<br/>which of your accounts<br/>receives control"]
+    B -- No --> D["Single account —<br/>step skipped automatically"]
+    C --> E["→ Flow D chapter 1"]
+    D --> E
+      </pre></div>
+      <div class="diagram" style="margin-top:0"><pre class="mermaid">
+flowchart TD
+    A["Checklist — one row per method<br/>of the selected path"] --> B["VERIFY button per row:<br/>explains how to get the proof<br/>+ submit input in place"]
+    B --> C["Claim submitted →<br/>row marked complete"]
+    C --> D{"Back to pick<br/>another path?"}
+    D -- Yes --> E["Claims are KEPT —<br/>shared methods stay complete"]
+    E --> A
+    D -- No --> F["Path complete →<br/>confirmation screen"]
+    F -.-> G["On flow EXIT: all claims WIPED<br/>(security — never stored forever)"]
+      </pre></div>
+    </div>
+    <div class="decisions">
+      <div class="drow"><span class="tag ok">Decided</span><span>Recovery also starts logged-in, from Settings. Multiple accounts → the user chooses which account becomes the new owner; a single account skips the step.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>The anti-scam warning gates this entry too — the "open Settings, click Recover" scam script hits the same warning as a fresh install.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>Each method row is interactive: a verify button explains how to obtain the proof and offers the submission in place.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>Claims survive switching paths — and are wiped the moment the recovery flow exits, finished or abandoned.</span></div>
+    </div>
+  </div></section>
+
+  <!-- ============ S12 · FLOW D2 ============ -->
+  <section class="slide" data-title="Flow D2 · Cancel"><div class="inner wide">
+    <p class="eyebrow">Flow D2</p>
+    <h2>Cancel side — the waiting period only works if someone shows up</h2>
+    <div class="diagram"><pre class="mermaid">
+flowchart TD
+    A[Recovery initiated on-chain] --> B[Wallet detects pending recovery]
+    B --> C[Persistent banner on dashboard]
+    B --> D[System notification]
+    C --> E{"Owner action"}
+    D --> E
+    E -->|It's me| F[Dismiss banner]
+    E -->|NOT me| G["Cancel recovery —<br/>owner-signed transaction"]
+    G --> T["Triage screen (required):<br/>which methods were satisfied →<br/>replace them (→ Flow G) →<br/>consider moving funds"]
+    </pre></div>
+    <div class="decisions">
+      <div class="drow"><span class="tag ok">Decided</span><span>Cancel is not resolution — the attacker still holds a working method. Triage is required.</span></div>
+      <div class="drow"><span class="tag open">Accepted caveat</span><span>Detection is polling-based: a user who never opens the browser during the waiting period sees nothing.</span></div>
+    </div>
+    <div class="focus"><b>Review focus</b><p>Is the polling caveat acceptable for a 48h window, or does v1 need an out-of-band alert channel despite the privacy cost?</p></div>
+  </div></section>
+
+  <!-- ============ S13 · FLOW E ============ -->
+  <section class="slide" data-title="Flow E · Guardians"><div class="inner wide">
+    <p class="eyebrow">Flow E1 (default) · E2 (future)</p>
+    <h2>Guardian approval — “ignorable but verifiable”</h2>
+    <p class="lede">Guardians can be non-technical. Plain language leads; the exact payload sits behind a “Verify the details” expander. The page is <b>not</b> a trust anchor — the anchors are the out-of-band call and the wallet's signing prompt.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart TD
+    A["Recoverer shares link/QR<br/>with the guardian (any channel)"] --> B["Guardian opens the CANONICAL<br/>IPFS/IPNS page"]
+    B --> C["Plain language first: who asks,<br/>what approving does.<br/>'Verify the details' expander:<br/>account, new owner, nonce (on-chain).<br/>NO expiry shown — none is enforced."]
+    C --> W["Required acknowledgment: sign button<br/>disabled until the guardian checks<br/>'I contacted the owner on a<br/>channel I already had.'"]
+    W -->|Something is off| DE["Decline — and tell the owner<br/>about this request anyway"]
+    W -->|Confirmed| D["Connect wallet — injected + WalletConnect.<br/>OFFLINE path: copy payload,<br/>sign air-gapped, paste back"]
+    D --> E["Approve in the wallet prompt.<br/>'Trust your WALLET prompt,<br/>not this page.'"]
+    E --> F["Single-line signature blob,<br/>pre-wrapped in backticks"]
+    F --> G[Guardian sends it to the recoverer]
+    G --> H["Recoverer pastes it — validated<br/>immediately, specific errors"]
+    </pre></div>
+    <div class="decisions" style="margin-bottom:4px">
+      <div class="drow"><span class="tag ok">Decided</span><span>The approval page is an <b>extension-specific implementation</b>, not part of the kit/SDK — each wallet builds its own guardian-approval surface. Hosting decided (decision 51): <b>relative path first, IPFS/IPNS later</b>; long-term canonical hosting stays with the EF questions.</span></div>
+    </div>
+    <div class="focus"><b>Review focus</b><p>Walk this page as Carl's friend Sara: would you sign — and would you catch a fake? Is blob-over-WhatsApp acceptable as the v1 transport?</p></div>
+  </div></section>
+
+  <!-- ============ S14 · FLOW F ============ -->
+  <section class="slide" data-title="Flow F · Health"><div class="inner wide">
+    <p class="eyebrow">Flow F</p>
+    <h2>Health checks — “Recovery ready”, verified over time</h2>
+    <p class="lede"><b>Optional capability, not the v1 focus (decision 42)</b> — the flow stays mapped, but nothing else depends on it shipping. The same tests that gate enrollment run periodically. The meter says <b>“Recovery ready”</b>, not “Protected” — recovery defends against key <i>loss</i>, not key theft.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart TD
+    A["Trigger: opening the Account recovery tab<br/>+ periodic background check"] --> B[Run per enrolled method]
+    B --> C["Passkey: sign a test challenge<br/>(no transaction)"]
+    B --> D["ZK Email: test proof against<br/>live DKIM registry"]
+    B --> E["Guardians: prompt periodic<br/>self-audit"]
+    B --> F["Aadhaar: proof against current UIDAI key"]
+    C --> G{"All pass?"}
+    D --> G
+    E -. best effort .-> G
+    F --> G
+    G -- Yes --> H["Meter: 'Recovery ready'"]
+    G -- No --> I["Alert + per-method fix path"]
+    I --> J[→ Flow G edit]
+    </pre></div>
+    <div class="focus"><b>Review focus</b><p>How loud should a failing health check be — badge, banner, or notification?</p></div>
+  </div></section>
+
+  <!-- ============ S15 · FLOW G ============ -->
+  <section class="slide" data-title="Flow G · Manage"><div class="inner wide">
+    <p class="eyebrow">Flow G</p>
+    <h2>Manage — edit without footguns</h2>
+    <div class="diagram"><pre class="mermaid">
+flowchart TD
+    A["Settings › Account recovery — overview:<br/>status line + recovery paths ONLY<br/>+ 'Recover an account' entry<br/>+ pending-recovery notice when active<br/>(no methods section — decision 45)"] --> B[Add recovery path → Flow C]
+    A --> C[Edit recovery path]
+    A --> D[Remove recovery path]
+    C --> C1["Builder opens with the path loaded —<br/>members and methods are<br/>added/removed HERE"]
+    C1 --> E["Remove a member the path still needs"]
+    C1 --> C2["Review-changes diff →<br/>Save → owner-signed tx"]
+    D --> D1{"Last remaining path?"}
+    D1 -- Yes --> D2["Explicit warning: account becomes<br/>UNPROTECTED. Type-to-confirm."]
+    D1 -- No --> D3[Simple confirm]
+    D2 --> D4[Remove → owner-signed tx]
+    D3 --> D4
+    E --> E2["Blocked: modal lists the paths<br/>that still need it"]
+    E2 -->|Lower the threshold /<br/>edit the other path first| C1
+    E2 -->|Cascade-remove after warning| C2
+    </pre></div>
+    <div class="decisions">
+      <div class="drow"><span class="tag ok">Decided</span><span>Methods are managed <b>inside path editing</b>: edit path → review-changes diff → one owner-signed tx. The overview lists paths only (decision 45).</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>A deferred post-recovery cleanup shows here as a flagged banner until resolved (decision 46).</span></div>
+    </div>
+    <div class="focus"><b>Review focus</b><p>Config changes stay allowed while a recovery is pending (they do not affect it) — should this screen restrict more than it warns?</p></div>
+  </div></section>
+
+  <!-- ============ S16 · OPEN THREADS ============ -->
+  <section class="slide" data-title="Open threads"><div class="inner">
+    <p class="eyebrow">Decision state</p>
+    <h2>Every open thread, and what it blocks</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Ref</th><th>Item</th><th>Blocks</th></tr></thead>
+        <tbody>
+          <tr><td>Q7/19</td><td><b>Funding &amp; execution</b> — who pays and who executes (bypass 4337; backend-zero)</td><td>Flow D entirely</td></tr>
+          <tr><td>Q16</td><td><b>ZK Email mechanics</b> — user action; client vs hosted prover</td><td>ZK Email sub-flows</td></tr>
+          <tr><td>Q22/41</td><td>Encoding for generic ANY-of groups — mixed members, M-of-N thresholds (T10 threshold field)</td><td>Builder + presets + recovery checklist</td></tr>
+          <tr><td>—</td><td>Exact guardian signed payload (nonce; policyId?; expiry — define or confirm none)</td><td>Flow E1 page</td></tr>
+          <tr><td>Q29</td><td>Policy value visibility (guardian addresses natively public) + password-encrypted values</td><td>Flow D path display</td></tr>
+          <tr><td>51</td><td>Guardian approval-page hosting — decided: relative path first, IPFS/IPNS later; long-term canonical hosting stays with the EF</td><td>Flow E1</td></tr>
+          <tr><td>53</td><td>Metadata encryption: nothing / policy only / policy + metadata — choice with the kit team; schema must be fixed once (Q29 stays open)</td><td>Flow D path display</td></tr>
+          <tr><td>—</td><td>R5 conflict (atomic vs incremental); E2 needs approval function + indexing</td><td>Flow E2</td></tr>
+          <tr><td>Q28</td><td>Setup batching — write the one-UserOp answer (T7) into the spec</td><td>Wizard step 6</td></tr>
+          <tr><td>Q20</td><td>Config survival after rotation (+ onUninstall nonce-reset)</td><td>Flow D end state</td></tr>
+          <tr><td>Q8</td><td>Same-install account history lookup, gated</td><td>Flow D identify</td></tr>
+          <tr><td>—</td><td>ZK Email accountCode derivation per account (unlinkability)</td><td>Multi-account apply</td></tr>
+          <tr><td>—</td><td>Enforced minimum waiting period on-chain (zero-second currently legal)</td><td>Builder guardrails</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div></section>
+
+  <!-- ============ S17 · CLOSING ============ -->
+  <section class="slide" data-title="Your turn"><div class="inner">
+    <p class="eyebrow">Your turn</p>
+    <h1 style="font-size:clamp(30px,4.4vw,46px)">Tear it apart.</h1>
+    <p class="lede">The strongest review walks a persona through a flow and finds where it breaks. Pick Sara the guardian, Diana who never wrote her address down, or Sam with his single passkey — and follow them.</p>
+    <div class="decisions" style="margin-top:26px">
+      <div class="drow"><span class="tag ok">Comments</span><span>Line comments on <a href="https://github.com/FiboAtWonder/kohaku-extension/pull/2">PR #2</a> — source of truth: <code>social-recovery-ux-flows.md</code>, branch <code>docs/social-recovery-ux-flows</code>.</span></div>
+      <div class="drow"><span class="tag ok">Grounding</span><span><a href="https://app.notion.com/p/36d9a4c092c780578f9dde36e69dfff5">Persona research</a> · Design Rationales R1–R13 · the prototype demo · wireframes v1 (social-wireframes.pen).</span></div>
+      <div class="drow"><span class="tag ok">Owner</span><span>Fibo · Kohaku / Social Recovery Kit · 2026-08-13</span></div>
+    </div>
+  </div></section>
+
+</div>
+
+<div class="fadeout" id="fadeout"></div>
+<div class="scrollhint" id="scrollhint" role="button" tabindex="0" aria-label="Scroll for more on this slide">↓ More on this slide — scroll</div>
+
+<!-- ============ NAV BAR ============ -->
+<div class="bar">
+  <button id="prev" aria-label="Previous slide">←</button>
+  <button id="next" aria-label="Next slide">→</button>
+  <span class="count" id="count">1 / 20</span>
+  <div class="prog"><i id="progfill"></i></div>
+  <span class="slidetitle" id="slidetitle"></span>
+  <span class="kbd-hint">← → keys</span>
+</div>
+
+<script>
+(function(){
+  var deck = document.getElementById('deck');
+  var slides = deck.querySelectorAll('.slide');
+  var n = slides.length;
+  var i = 0;
+  var count = document.getElementById('count');
+  var fill = document.getElementById('progfill');
+  var title = document.getElementById('slidetitle');
+
+  /* ---- scrollable-slide affordance ---- */
+  var hint = document.getElementById('scrollhint');
+  var fade = document.getElementById('fadeout');
+  function updateHint(){
+    var s = slides[i];
+    var more = s.scrollHeight - s.scrollTop - s.clientHeight > 24;
+    hint.classList.toggle('on', more);
+    fade.classList.toggle('on', more);
+  }
+  slides.forEach(function(s){ s.addEventListener('scroll', updateHint, {passive:true}); });
+  window.addEventListener('resize', updateHint);
+  if (window.ResizeObserver){
+    var ro = new ResizeObserver(updateHint);
+    slides.forEach(function(s){ var el = s.querySelector('.inner'); if (el) ro.observe(el); });
+  }
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function hintScroll(){ slides[i].scrollBy({top: slides[i].clientHeight * 0.75, behavior: reduced ? 'auto' : 'smooth'}); }
+  hint.addEventListener('click', hintScroll);
+  hint.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') { hintScroll(); e.preventDefault(); } });
+
+  function clamp(x){ return Math.max(0, Math.min(n-1, x)); }
+  function render(){
+    deck.style.transform = 'translateX(' + (-i * 100) + 'vw)';
+    count.textContent = (i+1) + ' / ' + n;
+    fill.style.width = (((i+1)/n)*100) + '%';
+    title.textContent = slides[i].getAttribute('data-title') || '';
+    if (history.replaceState) history.replaceState(null, '', '#' + (i+1));
+    updateHint();
+  }
+  function go(x){ i = clamp(x); render(); }
+
+  document.getElementById('prev').addEventListener('click', function(){ go(i-1); });
+  document.getElementById('next').addEventListener('click', function(){ go(i+1); });
+
+  document.addEventListener('keydown', function(e){
+    if (e.target && /input|textarea|select/i.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { go(i+1); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { go(i-1); e.preventDefault(); }
+    else if (e.key === 'Home') { go(0); e.preventDefault(); }
+    else if (e.key === 'End') { go(n-1); e.preventDefault(); }
+  });
+
+  var h = parseInt((location.hash || '').replace('#',''), 10);
+  if (!isNaN(h) && h >= 1 && h <= n) i = h - 1;
+  render();
+})();
+</script>

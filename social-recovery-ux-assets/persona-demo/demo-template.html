@@ -1,0 +1,339 @@
+<meta charset="utf-8">
+<title>Recovery Journeys</title>
+<style>
+  :root{
+    --paper:#fbfbfd; --panel:#ffffff; --wash:#f3f4f8; --ink:#1b1e28; --muted:#6b7284;
+    --line:#e5e7ee; --accent:#6a4bd6; --accent-ink:#5a3ecb; --accent-soft:#efeafc;
+    --hot:#6a4bd6; --hot-fill:rgba(106,75,214,.10); --stage:#eef0f5;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#13151b; --panel:#1a1d25; --wash:#21252f; --ink:#e8eaf2; --muted:#98a0b4;
+      --line:#2b3040; --accent:#9c86ec; --accent-ink:#b3a1f2; --accent-soft:#2a2444;
+      --hot:#9c86ec; --hot-fill:rgba(156,134,236,.14); --stage:#1e222c;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#13151b; --panel:#1a1d25; --wash:#21252f; --ink:#e8eaf2; --muted:#98a0b4;
+    --line:#2b3040; --accent:#9c86ec; --accent-ink:#b3a1f2; --accent-soft:#2a2444;
+    --hot:#9c86ec; --hot-fill:rgba(156,134,236,.14); --stage:#1e222c;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0; min-height:100%}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:"SF Mono",ui-monospace,Menlo,monospace}
+  button{font:inherit; color:inherit; cursor:pointer}
+  button:focus-visible,a:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:6px}
+
+  /* ---------- home ---------- */
+  .home{max-width:1080px; margin:0 auto; padding:56px 24px 80px}
+  .home .eyebrow{font-size:12px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-ink); margin:0 0 10px}
+  .home h1{font-size:clamp(28px,4.5vw,40px); line-height:1.15; margin:0 0 14px; letter-spacing:-.02em; text-wrap:balance}
+  .home .sub{color:var(--muted); max-width:64ch; margin:0 0 8px}
+  .home .note{color:var(--muted); font-size:13.5px; max-width:64ch; margin:0 0 36px}
+  .cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px}
+  .pcard{
+    text-align:left; background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:22px 22px 18px; display:flex; flex-direction:column; gap:10px;
+    transition:border-color .15s, transform .15s;
+  }
+  .pcard:hover{border-color:var(--accent); transform:translateY(-2px)}
+  @media (prefers-reduced-motion: reduce){ .pcard{transition:none} .pcard:hover{transform:none} }
+  .pcard .top{display:flex; align-items:center; gap:12px}
+  .ava{width:42px; height:42px; border-radius:50%; background:var(--accent-soft); color:var(--accent-ink);
+       display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; flex:none}
+  .pcard .name{font-weight:800; font-size:18px}
+  .pcard .tagline{color:var(--accent-ink); font-size:13.5px; font-weight:600}
+  .pcard .bio{color:var(--muted); font-size:14px; flex:1}
+  .pcard .meta{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:4px}
+  .chip{font-size:11.5px; font-weight:700; letter-spacing:.06em; padding:3px 9px; border-radius:20px;
+        background:var(--wash); color:var(--muted); border:1px solid var(--line)}
+  .chip.flows{color:var(--accent-ink); background:var(--accent-soft); border-color:transparent}
+
+  /* ---------- player ---------- */
+  .player{display:none; flex-direction:column; min-height:100vh}
+  .player.on{display:flex}
+  .home.off{display:none}
+  .topbar{
+    display:flex; align-items:center; gap:14px; padding:10px 18px;
+    background:var(--panel); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5;
+  }
+  .topbar .backlink{background:none; border:none; color:var(--muted); font-size:13.5px; padding:6px 4px}
+  .topbar .backlink:hover{color:var(--accent-ink)}
+  .topbar .who{display:flex; align-items:center; gap:9px; font-weight:700}
+  .topbar .who .ava{width:28px; height:28px; font-size:13px}
+  .topbar .spacer{flex:1}
+  .stepcount{font-size:12.5px; color:var(--muted)}
+  .dots{display:flex; gap:5px; align-items:center}
+  .dots i{width:7px; height:7px; border-radius:50%; background:var(--line); display:block; border:none; padding:0; cursor:pointer}
+  .dots i.done{background:var(--accent-soft)}
+  .dots i.cur{background:var(--accent)}
+
+  .stagewrap{flex:1; display:flex; align-items:center; justify-content:center; padding:22px 22px 8px; background:var(--stage)}
+  .stage{position:relative; width:100%; border:1px solid var(--line); border-radius:10px; overflow:hidden;
+         box-shadow:0 10px 34px rgba(10,12,20,.10); background:#fff}
+  .stage img{display:block; width:100%; height:auto}
+  .hot{
+    position:absolute; border:2px solid var(--hot); background:var(--hot-fill); border-radius:9px;
+    cursor:pointer; padding:0;
+  }
+  .hot::after{
+    content:""; position:absolute; inset:-2px; border-radius:9px; border:2px solid var(--hot);
+    animation:pulse 1.6s ease-out infinite; pointer-events:none;
+  }
+  @keyframes pulse{ 0%{transform:scale(1); opacity:.85} 100%{transform:scale(1.5); opacity:0} }
+  @media (prefers-reduced-motion: reduce){ .hot::after{animation:none; display:none} }
+
+  .caption{
+    background:var(--panel); border-top:1px solid var(--line); padding:18px 22px 20px;
+  }
+  .caption .row{max-width:1100px; margin:0 auto; display:flex; gap:26px; align-items:flex-start}
+  .caption .text{flex:1; min-width:0}
+  .caption .head{display:flex; align-items:center; gap:10px; margin-bottom:6px; flex-wrap:wrap}
+  .scode{font-size:11.5px; font-weight:700; letter-spacing:.05em; color:var(--accent-ink);
+         background:var(--accent-soft); border-radius:6px; padding:2px 8px}
+  .devchip{font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+  .actchip{font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--ink);
+           background:var(--wash); border:1px solid var(--line); border-radius:20px; padding:2px 10px}
+  .dots i.actsep{width:1px; height:11px; border-radius:0; background:var(--line); cursor:default}
+  .acttabs{display:flex; gap:4px; background:var(--wash); border:1px solid var(--line); border-radius:9px; padding:3px}
+  .acttabs button{border:none; background:transparent; border-radius:6px; padding:4px 12px;
+                  font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+  .acttabs button.on{background:var(--panel); color:var(--accent-ink); box-shadow:0 1px 3px rgba(10,12,20,.12)}
+  .acttabs button:hover{color:var(--accent-ink)}
+  .modalwrap{position:fixed; inset:0; background:rgba(12,14,20,.55); display:none;
+             align-items:center; justify-content:center; z-index:30; padding:24px}
+  .modalwrap.on{display:flex}
+  .modal{background:var(--panel); color:var(--ink); border:1px solid var(--line); border-radius:16px;
+         max-width:860px; width:100%; max-height:86vh; display:flex; flex-direction:column}
+  .modal .mhead{display:flex; align-items:center; gap:12px; padding:18px 24px; border-bottom:1px solid var(--line)}
+  .modal .mhead h2{margin:0; font-size:19px; flex:1}
+  .modal .mclose{border:1px solid var(--line); background:var(--wash); border-radius:8px; padding:6px 12px; font-size:13px}
+  .modal .mbody{overflow-y:auto; padding:8px 24px 26px}
+  .modal .mnote{font-size:12.5px; color:var(--muted); margin:14px 0 6px; padding:10px 14px;
+                background:var(--wash); border-radius:9px}
+  .modal h3{font-size:16px; margin:26px 0 8px; color:var(--accent-ink)}
+  .modal p{margin:0 0 12px; font-size:14.5px; max-width:75ch; white-space:pre-wrap}
+  .modal pre{background:var(--wash); border:1px solid var(--line); border-radius:9px; padding:12px 14px;
+             font-size:12.5px; overflow-x:auto; margin:0 0 12px}
+  .homehead-actions{margin:0 0 36px}
+  .story{margin:0; font-size:15.5px; max-width:78ch}
+  .spec{margin:7px 0 0; font-size:12.5px; color:var(--muted); max-width:78ch}
+  .spec b{color:var(--muted); font-weight:700; letter-spacing:.07em; font-size:11px; text-transform:uppercase; margin-right:6px}
+  .navbtns{display:flex; gap:10px; flex:none; align-items:center; padding-top:2px}
+  .btn{border:1px solid var(--line); background:var(--wash); border-radius:9px; padding:9px 16px; font-size:14px; font-weight:600}
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+  :root[data-theme="dark"] .btn.primary, :root:not([data-theme="light"]) .btn.primary{color:#fff}
+  .btn:disabled{opacity:.35; cursor:default}
+  .btn:disabled:hover{border-color:var(--line)}
+  .hint{font-size:12px; color:var(--muted); text-align:center; margin:8px 0 0}
+  .endcard{display:flex; align-items:center; gap:12px}
+  .endcard .fin{font-size:13px; font-weight:700; color:var(--accent-ink)}
+  @media (max-width: 760px){
+    .caption .row{flex-direction:column; gap:14px}
+    .navbtns{width:100%; justify-content:flex-end}
+  }
+</style>
+
+<div class="home" id="home">
+  <p class="eyebrow">Kohaku · Account recovery</p>
+  <h1>Walk the flows as five different people</h1>
+  <p class="sub">Every screen below is a real wireframe. Pick a persona and follow their full story — first they set recovery up, then they use it. The pulsing outline marks what they tap next. Captions tell the story; the small print maps each step to a spec decision.</p>
+  <p class="note">Lo-fi wireframes: grayscale is deliberate, red panels are design notes to the team, not user copy. Source of truth: <span class="mono">social-recovery-ux-flows.md</span>.</p>
+  <p class="homehead-actions"><button class="btn" id="docs-btn">Persona descriptions — verbatim from the research doc</button></p>
+  <div class="cards" id="cards"></div>
+</div>
+
+<div class="modalwrap" id="docs-modal" role="dialog" aria-modal="true" aria-label="Persona descriptions">
+  <div class="modal">
+    <div class="mhead"><h2>Persona descriptions</h2><button class="mclose" id="docs-close">Close</button></div>
+    <div class="mbody" id="docs-body"></div>
+  </div>
+</div>
+
+<div class="player" id="player">
+  <div class="topbar">
+    <button class="backlink" id="back-home">‹ All personas</button>
+    <span class="who"><span class="ava" id="p-ava"></span><span id="p-name"></span></span>
+    <span class="acttabs" id="p-acts"></span>
+    <span class="spacer"></span>
+    <span class="stepcount mono" id="p-count"></span>
+    <span class="dots" id="p-dots"></span>
+  </div>
+  <div class="stagewrap"><div class="stage" id="stage"></div></div>
+  <div class="caption">
+    <div class="row">
+      <div class="text">
+        <div class="head"><span class="actchip" id="c-actchip"></span><span class="scode mono" id="c-code"></span><span class="devchip" id="c-dev"></span></div>
+        <p class="story" id="c-story"></p>
+        <p class="spec" id="c-spec"></p>
+      </div>
+      <div class="navbtns" id="navbtns"></div>
+    </div>
+    <p class="hint" id="c-hint"></p>
+  </div>
+</div>
+
+<script>
+const DATA = __DATA__;
+const $ = id => document.getElementById(id);
+let cur = null, idx = 0;
+
+function fmtFlows(fl){ return fl.map(f => "Flow " + f).join(" · "); }
+
+function renderHome(){
+  const c = $("cards"); c.innerHTML = "";
+  DATA.personas.forEach(p => {
+    const b = document.createElement("button");
+    b.className = "pcard";
+    b.innerHTML = '<span class="top"><span class="ava">' + p.monogram + '</span><span><span class="name">' + p.name + '</span><br><span class="tagline">' + p.tag + '</span></span></span>' +
+      '<span class="bio">' + p.bio + '</span>' +
+      '<span class="meta"><span class="chip flows">' + fmtFlows(p.flows) + '</span><span class="chip">' + p.steps.length + ' steps</span></span>';
+    b.addEventListener("click", () => start(p.id));
+    c.appendChild(b);
+  });
+}
+
+function start(pid){
+  cur = DATA.personas.find(p => p.id === pid); idx = 0;
+  $("home").classList.add("off"); $("player").classList.add("on");
+  location.hash = pid;
+  renderStep();
+  window.scrollTo(0,0);
+}
+function goHome(){
+  cur = null;
+  $("player").classList.remove("on"); $("home").classList.remove("off");
+  history.replaceState(null, "", location.pathname + location.search);
+}
+
+function renderStep(){
+  const st = cur.steps[idx];
+  const size = DATA.sizes[st.screen];
+  const ar = size[0] / size[1];
+  $("p-ava").textContent = cur.monogram;
+  $("p-name").textContent = cur.name + " — " + cur.tag;
+  $("p-count").textContent = (idx+1) + " / " + cur.steps.length;
+
+  const tabs = $("p-acts"); tabs.innerHTML = "";
+  const acts = [...new Set(cur.steps.map(s => s.act))];
+  acts.forEach(a => {
+    const b = document.createElement("button");
+    b.textContent = a;
+    b.className = cur.steps[idx].act === a ? "on" : "";
+    b.title = "Jump to the first " + a + " step";
+    b.addEventListener("click", () => { idx = cur.steps.findIndex(s => s.act === a); renderStep(); });
+    tabs.appendChild(b);
+  });
+
+  const dots = $("p-dots"); dots.innerHTML = "";
+  cur.steps.forEach((s,i) => {
+    if (i > 0 && s.act !== cur.steps[i-1].act){
+      const sep = document.createElement("i");
+      sep.className = "actsep"; sep.title = s.act;
+      dots.appendChild(sep);
+    }
+    const d = document.createElement("i");
+    d.className = i < idx ? "done" : (i === idx ? "cur" : "");
+    d.title = s.act + " · step " + (i+1);
+    d.addEventListener("click", () => { idx = i; renderStep(); });
+    dots.appendChild(d);
+  });
+
+  const stage = $("stage");
+  stage.style.maxWidth = "min(1160px, calc((100vh - 300px) * " + ar.toFixed(4) + "), 100%)";
+  stage.innerHTML = "";
+  const img = document.createElement("img");
+  img.src = DATA.imgs[st.screen];
+  img.alt = st.screen;
+  stage.appendChild(img);
+
+  if (st.hit){
+    const [x,y,w,h] = st.hit;
+    const padX = 16, padY = 12;
+    const hot = document.createElement("button");
+    hot.className = "hot";
+    hot.setAttribute("aria-label", "Click: " + st.hitLabel);
+    hot.style.left   = ((x - padX) / size[0] * 100) + "%";
+    hot.style.top    = ((y - padY) / size[1] * 100) + "%";
+    hot.style.width  = ((w + padX*2) / size[0] * 100) + "%";
+    hot.style.height = ((h + padY*2) / size[1] * 100) + "%";
+    hot.addEventListener("click", next);
+    stage.appendChild(hot);
+  }
+
+  $("c-actchip").textContent = st.act || "";
+  $("c-code").textContent = st.screen;
+  $("c-dev").textContent = st.device === "mobile" ? "· a guardian's phone" : (st.device === "popup" ? "· extension popup" : "");
+  $("c-story").textContent = st.story;
+  $("c-spec").innerHTML = st.spec ? "<b>Spec</b>" + st.spec : "";
+
+  const nav = $("navbtns"); nav.innerHTML = "";
+  const bk = document.createElement("button");
+  bk.className = "btn"; bk.textContent = "‹ Back"; bk.disabled = idx === 0;
+  bk.addEventListener("click", prev);
+  nav.appendChild(bk);
+
+  const last = idx === cur.steps.length - 1;
+  if (!last){
+    const nx = document.createElement("button");
+    nx.className = "btn primary"; nx.textContent = "Next ›";
+    nx.addEventListener("click", next);
+    nav.appendChild(nx);
+  } else {
+    const end = document.createElement("span"); end.className = "endcard";
+    end.innerHTML = '<span class="fin">End of ' + cur.name + '’s journey</span>';
+    const again = document.createElement("button");
+    again.className = "btn"; again.textContent = "Restart";
+    again.addEventListener("click", () => { idx = 0; renderStep(); });
+    const all = document.createElement("button");
+    all.className = "btn primary"; all.textContent = "All personas";
+    all.addEventListener("click", goHome);
+    end.appendChild(again); end.appendChild(all);
+    nav.appendChild(end);
+  }
+
+  $("c-hint").textContent = st.hit
+    ? "Click the highlighted control on the screen, press Next, or use the arrow keys."
+    : (idx === cur.steps.length - 1 ? "" : "Press Next or use the arrow keys.");
+}
+
+function next(){ if (cur && idx < cur.steps.length - 1){ idx++; renderStep(); } }
+function prev(){ if (cur && idx > 0){ idx--; renderStep(); } }
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && $("docs-modal").classList.contains("on")){ $("docs-modal").classList.remove("on"); return; }
+  if (!cur) return;
+  if (e.key === "ArrowRight") next();
+  else if (e.key === "ArrowLeft") prev();
+  else if (e.key === "Escape") goHome();
+});
+$("back-home").addEventListener("click", goHome);
+
+function renderDocs(){
+  const body = $("docs-body"); body.innerHTML = "";
+  const note = document.createElement("p"); note.className = "mnote";
+  note.textContent = DATA.personaDocsNote; body.appendChild(note);
+  DATA.personas.forEach(p => {
+    const doc = DATA.personaDocs[p.id]; if (!doc) return;
+    const h = document.createElement("h3"); h.textContent = doc.title; body.appendChild(h);
+    doc.text.split("\n\n").forEach(block => {
+      const isCode = /^clause \d/m.test(block);
+      const el = document.createElement(isCode ? "pre" : "p");
+      el.textContent = block; body.appendChild(el);
+    });
+  });
+}
+$("docs-btn").addEventListener("click", () => { renderDocs(); $("docs-modal").classList.add("on"); });
+$("docs-close").addEventListener("click", () => $("docs-modal").classList.remove("on"));
+$("docs-modal").addEventListener("click", e => { if (e.target === $("docs-modal")) $("docs-modal").classList.remove("on"); });
+
+renderHome();
+const h = location.hash.replace("#","");
+if (h && DATA.personas.some(p => p.id === h)) start(h);
+</script>
