@@ -611,6 +611,7 @@ Notes:
 | 54 | Verify-access scope | The wizard's identity-method tests stay mandatory and blocking (#27). The **Advanced builder offers tests without enforcing them** — a power user may save untested methods (wireframes C-10d/C-10e). |
 | 55 | ZK Email transport direction | **Local, relayer-free**: the user sends the prepared email, downloads the raw `.eml` (Gmail: ⋮ → Show original → Download original), and the wallet verifies/proves from it on-device. Fits backend-zero. Open with the kit team: exact subject/command format, accountCode storage, in-extension proving latency (~15–60s). Redrawn in C-05e/D-07e; the 6-digit-code illustration is retired (it matched no real mechanic). |
 | 56 | Recovery password lifecycle | Set once at setup; **no change or removal surface**. A forgotten password never blocks recovery — it only keeps values hidden (D-06e). The dry run's recall row is the forget-protection. Note: editing guardians re-encrypts under the same password. |
+| 57 | Password naming | One name everywhere: **"extension password"** (the device-unlock password). "Full wallet password" is retired from all copy. The recovery password (decision 48) stays a distinct, clearly separated concept. |
 
 ---
 
