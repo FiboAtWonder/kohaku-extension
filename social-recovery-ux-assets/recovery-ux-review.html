@@ -197,7 +197,7 @@
     <h2>Five things this review must answer</h2>
     <div class="bigfive">
       <div class="item"><div><b>Funding &amp; execution <span class="chip block" style="margin-left:6px"><i></i>blocker</span></b>Recovery calls bypass the 4337 flow — no paymaster can sponsor them, and the SDK is backend-zero (no relayer). Who pays, and who executes after the waiting period?</div></div>
-      <div class="item"><div><b>ZK Email mechanics <span class="chip block" style="margin-left:6px"><i></i>blocker</span></b>What does the user physically do, and where does the proof generate? Gates enrollment, the access test, and the recovery step for that method.</div></div>
+      <div class="item"><div><b>ZK Email mechanics <span class="chip open" style="margin-left:6px"><i></i>narrowed</span></b>Direction decided (55): the user sends a prepared email, downloads the raw .eml (Gmail “Show original”), and the wallet proves it locally — no relayer. Still open: subject format, accountCode storage, prover stack and latency.</div></div>
       <div class="item"><div><b>Config value visibility <span class="chip open" style="margin-left:6px"><i></i>open</span></b>Guardian addresses are natively public in the current contracts. Can values be hidden at all? Flows assume structure-public + a password-decrypt case.</div></div>
       <div class="item"><div><b>Mixed-method OR-groups <span class="chip open" style="margin-left:6px"><i></i>open encoding</span></b>We assume <code>passkey AND [zk_email OR aadhaar]</code> is valid, like the guardian case. The contract encoding needs confirmation.</div></div>
       <div class="item"><div><b>The starter presets <span class="chip open" style="margin-left:6px"><i></i>open fit</span></b>Three ship by default. Do they fit the persona spread — and is a single-method floor acceptable as an edit of a preset?</div></div>
@@ -357,7 +357,8 @@ flowchart TD
       <div class="drow"><span class="tag ok">Decided</span><span>Guardian checks stay optional — confirmed in the demo-review meeting (decision 52); mutual guardian approval still under consideration.</span></div>
       <div class="drow"><span class="tag ok">Decided</span><span>The wizard ends with an optional <b>dry run</b>: rehearse the recovery locally before the save (decision 47).</span></div>
       <div class="drow"><span class="tag ok">Decided</span><span>Single-method setups are never forced to add more — the copy recommends a second method, including <b>a second passkey from another device</b> (decision 49).</span></div>
-      <div class="drow"><span class="tag ok">Decided</span><span>The Recovery Card may carry an optional <b>recovery-password hint</b>; the password's setup moment is under UX audit (decision 48).</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>The recovery password gets an explicit, skippable wizard step before the review (decision 48 amended); <b>the card hint is dropped</b> — it could leak configuration. The dry run's recall row covers forgetting. Set once, no change surface, never blocks recovery (decision 56).</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>Verify-access scope (decision 54): wizard tests stay blocking; the <b>Advanced builder offers tests without enforcing them</b>.</span></div>
     </div>
   </div></section>
 
@@ -600,7 +601,7 @@ flowchart TD
         <thead><tr><th>Ref</th><th>Item</th><th>Blocks</th></tr></thead>
         <tbody>
           <tr><td>Q7/19</td><td><b>Funding &amp; execution</b> — who pays and who executes (bypass 4337; backend-zero)</td><td>Flow D entirely</td></tr>
-          <tr><td>Q16</td><td><b>ZK Email mechanics</b> — user action; client vs hosted prover</td><td>ZK Email sub-flows</td></tr>
+          <tr><td>Q16/55</td><td><b>ZK Email</b> — .eml-local direction decided; open: subject/command format, accountCode storage without a backend, prover stack (~15–60s in-extension?), DKIM registry choice, module timelock vs our waiting period</td><td>ZK Email sub-flows</td></tr>
           <tr><td>Q22/41</td><td>Encoding for generic ANY-of groups — mixed members, M-of-N thresholds (T10 threshold field)</td><td>Builder + presets + recovery checklist</td></tr>
           <tr><td>—</td><td>Exact guardian signed payload (nonce; policyId?; expiry — define or confirm none)</td><td>Flow E1 page</td></tr>
           <tr><td>Q29</td><td>Policy value visibility (guardian addresses natively public) + password-encrypted values</td><td>Flow D path display</td></tr>

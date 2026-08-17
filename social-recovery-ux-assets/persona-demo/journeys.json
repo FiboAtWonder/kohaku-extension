@@ -131,8 +131,21 @@
      "hitLabel": "Confirm and save",
      "hit": [
       340,
-      502,
+      622,
       121,
+      17
+     ]
+    },
+    {
+     "screen": "C-07h-dry-run-single-passkey",
+     "story": "Before the save: the rehearsal. Sam completes his one row as if the key were lost today — locally, nothing on-chain.",
+     "act": "Setup",
+     "spec": "Decision 47 — the dry run · new screen",
+     "hitLabel": "Finish rehearsal",
+     "hit": [
+      340,
+      425,
+      109,
       17
      ]
     },
@@ -144,7 +157,7 @@
      "hitLabel": "Continue",
      "hit": [
       340,
-      485,
+      503,
       63,
       17
      ]
@@ -196,7 +209,7 @@
      "hitLabel": "Continue",
      "hit": [
       372,
-      514,
+      553,
       61,
       16
      ]
@@ -354,8 +367,21 @@
      "hitLabel": "Confirm and save",
      "hit": [
       340,
-      525,
+      622,
       121,
+      17
+     ]
+    },
+    {
+     "screen": "C-07i-dry-run-people-only",
+     "story": "The rehearsal: her guardian rows cannot sign without asking her people, so they rehearse as reachability checks.",
+     "act": "Setup",
+     "spec": "Decision 47 · decision 52 — guardian rows rehearse as reachability only",
+     "hitLabel": "Finish rehearsal",
+     "hit": [
+      340,
+      633,
+      109,
       17
      ]
     },
@@ -367,7 +393,7 @@
      "hitLabel": "Continue",
      "hit": [
       340,
-      485,
+      503,
       63,
       17
      ]
@@ -412,7 +438,7 @@
      "hitLabel": "Continue",
      "hit": [
       372,
-      514,
+      553,
       61,
       16
      ]
@@ -464,7 +490,7 @@
      "hitLabel": "Continue with this path",
      "hit": [
       340,
-      719,
+      779,
       159,
       17
      ]
@@ -660,8 +686,21 @@
      "hitLabel": "Confirm and save",
      "hit": [
       340,
-      485,
+      605,
       121,
+      17
+     ]
+    },
+    {
+     "screen": "C-07j-dry-run-passkey-plus-person",
+     "story": "The rehearsal: his passkey signs for real; Sara's row rehearses as reachable.",
+     "act": "Setup",
+     "spec": "Decision 47",
+     "hitLabel": "Finish rehearsal",
+     "hit": [
+      340,
+      600,
+      109,
       17
      ]
     },
@@ -673,7 +712,7 @@
      "hitLabel": "Continue",
      "hit": [
       340,
-      485,
+      503,
       63,
       17
      ]
@@ -718,7 +757,7 @@
      "hitLabel": "Continue",
      "hit": [
       372,
-      514,
+      553,
       61,
       16
      ]
@@ -770,7 +809,7 @@
      "hitLabel": "Continue with this path",
      "hit": [
       340,
-      754,
+      799,
       159,
       17
      ]
@@ -946,14 +985,14 @@
     },
     {
      "screen": "C-05e-enroll-email",
-     "story": "The email path: a code proves the inbox now, not during a crisis. (Illustrated as a code — the real ZK Email mechanics are Q16, open.)",
+     "story": "The email path, redrawn on the real mechanic: she sends one prepared email, downloads the raw .eml from Gmail (Show original), and the wallet checks the signature locally — no relayer. (Subject format and prover still open — Q16.)",
      "act": "Setup",
-     "spec": "Decision 27 · Q16 open — illustrative only",
-     "hitLabel": "Verify",
+     "spec": "Decision 55 — local .eml proving · Q16 narrowed",
+     "hitLabel": "Save and continue",
      "hit": [
-      358,
-      380,
-      42,
+      340,
+      652,
+      127,
       17
      ]
     },
@@ -978,10 +1017,16 @@
      "hitLabel": "Confirm and save",
      "hit": [
       340,
-      485,
+      605,
       121,
       17
      ]
+    },
+    {
+     "screen": "C-07k-dry-run-two-single-paths",
+     "story": "The rehearsal covers both paths; the email row runs the same .eml check in miniature. Drawn mid-rehearsal.",
+     "act": "Setup",
+     "spec": "Decision 47"
     },
     {
      "screen": "C-07e-setup-saved",
@@ -991,7 +1036,7 @@
      "hitLabel": "Continue",
      "hit": [
       340,
-      485,
+      503,
       63,
       17
      ]
@@ -1036,7 +1081,7 @@
      "hitLabel": "Continue",
      "hit": [
       372,
-      514,
+      553,
       61,
       16
      ]
@@ -1088,23 +1133,16 @@
      "hitLabel": "Continue with this path",
      "hit": [
       340,
-      739,
+      799,
       159,
       17
      ]
     },
     {
      "screen": "D-07e-recovery-email-code",
-     "story": "One row: a code to the enrolled address, six digits typed. Row complete — nothing else to collect. (Illustrative — Q16.)",
+     "story": "One row: she sends the prepared recovery email from the enrolled address, downloads the raw .eml, and the wallet generates the proof on this device (~60s). Row complete.",
      "act": "Recovery",
-     "spec": "Decision 35 — for a one-row path, the verify panel IS the checklist",
-     "hitLabel": "Verify",
-     "hit": [
-      358,
-      408,
-      42,
-      17
-     ]
+     "spec": "Decision 55 · decision 35 — the verify panel IS the checklist for a one-row path"
     },
     {
      "screen": "D-11-confirm-start-recovery",
@@ -1199,6 +1237,19 @@
      "spec": "The advanced flow never routes through the wizard"
     },
     {
+     "screen": "C-07l-dry-run-mixed-group",
+     "story": "Even the advanced path gets the rehearsal: any 2 of 3, satisfied locally. (Drawn in wizard chrome — the advanced entry is a bridge.)",
+     "act": "Setup",
+     "spec": "Decision 47",
+     "hitLabel": "Finish rehearsal",
+     "hit": [
+      340,
+      521,
+      109,
+      17
+     ]
+    },
+    {
      "screen": "C-10c-builder-saved",
      "story": "Saved as one transaction — confirmed. The builder shows the result read-only.",
      "act": "Setup",
@@ -1264,23 +1315,16 @@
      "hitLabel": "Continue with this path",
      "hit": [
       340,
-      719,
+      779,
       159,
       17
      ]
     },
     {
      "screen": "D-07e-recovery-email-code",
-     "story": "Member one: the email code. (Illustrative — Q16.)",
+     "story": "Member one, the email: prepared subject, raw .eml from Gmail, proof generated on-device. Complete.",
      "act": "Recovery",
-     "spec": "Q16 open",
-     "hitLabel": "Verify",
-     "hit": [
-      358,
-      408,
-      42,
-      17
-     ]
+     "spec": "Decision 55 · Q16 narrowed"
     },
     {
      "screen": "E1-01-guardian-page-lead",
@@ -1427,5 +1471,291 @@
     }
    ]
   }
- ]
+ ],
+ "sizes": {
+  "A-00-welcome": [
+   1280,
+   800
+  ],
+  "A1-01-fast-track-warning": [
+   1280,
+   800
+  ],
+  "A1-03-seed-backup": [
+   1280,
+   800
+  ],
+  "B-01-nudge-modal": [
+   600,
+   630
+  ],
+  "C-01-account-recovery-landing": [
+   1280,
+   814
+  ],
+  "C-02-how-recovery-works": [
+   1280,
+   800
+  ],
+  "C-03-inventory": [
+   1280,
+   800
+  ],
+  "C-03b-inventory-device-only": [
+   1280,
+   800
+  ],
+  "C-03c-inventory-device-and-email": [
+   1280,
+   800
+  ],
+  "C-04-recommended-paths": [
+   1280,
+   1107
+  ],
+  "C-04b-recommended-paths-two-methods": [
+   1280,
+   800
+  ],
+  "C-04c-recommended-path-single-method": [
+   1280,
+   800
+  ],
+  "C-05-enroll-passkey-test-pass": [
+   1280,
+   800
+  ],
+  "C-05a-create-passkey": [
+   1280,
+   800
+  ],
+  "C-05c-enroll-guardians": [
+   1280,
+   800
+  ],
+  "C-05g-create-passkey-start": [
+   1280,
+   800
+  ],
+  "C-05h-enroll-passkey-test-pending": [
+   1280,
+   800
+  ],
+  "C-06c-waiting-period-people-only": [
+   1280,
+   800
+  ],
+  "C-08-recovery-card-and-alerts": [
+   1280,
+   800
+  ],
+  "C-10b-add-member": [
+   1280,
+   1231
+  ],
+  "C-10c-builder-saved": [
+   1280,
+   1076
+  ],
+  "D-01-choose-new-owner": [
+   1280,
+   800
+  ],
+  "D-02-identify-account": [
+   1280,
+   800
+  ],
+  "D-02b-identify-account-fresh-install": [
+   1280,
+   800
+  ],
+  "D-04-confirm-identity": [
+   1280,
+   800
+  ],
+  "D-04b-confirm-identity-people-only": [
+   1280,
+   800
+  ],
+  "D-04c-confirm-identity-lone-mixed-group": [
+   1280,
+   800
+  ],
+  "D-07-checklist-pending": [
+   1280,
+   800
+  ],
+  "D-07b-passkey-verify-new-device": [
+   1280,
+   864
+  ],
+  "D-07f-checklist-group-only-people": [
+   1280,
+   835
+  ],
+  "D-07g-checklist-mixed-group-no-passkey": [
+   1280,
+   855
+  ],
+  "D-07h-checklist-single-passkey-new-device": [
+   1280,
+   620
+  ],
+  "D-07i-checklist-group-only-people-complete": [
+   1280,
+   745
+  ],
+  "D-07j-checklist-mixed-group-complete": [
+   1280,
+   726
+  ],
+  "D-08-checklist-verify-in-place": [
+   1280,
+   800
+  ],
+  "D-11-confirm-start-recovery": [
+   1280,
+   800
+  ],
+  "D-13-waiting-period-countdown": [
+   1280,
+   800
+  ],
+  "D-15-recovery-done-cleanup": [
+   1280,
+   800
+  ],
+  "D-15c-recovered-nothing-flagged": [
+   1280,
+   540
+  ],
+  "D2-01-pending-recovery-banner-and-alert": [
+   1280,
+   800
+  ],
+  "D2-02-post-cancel-triage": [
+   1280,
+   822
+  ],
+  "E1-01-guardian-page-lead": [
+   1280,
+   800
+  ],
+  "E1-04-guardian-page-connect-wallet": [
+   1280,
+   552
+  ],
+  "E1-05-guardian-page-signed": [
+   1280,
+   712
+  ],
+  "F-02-health-check-alert": [
+   1280,
+   800
+  ],
+  "G-01-management-overview": [
+   1280,
+   800
+  ],
+  "G-01b-cleanup-deferred": [
+   1280,
+   820
+  ],
+  "G-05-edit-path": [
+   1280,
+   800
+  ],
+  "C-05f-enroll-guardians-people-only": [
+   1280,
+   825
+  ],
+  "C-06-waiting-period": [
+   1280,
+   800
+  ],
+  "C-07-review-and-confirm": [
+   1280,
+   800
+  ],
+  "C-07c-review-single-method-path": [
+   1280,
+   800
+  ],
+  "C-07d-review-people-only-path": [
+   1280,
+   800
+  ],
+  "C-07e-setup-saved": [
+   1280,
+   800
+  ],
+  "C-07f-review-passkey-plus-one-person": [
+   1280,
+   800
+  ],
+  "C-07g-review-two-single-method-paths": [
+   1280,
+   800
+  ],
+  "C-07h-dry-run-single-passkey": [
+   1280,
+   800
+  ],
+  "C-07i-dry-run-people-only": [
+   1280,
+   800
+  ],
+  "C-07j-dry-run-passkey-plus-person": [
+   1280,
+   800
+  ],
+  "C-07k-dry-run-two-single-paths": [
+   1280,
+   880
+  ],
+  "C-07l-dry-run-mixed-group": [
+   1280,
+   800
+  ],
+  "C-10-advanced-builder": [
+   1280,
+   1404
+  ],
+  "D-06-choose-recovery-path": [
+   1280,
+   856
+  ],
+  "D-06b-choose-path-one-unavailable": [
+   1280,
+   856
+  ],
+  "D-06c-your-recovery-path-lone-group": [
+   1280,
+   856
+  ],
+  "D-06d-your-recovery-path-people-only": [
+   1280,
+   856
+  ],
+  "C-05e-enroll-email": [
+   1280,
+   800
+  ],
+  "D-07e-recovery-email-code": [
+   1280,
+   800
+  ],
+  "A1-02-extension-password": [
+   1280,
+   800
+  ],
+  "E1-01m-guardian-page-lead-mobile": [
+   390,
+   784
+  ],
+  "E1-04b-guardian-page-sign-offline-expanded": [
+   1280,
+   932
+  ]
+ }
 }
