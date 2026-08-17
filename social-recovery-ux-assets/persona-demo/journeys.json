@@ -888,9 +888,9 @@
     },
     {
      "screen": "D-08-checklist-verify-in-place",
-     "story": "Carl pastes Sara's approval; it validates on paste. Her single approval completes his group. (Bridge: the drawn counter says one more is needed — not true for 1-of-1.)",
+     "story": "Carl pastes Sara's approval; it validates on paste. Her single approval completes his group — the footer stays count-neutral for exactly this 1-of-1 case.",
      "act": "Recovery",
-     "spec": "Paste-time validation · D-08 footer flagged for a future wireframe pass",
+     "spec": "Paste-time validation · D-08 footer fixed in v8",
      "hitLabel": "Add approval",
      "hit": [
       768,
