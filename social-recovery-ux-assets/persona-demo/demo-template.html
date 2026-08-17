@@ -199,10 +199,10 @@ function renderHome(){
   });
 }
 
-function start(pid){
+function start(pid, step){
   cur = DATA.personas.find(p => p.id === pid); idx = 0;
+  if (step && step >= 1 && step <= cur.steps.length) idx = step - 1;
   $("home").classList.add("off"); $("player").classList.add("on");
-  location.hash = pid;
   renderStep();
   window.scrollTo(0,0);
 }
@@ -219,6 +219,7 @@ function renderStep(){
   $("p-ava").textContent = cur.monogram;
   $("p-name").textContent = cur.name + " — " + cur.tag;
   $("p-count").textContent = (idx+1) + " / " + cur.steps.length;
+  try { history.replaceState(null, "", "#" + cur.id + "/" + (idx+1)); } catch(e) {}
 
   const tabs = $("p-acts"); tabs.innerHTML = "";
   const acts = [...new Set(cur.steps.map(s => s.act))];
@@ -334,6 +335,6 @@ $("docs-close").addEventListener("click", () => $("docs-modal").classList.remove
 $("docs-modal").addEventListener("click", e => { if (e.target === $("docs-modal")) $("docs-modal").classList.remove("on"); });
 
 renderHome();
-const h = location.hash.replace("#","");
-if (h && DATA.personas.some(p => p.id === h)) start(h);
+const h = location.hash.replace("#","").split("/");
+if (h[0] && DATA.personas.some(p => p.id === h[0])) start(h[0], parseInt(h[1], 10) || 1);
 </script>

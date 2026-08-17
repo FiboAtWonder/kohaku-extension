@@ -360,6 +360,19 @@
      ]
     },
     {
+     "screen": "C-06e-recovery-password",
+     "story": "She hides the values: five addresses behind a password. Anyone can still read her path's shape — not who her people are. Set once; forgetting it never locks her out.",
+     "act": "Setup",
+     "spec": "Decisions 48/56 · what exactly gets hidden is open (53)",
+     "hitLabel": "Hide the details",
+     "hit": [
+      340,
+      533,
+      107,
+      17
+     ]
+    },
+    {
      "screen": "C-07d-review-people-only-path",
      "story": "The review is her exact shape: one path, one lone group, any 3 of these 5 members, 72 hours.",
      "act": "Setup",
@@ -675,6 +688,19 @@
       340,
       618,
       127,
+      17
+     ]
+    },
+    {
+     "screen": "C-06e-recovery-password",
+     "story": "Carl hides Sara's address behind a password. The Recovery Card in the drawer stays a non-map.",
+     "act": "Setup",
+     "spec": "Decisions 48/56",
+     "hitLabel": "Hide the details",
+     "hit": [
+      340,
+      533,
+      107,
       17
      ]
     },
@@ -1010,6 +1036,19 @@
      ]
     },
     {
+     "screen": "C-06e-recovery-password",
+     "story": "Her email address gets hidden too. She needs this password only to read her own setup during a recovery — forgetting it never blocks the recovery itself.",
+     "act": "Setup",
+     "spec": "Decisions 48/56 · D-06e is the wrong-password state",
+     "hitLabel": "Hide the details",
+     "hit": [
+      340,
+      533,
+      107,
+      17
+     ]
+    },
+    {
      "screen": "C-07g-review-two-single-method-paths",
      "story": "The review is her config verbatim: “Passkey alone” OR “Email alone”, 48 hours each, no forced pair.",
      "act": "Setup",
@@ -1232,7 +1271,7 @@
     },
     {
      "screen": "C-10-advanced-builder",
-     "story": "Group complete, 48h on the path. Advanced has its own terminal: “Save and sign” — one transaction, no wizard review.",
+     "story": "Group complete, 48h on the path. Advanced has its own terminal: “Save and sign” — one transaction, no wizard review. The optional password row sits right above the save (same component as the wizard step).",
      "act": "Setup",
      "spec": "The advanced flow never routes through the wizard"
     },
@@ -1334,7 +1373,7 @@
      "hitLabel": "Connect wallet and sign",
      "hit": [
       322,
-      692,
+      527,
       164,
       17
      ]
@@ -1468,6 +1507,36 @@
      "story": "One signed transaction later: clean overview, no flag. The design held.",
      "act": "Attack",
      "spec": "End of the attack — and of the demo"
+    }
+   ]
+  },
+  {
+   "id": "extras",
+   "name": "Extras",
+   "monogram": "✱",
+   "tag": "Provisional & developer states",
+   "bio": "Not part of any persona story: the provisional wizard states (drawn dashed — they will probably be removed) and the all-methods dry-run master for development.",
+   "flows": [
+    "C"
+   ],
+   "steps": [
+    {
+     "screen": "C-05i-guardian-test-optional",
+     "story": "PROVISIONAL — the optional guardian test-sign: ask a guardian to sign a test message, paste the reply back; saving is never blocked. Drawn dashed; the dry run may replace it.",
+     "act": "Extras",
+     "spec": "Decision 52 · audit item A4"
+    },
+    {
+     "screen": "C-06d-access-recheck",
+     "story": "PROVISIONAL — the mid-wizard access recheck strip. The decision-47 dry run covers the same need in-session; drawn for the meeting's request.",
+     "act": "Extras",
+     "spec": "Audit item A5 · decision 47"
+    },
+    {
+     "screen": "C-07m-dry-run-all-methods",
+     "story": "The all-methods dry-run master: passkey, guardians, email and Aadhaar in one rehearsal, plus the password-recall row. A development reference — no persona has all four methods.",
+     "act": "Extras",
+     "spec": "Decision 47 · the recall row is the forget-protection (56)"
     }
    ]
   }
@@ -1756,6 +1825,22 @@
   "E1-04b-guardian-page-sign-offline-expanded": [
    1280,
    932
+  ],
+  "C-06e-recovery-password": [
+   1280,
+   800
+  ],
+  "C-05i-guardian-test-optional": [
+   1280,
+   900
+  ],
+  "C-06d-access-recheck": [
+   1280,
+   800
+  ],
+  "C-07m-dry-run-all-methods": [
+   1280,
+   1150
   ]
  }
 }
