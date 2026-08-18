@@ -13566,7 +13566,7 @@
                               "id": "mjMg5",
                               "name": "Step label",
                               "fill": "$faint",
-                              "content": "STEP 3 OF 9",
+                              "content": "STEP 3 OF 10",
                               "fontFamily": "$sans",
                               "fontSize": 11,
                               "fontWeight": "700",
@@ -13574,7 +13574,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "I1sQtq",
+                              "id": "p8O0q",
                               "name": "Dots",
                               "gap": 6,
                               "alignItems": "center",
@@ -13582,7 +13582,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "bvnLv",
+                                  "id": "wAg1F",
                                   "name": "Dot 1",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -13591,7 +13591,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "qSvwC",
+                                  "id": "lyvDI",
                                   "name": "Dot 2",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -13600,7 +13600,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "Cwsaj",
+                                  "id": "A7kku",
                                   "name": "Dot 3",
                                   "fill": "$accent",
                                   "width": 17,
@@ -13609,7 +13609,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "S0KaOv",
+                                  "id": "lrKEV",
                                   "name": "Dot 4",
                                   "fill": "$line2",
                                   "width": 17,
@@ -13618,7 +13618,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "V41YE",
+                                  "id": "fUmRz",
                                   "name": "Dot 5",
                                   "fill": "$line2",
                                   "width": 17,
@@ -13627,7 +13627,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "j6Oba",
+                                  "id": "gj43t",
                                   "name": "Dot 6",
                                   "fill": "$line2",
                                   "width": 17,
@@ -13636,7 +13636,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "IsZrf",
+                                  "id": "yfJ4x",
                                   "name": "Dot 7",
                                   "fill": "$line2",
                                   "width": 17,
@@ -13645,7 +13645,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "L49VED",
+                                  "id": "IapXl",
                                   "name": "Dot 8",
                                   "fill": "$line2",
                                   "width": 17,
@@ -13654,8 +13654,17 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "IREJw",
+                                  "id": "wlY2s",
                                   "name": "Dot 9",
+                                  "fill": "$line2",
+                                  "width": 17,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "xZyhM",
+                                  "name": "Dot 10",
                                   "fill": "$line2",
                                   "width": 17,
                                   "height": 4
@@ -14623,7 +14632,7 @@
                               "id": "t8kvQ",
                               "name": "Step label",
                               "fill": "$faint",
-                              "content": "STEP 3 OF 9",
+                              "content": "STEP 3 OF 10",
                               "fontFamily": "$sans",
                               "fontSize": 11,
                               "fontWeight": "700",
@@ -14631,7 +14640,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "p0TLm",
+                              "id": "nCF54",
                               "name": "Dots",
                               "gap": 6,
                               "alignItems": "center",
@@ -14639,7 +14648,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "ncArt",
+                                  "id": "omPFM",
                                   "name": "Dot 1",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -14648,7 +14657,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "N0fauK",
+                                  "id": "i4uUW",
                                   "name": "Dot 2",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -14657,7 +14666,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "HtlXd",
+                                  "id": "AP6ej",
                                   "name": "Dot 3",
                                   "fill": "$accent",
                                   "width": 17,
@@ -14666,7 +14675,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "vGHq8",
+                                  "id": "QLSyl",
                                   "name": "Dot 4",
                                   "fill": "$line2",
                                   "width": 17,
@@ -14675,7 +14684,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "i1pCXN",
+                                  "id": "ruzvA",
                                   "name": "Dot 5",
                                   "fill": "$line2",
                                   "width": 17,
@@ -14684,7 +14693,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "ZWqpK",
+                                  "id": "cUF96",
                                   "name": "Dot 6",
                                   "fill": "$line2",
                                   "width": 17,
@@ -14693,7 +14702,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "J6buF",
+                                  "id": "A3CHzS",
                                   "name": "Dot 7",
                                   "fill": "$line2",
                                   "width": 17,
@@ -14702,7 +14711,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "FlsMH",
+                                  "id": "JvZ5B",
                                   "name": "Dot 8",
                                   "fill": "$line2",
                                   "width": 17,
@@ -14711,8 +14720,17 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "FkT6u",
+                                  "id": "nhEbu",
                                   "name": "Dot 9",
+                                  "fill": "$line2",
+                                  "width": 17,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "Zep44",
+                                  "name": "Dot 10",
                                   "fill": "$line2",
                                   "width": 17,
                                   "height": 4
@@ -16959,7 +16977,7 @@
                               "id": "IhdeE",
                               "name": "Step label",
                               "fill": "$faint",
-                              "content": "STEP 3 OF 9",
+                              "content": "STEP 3 OF 10",
                               "fontFamily": "$sans",
                               "fontSize": 11,
                               "fontWeight": "700",
@@ -16967,7 +16985,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "Drvxz",
+                              "id": "Hy9fy",
                               "name": "Dots",
                               "gap": 6,
                               "alignItems": "center",
@@ -16975,7 +16993,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "k88810",
+                                  "id": "DvN0w",
                                   "name": "Dot 1",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -16984,7 +17002,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "wzEcE",
+                                  "id": "Cps2J",
                                   "name": "Dot 2",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -16993,7 +17011,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "xKDD4",
+                                  "id": "R4CUV",
                                   "name": "Dot 3",
                                   "fill": "$accent",
                                   "width": 17,
@@ -17002,7 +17020,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "xRtyC",
+                                  "id": "bdODJ",
                                   "name": "Dot 4",
                                   "fill": "$line2",
                                   "width": 17,
@@ -17011,7 +17029,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "JDmRq",
+                                  "id": "X7l0y3",
                                   "name": "Dot 5",
                                   "fill": "$line2",
                                   "width": 17,
@@ -17020,7 +17038,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "ZSEkF",
+                                  "id": "E61IZs",
                                   "name": "Dot 6",
                                   "fill": "$line2",
                                   "width": 17,
@@ -17029,7 +17047,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "Jbjrc",
+                                  "id": "upXEl",
                                   "name": "Dot 7",
                                   "fill": "$line2",
                                   "width": 17,
@@ -17038,7 +17056,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "YcmaM",
+                                  "id": "GxfYY",
                                   "name": "Dot 8",
                                   "fill": "$line2",
                                   "width": 17,
@@ -17047,8 +17065,17 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "sQlsZ",
+                                  "id": "q88hu",
                                   "name": "Dot 9",
+                                  "fill": "$line2",
+                                  "width": 17,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "Yqgtt",
+                                  "name": "Dot 10",
                                   "fill": "$line2",
                                   "width": 17,
                                   "height": 4
@@ -23326,7 +23353,7 @@
                               "id": "hVpw0",
                               "name": "Step label",
                               "fill": "$faint",
-                              "content": "STEP 4 OF 9",
+                              "content": "STEP 4 OF 10",
                               "fontFamily": "$sans",
                               "fontSize": 11,
                               "fontWeight": "700",
@@ -23334,7 +23361,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "YduJv",
+                              "id": "c9gm8X",
                               "name": "Dots",
                               "gap": 6,
                               "alignItems": "center",
@@ -23342,7 +23369,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "H8DWv",
+                                  "id": "eLlst",
                                   "name": "Dot 1",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -23351,7 +23378,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "fDzdw",
+                                  "id": "iiO7J",
                                   "name": "Dot 2",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -23360,7 +23387,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "xbX3C",
+                                  "id": "IqYb3",
                                   "name": "Dot 3",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -23369,7 +23396,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "t3TWV",
+                                  "id": "QSMQI",
                                   "name": "Dot 4",
                                   "fill": "$accent",
                                   "width": 17,
@@ -23378,7 +23405,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "n04hb",
+                                  "id": "RcyT8",
                                   "name": "Dot 5",
                                   "fill": "$line2",
                                   "width": 17,
@@ -23387,7 +23414,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "gjFno",
+                                  "id": "X6nD10",
                                   "name": "Dot 6",
                                   "fill": "$line2",
                                   "width": 17,
@@ -23396,7 +23423,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "N1gK8",
+                                  "id": "gSKux",
                                   "name": "Dot 7",
                                   "fill": "$line2",
                                   "width": 17,
@@ -23405,7 +23432,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "NTC4x",
+                                  "id": "MbfEf",
                                   "name": "Dot 8",
                                   "fill": "$line2",
                                   "width": 17,
@@ -23414,8 +23441,17 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "gcuhG",
+                                  "id": "x1kUK",
                                   "name": "Dot 9",
+                                  "fill": "$line2",
+                                  "width": 17,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "o84IM3",
+                                  "name": "Dot 10",
                                   "fill": "$line2",
                                   "width": 17,
                                   "height": 4
@@ -31583,7 +31619,7 @@
                               "id": "wR5gF",
                               "name": "Step label",
                               "fill": "$faint",
-                              "content": "STEP 4 OF 9",
+                              "content": "STEP 4 OF 10",
                               "fontFamily": "$sans",
                               "fontSize": 11,
                               "fontWeight": "700",
@@ -31591,7 +31627,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "pLTQ3",
+                              "id": "lj59S",
                               "name": "Dots",
                               "gap": 6,
                               "alignItems": "center",
@@ -31599,7 +31635,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "yxh3w",
+                                  "id": "GsRlP",
                                   "name": "Dot 1",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -31608,7 +31644,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "XIRSv",
+                                  "id": "OXBav",
                                   "name": "Dot 2",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -31617,7 +31653,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "ZThmA",
+                                  "id": "czpNc",
                                   "name": "Dot 3",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -31626,7 +31662,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "t9gBE",
+                                  "id": "GTqR2",
                                   "name": "Dot 4",
                                   "fill": "$accent",
                                   "width": 17,
@@ -31635,7 +31671,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "i8OO6",
+                                  "id": "HTKoL",
                                   "name": "Dot 5",
                                   "fill": "$line2",
                                   "width": 17,
@@ -31644,7 +31680,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "nJNvk",
+                                  "id": "eATn4",
                                   "name": "Dot 6",
                                   "fill": "$line2",
                                   "width": 17,
@@ -31653,7 +31689,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "xMuXM",
+                                  "id": "uwGkn",
                                   "name": "Dot 7",
                                   "fill": "$line2",
                                   "width": 17,
@@ -31662,7 +31698,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "sItbJ",
+                                  "id": "DUS7u",
                                   "name": "Dot 8",
                                   "fill": "$line2",
                                   "width": 17,
@@ -31671,8 +31707,17 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "O6VEaa",
+                                  "id": "RG8EL",
                                   "name": "Dot 9",
+                                  "fill": "$line2",
+                                  "width": 17,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "MJvrj",
+                                  "name": "Dot 10",
                                   "fill": "$line2",
                                   "width": 17,
                                   "height": 4
@@ -39908,7 +39953,7 @@
                               "id": "zR6oA",
                               "name": "Step label",
                               "fill": "$faint",
-                              "content": "STEP 8 OF 9",
+                              "content": "STEP 8 OF 10",
                               "fontFamily": "$sans",
                               "fontSize": 11,
                               "fontWeight": "700",
@@ -39916,7 +39961,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "H3VPzc",
+                              "id": "B2IUED",
                               "name": "Dots",
                               "gap": 6,
                               "alignItems": "center",
@@ -39924,7 +39969,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "I5Dvu8",
+                                  "id": "nLvtW",
                                   "name": "Dot 1",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -39933,7 +39978,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "z6DLw",
+                                  "id": "LRoMj",
                                   "name": "Dot 2",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -39942,7 +39987,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "rENpZ",
+                                  "id": "vDUC0",
                                   "name": "Dot 3",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -39951,7 +39996,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "S7Rps",
+                                  "id": "o2qDv",
                                   "name": "Dot 4",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -39960,7 +40005,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "C3CDBs",
+                                  "id": "pGQGL",
                                   "name": "Dot 5",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -39969,7 +40014,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "Rg1Js",
+                                  "id": "HgeVW",
                                   "name": "Dot 6",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -39978,7 +40023,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "ebme8",
+                                  "id": "mvNUB",
                                   "name": "Dot 7",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -39987,7 +40032,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "fflV1",
+                                  "id": "uVb3L",
                                   "name": "Dot 8",
                                   "fill": "$accent",
                                   "width": 17,
@@ -39996,8 +40041,17 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "n7mWz",
+                                  "id": "JkKG7",
                                   "name": "Dot 9",
+                                  "fill": "$line2",
+                                  "width": 17,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "JEOrv",
+                                  "name": "Dot 10",
                                   "fill": "$line2",
                                   "width": 17,
                                   "height": 4
@@ -41186,7 +41240,7 @@
                               "id": "rU0Mc",
                               "name": "Step label",
                               "fill": "$faint",
-                              "content": "STEP 8 OF 9",
+                              "content": "STEP 8 OF 10",
                               "fontFamily": "$sans",
                               "fontSize": 11,
                               "fontWeight": "700",
@@ -41194,7 +41248,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "uMc6m",
+                              "id": "QKJGh",
                               "name": "Dots",
                               "gap": 6,
                               "alignItems": "center",
@@ -41202,7 +41256,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "hnO5Y",
+                                  "id": "Gkcrk",
                                   "name": "Dot 1",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -41211,7 +41265,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "B5NZe",
+                                  "id": "SRcM0",
                                   "name": "Dot 2",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -41220,7 +41274,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "zEhUU",
+                                  "id": "DZcCo",
                                   "name": "Dot 3",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -41229,7 +41283,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "dzO3M",
+                                  "id": "B4hwEr",
                                   "name": "Dot 4",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -41238,7 +41292,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "CnAdy",
+                                  "id": "uClL5",
                                   "name": "Dot 5",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -41247,7 +41301,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "eYEyM",
+                                  "id": "j1DnoO",
                                   "name": "Dot 6",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -41256,7 +41310,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "C2m9P",
+                                  "id": "w6iAhz",
                                   "name": "Dot 7",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -41265,7 +41319,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "Mn6LK",
+                                  "id": "KPOm1",
                                   "name": "Dot 8",
                                   "fill": "$accent",
                                   "width": 17,
@@ -41274,8 +41328,17 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "TSHWq",
+                                  "id": "KCQFV",
                                   "name": "Dot 9",
+                                  "fill": "$line2",
+                                  "width": 17,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "FbzZp",
+                                  "name": "Dot 10",
                                   "fill": "$line2",
                                   "width": 17,
                                   "height": 4
@@ -45887,7 +45950,7 @@
                               "id": "YQbHj",
                               "name": "Step label",
                               "fill": "$faint",
-                              "content": "STEP 8 OF 9",
+                              "content": "STEP 8 OF 10",
                               "fontFamily": "$sans",
                               "fontSize": 11,
                               "fontWeight": "700",
@@ -45895,7 +45958,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "aTHWv",
+                              "id": "USkQt",
                               "name": "Dots",
                               "gap": 6,
                               "alignItems": "center",
@@ -45903,7 +45966,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "EDvVV",
+                                  "id": "A1HwQH",
                                   "name": "Dot 1",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -45912,7 +45975,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "T8WMkz",
+                                  "id": "cNxz0",
                                   "name": "Dot 2",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -45921,7 +45984,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "e3ijh",
+                                  "id": "aUnv3",
                                   "name": "Dot 3",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -45930,7 +45993,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "FPBCT",
+                                  "id": "Z5AFOE",
                                   "name": "Dot 4",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -45939,7 +46002,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "uQ6ja",
+                                  "id": "AvmAZ",
                                   "name": "Dot 5",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -45948,7 +46011,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "KXQpn",
+                                  "id": "VFimJ",
                                   "name": "Dot 6",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -45957,7 +46020,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "vGk9H",
+                                  "id": "pZ3hC",
                                   "name": "Dot 7",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -45966,7 +46029,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "FoXN6",
+                                  "id": "DJksC",
                                   "name": "Dot 8",
                                   "fill": "$accent",
                                   "width": 17,
@@ -45975,8 +46038,17 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "zvpwt",
+                                  "id": "nXIUH",
                                   "name": "Dot 9",
+                                  "fill": "$line2",
+                                  "width": 17,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "SEWpi",
+                                  "name": "Dot 10",
                                   "fill": "$line2",
                                   "width": 17,
                                   "height": 4
@@ -49835,7 +49907,7 @@
                               "id": "Y8d1i",
                               "name": "Step label",
                               "fill": "$faint",
-                              "content": "STEP 8 OF 9",
+                              "content": "STEP 7 OF 10",
                               "fontFamily": "$sans",
                               "fontSize": 11,
                               "fontWeight": "700",
@@ -49843,7 +49915,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "Z0G6X",
+                              "id": "Fnqb6",
                               "name": "Dots",
                               "gap": 6,
                               "alignItems": "center",
@@ -49851,7 +49923,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "jNWWD",
+                                  "id": "dzQFV",
                                   "name": "Dot 1",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -49860,7 +49932,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "RBXD1",
+                                  "id": "apOGY",
                                   "name": "Dot 2",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -49869,7 +49941,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "U51ig",
+                                  "id": "C0RVok",
                                   "name": "Dot 3",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -49878,7 +49950,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "omqLO",
+                                  "id": "gUcSx",
                                   "name": "Dot 4",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -49887,7 +49959,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "tx0fI",
+                                  "id": "NoAje",
                                   "name": "Dot 5",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -49896,7 +49968,7 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "JONTr",
+                                  "id": "fq8Mp",
                                   "name": "Dot 6",
                                   "fill": "$accent-line",
                                   "width": 17,
@@ -49905,17 +49977,8 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "V25IG",
+                                  "id": "j7mKKT",
                                   "name": "Dot 7",
-                                  "fill": "$accent-line",
-                                  "width": 17,
-                                  "height": 4
-                                },
-                                {
-                                  "type": "rectangle",
-                                  "cornerRadius": 3,
-                                  "id": "gRPHG",
-                                  "name": "Dot 8",
                                   "fill": "$accent",
                                   "width": 17,
                                   "height": 4
@@ -49923,8 +49986,26 @@
                                 {
                                   "type": "rectangle",
                                   "cornerRadius": 3,
-                                  "id": "s5C7M",
+                                  "id": "UQdIf",
+                                  "name": "Dot 8",
+                                  "fill": "$line2",
+                                  "width": 17,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "ui178",
                                   "name": "Dot 9",
+                                  "fill": "$line2",
+                                  "width": 17,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "FByPw",
+                                  "name": "Dot 10",
                                   "fill": "$line2",
                                   "width": 17,
                                   "height": 4
