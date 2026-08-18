@@ -3,13 +3,15 @@
 > **Purpose:** the single catch-up document for this workstream. Any agent or
 > teammate resuming the work reads this first. **Rule: update this file at every
 > checkpoint** (wireframe commit, decisions batch, artifact republish, review round).
-> Last update: 2026-08-18, after the six-front attack round.
+> Last update: 2026-08-18, after the **single-path model change** (decisions 73–78)
+> landed in the spec. Wireframes/demo/deck/Notion sync is IN FLIGHT — see
+> "Round in flight" below.
 
 ## The surfaces (where everything lives)
 
 | Surface | Location | Sync rule |
 |---|---|---|
-| **Spec (source of truth)** | `social-recovery-ux-flows.md` — flows A–G, decisions log **1–72**, display rules, persistence table, tech-deps | Everything else follows it |
+| **Spec (source of truth)** | `social-recovery-ux-flows.md` — flows A–G, decisions log **1–78**, display rules, persistence table, tech-deps | Everything else follows it |
 | **Wireframes** | `social-wireframes.pen` — **v10, 128 screens** (commit `3e8581919`) | Edited ONLY by the Pen design agent via prompts; the driving agent writes prompts, verifies via git-JSON, commits after the user's ⌘S |
 | **Notion replica** | [Social Recovery UX Draft](https://app.notion.com/p/3ba9a4c092c780a492f2d144c148762b) | Sync only on request, targeted `update_content` ops only (inline discussions must survive) |
 | **Review deck** (teammates) | artifact `ca87aff0-…65e3`, source `social-recovery-ux-assets/recovery-ux-review.html` | Edit the repo file, republish with `url` param |
@@ -41,6 +43,30 @@
 6. **The attack round** (2026-08-18) — six Opus 5 fronts (ease, copy, missing
    states, consistency, collisions, implementability) → 89 findings → 55 approved
    → decisions 58–72, two Pen sweeps (92 frames edited, 20 screens added).
+7. **The single-path model change** (2026-08-18, decisions 73–78) — team decision:
+   ONE recovery path per account (no OR-of-paths). Path = required rows AND ANY-of
+   groups; wizard builds at most one group, multiple groups are Advanced-only;
+   instance uniqueness; one waiting period, 24h contract floor (48h UI default);
+   ZK Email becomes receive-and-upload via an external send-only relayer + a
+   "How to get the .eml" help sheet (Gmail/Outlook web/Apple Mail/Yahoo/Proton);
+   4337 focus (7702 deferred, record-only). Persona remap approved: Sam = passkey
+   only · Alice = [3/5] guardians · Carl = passkey AND Sara (both required) ·
+   Diana = [1/2](passkey, zk email) · Bob = [2/3](passkey, guardian, zk email) via
+   Advanced.
+
+## Round in flight (single-path model)
+
+Spec is DONE (this checkpoint). Still to do, in order:
+1. Notion replica sync (targeted ops).
+2. Pen round: new `Flow · OUTDATED` band at the canvas bottom; invalidated screens
+   move there (renamed `<code>-old`); replacements keep the original codes; ZK Email
+   send+upload redraw (C-05e, D-07e) + new help sheet C-05n; copy sweep for
+   path-plural wording; C-10 family rebuilt for required-rows-plus-multiple-groups
+   (Nico's layout input still pending — lo-fi only).
+3. Verify (git-JSON), commit wireframes v11.
+4. Demo: re-export, remap journeys.json to the one-path personas, rebuild,
+   republish artifact `b822a105…`.
+5. Deck `ca87aff0…`: update the model sections + republish.
 
 ## Key decisions (themes; the log rows 1–72 in the spec are authoritative)
 
