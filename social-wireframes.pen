@@ -14338,7 +14338,7 @@
                                                   "id": "iVseC",
                                                   "type": "ref",
                                                   "ref": "egaib",
-                                                  "name": "Threshold · 1 of your people",
+                                                  "name": "Threshold · 1 of your guardians",
                                                   "descendants": {
                                                     "tBtwH": {
                                                       "content": "1"
@@ -14347,7 +14347,7 @@
                                                       "enabled": false
                                                     },
                                                     "PFBzB": {
-                                                      "content": "your people"
+                                                      "content": "your guardians"
                                                     }
                                                   }
                                                 },
@@ -103516,7 +103516,7 @@
                   "name": "D-12-submit-failure",
                   "clip": true,
                   "width": 1280,
-                  "height": 975,
+                  "height": 1060,
                   "fill": "$panel",
                   "children": [
                     {
@@ -103674,7 +103674,7 @@
                               "children": [
                                 {
                                   "type": "frame",
-                                  "id": "u2KOF",
+                                  "id": "bvHmc",
                                   "name": "Submit failure panel",
                                   "width": "fill_container",
                                   "fill": "$panel",
@@ -103691,7 +103691,7 @@
                                   "children": [
                                     {
                                       "type": "frame",
-                                      "id": "W4Vr4",
+                                      "id": "oqhDr",
                                       "name": "Head",
                                       "width": "fill_container",
                                       "gap": 8,
@@ -103699,7 +103699,7 @@
                                       "children": [
                                         {
                                           "type": "icon",
-                                          "id": "yzvEV",
+                                          "id": "K3AcQN",
                                           "name": "Icon",
                                           "width": 16,
                                           "height": 16,
@@ -103709,7 +103709,7 @@
                                         },
                                         {
                                           "type": "text",
-                                          "id": "WESE5",
+                                          "id": "a2NHUk",
                                           "name": "Title",
                                           "fill": "$ink",
                                           "content": "The recovery could not be started",
@@ -103721,7 +103721,7 @@
                                     },
                                     {
                                       "type": "text",
-                                      "id": "v5wOoj",
+                                      "id": "tdixR",
                                       "name": "Body",
                                       "fill": "$ink2",
                                       "textGrowth": "fixed-width",
@@ -103734,14 +103734,14 @@
                                     },
                                     {
                                       "type": "frame",
-                                      "id": "hC02h",
+                                      "id": "tAfa0",
                                       "name": "Failure actions",
                                       "width": "fill_container",
                                       "gap": 8,
                                       "children": [
                                         {
                                           "type": "frame",
-                                          "id": "pesw8",
+                                          "id": "tk5Ds",
                                           "name": "Button · Try again",
                                           "fill": "$panel",
                                           "cornerRadius": 10,
@@ -103757,7 +103757,7 @@
                                           "children": [
                                             {
                                               "type": "text",
-                                              "id": "Kup44",
+                                              "id": "E6Pk4e",
                                               "name": "Label",
                                               "fill": "$ink",
                                               "content": "Try again",
@@ -103769,7 +103769,7 @@
                                         },
                                         {
                                           "type": "frame",
-                                          "id": "YZdAy",
+                                          "id": "wfPI6",
                                           "name": "Button · Pay the fee from another account",
                                           "fill": "$panel",
                                           "cornerRadius": 10,
@@ -103785,7 +103785,7 @@
                                           "children": [
                                             {
                                               "type": "text",
-                                              "id": "m2O1XD",
+                                              "id": "acqB7",
                                               "name": "Label",
                                               "fill": "$ink",
                                               "content": "Pay the fee from another account",
@@ -103799,7 +103799,7 @@
                                     },
                                     {
                                       "type": "text",
-                                      "id": "sScKN",
+                                      "id": "mfJZE",
                                       "name": "Kept note",
                                       "fill": "$muted",
                                       "textGrowth": "fixed-width",
@@ -103809,6 +103809,50 @@
                                       "fontFamily": "$sans",
                                       "fontSize": 11.5,
                                       "fontWeight": "normal"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "jTkyN",
+                                      "name": "Note · Paying from another account",
+                                      "width": "fill_container",
+                                      "fill": "$wash",
+                                      "cornerRadius": 12,
+                                      "stroke": "$line",
+                                      "strokeWidth": 1,
+                                      "strokeAlignment": "inner",
+                                      "layout": "vertical",
+                                      "gap": 4,
+                                      "padding": [
+                                        12,
+                                        13
+                                      ],
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "CTzP1",
+                                          "name": "Note title",
+                                          "fill": "$ink",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Paying from another account",
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12.5,
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "bhKGG",
+                                          "name": "Note text",
+                                          "fill": "$muted",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "The fallback lets you fund the transaction from a different account of yours. It has no effect on who ends up controlling the recovered account.",
+                                          "lineHeight": 1.45,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 11.5,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
                                     }
                                   ]
                                 },
