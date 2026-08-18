@@ -3,9 +3,10 @@
 > **Purpose:** the single catch-up document for this workstream. Any agent or
 > teammate resuming the work reads this first. **Rule: update this file at every
 > checkpoint** (wireframe commit, decisions batch, artifact republish, review round).
-> Last update: 2026-08-18, after wireframes **v11 was verified and committed**
-> (`59944b2fa`). Spec + Notion are synced. Remaining: a step-label micro-fix,
-> then the demo + deck republish — see "Round in flight" below.
+> Last update: 2026-08-18, after wireframes **v11.1** (step-label micro-fix,
+> verified PASS incl. a whole-file closure test, commit `89142332d`). Spec +
+> Notion are synced. Remaining: the demo + deck republish (running via Opus 5
+> subagents) — see "Round in flight" below.
 
 ## The surfaces (where everything lives)
 
@@ -58,12 +59,16 @@
 
 Done: spec (`4b1232964`) · Notion sync · Pen round, verified (git-JSON: 28 moves,
 25 rebuilds + C-05n, 95 content edits + property-only sweeps confirmed by
-full-JSON hash) · committed as v11 (`59944b2fa`). Still to do:
-1. Pen MICRO-FIX: step labels on the 9 rebuilt wizard frames (see next note).
-2. Verify + commit the micro-fix (v11.1).
-3. Demo: re-export active screens, remap journeys.json to the one-path personas,
-   rebuild, republish artifact `b822a105…`.
-4. Deck `ca87aff0…`: update the model sections + republish.
+full-JSON hash) · committed as v11 (`59944b2fa`) · step-label micro-fix verified
+(PASS: exactly the 9 frames changed, closure test reproduces the baseline hash;
+C-09/C-09c "OF 9" strings are pre-existing single-account annotations, fine) ·
+committed as v11.1 (`89142332d`) · journeys.json remapped to the one-path
+personas (23 screen renames, 22 story/spec rewrites, Diana bio, C-05n added to
+Extras; 16 hotspots pending fresh bounds). Still to do:
+1. Demo: exports + hotspot bounds (Opus 5 subagent, running) → merge hits →
+   `build-demo.py` → republish artifact `b822a105…` → per-persona verifiers.
+2. Deck `ca87aff0…`: model-sections update (Opus 5 subagent, running) → diff
+   review → republish.
 
 ### Pen round — what landed (2026-08-18)
 
@@ -149,16 +154,21 @@ Notable non-mechanical parts of the sweep:
 **Clipping baseline holds:** the scan reports exactly one enabled issue,
 D2-01 "Action · Receive" (accepted).
 
-### Step-label micro-fix (resolved — decision 58 stands, no renumbering)
+### Step-label micro-fix — APPLIED
 
-The rebuild prompt wrongly specified a 9-step map, so 9 rebuilt frames read
-`OF 9` (C-04, C-04b, C-04e, C-05e, C-05k, C-07, C-07b, C-07g, C-07k) while the
-37 copy-swept wizard frames correctly read `OF 10`. **Nothing in the single-path
-model drops a wizard step — the ten-step map of decision 58 is unchanged**
-("OF 9" exists only for single-account wallets skipping step 10). Fix = sweep the
-9 frames to `OF 10` with the decision-58 step numbers: step 3 (C-04/C-04b/C-04e),
-step 4 (C-05e/C-05k), step 7 (C-07k dry run), step 8 (C-07/C-07b/C-07g), and give
-each indicator ten dots.
+Decision 58 stands: the wizard map is **ten steps**, and nothing in the single-path
+model drops one ("OF 9" exists only for single-account wallets that skip step 10).
+The 9 rebuilt frames that briefly read `OF 9` were corrected in place — label text
+plus a ten-dot indicator with the right dot active:
+
+- C-04, C-04b, C-04e → `STEP 3 OF 10`
+- C-05e, C-05k → `STEP 4 OF 10`
+- C-07k (dry run) → `STEP 7 OF 10`
+- C-07, C-07b, C-07g (review) → `STEP 8 OF 10`
+
+Verified: **no `OF 9` label remains** anywhere in the document, all 46 active wizard
+indicators carry ten dots, and the clipping baseline still reports exactly one
+enabled issue (D2-01 "Action · Receive").
 
 ## Key decisions (themes; the log rows 1–78 in the spec are authoritative)
 
