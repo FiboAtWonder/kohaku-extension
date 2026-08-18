@@ -34,7 +34,7 @@
      "hitLabel": "Guide me",
      "hit": [
       364,
-      249,
+      267,
       65,
       17
      ]
@@ -131,7 +131,7 @@
      "hitLabel": "Confirm and save",
      "hit": [
       340,
-      622,
+      575,
       121,
       17
      ]
@@ -157,7 +157,7 @@
      "hitLabel": "Continue",
      "hit": [
       340,
-      503,
+      659,
       63,
       17
      ]
@@ -267,7 +267,7 @@
      "hitLabel": "Start recovery",
      "hit": [
       340,
-      733,
+      718,
       99,
       17
      ]
@@ -322,14 +322,14 @@
     },
     {
      "screen": "C-01-account-recovery-landing",
-     "story": "She goes straight for the only preset with no passkey: “People only”. Its “Set up ›” starts the guided setup from that path — she skips the inventory and lands at enrollment.",
+     "story": "She goes straight for the only preset with no passkey: “Guardians only”. Its “Set up ›” starts the guided setup from that path — she skips the inventory and lands at enrollment.",
      "act": "Setup",
      "spec": "Preset deep-link = “Guided setup, starting from this path” (C-01's own copy)",
-     "hitLabel": "People only",
+     "hitLabel": "Guardians only",
      "hit": [
       338,
-      676,
-      83,
+      694,
+      107,
       18
      ]
     },
@@ -366,10 +366,10 @@
      "spec": "Decisions 48/56 · what exactly gets hidden is open (53)",
      "hitLabel": "Hide the details",
      "hit": [
-      340,
-      533,
-      107,
-      17
+      410.25,
+      529,
+      99,
+      16
      ]
     },
     {
@@ -380,7 +380,7 @@
      "hitLabel": "Confirm and save",
      "hit": [
       340,
-      622,
+      661,
       121,
       17
      ]
@@ -406,7 +406,7 @@
      "hitLabel": "Continue",
      "hit": [
       340,
-      503,
+      659,
       63,
       17
      ]
@@ -546,11 +546,11 @@
      "story": "Copy the message, sign it on the air-gapped machine, carry the signature back, paste it.",
      "act": "Recovery",
      "spec": "E1-04b — the air-gapped ceremony, step by step",
-     "hitLabel": "Add signature",
+     "hitLabel": "Add approval",
      "hit": [
-      859,
+      863,
       827,
-      79,
+      75,
       14
      ]
     },
@@ -588,7 +588,7 @@
      "hitLabel": "Continue",
      "hit": [
       340,
-      681,
+      759,
       63,
       17
      ]
@@ -601,7 +601,7 @@
      "hitLabel": "Start recovery",
      "hit": [
       340,
-      733,
+      718,
       99,
       17
      ]
@@ -647,7 +647,7 @@
      "hitLabel": "Set up ›",
      "hit": [
       818,
-      420,
+      438,
       48,
       15
      ]
@@ -698,10 +698,10 @@
      "spec": "Decisions 48/56",
      "hitLabel": "Hide the details",
      "hit": [
-      340,
-      533,
-      107,
-      17
+      410.25,
+      529,
+      99,
+      16
      ]
     },
     {
@@ -712,7 +712,7 @@
      "hitLabel": "Confirm and save",
      "hit": [
       340,
-      605,
+      558,
       121,
       17
      ]
@@ -738,7 +738,7 @@
      "hitLabel": "Continue",
      "hit": [
       340,
-      503,
+      659,
       63,
       17
      ]
@@ -835,7 +835,7 @@
      "hitLabel": "Continue with this path",
      "hit": [
       340,
-      799,
+      927,
       159,
       17
      ]
@@ -854,7 +854,7 @@
      "hitLabel": "Ask a guardian",
      "hit": [
       766,
-      300.5,
+      281.5,
       88,
       15
      ]
@@ -894,7 +894,7 @@
      "hitLabel": "Add approval",
      "hit": [
       768,
-      536,
+      367,
       75,
       14
      ]
@@ -907,7 +907,7 @@
      "hitLabel": "Start recovery",
      "hit": [
       340,
-      733,
+      718,
       99,
       17
      ]
@@ -952,7 +952,7 @@
      "hitLabel": "Guide me",
      "hit": [
       364,
-      249,
+      267,
       65,
       17
      ]
@@ -1042,10 +1042,10 @@
      "spec": "Decisions 48/56 · D-06e is the wrong-password state",
      "hitLabel": "Hide the details",
      "hit": [
-      340,
-      533,
-      107,
-      17
+      410.25,
+      529,
+      99,
+      16
      ]
     },
     {
@@ -1056,7 +1056,7 @@
      "hitLabel": "Confirm and save",
      "hit": [
       340,
-      605,
+      603,
       121,
       17
      ]
@@ -1075,7 +1075,7 @@
      "hitLabel": "Continue",
      "hit": [
       340,
-      503,
+      659,
       63,
       17
      ]
@@ -1191,7 +1191,7 @@
      "hitLabel": "Start recovery",
      "hit": [
       340,
-      733,
+      718,
       99,
       17
      ]
@@ -1238,7 +1238,7 @@
      "hitLabel": "Customize",
      "hit": [
       499,
-      249,
+      267,
       74,
       17
      ]
@@ -1252,7 +1252,7 @@
      "hit": [
       368,
       378,
-      295,
+      306,
       15
      ]
     },
@@ -1296,7 +1296,7 @@
      "hitLabel": "Done",
      "hit": [
       340,
-      993,
+      1121,
       36,
       17
      ]
@@ -1412,7 +1412,7 @@
      "hitLabel": "Continue",
      "hit": [
       340,
-      662,
+      740,
       63,
       17
      ]
@@ -1425,7 +1425,7 @@
      "hitLabel": "Start recovery",
      "hit": [
       340,
-      733,
+      718,
       99,
       17
      ]
@@ -1450,7 +1450,7 @@
      "spec": "Decision 20 · the deferral is allowed — and tracked",
      "hitLabel": "Do this later",
      "hit": [
-      589,
+      588,
       637,
       79,
       16
@@ -1484,7 +1484,7 @@
      "hitLabel": "Replace the flagged methods",
      "hit": [
       357,
-      482,
+      631,
       193,
       16
      ]
@@ -1550,6 +1550,10 @@
    1280,
    800
   ],
+  "A1-02-extension-password": [
+   1280,
+   800
+  ],
   "A1-03-seed-backup": [
    1280,
    800
@@ -1566,10 +1570,6 @@
    1280,
    800
   ],
-  "C-03-inventory": [
-   1280,
-   800
-  ],
   "C-03b-inventory-device-only": [
    1280,
    800
@@ -1577,10 +1577,6 @@
   "C-03c-inventory-device-and-email": [
    1280,
    800
-  ],
-  "C-04-recommended-paths": [
-   1280,
-   1107
   ],
   "C-04b-recommended-paths-two-methods": [
    1280,
@@ -1590,17 +1586,25 @@
    1280,
    800
   ],
-  "C-05-enroll-passkey-test-pass": [
+  "C-05a-create-passkey": [
    1280,
    800
   ],
-  "C-05a-create-passkey": [
+  "C-05-enroll-passkey-test-pass": [
    1280,
    800
   ],
   "C-05c-enroll-guardians": [
    1280,
    800
+  ],
+  "C-05e-enroll-email": [
+   1280,
+   800
+  ],
+  "C-05f-enroll-guardians-people-only": [
+   1280,
+   825
   ],
   "C-05g-create-passkey-start": [
    1280,
@@ -1610,139 +1614,23 @@
    1280,
    800
   ],
-  "C-06c-waiting-period-people-only": [
+  "C-05i-guardian-test-optional": [
    1280,
-   800
-  ],
-  "C-08-recovery-card-and-alerts": [
-   1280,
-   800
-  ],
-  "C-10b-add-member": [
-   1280,
-   1231
-  ],
-  "C-10c-builder-saved": [
-   1280,
-   1076
-  ],
-  "D-01-choose-new-owner": [
-   1280,
-   800
-  ],
-  "D-02-identify-account": [
-   1280,
-   800
-  ],
-  "D-02b-identify-account-fresh-install": [
-   1280,
-   800
-  ],
-  "D-04-confirm-identity": [
-   1280,
-   800
-  ],
-  "D-04b-confirm-identity-people-only": [
-   1280,
-   800
-  ],
-  "D-04c-confirm-identity-lone-mixed-group": [
-   1280,
-   800
-  ],
-  "D-07-checklist-pending": [
-   1280,
-   800
-  ],
-  "D-07b-passkey-verify-new-device": [
-   1280,
-   864
-  ],
-  "D-07f-checklist-group-only-people": [
-   1280,
-   835
-  ],
-  "D-07g-checklist-mixed-group-no-passkey": [
-   1280,
-   855
-  ],
-  "D-07h-checklist-single-passkey-new-device": [
-   1280,
-   620
-  ],
-  "D-07i-checklist-group-only-people-complete": [
-   1280,
-   745
-  ],
-  "D-07j-checklist-mixed-group-complete": [
-   1280,
-   726
-  ],
-  "D-08-checklist-verify-in-place": [
-   1280,
-   800
-  ],
-  "D-11-confirm-start-recovery": [
-   1280,
-   800
-  ],
-  "D-13-waiting-period-countdown": [
-   1280,
-   800
-  ],
-  "D-15-recovery-done-cleanup": [
-   1280,
-   800
-  ],
-  "D-15c-recovered-nothing-flagged": [
-   1280,
-   540
-  ],
-  "D2-01-pending-recovery-banner-and-alert": [
-   1280,
-   800
-  ],
-  "D2-02-post-cancel-triage": [
-   1280,
-   822
-  ],
-  "E1-01-guardian-page-lead": [
-   1280,
-   800
-  ],
-  "E1-04-guardian-page-connect-wallet": [
-   1280,
-   552
-  ],
-  "E1-05-guardian-page-signed": [
-   1280,
-   712
-  ],
-  "F-02-health-check-alert": [
-   1280,
-   800
-  ],
-  "G-01-management-overview": [
-   1280,
-   800
-  ],
-  "G-01b-cleanup-deferred": [
-   1280,
-   820
-  ],
-  "G-05-edit-path": [
-   1280,
-   800
-  ],
-  "C-05f-enroll-guardians-people-only": [
-   1280,
-   825
+   900
   ],
   "C-06-waiting-period": [
    1280,
    800
   ],
-  "C-07-review-and-confirm": [
+  "C-06c-waiting-period-people-only": [
+   1280,
+   800
+  ],
+  "C-06d-access-recheck": [
+   1280,
+   800
+  ],
+  "C-06e-recovery-password": [
    1280,
    800
   ],
@@ -1786,13 +1674,53 @@
    1280,
    800
   ],
+  "C-07m-dry-run-all-methods": [
+   1280,
+   1150
+  ],
+  "C-08-recovery-card-and-alerts": [
+   1280,
+   800
+  ],
   "C-10-advanced-builder": [
    1280,
-   1404
+   1524
+  ],
+  "C-10b-add-member": [
+   1280,
+   1231
+  ],
+  "C-10c-builder-saved": [
+   1280,
+   1196
+  ],
+  "D-01-choose-new-owner": [
+   1280,
+   800
+  ],
+  "D-02-identify-account": [
+   1280,
+   800
+  ],
+  "D-02b-identify-account-fresh-install": [
+   1280,
+   800
+  ],
+  "D-04-confirm-identity": [
+   1280,
+   800
+  ],
+  "D-04b-confirm-identity-people-only": [
+   1280,
+   800
+  ],
+  "D-04c-confirm-identity-lone-mixed-group": [
+   1280,
+   800
   ],
   "D-06-choose-recovery-path": [
    1280,
-   856
+   1000
   ],
   "D-06b-choose-path-one-unavailable": [
    1280,
@@ -1806,15 +1734,67 @@
    1280,
    856
   ],
-  "C-05e-enroll-email": [
+  "D-07-checklist-pending": [
    1280,
    800
+  ],
+  "D-07b-passkey-verify-new-device": [
+   1280,
+   890
   ],
   "D-07e-recovery-email-code": [
    1280,
    800
   ],
-  "A1-02-extension-password": [
+  "D-07f-checklist-group-only-people": [
+   1280,
+   1098
+  ],
+  "D-07g-checklist-mixed-group-no-passkey": [
+   1280,
+   970
+  ],
+  "D-07h-checklist-single-passkey-new-device": [
+   1280,
+   620
+  ],
+  "D-07i-checklist-group-only-people-complete": [
+   1280,
+   820
+  ],
+  "D-07j-checklist-mixed-group-complete": [
+   1280,
+   800
+  ],
+  "D-08-checklist-verify-in-place": [
+   1280,
+   975
+  ],
+  "D-11-confirm-start-recovery": [
+   1280,
+   800
+  ],
+  "D-13-waiting-period-countdown": [
+   1280,
+   800
+  ],
+  "D-15-recovery-done-cleanup": [
+   1280,
+   925
+  ],
+  "D-15c-recovered-nothing-flagged": [
+   1280,
+   540
+  ],
+  "D2-01-pending-recovery-banner-and-alert": [
+   1280,
+   800
+  ],
+  "D2-02-post-cancel-triage": [
+   1280,
+   1095
+  ],
+  "E1-01-guardian-page-lead": [
    1280,
    800
   ],
@@ -1822,25 +1802,29 @@
    390,
    784
   ],
+  "E1-04-guardian-page-connect-wallet": [
+   1280,
+   552
+  ],
   "E1-04b-guardian-page-sign-offline-expanded": [
    1280,
    932
   ],
-  "C-06e-recovery-password": [
+  "E1-05-guardian-page-signed": [
+   1280,
+   712
+  ],
+  "G-01-management-overview": [
+   1280,
+   955
+  ],
+  "G-01b-cleanup-deferred": [
+   1280,
+   820
+  ],
+  "G-05-edit-path": [
    1280,
    800
-  ],
-  "C-05i-guardian-test-optional": [
-   1280,
-   900
-  ],
-  "C-06d-access-recheck": [
-   1280,
-   800
-  ],
-  "C-07m-dry-run-all-methods": [
-   1280,
-   1150
   ]
  }
 }
