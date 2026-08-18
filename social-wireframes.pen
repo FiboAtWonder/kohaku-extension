@@ -65998,7 +65998,7 @@
                                       "fill": "$muted",
                                       "textGrowth": "fixed-width",
                                       "width": "fill_container",
-                                      "content": "Unlocking asks for your full wallet password. No balances are shown, and every use of this list is written to your local log.",
+                                      "content": "Unlocking asks for your extension password. No balances are shown, and every use of this list is written to your local log.",
                                       "lineHeight": 1.45,
                                       "fontFamily": "$sans",
                                       "fontSize": 11,
