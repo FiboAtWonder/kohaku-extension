@@ -359,6 +359,7 @@ flowchart TD
       <div class="drow"><span class="tag ok">Decided</span><span>Single-method setups are never forced to add more — the copy recommends a second method, including <b>a second passkey from another device</b> (decision 49).</span></div>
       <div class="drow"><span class="tag ok">Decided</span><span>The recovery password gets an explicit, skippable wizard step before the review (decision 48 amended); <b>the card hint is dropped</b> — it could leak configuration. The dry run's recall row covers forgetting. Set once, no change surface, never blocks recovery (decision 56).</span></div>
       <div class="drow"><span class="tag ok">Decided</span><span>Verify-access scope (decision 54): wizard tests stay blocking; the <b>Advanced builder offers tests without enforcing them</b>.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>Attack-round batch (decisions 58–72): a ten-step wizard map, one status-chip vocabulary, group-as-one-unit progress counting, guardian/member/approval naming, the full threshold-component sweep, error-states-preserve-base, a Back on every step, card &amp; alerts on the management overview, per-request dismissal, shared tx submitting/failed states, display rules, a persistence table.</span></div>
     </div>
   </div></section>
 
@@ -604,6 +605,7 @@ flowchart TD
         <tbody>
           <tr><td>Q7/19</td><td><b>Funding &amp; execution</b> — who pays and who executes (bypass 4337; backend-zero)</td><td>Flow D entirely</td></tr>
           <tr><td>Q16/55</td><td><b>ZK Email</b> — .eml-local direction decided; open: subject/command format, accountCode storage without a backend, prover stack (~15–60s in-extension?), DKIM registry choice, module timelock vs our waiting period</td><td>ZK Email sub-flows</td></tr>
+          <tr><td>M10</td><td><b>Concurrency</b> — can one account hold two pending recoveries? The recoverer UI needs a warning band either way</td><td>Flow D + D2</td></tr>
           <tr><td>Q22/41</td><td>Encoding for generic ANY-of groups — mixed members, M-of-N thresholds (T10 threshold field)</td><td>Builder + presets + recovery checklist</td></tr>
           <tr><td>—</td><td>Exact guardian signed payload (nonce; policyId?; expiry — define or confirm none)</td><td>Flow E1 page</td></tr>
           <tr><td>Q29</td><td>Policy value visibility (guardian addresses natively public) + password-encrypted values</td><td>Flow D path display</td></tr>
