@@ -70,8 +70,26 @@ has no hotspot) · **demo REPUBLISHED** (`b822a105…`, label single-path-model)
 **deck REPUBLISHED** (`ca87aff0…`; targeted single-path edits by an Opus 5
 subagent, zero stale phrases; note: deck's "eight steps" wizard heading is
 pre-existing drift vs decision 58's ten, left alone). Still open in this round:
-1. Five per-persona verifiers (Opus 5, running) on the rebuilt demo — triage
-   their findings when they land.
+1. **Verifier triage.** Five Opus 5 per-persona verifiers ran on the rebuilt
+   demo: 66 findings (24 blockers). Clean across all five: zero multi-path UI
+   remnants, all wizard labels OF 10, receive-and-upload correct everywhere.
+   Merged families awaiting Fibo's per-family approval:
+   F1 Bob's rebuilt builder trio (C-10/C-10c/G-01) draws required-passkey +
+   guardian group instead of his lone [2/3](passkey,email,guardian) — Pen fix.
+   F2 generic recovery readouts (D-04/D-07*/D-11/D-13/D-15) draw passkey+2-of-3
+   and contradict Sam/Diana/Carl — bridges vs persona variants, Fibo decides.
+   F3 journeys play review (step 8) before dry run (step 7) — journeys reorder.
+   F4 C-05 side panel lists methods the persona never picked — bridge notes.
+   F5 stale story text/labels (~14 items) — journeys fixes.
+   F6 dead/misplaced hotspots (7) — bounds re-pass.
+   F7 screen defects for a Pen micro-round: C-07f visible-vs-hidden panel,
+   C-07m progress mismatch, D-08 count-bearing footer + failure-only state,
+   D-15 email mask mismatch, D-07f/D-07i decline-state inconsistency, D-02b
+   same-install list on a fresh install.
+   F8 design tension: preset "device+email" is AND-required while the wizard
+   recommends [1 of 2] for the same inventory — Fibo to rule.
+   F9 accepted/no action: "relayer" inside red design notes, alex.eth fixture,
+   address drift between frames, mid-ceremony device switch.
 
 ### Pen round — what landed (2026-08-18)
 
