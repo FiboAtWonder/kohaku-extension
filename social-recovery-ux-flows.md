@@ -92,7 +92,7 @@ Decisions:
   Settings › Account recovery entry while the account has no recovery path. It never
   pops up and never blocks anything. Clicking it opens setup (Flow C).
 - ✅ Honesty note, concrete copy: "Recovery protects you if you **lose** your key.
-  It cannot stop someone who already has it. And if your only method is a passkey on
+  It cannot stop someone who already has it. And if your method is a device-bound passkey on
   this device, losing the device also removes this recovery path." The passkey
   sentence adapts to the detected type (synced passkeys depend on the platform
   account instead of the device).
@@ -552,6 +552,31 @@ Notes:
 
 ---
 
+## Display rules (decision 69)
+
+| Data type | Form |
+|---|---|
+| Address | `0x2b0F…6ef5` (4+4) everywhere; full 42 chars only on review/confirm blocks |
+| ENS | full, ellipsize over 24 chars |
+| Tx hash / challenge | `0x8f31a27b04ce…5d19c2` (12+6) |
+| Signature / approval blob | 12+8, one form per screen |
+| Hidden value mask | 16 dots + `hidden` chip |
+| Member lists | show 3, then "+K more" |
+| User-typed method names | 24-char cap in interpolated copy, ellipsized |
+
+## What persists (decision 70)
+
+| Record | Lives | Wiped by |
+|---|---|---|
+| Setup draft (inventory, chosen paths, enrollments, waiting periods, password-set flag) | this device, until saved on-chain | save confirm · "Start over" (platform credentials survive) |
+| Recovery claim set (per-row approvals/claims + chosen path) | this device, across path switches and resumes | flow exit (finished or abandoned) · owner cancel · submit |
+| Pending-recovery countdown state | chain (persistent) | execute · cancel |
+
+Deferred (kept open from the 2026-08-18 attack round): re-read-config-on-resume rules
+and the stale-draft/setup-changed states (M9); attack-during-triage band (M13);
+guardian changed-mind block on E1-05 (M16); alerts-honesty rewrite (M23);
+DKIM-rotation failure split (M34).
+
 ## Decisions log
 
 | # | Question | Answer |
@@ -613,6 +638,21 @@ Notes:
 | 55 | ZK Email transport direction | **Local, relayer-free**: the user sends the prepared email, downloads the raw `.eml` (Gmail: ⋮ → Show original → Download original), and the wallet verifies/proves from it on-device. Fits backend-zero. Open with the kit team: exact subject/command format, accountCode storage, in-extension proving latency (~15–60s). Redrawn in C-05e/D-07e; the 6-digit-code illustration is retired (it matched no real mechanic). |
 | 56 | Recovery password lifecycle | Set once at setup; **no change or removal surface**. A forgotten password never blocks recovery — it only keeps values hidden (D-06e). The dry run's recall row is the forget-protection. Note: editing guardians re-encrypts under the same password. |
 | 57 | Password naming | One name everywhere: **"extension password"** (the device-unlock password). "Full wallet password" is retired from all copy. The recovery password (decision 48) stays a distinct, clearly separated concept. |
+| 58 | Wizard step map | Ten numbered steps: 1 how-it-works · 2 inventory · 3 recommended paths · 4 enroll · 5 waiting period · 6 recovery password · 7 dry run · 8 review+save · 9 card+alerts · 10 apply-to-others. Single-account wallets skip 10 → "OF 9". Preset deep-links get their own landing (C-04d) with a renumbered short run. The fast-track onboarding is a prologue labeled "SET UP THIS DEVICE · N OF 3", so only one recovery counter exists. |
+| 59 | Status chip vocabulary | Setup: Not started / In progress / Tested / Saved / Live ("Saved" only for methods with no test). Collection: Not asked / Waiting / Complete. Retired as chips: Enrolled, Created, Confirmed, Passed, OK, Added, Satisfied, Kept. |
+| 60 | Progress counting | A group counts as ONE unit in checklist headlines. Grammar: "N of M done — X methods and Y groups", numerals throughout; one group-aware subhead everywhere. |
+| 61 | Role & artefact naming | "Guardian" for the human role in prose and help; "member" only inside group headers; "person"/"your people" retired from labels. The guardian's artefact is an **approval** on both sides ("signature" survives only inside the offline-signing block). |
+| 62 | Threshold display | Component / Threshold renders EVERY read-only threshold (full sweep — supersedes the earlier leave-as-is). Hand-drawn threshold text survives only inside editable builder controls (C-10 family, G-05). |
+| 63 | Error-state rule | An error state renders its base screen unchanged and only adds the error card. |
+| 64 | Wizard footer rule | Every non-first step keeps a Back; skip/exit are extra actions; in-body options set state and never advance. |
+| 65 | Card & alerts re-access | The Recovery Card (download/print) and the alerts opt-in live permanently on the management overview. No forced routing for Advanced users. |
+| 66 | Dismissal scope | "It's me" binds to one recovery request; a new request warns again. Stated under the action. |
+| 67 | Frame naming rule | Future sequence suffixes are letters skipping "m"; mobile variants use "-mobile". No renames of existing frames. |
+| 68 | Transaction feedback | Every owner-signed write gets the shared submitting + failed states (D-11b/C-07b anatomy): builder save, path-edit save, cleanup remove/replace, post-cancel replace. |
+| 69 | Display rules | One truncation form per data type and a list-overflow rule — see the "Display rules" section. Interpolated user-typed names get a length cap; presets keep their names on edit, builder paths keep index labels, no renaming in v1. |
+| 70 | Local persistence | What persists, for how long, and every wipe trigger — see the "What persists" section. "Start over" never deletes platform credentials. |
+| 71 | "Last check" stat | Renders only when the health-check capability is enabled (decision 42). V1 stat row is paths / methods. |
+| 72 | Multi-account apply mechanics | Apply = one owner-signed transaction per selected account, re-entering enrollment per account; primary disabled at zero selection; per-account progress state (C-09c). |
 
 ---
 
@@ -628,6 +668,7 @@ Notes:
 | Policy value visibility (guardian addresses are natively public today — can values be hidden at all?) + password-encrypted values case | Flow D entry + path display | Q29 |
 | R5 conflict (atomic vs incremental); E2 needs an approval function + indexing | Flow E2 | — |
 | Setup batching: write T7's one-UserOp answer into the spec | Wizard step 6 | Q28 |
+| **Concurrency**: can one account hold two pending recoveries? Nothing in the contracts or spec says; the recoverer UI needs a pending-recovery warning band either way | Flow D chapters 1/3, Flow D2 | M10 |
 | Config survival after rotation (+ `onUninstall` nonce-reset issue) | Flow D end state | Q20 |
 | Same-install account history lookup, gated | Flow D identify step | Q8 |
 | Enforced minimum waiting period on-chain (zero-second currently legal) | Builder guardrails | — |
