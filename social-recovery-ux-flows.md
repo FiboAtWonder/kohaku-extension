@@ -137,10 +137,10 @@ actions on top: **"Guide me"** (Express) and **"Customize"** (Advanced).
 
 **Starter presets (updated): three recovery paths shown by default**, 48h waiting
 period each, all starting in "needs setup" state with deep-links into enrollment:
-1. `passkey AND [any 1 of your people]` — your device + your people.
+1. `passkey AND [any 1 of your guardians]` — your device + your guardians.
 2. `passkey AND zk_email` — your device + your email. (Note: violates R9 when the
    passkey is Google-synced and the email is Gmail — accepted for now.)
-3. `guardians-only, M-of-N` — people only, no device or platform dependency
+3. `guardians-only, M-of-N` — "Guardians only", no device or platform dependency
    (added for the Alice/paper-guardian profile; also the only preset with no passkey).
 
 ### Express wizard — step list
@@ -641,7 +641,7 @@ DKIM-rotation failure split (M34).
 | 58 | Wizard step map | Ten numbered steps: 1 how-it-works · 2 inventory · 3 recommended paths · 4 enroll · 5 waiting period · 6 recovery password · 7 dry run · 8 review+save · 9 card+alerts · 10 apply-to-others. Single-account wallets skip 10 → "OF 9". Preset deep-links get their own landing (C-04d) with a renumbered short run. The fast-track onboarding is a prologue labeled "SET UP THIS DEVICE · N OF 3", so only one recovery counter exists. |
 | 59 | Status chip vocabulary | Setup: Not started / In progress / Tested / Saved / Live ("Saved" only for methods with no test). Collection: Not asked / Waiting / Complete. Retired as chips: Enrolled, Created, Confirmed, Passed, OK, Added, Satisfied, Kept. |
 | 60 | Progress counting | A group counts as ONE unit in checklist headlines. Grammar: "N of M done — X methods and Y groups", numerals throughout; one group-aware subhead everywhere. |
-| 61 | Role & artefact naming | "Guardian" for the human role in prose and help; "member" only inside group headers; "person"/"your people" retired from labels. The guardian's artefact is an **approval** on both sides ("signature" survives only inside the offline-signing block). |
+| 61 | Role & artefact naming | "Guardian" for the human role in prose and help; "member" only inside group headers; "person"/"your people" retired from labels. The guardian's artefact is an **approval** on both sides ("signature" survives only inside the offline-signing block). **Preset names follow: "Your device + your guardians", "Guardians only".** |
 | 62 | Threshold display | Component / Threshold renders EVERY read-only threshold (full sweep — supersedes the earlier leave-as-is). Hand-drawn threshold text survives only inside editable builder controls (C-10 family, G-05). |
 | 63 | Error-state rule | An error state renders its base screen unchanged and only adds the error card. |
 | 64 | Wizard footer rule | Every non-first step keeps a Back; skip/exit are extra actions; in-body options set state and never advance. |
