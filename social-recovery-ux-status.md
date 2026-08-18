@@ -3,17 +3,17 @@
 > **Purpose:** the single catch-up document for this workstream. Any agent or
 > teammate resuming the work reads this first. **Rule: update this file at every
 > checkpoint** (wireframe commit, decisions batch, artifact republish, review round).
-> Last update: 2026-08-18, after wireframes **v11.1** (step-label micro-fix,
-> verified PASS incl. a whole-file closure test, commit `89142332d`). Spec +
-> Notion are synced. Remaining: the demo + deck republish (running via Opus 5
-> subagents) — see "Round in flight" below.
+> Last update: 2026-08-18, end of the single-path round: wireframes **v12**
+> (`ec834ea8d`, 157 wrappers = 129 active + 28 outdated, incl. the **X-01
+> model-comparison team exhibit**), demo + deck republished, all verifier
+> families F1–F9 resolved per Fibo's rulings. All surfaces synced.
 
 ## The surfaces (where everything lives)
 
 | Surface | Location | Sync rule |
 |---|---|---|
 | **Spec (source of truth)** | `social-recovery-ux-flows.md` — flows A–G, decisions log **1–78**, display rules, persistence table, tech-deps | Everything else follows it |
-| **Wireframes** | `social-wireframes.pen` — **v11, 154 `Page ·` wrappers = 126 active + 28 in `Flow · OUTDATED`** (commit `59944b2fa`) | Edited ONLY by the Pen design agent via prompts; the driving agent writes prompts, verifies via git-JSON, commits after the user's ⌘S |
+| **Wireframes** | `social-wireframes.pen` — **v12, 157 `Page ·` wrappers = 129 active + 28 in `Flow · OUTDATED`** (commit `ec834ea8d`); new since v11: D-04d, D-15d, X-01 exhibit (band `Flow · X`) | Edited ONLY by the Pen design agent via prompts; the driving agent writes prompts, verifies via git-JSON, commits after the user's ⌘S |
 | **Notion replica** | [Social Recovery UX Draft](https://app.notion.com/p/3ba9a4c092c780a492f2d144c148762b) | Sync only on request, targeted `update_content` ops only (inline discussions must survive) |
 | **Review deck** (teammates) | artifact `ca87aff0-…65e3`, source `social-recovery-ux-assets/recovery-ux-review.html` | Edit the repo file, republish with `url` param |
 | **Persona demo** ("Recovery Journeys") | artifact `b822a105-…08b0f`, sources in `social-recovery-ux-assets/persona-demo/` (journeys.json + template + build-demo.py) | Re-export screens from the .pen, run `build-demo.py`, republish with `url` |
@@ -90,6 +90,21 @@ pre-existing drift vs decision 58's ten, left alone). Still open in this round:
    recommends [1 of 2] for the same inventory — Fibo to rule.
    F9 accepted/no action: "relayer" inside red design notes, alex.eth fixture,
    address drift between frames, mid-ceremony device switch.
+
+**RESOLVED (Fibo's rulings, all landed in v12 + journeys v9):** F1 Pen redraw
+(Bob trio = lone [2/3] group) · F2 hybrid (new D-04d + D-15d for Sam and Carl;
+bridge notes elsewhere) · F3 reorder (dry run step 7 before review step 8, all
+four wizard journeys) · F4 bridges · F5/F6 journeys fixes (verifier-measured
+rects; Carl's D-08 step now narrates the reject-then-retry beat by design) ·
+F7 six Pen pixel fixes · F8 keep the AND preset + "Deliberately strict" line on
+C-01 · F9 accepted. Plus Fibo's new **X-01 exhibit** (three policy grammars
+compared; Extras act, no persona mapping). Both rounds verified PASS by Opus 5
+subagents; demo republished (75 screens, label verifier-fixes-v12).
+
+**Clipping baseline UPDATE:** the accepted scan baseline is now **1 + 4**:
+D2-01 "Action · Receive" plus four decorative dash-rule overflows in C-07k and
+D-07e (last dash of a dashed rule inside a clip strip — by design). Disabled
+(`enabled:false`) multi-path leftovers also appear in raw scans; ignore them.
 
 ### Pen round — what landed (2026-08-18)
 
