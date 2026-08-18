@@ -62,13 +62,16 @@ Done: spec (`4b1232964`) · Notion sync · Pen round, verified (git-JSON: 28 mov
 full-JSON hash) · committed as v11 (`59944b2fa`) · step-label micro-fix verified
 (PASS: exactly the 9 frames changed, closure test reproduces the baseline hash;
 C-09/C-09c "OF 9" strings are pre-existing single-account annotations, fine) ·
-committed as v11.1 (`89142332d`) · journeys.json remapped to the one-path
-personas (23 screen renames, 22 story/spec rewrites, Diana bio, C-05n added to
-Extras; 16 hotspots pending fresh bounds). Still to do:
-1. Demo: exports + hotspot bounds (Opus 5 subagent, running) → merge hits →
-   `build-demo.py` → republish artifact `b822a105…` → per-persona verifiers.
-2. Deck `ca87aff0…`: model-sections update (Opus 5 subagent, running) → diff
-   review → republish.
+committed as v11.1 (`89142332d`) · journeys v8: remapped to the one-path
+personas (23 screen renames, 22 story/spec rewrites, Diana bio, C-05n in
+Extras; 72 fresh exports + 16 fresh hotspots — C-07g's button is "Save recovery
+path", C-10b's is "Add", the rebuilt C-10c has no advance button so Bob's step
+has no hotspot) · **demo REPUBLISHED** (`b822a105…`, label single-path-model) ·
+**deck REPUBLISHED** (`ca87aff0…`; targeted single-path edits by an Opus 5
+subagent, zero stale phrases; note: deck's "eight steps" wizard heading is
+pre-existing drift vs decision 58's ten, left alone). Still open in this round:
+1. Five per-persona verifiers (Opus 5, running) on the rebuilt demo — triage
+   their findings when they land.
 
 ### Pen round — what landed (2026-08-18)
 

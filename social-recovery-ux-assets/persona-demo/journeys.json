@@ -27,14 +27,14 @@
      ]
     },
     {
-     "screen": "C-01-account-recovery-landing",
-     "story": "The tab lands on ready-made paths, but Sam wants his hand held. He picks “Guide me”.",
+     "screen": "C-01-choose-your-recovery-path-presets",
+     "story": "The tab lands on three preset shapes — you pick ONE. Sam wants his hand held instead: “Guide me”.",
      "act": "Setup",
-     "spec": "Flow C · decision 3 — no mode fork; presets landing + Guide me / Customize",
+     "spec": "Flow C · decisions 3/75 — presets landing (pick one shape) + Guide me / Customize",
      "hitLabel": "Guide me",
      "hit": [
       364,
-      267,
+      218,
       65,
       17
      ]
@@ -241,15 +241,15 @@
      ]
     },
     {
-     "screen": "D-04-confirm-identity",
-     "story": "Identity confirmed before anything is collected. His summary would read one path: Passkey · 48h.",
+     "screen": "D-04-confirm-identity-single-path",
+     "story": "Identity confirmed before anything is collected. The summary shows THE path: Passkey · 48h.",
      "act": "Recovery",
-     "spec": "Confirming starts nothing · single-path configs skip the choose-path step entirely",
-     "hitLabel": "Yes, this is the account",
+     "spec": "Confirming starts nothing · one path per account (decision 73)",
+     "hitLabel": "This is my account",
      "hit": [
       340,
-      477,
-      158,
+      726,
+      128,
       17
      ]
     },
@@ -321,14 +321,14 @@
      ]
     },
     {
-     "screen": "C-01-account-recovery-landing",
-     "story": "She goes straight for the only preset with no passkey: “Guardians only”. Its “Set up ›” starts the guided setup from that path — she skips the inventory and lands at enrollment.",
+     "screen": "C-01-choose-your-recovery-path-presets",
+     "story": "She picks the only preset with no passkey: “Guardians only”. Picking it makes it her single recovery path — she skips the inventory and lands at enrollment.",
      "act": "Setup",
-     "spec": "Preset deep-link = “Guided setup, starting from this path” (C-01's own copy)",
+     "spec": "Preset pick = THE path (decision 75)",
      "hitLabel": "Guardians only",
      "hit": [
-      338,
-      694,
+      366,
+      535,
       107,
       18
      ]
@@ -640,16 +640,16 @@
    ],
    "steps": [
     {
-     "screen": "C-01-account-recovery-landing",
-     "story": "The first suggested path is exactly Carl's shape: your device + your people. He taps “Set up ›” — guided setup, starting from this path.",
+     "screen": "C-01-choose-your-recovery-path-presets",
+     "story": "The first preset is exactly Carl’s shape: your device + your guardians. He picks it — guided setup, starting from this path.",
      "act": "Setup",
-     "spec": "Flow C · preset deep-link",
-     "hitLabel": "Set up ›",
+     "spec": "Flow C · decision 75 — preset pick",
+     "hitLabel": "Your device + your guardians",
      "hit": [
-      818,
-      438,
-      48,
-      15
+      366,
+      323,
+      207,
+      18
      ]
     },
     {
@@ -815,28 +815,28 @@
      ]
     },
     {
-     "screen": "D-04-confirm-identity",
-     "story": "Right account, before anything is collected. (Bridge: his real summary is one path.)",
+     "screen": "D-04-confirm-identity-single-path",
+     "story": "Right account, before anything is collected. The summary reads his path: passkey + Sara, both required.",
      "act": "Recovery",
-     "spec": "Restored from the demo",
-     "hitLabel": "Yes, this is the account",
+     "spec": "Decision 73 — one path per account",
+     "hitLabel": "This is my account",
      "hit": [
       340,
-      477,
-      158,
+      726,
+      128,
       17
      ]
     },
     {
-     "screen": "D-06-choose-recovery-path",
-     "story": "His path needs the passkey AND Sara — and both are reachable today: the passkey is synced, Sara is a phone call away. (Bridge: the drawn group is 2-of-3; his is Sara alone.)",
+     "screen": "D-06-your-recovery-path-readout",
+     "story": "No choosing — this IS his path: the passkey AND Sara, both required, and both reachable today: the passkey is synced, Sara is a phone call away. (Bridge: the drawn readout shows a 2-of-3 group; his is Sara required.)",
      "act": "Recovery",
-     "spec": "Decision 29 — values may be hidden",
-     "hitLabel": "Continue with this path",
+     "spec": "Decision 73 — one path · decision 29 — values may be hidden",
+     "hitLabel": "Start collecting approvals",
      "hit": [
       340,
-      927,
-      159,
+      720,
+      176,
       17
      ]
     },
@@ -938,21 +938,21 @@
    "name": "Diana",
    "monogram": "D",
    "tag": "Two methods, 1-of-2 — lockout beats theft",
-   "bio": "Diana has a passkey and a long-lived email, and nobody she'd ask to be a guardian. The wizard gives her two single-method paths. When her device dies and her platform account is unreachable, the email path is her way back.",
+   "bio": "Diana has a passkey and a long-lived email, and nobody she’d ask to be a guardian. The wizard gives her one group: any 1 of 2 — either alone recovers. When her device dies and her platform account is unreachable, the email is her way back.",
    "flows": [
     "C",
     "D"
    ],
    "steps": [
     {
-     "screen": "C-01-account-recovery-landing",
+     "screen": "C-01-choose-your-recovery-path-presets",
      "story": "Diana wants protection with no other people involved. Guided route.",
      "act": "Setup",
      "spec": "Flow C · decision 3",
      "hitLabel": "Guide me",
      "hit": [
       364,
-      267,
+      218,
       65,
       17
      ]
@@ -971,15 +971,15 @@
      ]
     },
     {
-     "screen": "C-04b-recommended-paths-two-methods",
-     "story": "The wizard does NOT recommend passkey AND email — at her level, locking herself out is the bigger risk. Two single-method paths: either alone recovers. This screen is her config verbatim.",
+     "screen": "C-04b-recommended-path-either-one",
+     "story": "The wizard does NOT recommend passkey AND email — at her level, locking herself out is the bigger risk. One group instead: any 1 of 2, either alone recovers. This screen is her config verbatim.",
      "act": "Setup",
-     "spec": "Decision 37 — the one exact persona/wireframe match",
-     "hitLabel": "Use these paths",
+     "spec": "Decision 75 — supersedes 37 · rebuilt screen",
+     "hitLabel": "Continue",
      "hit": [
       340,
-      643,
-      111,
+      482,
+      63,
       17
      ]
     },
@@ -1010,16 +1010,16 @@
      ]
     },
     {
-     "screen": "C-05e-enroll-email",
-     "story": "The email path, redrawn on the real mechanic: she sends one prepared email, downloads the raw .eml from Gmail (Show original), and the wallet checks the signature locally — no relayer. (Subject format and prover still open — Q16.)",
+     "screen": "C-05e-verify-your-email-receive-upload",
+     "story": "The email check, on the real mechanic: she clicks “Send email”, the message arrives at her enrolled address, she downloads the original .eml and uploads it — the wallet checks it locally. (Subject format and prover still open — Q16.)",
      "act": "Setup",
-     "spec": "Decision 55 — local .eml proving · Q16 narrowed",
-     "hitLabel": "Save and continue",
+     "spec": "Decision 77 — receive-and-upload · help sheet C-05n",
+     "hitLabel": "Send email",
      "hit": [
-      340,
-      652,
-      127,
-      17
+      405,
+      344,
+      68,
+      15
      ]
     },
     {
@@ -1049,23 +1049,23 @@
      ]
     },
     {
-     "screen": "C-07g-review-two-single-method-paths",
-     "story": "The review is her config verbatim: “Passkey alone” OR “Email alone”, 48 hours each, no forced pair.",
+     "screen": "C-07g-review-either-one-works",
+     "story": "The review is her config verbatim: one path — any 1 of 2: passkey, email. 48 hours.",
      "act": "Setup",
-     "spec": "Decision 37 · new screen",
-     "hitLabel": "Confirm and save",
+     "spec": "Decision 75 · rebuilt screen",
+     "hitLabel": "Save recovery path",
      "hit": [
       340,
-      603,
-      121,
+      735,
+      133,
       17
      ]
     },
     {
-     "screen": "C-07k-dry-run-two-single-paths",
-     "story": "The rehearsal covers both paths; the email row runs the same .eml check in miniature. Drawn mid-rehearsal.",
+     "screen": "C-07k-dry-run-either-one-works",
+     "story": "The rehearsal covers the group: either row alone completes it; the email row runs the same send-and-upload check in miniature. Drawn mid-rehearsal.",
      "act": "Setup",
-     "spec": "Decision 47"
+     "spec": "Decisions 47/75"
     },
     {
      "screen": "C-07e-setup-saved",
@@ -1152,36 +1152,36 @@
      ]
     },
     {
-     "screen": "D-04-confirm-identity",
-     "story": "The chain answers: two paths exist. The email one is her way back.",
+     "screen": "D-04-confirm-identity-single-path",
+     "story": "The chain answers with her path: any 1 of 2 — passkey or email. The email is her way back.",
      "act": "Recovery",
-     "spec": "Structure is always readable",
-     "hitLabel": "Yes, this is the account",
+     "spec": "Structure is always readable · decision 73",
+     "hitLabel": "This is my account",
      "hit": [
       340,
-      477,
-      158,
+      726,
+      128,
       17
      ]
     },
     {
-     "screen": "D-06b-choose-path-one-unavailable",
-     "story": "The passkey path says “This device has no passkey for the account” — marked, never disabled: the wallet cannot know it is truly gone. She picks the email path; its value stays hidden (Q29) — she knows her own inbox.",
+     "screen": "D-06b-path-one-member-unavailable",
+     "story": "The passkey row says “Not available on this device” — marked, never disabled: the wallet cannot know it is truly gone. The group needs any 1 of 2, so the email alone still recovers. Values stay hidden (Q29) — she knows her own inbox.",
      "act": "Recovery",
-     "spec": "Decision 29 · new screen — the unsatisfiable-path state",
-     "hitLabel": "Continue with this path",
+     "spec": "Decision 73 · rebuilt — one member unavailable",
+     "hitLabel": "Start collecting approvals",
      "hit": [
       340,
-      799,
-      159,
+      582,
+      176,
       17
      ]
     },
     {
-     "screen": "D-07e-recovery-email-code",
-     "story": "One row: she sends the prepared recovery email from the enrolled address, downloads the raw .eml, and the wallet generates the proof on this device (~60s). Row complete.",
+     "screen": "D-07e-verify-with-your-email-eml",
+     "story": "One row: “Send email”, the message arrives, she uploads the original .eml, and the wallet creates the proof on this device (~60s). Row complete.",
      "act": "Recovery",
-     "spec": "Decision 55 · decision 35 — the verify panel IS the checklist for a one-row path"
+     "spec": "Decision 77 · decision 35 — the verify panel IS the checklist for a one-row path"
     },
     {
      "screen": "D-11-confirm-start-recovery",
@@ -1231,49 +1231,49 @@
    ],
    "steps": [
     {
-     "screen": "C-01-account-recovery-landing",
+     "screen": "C-01-choose-your-recovery-path-presets",
      "story": "Bob skips the hand-holding.",
      "act": "Setup",
      "spec": "Flow C · Advanced is an action, not a mode",
      "hitLabel": "Customize",
      "hit": [
       499,
-      267,
+      218,
       74,
       17
      ]
     },
     {
-     "screen": "C-10-advanced-builder",
-     "story": "The builder. Drawn path 1 is his config to the letter: a lone group, any 2 of 3 — passkey, email, a person. He adds the member — guardians are ordinary members.",
+     "screen": "C-10-advanced-builder-single-path",
+     "story": "The builder: ONE path canvas — required rows plus groups. His config to the letter: a lone group, any 2 of 3 — passkey, email, a person. He adds the member — guardians are ordinary members.",
      "act": "Setup",
-     "spec": "Decision 41 · the filter-builder pattern users already know",
+     "spec": "Decisions 41/73/75 · the filter-builder pattern users already know",
      "hitLabel": "Add member",
      "hit": [
-      368,
-      378,
-      306,
-      15
+      575,
+      476,
+      73,
+      14
      ]
     },
     {
-     "screen": "C-10b-add-member",
-     "story": "The picker: “a hardware wallet or a paper key counts too.” He pastes his hardware wallet's address.",
+     "screen": "C-10b-add-member-instance-uniqueness",
+     "story": "The picker: “a hardware wallet or a paper key counts too.” He pastes his hardware wallet’s address. Anything already used in the path is greyed out — one instance, one slot.",
      "act": "Setup",
-     "spec": "Decision 41 · decision 43 — by address, no names",
-     "hitLabel": "Add to group",
+     "spec": "Decisions 43/76 — by address, no names · instance uniqueness",
+     "hitLabel": "Add",
      "hit": [
-      420,
-      943,
-      86,
-      16
+      418,
+      742,
+      28,
+      17
      ]
     },
     {
-     "screen": "C-10-advanced-builder",
-     "story": "Group complete, 48h on the path. Advanced has its own terminal: “Save and sign” — one transaction, no wizard review. The optional password row sits right above the save (same component as the wizard step).",
+     "screen": "C-10-advanced-builder-single-path",
+     "story": "Group complete, 48h on the path — the picker starts at the 24-hour floor. Advanced has its own terminal: save as one transaction, no wizard review. The optional password row sits right above the save.",
      "act": "Setup",
-     "spec": "The advanced flow never routes through the wizard"
+     "spec": "Decision 74 — 24h contract floor · the advanced flow never routes through the wizard"
     },
     {
      "screen": "C-07l-dry-run-mixed-group",
@@ -1289,23 +1289,16 @@
      ]
     },
     {
-     "screen": "C-10c-builder-saved",
+     "screen": "C-10c-advanced-builder-saved-single",
      "story": "Saved as one transaction — confirmed. The builder shows the result read-only.",
      "act": "Setup",
-     "spec": "Advanced terminal state · new screen",
-     "hitLabel": "Done",
-     "hit": [
-      340,
-      1121,
-      36,
-      17
-     ]
+     "spec": "Advanced terminal state · rebuilt screen"
     },
     {
-     "screen": "G-01-management-overview",
-     "story": "The result: the overview lists paths only — members live inside path editing. (Bridge: his account shows the single group path.)",
+     "screen": "G-01-management-overview-single-path",
+     "story": "The result: the overview shows THE path — structure, threshold, 48h — with Edit and Remove. Members live inside path editing.",
      "act": "Setup",
-     "spec": "Decision 45"
+     "spec": "Decisions 45/73"
     },
     {
      "screen": "D-01-choose-new-owner",
@@ -1360,10 +1353,10 @@
      ]
     },
     {
-     "screen": "D-07e-recovery-email-code",
-     "story": "Member one, the email: prepared subject, raw .eml from Gmail, proof generated on-device. Complete.",
+     "screen": "D-07e-verify-with-your-email-eml",
+     "story": "Member one, the email: “Send email”, the original .eml uploaded, proof generated on-device. Complete.",
      "act": "Recovery",
-     "spec": "Decision 55 · Q16 narrowed"
+     "spec": "Decision 77 · Q16 remainder open"
     },
     {
      "screen": "E1-01-guardian-page-lead",
@@ -1457,7 +1450,7 @@
      ]
     },
     {
-     "screen": "G-01b-cleanup-deferred",
+     "screen": "G-01b-cleanup-deferred-single",
      "story": "The overview will not let him forget: “Until you replace it, the account can be recovered again by whoever holds that device.” That sentence is about to come true.",
      "act": "Recovery",
      "spec": "Decision 46 — deferral is a state, not a screen"
@@ -1503,7 +1496,7 @@
      ]
     },
     {
-     "screen": "G-01-management-overview",
+     "screen": "G-01-management-overview-single-path",
      "story": "One signed transaction later: clean overview, no flag. The design held.",
      "act": "Attack",
      "spec": "End of the attack — and of the demo"
@@ -1537,6 +1530,12 @@
      "story": "The all-methods dry-run master: passkey, guardians, email and Aadhaar in one rehearsal, plus the password-recall row. A development reference — no persona has all four methods.",
      "act": "Extras",
      "spec": "Decision 47 · the recall row is the forget-protection (56)"
+    },
+    {
+     "screen": "C-05n-how-to-get-the-eml-sheet",
+     "story": "The help sheet behind “How do I get the .eml?”: per-client steps for Gmail, Outlook, Apple Mail, Yahoo and Proton. Opened from both the setup check (C-05e) and the recovery row (D-07e).",
+     "act": "Extras",
+     "spec": "Decision 77 — per-client steps to be verified by the kit team"
     }
    ]
   }
@@ -1562,10 +1561,6 @@
    600,
    630
   ],
-  "C-01-account-recovery-landing": [
-   1280,
-   814
-  ],
   "C-02-how-recovery-works": [
    1280,
    800
@@ -1575,10 +1570,6 @@
    800
   ],
   "C-03c-inventory-device-and-email": [
-   1280,
-   800
-  ],
-  "C-04b-recommended-paths-two-methods": [
    1280,
    800
   ],
@@ -1595,10 +1586,6 @@
    800
   ],
   "C-05c-enroll-guardians": [
-   1280,
-   800
-  ],
-  "C-05e-enroll-email": [
    1280,
    800
   ],
@@ -1650,10 +1637,6 @@
    1280,
    800
   ],
-  "C-07g-review-two-single-method-paths": [
-   1280,
-   800
-  ],
   "C-07h-dry-run-single-passkey": [
    1280,
    800
@@ -1665,10 +1648,6 @@
   "C-07j-dry-run-passkey-plus-person": [
    1280,
    800
-  ],
-  "C-07k-dry-run-two-single-paths": [
-   1280,
-   880
   ],
   "C-07l-dry-run-mixed-group": [
    1280,
@@ -1682,18 +1661,6 @@
    1280,
    800
   ],
-  "C-10-advanced-builder": [
-   1280,
-   1524
-  ],
-  "C-10b-add-member": [
-   1280,
-   1231
-  ],
-  "C-10c-builder-saved": [
-   1280,
-   1196
-  ],
   "D-01-choose-new-owner": [
    1280,
    800
@@ -1706,10 +1673,6 @@
    1280,
    800
   ],
-  "D-04-confirm-identity": [
-   1280,
-   800
-  ],
   "D-04b-confirm-identity-people-only": [
    1280,
    800
@@ -1717,14 +1680,6 @@
   "D-04c-confirm-identity-lone-mixed-group": [
    1280,
    800
-  ],
-  "D-06-choose-recovery-path": [
-   1280,
-   1000
-  ],
-  "D-06b-choose-path-one-unavailable": [
-   1280,
-   856
   ],
   "D-06c-your-recovery-path-lone-group": [
    1280,
@@ -1741,10 +1696,6 @@
   "D-07b-passkey-verify-new-device": [
    1280,
    890
-  ],
-  "D-07e-recovery-email-code": [
-   1280,
-   800
   ],
   "D-07f-checklist-group-only-people": [
    1280,
@@ -1814,15 +1765,67 @@
    1280,
    712
   ],
-  "G-01-management-overview": [
-   1280,
-   955
-  ],
-  "G-01b-cleanup-deferred": [
-   1280,
-   820
-  ],
   "G-05-edit-path": [
+   1280,
+   800
+  ],
+  "C-01-choose-your-recovery-path-presets": [
+   1280,
+   800
+  ],
+  "C-04b-recommended-path-either-one": [
+   1280,
+   800
+  ],
+  "C-05e-verify-your-email-receive-upload": [
+   1280,
+   860
+  ],
+  "C-07g-review-either-one-works": [
+   1280,
+   870
+  ],
+  "C-07k-dry-run-either-one-works": [
+   1280,
+   800
+  ],
+  "D-04-confirm-identity-single-path": [
+   1280,
+   800
+  ],
+  "D-06-your-recovery-path-readout": [
+   1280,
+   800
+  ],
+  "D-06b-path-one-member-unavailable": [
+   1280,
+   800
+  ],
+  "D-07e-verify-with-your-email-eml": [
+   1280,
+   1050
+  ],
+  "C-10-advanced-builder-single-path": [
+   1280,
+   800
+  ],
+  "C-10b-add-member-instance-uniqueness": [
+   1280,
+   800
+  ],
+  "C-10c-advanced-builder-saved-single": [
+   1280,
+   800
+  ],
+  "G-01-management-overview-single-path": [
+   1280,
+   800
+  ],
+  "G-01b-cleanup-deferred-single": [
+   1280,
+   800
+  ],
+  "C-05n-how-to-get-the-eml-sheet": [
    1280,
    800
   ]

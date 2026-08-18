@@ -171,8 +171,8 @@
     <p class="lede">Eight flows cover the full life of a recovery setup: from “you have no protection” to “your account is back”. This deck is standalone and mirrors the working doc in the repo.</p>
     <div class="metaline">
       <span>Owner: <b>Fibo</b></span>
-      <span>Status: <b>draft for team review · wireframes v1 reviewed</b></span>
-      <span>Updated: <b>2026-08-13</b></span>
+      <span>Status: <b>draft for team review · wireframes v1 reviewed · single-path model applied</b></span>
+      <span>Updated: <b>2026-08-18</b></span>
       <span>Line comments: <b><a href="https://github.com/FiboAtWonder/kohaku-extension/pull/2">PR #2</a></b></span>
     </div>
     <p style="margin-top:34px; font-size:13px; color:var(--muted)">Navigate with <b>→</b> and <b>←</b>, or the buttons below.</p>
@@ -196,11 +196,11 @@
     <p class="eyebrow">Where we need you most</p>
     <h2>Five things this review must answer</h2>
     <div class="bigfive">
-      <div class="item"><div><b>Funding &amp; execution <span class="chip block" style="margin-left:6px"><i></i>blocker</span></b>Recovery calls bypass the 4337 flow — no paymaster can sponsor them, and the SDK is backend-zero (no relayer). Who pays, and who executes after the waiting period?</div></div>
-      <div class="item"><div><b>ZK Email mechanics <span class="chip open" style="margin-left:6px"><i></i>narrowed</span></b>Direction decided (55): the user sends a prepared email, downloads the raw .eml (Gmail “Show original”), and the wallet proves it locally — no relayer. Still open: subject format, accountCode storage, prover stack and latency.</div></div>
+      <div class="item"><div><b>Funding &amp; execution <span class="chip block" style="margin-left:6px"><i></i>blocker</span></b>Recovery calls bypass the 4337 flow — no paymaster can sponsor them, and the SDK is backend-zero (no execution relayer). Who pays, and who executes after the waiting period?</div></div>
+      <div class="item"><div><b>ZK Email mechanics <span class="chip open" style="margin-left:6px"><i></i>narrowed</span></b>Direction decided (55, amended by 77): the user clicks “Send email” and <em>receives</em> an email at the enrolled address, downloads the original .eml (Gmail “Show original”) and uploads it — the wallet proves it locally. Still open: subject format, accountCode storage, prover stack and latency — and who runs the external send-only relayer that the receive direction reintroduces into a backend-zero design.</div></div>
       <div class="item"><div><b>Config value visibility <span class="chip open" style="margin-left:6px"><i></i>open</span></b>Guardian addresses are natively public in the current contracts. Can values be hidden at all? Flows assume structure-public + a password-decrypt case.</div></div>
-      <div class="item"><div><b>Mixed-method OR-groups <span class="chip open" style="margin-left:6px"><i></i>open encoding</span></b>We assume <code>passkey AND [zk_email OR aadhaar]</code> is valid, like the guardian case. The contract encoding needs confirmation.</div></div>
-      <div class="item"><div><b>The starter presets <span class="chip open" style="margin-left:6px"><i></i>open fit</span></b>Three ship by default. Do they fit the persona spread — and is a single-method floor acceptable as an edit of a preset?</div></div>
+      <div class="item"><div><b>Mixed-method ANY-of groups <span class="chip open" style="margin-left:6px"><i></i>open encoding</span></b>We assume <code>passkey AND [zk_email OR aadhaar]</code> is valid inside the single path, like the guardian case. The contract encoding needs confirmation.</div></div>
+      <div class="item"><div><b>The starter path shapes <span class="chip open" style="margin-left:6px"><i></i>open fit</span></b>Three presets ship by default, each a shape for the account's one path. Do they fit the persona spread — and is a single-method floor acceptable as an edit of a preset?</div></div>
     </div>
   </div></section>
 
@@ -208,18 +208,20 @@
   <section class="slide" data-title="The model"><div class="inner">
     <p class="eyebrow">Foundations</p>
     <h2>The model in one minute</h2>
-    <p class="lede">An account is protected by <b>recovery paths</b>. A path is a set of <b>methods</b> completed together; any one completed path recovers the account after a per-path <b>waiting period</b> (48h default), during which the current owner can cancel.</p>
+    <p class="lede">An account is protected by exactly <b>one recovery path</b>. The path is required <b>method</b> rows plus ANY-of groups, all combined with AND. Completing it recovers the account after the account's <b>waiting period</b> (48h default, 24h contract floor), during which the current owner can cancel.</p>
     <div class="vocab">
-      <span><code>recovery path</code> = one AND clause of methods</span>
+      <span><code>recovery path</code> = the account's one AND clause</span>
       <span><code>method</code> = one credential</span>
-      <span><code>waiting period</code> = timelock</span>
-      <span>paths combine with <code>OR</code></span>
+      <span><code>waiting period</code> = timelock, one per account</span>
+      <span>path = required rows <code>AND</code> any-of groups</span>
       <span>ANY-of groups mix methods, M-of-N: <code>passkey AND [Ana OR email]</code></span>
     </div>
     <div class="decisions">
+      <div class="drow"><span class="tag ok">Decided</span><span><b>One recovery path per account (decision 73)</b> — the OR-of-paths level is removed. No second path, no “Add recovery path”, no path choice during recovery. The UI keeps the names “recovery path” and “recovery method”.</span></div>
       <div class="drow"><span class="tag ok">Decided</span><span>Users see <b>“Account recovery”</b> — “Social Recovery Kit” stays internal.</span></div>
       <div class="drow"><span class="tag ok">Decided</span><span>Four methods in v1: passkey, guardians, ZK Email, Anon Aadhaar (listed last, badged “India”).</span></div>
       <div class="drow"><span class="tag ok">Decided</span><span>One chain per policy; multichain out of scope for v1. Personas ground every choice — <a href="https://app.notion.com/p/36d9a4c092c780578f9dde36e69dfff5">persona research</a>.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>Account context: the recovery module is ERC-7579 on a <b>4337 smart account</b> — the initiative focuses on 4337, and <b>7702 support is deferred</b> (decision 78). No user-visible copy changes from this.</span></div>
     </div>
   </div></section>
 
@@ -228,13 +230,13 @@
     <p class="eyebrow">Foundations</p>
     <h2>The builder uses a solved pattern</h2>
     <p class="lede">Grouped condition builders ship in products non-technical people already use. We show structure, not boolean jargon.</p>
-    <div class="imgwrap" role="img" aria-label="Three UI patterns: grouped condition builder with ALL-of and ANY-of sections, recovery-path cards separated by an OR divider, and a threshold selector row">
+    <div class="imgwrap" role="img" aria-label="Three UI patterns: grouped condition builder with ALL-of and ANY-of sections, two example shapes for the account's single recovery path, and a threshold selector row">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 400" font-family="-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
         <rect width="1080" height="400" fill="#f6f7f9"/>
         <text x="30" y="42" font-size="15" font-weight="700" fill="#1a1d26">1 · Grouped condition builder</text>
         <text x="30" y="62" font-size="12" fill="#7a8194">ALL-of rows + ANY-of group — members mix method types</text>
         <rect x="30" y="80" width="320" height="240" rx="14" fill="#ffffff" stroke="#dfe2ea"/>
-        <text x="50" y="112" font-size="13" font-weight="700" fill="#1a1d26">Recovery path #1</text>
+        <text x="50" y="112" font-size="13" font-weight="700" fill="#1a1d26">Your recovery path</text>
         <text x="50" y="132" font-size="11.5" font-weight="700" fill="#6a4bd6">NEEDS ALL OF:</text>
         <rect x="50" y="146" width="280" height="40" rx="9" fill="#f3f4f8" stroke="#e9ebf1"/>
         <text x="66" y="171" font-size="12.5" fill="#1a1d26">🔑  Passkey — this device</text>
@@ -244,19 +246,18 @@
         <text x="80" y="249" font-size="11.5" fill="#1a1d26">👤  Ana's wallet · 0x8a…41</text>
         <rect x="66" y="264" width="248" height="26" rx="13" fill="#ffffff" stroke="#dfe2ea"/>
         <text x="80" y="281" font-size="11.5" fill="#1a1d26">✉️  recovery@gmail.com</text>
-        <text x="395" y="42" font-size="15" font-weight="700" fill="#1a1d26">2 · Paths combined with OR</text>
-        <text x="395" y="62" font-size="12" fill="#7a8194">Any one path recovers the account</text>
+        <text x="395" y="42" font-size="15" font-weight="700" fill="#1a1d26">2 · One path, different shapes</text>
+        <text x="395" y="62" font-size="12" fill="#7a8194">Required rows AND any-of groups — no OR level</text>
         <rect x="395" y="80" width="300" height="92" rx="14" fill="#ffffff" stroke="#dfe2ea"/>
-        <text x="413" y="108" font-size="13" font-weight="700" fill="#1a1d26">Path 1</text>
-        <text x="413" y="130" font-size="12" fill="#1a1d26">🔑 Passkey <tspan font-weight="700" fill="#6a4bd6">AND</tspan> [👤 Ana <tspan font-weight="700" fill="#6a4bd6">OR</tspan> ✉️ Email]</text>
-        <text x="413" y="152" font-size="11" fill="#7a8194">⏱ waiting period: 48h</text>
-        <line x1="415" y1="196" x2="510" y2="196" stroke="#dfe2ea" stroke-width="1.5"/>
-        <text x="545" y="201" font-size="11.5" font-weight="800" fill="#7a8194" text-anchor="middle" letter-spacing="2">OR</text>
-        <line x1="580" y1="196" x2="675" y2="196" stroke="#dfe2ea" stroke-width="1.5"/>
-        <rect x="395" y="220" width="300" height="92" rx="14" fill="#ffffff" stroke="#dfe2ea"/>
-        <text x="413" y="248" font-size="13" font-weight="700" fill="#1a1d26">Path 2</text>
-        <text x="413" y="270" font-size="12" fill="#1a1d26">One group — any <tspan font-weight="700" fill="#6a4bd6">3 of 5</tspan> members</text>
-        <text x="413" y="292" font-size="11" fill="#7a8194">⏱ waiting period: 48h</text>
+        <text x="413" y="108" font-size="13" font-weight="700" fill="#1a1d26">Shape A · device + guardians</text>
+        <text x="413" y="130" font-size="12" fill="#1a1d26">🔑 Passkey <tspan font-weight="700" fill="#6a4bd6">AND</tspan> [👤 any <tspan font-weight="700" fill="#6a4bd6">2 of 3</tspan>]</text>
+        <text x="413" y="152" font-size="11" fill="#7a8194">⏱ waiting period: 48h (24h floor)</text>
+        <text x="545" y="200" font-size="11" fill="#7a8194" text-anchor="middle">an account has exactly one path —</text>
+        <text x="545" y="215" font-size="11" fill="#7a8194" text-anchor="middle">pick the shape that fits</text>
+        <rect x="395" y="230" width="300" height="82" rx="14" fill="#ffffff" stroke="#dfe2ea"/>
+        <text x="413" y="256" font-size="13" font-weight="700" fill="#1a1d26">Shape B · guardians only</text>
+        <text x="413" y="276" font-size="12" fill="#1a1d26">One group — any <tspan font-weight="700" fill="#6a4bd6">3 of 5</tspan> members</text>
+        <text x="413" y="296" font-size="11" fill="#7a8194">⏱ waiting period: 48h (24h floor)</text>
         <text x="740" y="42" font-size="15" font-weight="700" fill="#1a1d26">3 · Threshold selector</text>
         <text x="740" y="62" font-size="12" fill="#7a8194">Every group has one — no boolean words needed</text>
         <rect x="740" y="80" width="310" height="120" rx="14" fill="#ffffff" stroke="#dfe2ea"/>
@@ -312,7 +313,7 @@ flowchart TD
     <h2>The nudge — unprotected accounts get told</h2>
     <div class="diagram"><pre class="mermaid">
 flowchart TD
-    A[Account exists / dashboard] --> B{"Account has recovery<br/>paths set up?"}
+    A[Account exists / dashboard] --> B{"Account has a recovery<br/>path set up?"}
     B -- Yes --> C[End. No action.]
     B -- No --> D["Modal: 'You have no recovery path<br/>set up yet. Protect your account.'<br/>+ honesty note"]
     D -->|Set up recovery| G[Settings › Account recovery → Flow C]
@@ -332,27 +333,31 @@ flowchart TD
   <section class="slide" data-title="Flow C · Setup model"><div class="inner">
     <p class="eyebrow">Flow C · 1 of 2</p>
     <h2>Setup — presets first, guidance and power on top</h2>
-    <p class="lede">No mode-picker fork. The tab lands on the <b>Presets</b> state with three starter paths visible and editable. “Guide me” → Express wizard. “Customize” → Advanced builder.</p>
+    <p class="lede">No mode-picker fork. The tab lands on the <b>Presets</b> state with three starter path shapes visible and editable — the user picks one, and it becomes the account's single recovery path. “Guide me” → Express wizard. “Customize” → Advanced builder.</p>
     <div class="cols">
-      <div class="panel"><b class="hd">Starter presets (48h each)</b>
+      <div class="panel"><b class="hd">Starter path shapes (48h default, 24h floor)</b>
         <ul class="tight" style="font-size:14.5px">
-          <li><code>passkey AND [guardians]</code> — your device + your guardians</li>
-          <li><code>passkey AND zk_email</code> — your device + your email</li>
-          <li><code>guardians-only M-of-N</code> — people only, no platform dependency</li>
+          <li><code>passkey AND [2 of 3](guardians)</code> — “Your device + your guardians”</li>
+          <li><code>passkey AND zk_email</code> — your device + your email, both required</li>
+          <li><code>[2 of 3](guardians)</code> — “Guardians only”, no device or platform dependency</li>
         </ul>
       </div>
       <div class="panel"><b class="hd">Builder rules</b>
         <ul class="tight" style="font-size:14.5px">
           <li><b>ANY-of groups are generic:</b> members mix guardians, passkeys, email, Aadhaar; every group has an M-of-N threshold. Guardians are ordinary members.</li>
-          <li>A path = required rows + groups, freely mixed; a lone group, a single method, and 1-of-1 groups are all valid.</li>
-          <li>Wizard "any M of your N methods" → one path with one group. Two-method inventories still get two single-method paths.</li>
+          <li>The account's <b>one</b> path = required rows AND groups; a lone group, a single method, and 1-of-1 groups are all valid.</li>
+          <li>Wizard and presets build required rows + <b>at most one</b> group; several groups in one path are Advanced-only. Two-method inventories get one <code>[1 of 2]</code> group.</li>
+          <li><b>Instance uniqueness:</b> one enrolled instance appears once in the path — never as a required row and a group member at once. Method types may repeat with different values.</li>
           <li>Passkey enrollment detects synced vs device-bound; warnings adapt.</li>
-          <li>Guardrails: no zero-second waits; dominated-path warning. Group encoding with the kit team.</li>
+          <li>Guardrails: the contract enforces a 24h minimum wait; the builder blocks duplicate instances. Group encoding with the kit team.</li>
         </ul>
       </div>
     </div>
     <div class="decisions">
-      <div class="drow"><span class="tag ok">Decided</span><span>Dominated-path warning: if path X needs a subset of Y's methods with an equal-or-shorter wait, Y adds zero security.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span><b>Single recovery path (decision 73):</b> the setup builds one path — required rows AND any-of groups. Presets are path <i>shapes</i>, not paths to combine; “Add recovery path” is gone.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span><b>One waiting period per account (decision 74):</b> 48h stays the UI default, and the <b>contract enforces a 24h minimum</b>, so the picker offers nothing below 24h. The dominated-path warning is retired — with one path, domination cannot exist.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span><b>Wizard vs Advanced shape (decision 75):</b> the wizard and the presets produce required rows + at most one any-of group; several groups in one path stay Advanced-only. Two-method inventories get one <code>[1 of 2]</code> group.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span><b>Instance uniqueness (decision 76):</b> one enrolled method instance (a specific passkey, guardian address, or email) appears once across the path; the builder blocks the duplicate.</span></div>
       <div class="drow"><span class="tag ok">Decided</span><span>No guardian names anywhere — a guardian <b>is</b> an address, shown as blockie + address or ENS. The wallet stores no contact labels; nothing extra to leak (decision 43).</span></div>
       <div class="drow"><span class="tag ok">Decided</span><span>Guardian checks stay optional — confirmed in the demo-review meeting (decision 52); mutual guardian approval still under consideration.</span></div>
       <div class="drow"><span class="tag ok">Decided</span><span>The wizard ends with an optional <b>dry run</b>: rehearse the recovery locally before the save (decision 47).</span></div>
@@ -371,9 +376,9 @@ flowchart TD
 flowchart TD
     A[Express start] --> B["1 · How recovery works —<br/>one screen, three bullets"]
     B --> C["2 · Inventory: what do you have?<br/>☐ another device (passkey-capable)<br/>☐ trusted contacts with wallets<br/>☐ long-lived email<br/>☐ keys you keep yourself (paper/hardware)<br/>☐ Aadhaar ID (last, badged)"]
-    C --> D["3 · Recommended preset shown as<br/>recovery-path cards<br/>(from the persona research)"]
+    C --> D["3 · Recommended path shown as<br/>ONE card: required rows + one<br/>ANY-of group over the selection<br/>(shapes from the persona research)"]
     D --> E["4 · Enroll each method:<br/>short explainer + 'Learn more' +<br/>mandatory access test (local, no chain)"]
-    E --> F["5 · Waiting period — 48h default,<br/>changeable. Guardrails apply."]
+    E --> F["5 · Waiting period — one per account,<br/>48h default, changeable. Floor: the<br/>contract enforces a 24h minimum."]
     F --> PW["5b · Recovery password — optional:<br/>hide the setup values (48/56)"]
     PW --> G["6 · Review → optional DRY RUN<br/>(local rehearsal, decision 47)<br/>→ submit config (one confirmation)"]
     G --> H["7 · Recovery Card download<br/>+ enable alerts opt-in"]
@@ -381,9 +386,11 @@ flowchart TD
     </pre></div>
     <div class="decisions">
       <div class="drow"><span class="tag ok">Decided</span><span>Access tests are mandatory for identity methods — a failing test blocks the save.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span><b>ZK Email is receive-and-upload (decision 77):</b> the user clicks <b>“Send email”</b>, receives an email at the enrolled address, opens “Show original”, downloads the <code>.eml</code> and uploads it — the proof is computed locally. Same interaction at enrollment and during recovery.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>A new <b>“How to get the .eml” help sheet</b> covers Gmail, Outlook (web), Apple Mail, Yahoo and Proton, linked from the enrollment test and from the recovery verify row.</span></div>
       <div class="drow"><span class="tag ok">Decided</span><span>The Recovery Card holds only address + how-to + page URL. A stolen card must not be a phishing map.</span></div>
     </div>
-    <div class="focus"><b>Review focus</b><p>Do the presets fit our persona spread? Is mandatory testing the right friction? Is flat 48h right — even for single-method paths?</p></div>
+    <div class="focus"><b>Review focus</b><p>Do the preset shapes fit our persona spread? Is mandatory testing the right friction? Is 48h the right default above the 24h contract floor — even for a single-method path?</p></div>
   </div></section>
 
   <!-- ============ S10 · FLOW D CH1 ============ -->
@@ -401,12 +408,11 @@ flowchart TD
     C1 --> B
     C -->|Found| CC["Confirm identity card:<br/>address + blockie + ENS + path summary.<br/>'This is my account'"]
     CC -->|Not mine| B
-    CC --> E{"Account has recovery paths?"}
+    CC --> E{"Account has a recovery path?"}
     E -- No --> X["'No recovery set up — cannot recover.'<br/>Primary action: try another address"]
     X --> B
-    E -- Yes --> V["Paths shown. Structure always readable;<br/>value visibility OPEN.<br/>Password-decrypt case for values."]
-    V --> F["Pick the recovery path you can satisfy"]
-    F --> NEXT["→ Chapter 2: collect the approvals"]
+    E -- Yes --> V["THE path shown — there is only one<br/>(decision 73). Structure always readable;<br/>value visibility OPEN.<br/>Password-decrypt case for values."]
+    V --> NEXT["→ Chapter 2: collect the approvals"]
     </pre></div>
   </div></section>
 
@@ -414,15 +420,15 @@ flowchart TD
   <section class="slide" data-title="Flow D · Collect"><div class="inner wide">
     <p class="eyebrow">Flow D · 2 of 4</p>
     <h2>Recover, chapter 2 — collect the approvals</h2>
-    <p class="lede">The checklist persists locally and resumes; a path that cannot be completed is never a trap.</p>
+    <p class="lede">There is no path choice — the checklist renders THE path. It persists locally and resumes; a path that cannot be satisfied is stated honestly, never a trap.</p>
     <div class="diagram"><pre class="mermaid">
 flowchart TD
-    F["Recovery path chosen (chapter 1)"] --> G["Recovery checklist — persisted locally,<br/>resumable via a dedicated<br/>'Recovery in progress' screen"]
+    F["Account confirmed (chapter 1)"] --> G["Recovery checklist — persisted locally,<br/>resumable via a dedicated<br/>'Recovery in progress' screen"]
     G --> G1[Get guardian approvals → Flow E1]
-    G --> G2["Confirm with your email (TBD)"]
+    G --> G2["Confirm with your email —<br/>send email → upload the .eml"]
     G --> G3["Confirm with your passkey —<br/>platform sync + hybrid QR"]
     G --> G4[Confirm with Aadhaar]
-    G -->|Cannot complete this path| SW["→ back to path choice (chapter 1)"]
+    G -->|Cannot complete the path| SW["Dead end, stated honestly:<br/>abandon, or keep the partial progress"]
     G1 --> H{"Path satisfied?"}
     G2 --> H
     G3 --> H
@@ -439,7 +445,7 @@ flowchart TD
     <p class="lede">Explicit consent before the transaction; a cancelled recovery ends loudly, not silently; cleanup is required.</p>
     <div class="diagram"><pre class="mermaid">
 flowchart TD
-    CF["Confirmation screen: the account,<br/>the new key that takes control,<br/>the chosen path, the waiting period.<br/>'The current owner can cancel.'"] --> I["START RECOVERY — one atomic tx<br/>(funding/executor: BLOCKER)"]
+    CF["Confirmation screen: the account,<br/>the new key that takes control,<br/>the path, the waiting period.<br/>'The current owner can cancel.'"] --> I["START RECOVERY — one atomic tx<br/>(funding/executor: BLOCKER)"]
     I -->|Submit fails| I2["Plain-language error + retry<br/>+ self-pay-gas fallback"]
     I2 --> BK["→ back to the checklist (chapter 2)"]
     I -->|Submitted| J["Waiting period countdown —<br/>persistent, resumable"]
@@ -454,11 +460,11 @@ flowchart TD
     <p class="eyebrow">Flow D · 4 of 4</p>
     <h2>Recover — what's decided, what blocks it</h2>
     <div class="decisions">
-      <div class="drow"><span class="tag block">Blocker</span><span><b>Funding &amp; execution.</b> Recovery calls bypass 4337 — no paymaster can sponsor them; no relayer exists (backend-zero). The intended UX (sponsored + auto-execute) has no infrastructure owner.</span></div>
+      <div class="drow"><span class="tag block">Blocker</span><span><b>Funding &amp; execution.</b> Recovery calls bypass 4337 — no paymaster can sponsor them; no execution relayer exists (backend-zero). The intended UX (sponsored + auto-execute) has no infrastructure owner.</span></div>
       <div class="drow"><span class="tag ok">Decided</span><span>Identity confirmation before proof collection; explicit consent screen before the transaction.</span></div>
       <div class="drow"><span class="tag ok">Decided</span><span>Recovery ends with a <b>required</b> cleanup checklist — the lost device's methods survive rotation and must be replaced. Deferring is allowed; the deferral shows as a flagged banner on the management overview until resolved (decision 46).</span></div>
       <div class="drow"><span class="tag ok">Decided</span><span>Synced passkeys are flagged too while the lost device stays signed in; the fix includes revoking it from the platform / password manager (decision 50).</span></div>
-      <div class="drow"><span class="tag ok">Decided</span><span>Checklist state persists locally and resumes into a dedicated <b>“Recovery in progress”</b> screen — account, per-row progress, resume/abandon (decision 44). A “switch path” exit exists.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>Checklist state persists locally and resumes into a dedicated <b>“Recovery in progress”</b> screen — account, per-row progress, resume/abandon (decision 44). There is <b>no path choice and no “switch path” exit</b> (decision 73): if the path cannot be satisfied, the checklist says so honestly and the partial progress stays until the flow exits.</span></div>
       <div class="drow"><span class="tag ok">Decided</span><span>One password name everywhere: <b>"extension password"</b>; "full wallet password" is retired. The recovery password stays a separate, clearly-labeled concept (decision 57).</span></div>
       <div class="drow"><span class="tag open">Open</span><span>Value visibility during path display — guardian addresses are natively public today.</span></div>
     </div>
@@ -469,7 +475,7 @@ flowchart TD
   <section class="slide" data-title="Flow D · Additions"><div class="inner wide">
     <p class="eyebrow">Flow D · additions</p>
     <h2>Logged-in entry & the interactive checklist</h2>
-    <p class="lede">Recovery does not require a fresh install — and every claim is submitted in place, kept across path switches, and wiped when the flow ends.</p>
+    <p class="lede">Recovery does not require a fresh install — and every claim is submitted in place, kept across pauses and resumes, and wiped when the flow ends.</p>
     <div class="cols">
       <div class="diagram" style="margin-top:0"><pre class="mermaid">
 flowchart TD
@@ -482,10 +488,10 @@ flowchart TD
       </pre></div>
       <div class="diagram" style="margin-top:0"><pre class="mermaid">
 flowchart TD
-    A["Checklist — one row per method<br/>of the selected path"] --> B["VERIFY button per row:<br/>explains how to get the proof<br/>+ submit input in place"]
+    A["Checklist — one row per required<br/>method, one header per ANY-of group"] --> B["VERIFY button per row:<br/>explains how to get the proof<br/>+ submit input in place"]
     B --> C["Claim submitted →<br/>row marked complete"]
-    C --> D{"Back to pick<br/>another path?"}
-    D -- Yes --> E["Claims are KEPT —<br/>shared methods stay complete"]
+    C --> D{"Pause / close<br/>the extension?"}
+    D -- Yes --> E["Claims are KEPT —<br/>resume finds the rows complete"]
     E --> A
     D -- No --> F["Path complete →<br/>confirmation screen"]
     F -.-> G["On flow EXIT: all claims WIPED<br/>(security — never stored forever)"]
@@ -495,7 +501,7 @@ flowchart TD
       <div class="drow"><span class="tag ok">Decided</span><span>Recovery also starts logged-in, from Settings. Multiple accounts → the user chooses which account becomes the new owner; a single account skips the step.</span></div>
       <div class="drow"><span class="tag ok">Decided</span><span>The anti-scam warning gates this entry too — the "open Settings, click Recover" scam script hits the same warning as a fresh install.</span></div>
       <div class="drow"><span class="tag ok">Decided</span><span>Each method row is interactive: a verify button explains how to obtain the proof and offers the submission in place.</span></div>
-      <div class="drow"><span class="tag ok">Decided</span><span>Claims survive switching paths — and are wiped the moment the recovery flow exits, finished or abandoned.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>Claims survive <b>pauses and resumes</b> on this device — path switching no longer exists (decision 73) — and are wiped the moment the recovery flow exits, finished or abandoned.</span></div>
     </div>
   </div></section>
 
@@ -573,23 +579,21 @@ flowchart TD
     <h2>Manage — edit without footguns</h2>
     <div class="diagram"><pre class="mermaid">
 flowchart TD
-    A["Settings › Account recovery — overview:<br/>status line + recovery paths ONLY<br/>+ 'Recover an account' entry<br/>+ pending-recovery notice when active<br/>(no methods section — decision 45)"] --> B[Add recovery path → Flow C]
-    A --> C[Edit recovery path]
-    A --> D[Remove recovery path]
+    A["Settings › Account recovery — overview:<br/>status line + THE recovery path<br/>+ 'Recover an account' entry<br/>+ pending-recovery notice when active<br/>(no methods section — decision 45)"] --> B["No path yet:<br/>Set up recovery → Flow C"]
+    A --> C[Edit the recovery path]
+    A --> D[Remove recovery]
     C --> C1["Builder opens with the path loaded —<br/>members and methods are<br/>added/removed HERE"]
     C1 --> E["Remove a member the path still needs"]
     C1 --> C2["Review-changes diff →<br/>Save → owner-signed tx"]
-    D --> D1{"Last remaining path?"}
-    D1 -- Yes --> D2["Explicit warning: account becomes<br/>UNPROTECTED. Type-to-confirm."]
-    D1 -- No --> D3[Simple confirm]
+    D --> D2["ALWAYS the explicit warning<br/>(it is the only path): account becomes<br/>UNPROTECTED. Meter drops to zero.<br/>Type-to-confirm."]
     D2 --> D4[Remove → owner-signed tx]
-    D3 --> D4
-    E --> E2["Blocked: modal lists the paths<br/>that still need it"]
-    E2 -->|Lower the threshold /<br/>edit the other path first| C1
-    E2 -->|Cascade-remove after warning| C2
+    E --> E2["Blocked in place: the row explains<br/>that the path still needs this member —<br/>lower the group threshold or<br/>add a replacement first"]
+    E2 --> C1
     </pre></div>
     <div class="decisions">
-      <div class="drow"><span class="tag ok">Decided</span><span>Methods are managed <b>inside path editing</b>: edit path → review-changes diff → one owner-signed tx. The overview lists paths only (decision 45).</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>Methods are managed <b>inside path editing</b>: edit path → review-changes diff → one owner-signed tx. The overview shows the single path only (decision 45).</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>The overview offers exactly two actions on the path: <b>Edit</b> and <b>Remove recovery</b> (decision 73). Removal <b>always</b> shows the unprotected warning with type-to-confirm — the simple confirm is gone, because every removal leaves the account unprotected.</span></div>
+      <div class="drow"><span class="tag ok">Decided</span><span>A member the path still needs is blocked <b>in place</b> inside the editor — a threshold/coverage validation, not a cross-path modal (decision 45).</span></div>
       <div class="drow"><span class="tag ok">Decided</span><span>A deferred post-recovery cleanup shows here as a flagged banner until resolved (decision 46).</span></div>
     </div>
     <div class="focus"><b>Review focus</b><p>Config changes stay allowed while a recovery is pending (they do not affect it) — should this screen restrict more than it warns?</p></div>
@@ -604,9 +608,9 @@ flowchart TD
         <thead><tr><th>Ref</th><th>Item</th><th>Blocks</th></tr></thead>
         <tbody>
           <tr><td>Q7/19</td><td><b>Funding &amp; execution</b> — who pays and who executes (bypass 4337; backend-zero)</td><td>Flow D entirely</td></tr>
-          <tr><td>Q16/55</td><td><b>ZK Email</b> — .eml-local direction decided; open: subject/command format, accountCode storage without a backend, prover stack (~15–60s in-extension?), DKIM registry choice, module timelock vs our waiting period</td><td>ZK Email sub-flows</td></tr>
+          <tr><td>Q16/55/77</td><td><b>ZK Email</b> — receive-and-upload direction decided (77: “Send email” → the user receives the mail, uploads the <code>.eml</code>, proving stays local); open: subject/command format, accountCode storage without a backend, prover stack (~15–60s in-extension?), DKIM registry choice, module timelock vs our waiting period, <b>who runs the send-only relayer</b> that 77 reintroduces into the backend-zero design (plus its failure UX), and <code>.eml</code> compatibility per client incl. Proton</td><td>ZK Email sub-flows + verify-access</td></tr>
           <tr><td>M10</td><td><b>Concurrency</b> — can one account hold two pending recoveries? The recoverer UI needs a warning band either way</td><td>Flow D + D2</td></tr>
-          <tr><td>Q22/41</td><td>Encoding for generic ANY-of groups — mixed members, M-of-N thresholds (T10 threshold field)</td><td>Builder + presets + recovery checklist</td></tr>
+          <tr><td>Q22/41</td><td>Encoding for generic ANY-of groups inside the single path — mixed members, M-of-N thresholds (T10 threshold field)</td><td>Builder + presets + recovery checklist</td></tr>
           <tr><td>—</td><td>Exact guardian signed payload (nonce; policyId?; expiry — define or confirm none)</td><td>Flow E1 page</td></tr>
           <tr><td>Q29</td><td>Policy value visibility (guardian addresses natively public) + password-encrypted values</td><td>Flow D path display</td></tr>
           <tr><td>51</td><td>Guardian approval-page hosting — decided: relative path first, IPFS/IPNS later; long-term canonical hosting stays with the EF</td><td>Flow E1</td></tr>
@@ -616,7 +620,8 @@ flowchart TD
           <tr><td>Q20</td><td>Config survival after rotation (+ onUninstall nonce-reset)</td><td>Flow D end state</td></tr>
           <tr><td>Q8</td><td>Same-install account history lookup, gated</td><td>Flow D identify</td></tr>
           <tr><td>—</td><td>ZK Email accountCode derivation per account (unlinkability)</td><td>Multi-account apply</td></tr>
-          <tr><td>—</td><td>Enforced minimum waiting period on-chain (zero-second currently legal)</td><td>Builder guardrails</td></tr>
+          <tr><td>74</td><td>Enforced minimum waiting period on-chain — decided: the contract enforces a <b>24h minimum</b>; remaining question is the exact revert/validation surface for the builder</td><td>Builder guardrails</td></tr>
+          <tr><td>78</td><td>Account type — the initiative focuses on <b>4337 smart accounts</b>; 7702 support is deferred (recorded; no user-visible copy change)</td><td>Nothing today — revisit for 7702</td></tr>
         </tbody>
       </table>
     </div>
@@ -630,7 +635,7 @@ flowchart TD
     <div class="decisions" style="margin-top:26px">
       <div class="drow"><span class="tag ok">Comments</span><span>Line comments on <a href="https://github.com/FiboAtWonder/kohaku-extension/pull/2">PR #2</a> — source of truth: <code>social-recovery-ux-flows.md</code>, branch <code>docs/social-recovery-ux-flows</code>.</span></div>
       <div class="drow"><span class="tag ok">Grounding</span><span><a href="https://app.notion.com/p/36d9a4c092c780578f9dde36e69dfff5">Persona research</a> · Design Rationales R1–R13 · the prototype demo · wireframes v1 (social-wireframes.pen).</span></div>
-      <div class="drow"><span class="tag ok">Owner</span><span>Fibo · Kohaku / Social Recovery Kit · 2026-08-13</span></div>
+      <div class="drow"><span class="tag ok">Owner</span><span>Fibo · Kohaku / Social Recovery Kit · 2026-08-18 (single-path model, decisions 73–78)</span></div>
     </div>
   </div></section>
 
