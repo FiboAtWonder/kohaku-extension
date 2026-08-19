@@ -1,29 +1,12 @@
 # Social Recovery — UX Flow Diagrams (working doc)
 
-> Working document. Owner: Fibo. Status: **reviewed — 6-perspective review pass applied 2026-08-12**.
-> Sources: social-recovery prototype HTML (demo), the Notion
-> [Personas page](https://app.notion.com/p/36d9a4c092c780578f9dde36e69dfff5) (Alice → Sam),
-> Design Rationales R1–R13. Scope note: this document focuses on the **UX of the
-> initiative**; contract-level details live in the tech design and are only referenced
-> where a UX flow depends on them.
+> Working document. Owner: Fibo. Status: **reviewed — 6-perspective review pass applied 2026-08-12**. Sources: social-recovery prototype HTML (demo), the Notion [Personas page](https://app.notion.com/p/36d9a4c092c780578f9dde36e69dfff5) (Alice → Sam), Design Rationales R1–R13. Scope note: this document focuses on the **UX of the initiative**; contract-level details live in the tech design and are only referenced where a UX flow depends on them.
 >
-> Framing: the social recovery initiative is a **general-purpose improvement for the
-> ecosystem**. This extension is the demo/reference app that shows what can be done.
-> These flows are therefore **reference UX**, not app-only decisions.
-> This document lives as a **sibling to the Notion pages** (personas, rationales).
+> Framing: the social recovery initiative is a **general-purpose improvement for the ecosystem**. This extension is the demo/reference app that shows what can be done. These flows are therefore **reference UX**, not app-only decisions. This document lives as a **sibling to the Notion pages** (personas, rationales).
 >
-> Naming (decided): the user-facing label is **"Account recovery"**. "Social Recovery
-> (Kit)" stays as the internal/tech name only.
-> User-facing vocabulary (decided): **"recovery path"** = one clause/card,
-> **"method"** = one credential, **"waiting period"** = timelock. "Policy", "proof",
-> "relayer", "EIP-712" stay in spec prose only.
+> Naming (decided): the user-facing label is **"Account recovery"**. "Social Recovery (Kit)" stays as the internal/tech name only. User-facing vocabulary (decided): **"recovery path"** = one clause/card, **"method"** = one credential, **"waiting period"** = timelock. "Policy", "proof", "relayer", "EIP-712" stay in spec prose only.
 >
-> Context: the UX lives under **Settings › Account recovery**. The recovery module is
-> ERC-7579, on a **4337 smart account** (decision 78 — the initiative focuses on 4337;
-> 7702 support is deferred). Chain scope: **one chain per policy**; demo runs on
-> **Sepolia**; focus is Ethereum. **Multichain: out of scope for v1** (decided) —
-> note for integrators: rotation happens on one chain; the same address on other
-> chains stays locked.
+> Context: the UX lives under **Settings › Account recovery**. The recovery module is ERC-7579, on a **4337 smart account** (decision 78 — the initiative focuses on 4337; 7702 support is deferred). Chain scope: **one chain per policy**; demo runs on **Sepolia**; focus is Ethereum. **Multichain: out of scope for v1** (decided) — note for integrators: rotation happens on one chain; the same address on other chains stays locked.
 
 ---
 
@@ -61,11 +44,9 @@ flowchart TD
 ```
 
 Decisions:
-- ✅ Fast-track = **warning screen + extension password + key creation + seed
-  backup**. Nothing else.
+- ✅ Fast-track = **warning screen + extension password + key creation + seed backup**. Nothing else.
 - ✅ Seed backup is not deferred. It stays in the fast-track.
-- ✅ Copy at key creation (corrected): "**Your account stays at the same address.**
-  This new key will control it." (Nothing "moves"; the address never changes.)
+- ✅ Copy at key creation (corrected): "**Your account stays at the same address.** This new key will control it." (Nothing "moves"; the address never changes.)
 
 ---
 
@@ -87,15 +68,8 @@ flowchart TD
 
 Decisions:
 - ✅ Trigger: each dashboard open until the user acts or opts out.
-- ✅ Permanent dismiss keeps the shield badge as re-entry point. Concretely: a small
-  shield icon in a warning state, shown permanently on the account row and on the
-  Settings › Account recovery entry while the account has no recovery path. It never
-  pops up and never blocks anything. Clicking it opens setup (Flow C).
-- ✅ Honesty note, concrete copy: "Recovery protects you if you **lose** your key.
-  It cannot stop someone who already has it. And if your method is a device-bound passkey on
-  this device, losing the device also removes this recovery path." The passkey
-  sentence adapts to the detected type (synced passkeys depend on the platform
-  account instead of the device).
+- ✅ Permanent dismiss keeps the shield badge as re-entry point. Concretely: a small shield icon in a warning state, shown permanently on the account row and on the Settings › Account recovery entry while the account has no recovery path. It never pops up and never blocks anything. Clicking it opens setup (Flow C).
+- ✅ Honesty note, concrete copy: "Recovery protects you if you **lose** your key. It cannot stop someone who already has it. And if your method is a device-bound passkey on this device, losing the device also removes this recovery path." The passkey sentence adapts to the detected type (synced passkeys depend on the platform account instead of the device).
 
 ---
 
@@ -103,33 +77,14 @@ Decisions:
 
 Building blocks:
 - **Methods:** passkey, guardians (people's wallets, EOA or SCW), ZK Email, Anon Aadhaar.
-- **ONE recovery path per account (decision 73, 2026-08-18):** the OR-of-paths level
-  is removed. An account has exactly one path: required method rows and ANY-of
-  groups, all combined with AND. Examples:
-  `passkey AND [2 of 3](G1, G2, zk_email)` · `[2 of 3](G1, passkey, aadhaar)` ·
-  `passkey AND zk_email` (both required). The UI keeps calling it the
-  **"recovery path"**; the methods stay **"recovery methods"**.
-- **ANY-of groups are generic (decided 2026-08-13):** a group's members can be ANY
-  method instances — guardians, passkeys, ZK Email, Aadhaar — mixed freely.
-  Guardians are not special: "3 of 5 guardians" is simply a group whose five members
-  happen to be guardians. No guardian-specific threshold concept exists in the UX.
-- **Every group carries an M-of-N threshold** ("Require 2 ▾ of: passkey, Ana,
-  email"), not only 1-of-N.
-- **Wizard vs Advanced shape (decision 75):** the wizard builds required rows plus
-  **at most one** ANY-of group over the methods the user selects. Multiple groups
-  in one path (`passkey AND [2/3 guardians] AND [1/2 emails]`) exist only in the
-  Advanced builder.
-- **Instance uniqueness (decision 76):** one enrolled method instance (a specific
-  passkey, guardian address, or email) appears **once** across the whole path —
-  never both as a required row and as a group member. Method *types* may repeat
-  with different values (two ZK Email methods on different addresses is fine).
-- **A single method is a valid path** (Sam's floor). The builder must support
-  one-method paths; the honesty note (Flow B copy) doubles as their warning.
-- **Recoverer side:** the recovery checklist renders the path as required rows plus
-  group headers with progress ("any M of N — 1 of 2 done"); the path completes when
-  every required row and every group threshold is met. There is no path choice.
-- Contract encoding for generic M-of-N groups sits with the kit team
-  (tech-dependencies table; T10 `threshold` field).
+- **ONE recovery path per account (decision 73, 2026-08-18):** the OR-of-paths level is removed. An account has exactly one path: required method rows and ANY-of groups, all combined with AND. Examples: `passkey AND [2 of 3](G1, G2, zk_email)` · `[2 of 3](G1, passkey, aadhaar)` · `passkey AND zk_email` (both required). The UI keeps calling it the **"recovery path"**; the methods stay **"recovery methods"**.
+- **ANY-of groups are generic (decided 2026-08-13):** a group's members can be ANY method instances — guardians, passkeys, ZK Email, Aadhaar — mixed freely. Guardians are not special: "3 of 5 guardians" is simply a group whose five members happen to be guardians. No guardian-specific threshold concept exists in the UX.
+- **Every group carries an M-of-N threshold** ("Require 2 ▾ of: passkey, Ana, email"), not only 1-of-N.
+- **Wizard vs Advanced shape (decision 75):** the wizard builds required rows plus **at most one** ANY-of group over the methods the user selects. Multiple groups in one path (`passkey AND [2/3 guardians] AND [1/2 emails]`) exist only in the Advanced builder.
+- **Instance uniqueness (decision 76):** one enrolled method instance (a specific passkey, guardian address, or email) appears **once** across the whole path — never both as a required row and as a group member. Method *types* may repeat with different values (two ZK Email methods on different addresses is fine).
+- **A single method is a valid path** (Sam's floor). The builder must support one-method paths; the honesty note (Flow B copy) doubles as their warning.
+- **Recoverer side:** the recovery checklist renders the path as required rows plus group headers with progress ("any M of N — 1 of 2 done"); the path completes when every required row and every group threshold is met. There is no path choice.
+- Contract encoding for generic M-of-N groups sits with the kit team (tech-dependencies table; T10 `threshold` field).
 
 ### Three setup modes
 
@@ -139,20 +94,14 @@ Building blocks:
 | **Presets** | Middle ground | Pre-defined path shapes; the user picks ONE, then edits it. |
 | **Advanced** | Most technical | Free builder (grouped condition pattern). |
 
-**Entry pattern:** no three-way fork. The tab **lands on the Presets state**; two
-actions on top: **"Guide me"** (Express) and **"Customize"** (Advanced).
+**Entry pattern:** no three-way fork. The tab **lands on the Presets state**; two actions on top: **"Guide me"** (Express) and **"Customize"** (Advanced).
 
-**Starter presets (single-path model, decision 75): three path SHAPES to choose
-from** — the user picks one, and it becomes the account's single recovery path
-(48h waiting period, "needs setup" state, deep-links into enrollment):
+**Starter presets (single-path model, decision 75): three path SHAPES to choose from** — the user picks one, and it becomes the account's single recovery path (48h waiting period, "needs setup" state, deep-links into enrollment):
 1. **"Your device + your guardians"** — `passkey (required) AND [2 of 3](guardians)`.
-2. **Your device + your email** — `passkey AND zk_email`, both required. (Note:
-   violates R9 when the passkey is Google-synced and the email is Gmail — accepted.)
-3. **"Guardians only"** — `[2 of 3](guardians)`, no device or platform dependency
-   (the Alice/paper-guardian profile; the only preset with no passkey).
+2. **Your device + your email** — `passkey AND zk_email`, both required. (Note: violates R9 when the passkey is Google-synced and the email is Gmail — accepted.)
+3. **"Guardians only"** — `[2 of 3](guardians)`, no device or platform dependency (the Alice/paper-guardian profile; the only preset with no passkey).
 
-Group thresholds adapt to the member count the user actually enrolls; 2-of-3 is the
-starting suggestion.
+Group thresholds adapt to the member count the user actually enrolls; 2-of-3 is the starting suggestion.
 
 ### Express wizard — step list
 
@@ -176,15 +125,11 @@ Inventory items (step 2):
 - ☐ Aadhaar ID (last, badged)
 - ☐ keys you keep yourself — paper or hardware (routes to guardian-address entry)
 
-The recommended presets in step 3 come from the
-[persona research (Notion)](https://app.notion.com/p/36d9a4c092c780578f9dde36e69dfff5).
+The recommended presets in step 3 come from the [persona research (Notion)](https://app.notion.com/p/36d9a4c092c780578f9dde36e69dfff5).
 
 Wizard state rules:
-- ✅ **Draft/resume:** progress persists locally; abandoning mid-wizard re-enters at
-  the last completed step. Enrollments without a saved on-chain config show as
-  "not yet active".
-- ✅ **Alerts opt-in (step 7):** request notification permission here — Flow D2
-  depends on it. If denied: degraded banner-only behavior, stated to the user.
+- ✅ **Draft/resume:** progress persists locally; abandoning mid-wizard re-enters at the last completed step. Enrollments without a saved on-chain config show as "not yet active".
+- ✅ **Alerts opt-in (step 7):** request notification permission here — Flow D2 depends on it. If denied: degraded banner-only behavior, stated to the user.
 
 ### Verify-access at enrollment
 
@@ -199,51 +144,27 @@ Mandatory for identity methods; a failing test blocks the save. Local only, no c
 
 ### Recovery Card (step 7)
 
-Contents — **only**: the account address, a short "how to start recovery" guide, and
-the canonical approval-page URL. Plus the line "this card alone cannot move funds."
-The password hint idea from the demo-review meeting was **dropped** (decision 48
-amended): a hint cannot be validated against leaking the configuration. The card
-stays hint-free; the dry run's password-recall row covers the forgetting risk.
+Contents — **only**: the account address, a short "how to start recovery" guide, and the canonical approval-page URL. Plus the line "this card alone cannot move funds." The password hint idea from the demo-review meeting was **dropped** (decision 48 amended): a hint cannot be validated against leaking the configuration. The card stays hint-free; the dry run's password-recall row covers the forgetting risk.
 
-Explicitly **kept off the card** (decided, with rationale): the method inventory,
-guardian addresses, the enrolled email address, thresholds, and waiting-period
-values. (Guardian *names* do not exist anywhere — decision 43: a guardian is an
-address, shown as blockie + address or ENS; the wallet stores no contact labels.) Reason: the card is designed to be stored insecurely — that is its job. A
-stolen or copied card must not become a **map of exactly which methods to phish**.
-The address alone is public information anyway; the configuration is the secret.
+Explicitly **kept off the card** (decided, with rationale): the method inventory, guardian addresses, the enrolled email address, thresholds, and waiting-period values. (Guardian *names* do not exist anywhere — decision 43: a guardian is an address, shown as blockie + address or ENS; the wallet stores no contact labels.) Reason: the card is designed to be stored insecurely — that is its job. A stolen or copied card must not become a **map of exactly which methods to phish**. The address alone is public information anyway; the configuration is the secret.
 
 ### Multi-account "apply this setup" (R10 constraints)
 
-- ZK Email `accountCode` derivation per account: **open question** (moved to the
-  tech-dependencies table).
-- ✅ Passkey and guardian reuse across accounts is observable on-chain (per R10).
-  Show a linkability warning and offer "create a fresh passkey for this account".
+- ZK Email `accountCode` derivation per account: **open question** (moved to the tech-dependencies table).
+- ✅ Passkey and guardian reuse across accounts is observable on-chain (per R10). Show a linkability warning and offer "create a fresh passkey for this account".
 - Never applied by default.
 
 Other decisions:
 - ✅ All 4 methods in v1. Aadhaar for everyone, listed last, badged.
-- ✅ Two-method inventories (e.g. passkey + email only) get **one [1 of 2] ANY-of
-  group** recommended, not an AND pair — lockout is the larger risk at that level
-  (Diana's shape; supersedes the old two-single-method-paths rule, decision 75).
-  The waiting period stays the flat 48h default.
-- ✅ Passkey enrollment detects **synced vs device-bound** (WebAuthn
-  backup-eligibility flag). Warnings and floor copy adapt to the type: device-bound
-  → "losing the device removes this path"; synced → "this path depends on your
-  Apple/Google account".
-- ✅ Waiting period (decision 74): **one per account** — the path's waiting period.
-  48h default, changeable. Floor: the **contract enforces a 24h minimum**, so the
-  picker offers nothing below 24h. The dominated-path warning is retired — with a
-  single path, path domination cannot exist.
+- ✅ Two-method inventories (e.g. passkey + email only) get **one [1 of 2] ANY-of group** recommended, not an AND pair — lockout is the larger risk at that level (Diana's shape; supersedes the old two-single-method-paths rule, decision 75). The waiting period stays the flat 48h default.
+- ✅ Passkey enrollment detects **synced vs device-bound** (WebAuthn backup-eligibility flag). Warnings and floor copy adapt to the type: device-bound → "losing the device removes this path"; synced → "this path depends on your Apple/Google account".
+- ✅ Waiting period (decision 74): **one per account** — the path's waiting period. 48h default, changeable. Floor: the **contract enforces a 24h minimum**, so the picker offers nothing below 24h. The dominated-path warning is retired — with a single path, path domination cannot exist.
 - ✅ Express presets and their contents come from **ottie's persona research**.
-- ✅ Wizard "any M of your N methods" recommendations generate **one M-of-N group**
-  inside the single path — not pairwise expansions. Required rows plus multiple
-  groups exist only in the Advanced builder (decision 75).
+- ✅ Wizard "any M of your N methods" recommendations generate **one M-of-N group** inside the single path — not pairwise expansions. Required rows plus multiple groups exist only in the Advanced builder (decision 75).
 
 ### UI pattern references (solved problem)
 
-Grouped condition builder with "ALL of / ANY of" headers: Notion/Airtable advanced
-filters, Apple Smart Playlists, Zapier paths, Stripe Radar, `react-querybuilder`.
-Threshold selector inside a group: Safe's "M out of N owners" row.
+Grouped condition builder with "ALL of / ANY of" headers: Notion/Airtable advanced filters, Apple Smart Playlists, Zapier paths, Stripe Radar, `react-querybuilder`. Threshold selector inside a group: Safe's "M out of N owners" row.
 
 ![UI patterns: grouped condition builder, recovery-path cards with OR divider, threshold selector](social-recovery-ux-assets/ui-patterns.svg)
 
@@ -253,19 +174,9 @@ Threshold selector inside a group: Safe's "M out of N owners" row.
 
 Preconditions — a key that will receive control, from either entry point:
 - fresh install → the fast-track onboarding creates it (Flow A1);
-- **logged-in** → an existing account is the new owner (see "Flow D additions" below).
-⚠️ **Funding & execution: BLOCKER, unresolved.** `initiate/executeRecovery` are
-permissionless direct calls that bypass the 4337 flow — a 4337 paymaster cannot
-sponsor them, and the SDK design is backend-zero (no relayer exists today). "Who pays
-and who executes" has no owner. The flow below names the intended UX; the
-infrastructure question is in the tech-dependencies table.
+- **logged-in** → an existing account is the new owner (see "Flow D additions" below). ⚠️ **Funding & execution: BLOCKER, unresolved.** `initiate/executeRecovery` are permissionless direct calls that bypass the 4337 flow — a 4337 paymaster cannot sponsor them, and the SDK design is backend-zero (no relayer exists today). "Who pays and who executes" has no owner. The flow below names the intended UX; the infrastructure question is in the tech-dependencies table.
 
-**Config visibility:** the policy **structure** is readable on-chain
-("passkey + zk_email"). Value visibility is **OPEN**: in the current contracts,
-guardian addresses are natively public (R10 calls them observable); whether values
-can be hidden at all sits with the kit team. Case to design for either way: values
-encrypted with a **user password** — the recoverer enters it to decrypt and see the
-real values (e.g. which guardians to contact).
+**Config visibility:** the policy **structure** is readable on-chain ("passkey + zk_email"). Value visibility is **OPEN**: in the current contracts, guardian addresses are natively public (R10 calls them observable); whether values can be hidden at all sits with the kit team. Case to design for either way: values encrypted with a **user password** — the recoverer enters it to decrypt and see the real values (e.g. which guardians to contact).
 
 The flow is chaptered into its three phases so each diagram stays readable.
 
@@ -324,34 +235,20 @@ flowchart TD
 ```
 
 Decisions:
-- ✅ Identify by pasted address, ENS, or the gated same-install list (full
-  wallet-unlock strength, no balances shown, usage logged).
+- ✅ Identify by pasted address, ENS, or the gated same-install list (full wallet-unlock strength, no balances shown, usage logged).
 - ✅ Confirm-identity card before any proof collection (restored from the demo).
-- ✅ There is no path choice and no "switch path" exit (single-path model,
-  decision 73). If the path cannot be satisfied, the checklist says so honestly;
-  partial progress persists until the flow exits.
-- ✅ Resuming an unfinished recovery lands on a dedicated **"Recovery in progress"**
-  screen — the account being recovered, per-row progress, resume and abandon actions.
-  The home-surface pending card is only the entry point (decision 44).
+- ✅ There is no path choice and no "switch path" exit (single-path model, decision 73). If the path cannot be satisfied, the checklist says so honestly; partial progress persists until the flow exits.
+- ✅ Resuming an unfinished recovery lands on a dedicated **"Recovery in progress"** screen — the account being recovered, per-row progress, resume and abandon actions. The home-surface pending card is only the entry point (decision 44).
 - ✅ Submit failures get plain-language errors, retry, and a self-pay-gas fallback.
-- ✅ The countdown has a **cancelled** terminal state — the recoverer never waits
-  into silence.
-- ✅ End of recovery = **required cleanup checklist**, not a soft nudge: the surviving
-  config still contains the lost device's methods; whoever holds that device can
-  start a new recovery. Flag and walk through their removal. Deferring is allowed,
-  but the deferral surfaces as a flagged banner on the management overview until
-  resolved (decision 46) — it is a state, not a separate screen.
-- ✅ Synced passkeys are flagged too (decision 50): while a lost device stays signed
-  in to the platform account, it can still use the synced passkey. The fix path says
-  so: revoke the device or the passkey from the platform / password manager, add a
-  fresh one first, then remove the flagged method.
+- ✅ The countdown has a **cancelled** terminal state — the recoverer never waits into silence.
+- ✅ End of recovery = **required cleanup checklist**, not a soft nudge: the surviving config still contains the lost device's methods; whoever holds that device can start a new recovery. Flag and walk through their removal. Deferring is allowed, but the deferral surfaces as a flagged banner on the management overview until resolved (decision 46) — it is a state, not a separate screen.
+- ✅ Synced passkeys are flagged too (decision 50): while a lost device stays signed in to the platform account, it can still use the synced passkey. The fix path says so: revoke the device or the passkey from the platform / password manager, add a fresh one first, then remove the flagged method.
 
 ## Flow D additions — logged-in entry & interactive claims
 
 ### Logged-in entry (Settings)
 
-Recovery does not require a fresh install. A logged-in user starts it from the
-**"Recover an account"** button on the Settings › Account recovery overview (Flow G).
+Recovery does not require a fresh install. A logged-in user starts it from the **"Recover an account"** button on the Settings › Account recovery overview (Flow G).
 
 ```mermaid
 flowchart TD
@@ -365,11 +262,8 @@ flowchart TD
 
 Decisions:
 - ✅ Logged-in entry exists next to the fresh-install entry.
-- ✅ Multiple accounts → the user picks which account becomes the new owner.
-  A single account skips the step.
-- ✅ The anti-scam warning also gates this entry (condensed): a support-scam script
-  ("open Settings, click Recover") must hit the same warning as the fresh-install
-  path.
+- ✅ Multiple accounts → the user picks which account becomes the new owner. A single account skips the step.
+- ✅ The anti-scam warning also gates this entry (condensed): a support-scam script ("open Settings, click Recover") must hit the same warning as the fresh-install path.
 
 ### Interactive claim collection (refines Flow D chapter 2)
 
@@ -384,12 +278,9 @@ flowchart TD
 ```
 
 Decisions:
-- ✅ Each method row has a **verify button**: it explains how to get the proof and
-  gives the way to submit it, in place.
-- ✅ Claims **survive pauses and resumes** on this device. (Path switching no longer
-  exists — single-path model, decision 73.)
-- ✅ Claims are **wiped when the recovery flow exits** — finished or abandoned.
-  Security rule: claims never persist beyond the flow.
+- ✅ Each method row has a **verify button**: it explains how to get the proof and gives the way to submit it, in place.
+- ✅ Claims **survive pauses and resumes** on this device. (Path switching no longer exists — single-path model, decision 73.)
+- ✅ Claims are **wiped when the recovery flow exits** — finished or abandoned. Security rule: claims never persist beyond the flow.
 
 ---
 
@@ -410,25 +301,16 @@ flowchart TD
 ```
 
 Decisions:
-- ✅ Banner + notification. Polling caveat accepted for now (user must open the
-  browser during the waiting period). Alerts opt-in in Flow C step 7 mitigates.
-- ✅ Cancel is not resolution: the attacker still holds a working method. The triage
-  screen is required, not optional.
+- ✅ Banner + notification. Polling caveat accepted for now (user must open the browser during the waiting period). Alerts opt-in in Flow C step 7 mitigates.
+- ✅ Cancel is not resolution: the attacker still holds a working method. The triage screen is required, not optional.
 
 ---
 
 ## Flow E — Guardian approval
 
-**E1 (sync) is the default for v1.** E2 (async) stays mapped as a future improvement.
-Either way the recovery **trigger stays with one person** (the recoverer).
+**E1 (sync) is the default for v1.** E2 (async) stays mapped as a future improvement. Either way the recovery **trigger stays with one person** (the recoverer).
 
-**Scope note (decided, Notion review):** the guardian approval page is an
-**extension-specific implementation**, not part of the kit/SDK — the product is the
-SDK; each wallet implements its own guardian-approval surface. Who hosts and
-maintains the page — **decided (demo-review meeting, decision 51): the
-extension-relative path ships first; IPFS/IPNS is the later upgrade.** The
-relative-path MVP assumption (the guardian uses the same wallet) is accepted for
-the starting point.
+**Scope note (decided, Notion review):** the guardian approval page is an **extension-specific implementation**, not part of the kit/SDK — the product is the SDK; each wallet implements its own guardian-approval surface. Who hosts and maintains the page — **decided (demo-review meeting, decision 51): the extension-relative path ships first; IPFS/IPNS is the later upgrade.** The relative-path MVP assumption (the guardian uses the same wallet) is accepted for the starting point.
 
 ### Flow E1 — Sync (off-chain signature passing) — DEFAULT
 
@@ -446,20 +328,11 @@ flowchart TD
 ```
 
 Security rationale (why these steps exist):
-- Design principle for guardian-facing surfaces (decided): **"Information should be
-  ignorable but verifiable."** Guardians can be non-technical users. Plain language
-  leads; the technical detail collapses behind a "Verify the details" expander and
-  never blocks the main path.
-- The page renders whatever the URL says — an attacker who builds the link controls
-  everything it displays. The page is **not** a trust anchor. The two real anchors
-  are: the out-of-band call to the owner, and the wallet's own signing prompt.
-- The acknowledgment checkbox is UI friction, not enforcement — a static page cannot
-  verify that the call happened. It still forces a deliberate pause at the exact
-  moment phishing relies on speed.
-- Guardians who decline should still tell the owner: off-chain proof collection is
-  invisible on-chain, so guardians are the owner's only tripwire during that phase.
-- A guardian signature has **no expiry** — it dies only when its nonce is consumed or
-  the request is cancelled. Never display a time limit the contract does not enforce.
+- Design principle for guardian-facing surfaces (decided): **"Information should be ignorable but verifiable."** Guardians can be non-technical users. Plain language leads; the technical detail collapses behind a "Verify the details" expander and never blocks the main path.
+- The page renders whatever the URL says — an attacker who builds the link controls everything it displays. The page is **not** a trust anchor. The two real anchors are: the out-of-band call to the owner, and the wallet's own signing prompt.
+- The acknowledgment checkbox is UI friction, not enforcement — a static page cannot verify that the call happened. It still forces a deliberate pause at the exact moment phishing relies on speed.
+- Guardians who decline should still tell the owner: off-chain proof collection is invisible on-chain, so guardians are the owner's only tripwire during that phase.
+- A guardian signature has **no expiry** — it dies only when its nonce is consumed or the request is cancelled. Never display a time limit the contract does not enforce.
 
 ### Flow E2 — Async (on-chain approval) — FUTURE
 
@@ -473,17 +346,13 @@ flowchart TD
     F --> G[Recoverer starts the recovery — one tx]
 ```
 
-Blockers (secondary to this doc's focus; tracked for completeness): no on-chain
-approval function exists in the current contracts (R5 conflict); guardian-side gas
-needs sponsorship; detection needs indexing that the backend-zero design removed.
+Blockers (secondary to this doc's focus; tracked for completeness): no on-chain approval function exists in the current contracts (R5 conflict); guardian-side gas needs sponsorship; detection needs indexing that the backend-zero design removed.
 
 ---
 
 ## Flow F — Health checks (optional capability)
 
-Same machinery as the verify-access tests, run over time. **Optional capability,
-not the v1 focus (decision 42)** — the flow stays mapped, but nothing else in this
-document depends on it shipping.
+Same machinery as the verify-access tests, run over time. **Optional capability, not the v1 focus (decision 42)** — the flow stays mapped, but nothing else in this document depends on it shipping.
 
 ```mermaid
 flowchart TD
@@ -504,17 +373,13 @@ flowchart TD
 ```
 
 Decisions:
-- ✅ Meter label is **"Recovery ready"**, not "Protected" — recovery protects against
-  key **loss**, not key theft, and a single-passkey floor must not show the same
-  confidence as a 2-of-3. The meter level scales with the path's strength.
+- ✅ Meter label is **"Recovery ready"**, not "Protected" — recovery protects against key **loss**, not key theft, and a single-passkey floor must not show the same confidence as a 2-of-3. The meter level scales with the path's strength.
 
 ---
 
 ## Flow G — Recovery path & method management
 
-Lives in Settings › Account recovery (demo screens: `sr-policies`, `sr-policy-edit`).
-All changes are owner-signed transactions (only the current owner can modify
-configuration).
+Lives in Settings › Account recovery (demo screens: `sr-policies`, `sr-policy-edit`). All changes are owner-signed transactions (only the current owner can modify configuration).
 
 ```mermaid
 flowchart TD
@@ -536,20 +401,11 @@ flowchart TD
 ```
 
 Notes:
-- Config changes are allowed while a recovery is pending and do not affect the
-  pending request. If a recovery is pending, the management screen says so next to
-  every action.
-- Guardian replacement is an Edit case; the health-check alert (Flow F) and the
-  post-cancel triage (Flow D2) both deep-link here as the fix path.
-- "Recover an account" is reachable from this overview too, not only from the
-  fresh-install welcome.
-- Methods have no top-level list or "remove method" entry (decision 45): every
-  member/method change happens inside the path editor and ends in a review-changes
-  diff before one owner-signed transaction. The method-in-use block fires from the
-  editor, not from the overview — and with one path it is an in-place validation
-  (threshold/coverage), not a cross-path modal.
-- A deferred post-recovery cleanup (decision 46) surfaces here as a flagged banner
-  ("a method from your last recovery is still flagged — replace it") until resolved.
+- Config changes are allowed while a recovery is pending and do not affect the pending request. If a recovery is pending, the management screen says so next to every action.
+- Guardian replacement is an Edit case; the health-check alert (Flow F) and the post-cancel triage (Flow D2) both deep-link here as the fix path.
+- "Recover an account" is reachable from this overview too, not only from the fresh-install welcome.
+- Methods have no top-level list or "remove method" entry (decision 45): every member/method change happens inside the path editor and ends in a review-changes diff before one owner-signed transaction. The method-in-use block fires from the editor, not from the overview — and with one path it is an in-place validation (threshold/coverage), not a cross-path modal.
+- A deferred post-recovery cleanup (decision 46) surfaces here as a flagged banner ("a method from your last recovery is still flagged — replace it") until resolved.
 
 ---
 
@@ -573,10 +429,7 @@ Notes:
 | Recovery claim set (per-row approvals/claims) | this device, across pauses and resumes | flow exit (finished or abandoned) · owner cancel · submit |
 | Pending-recovery countdown state | chain (persistent) | execute · cancel |
 
-Deferred (kept open from the 2026-08-18 attack round): re-read-config-on-resume rules
-and the stale-draft/setup-changed states (M9); attack-during-triage band (M13);
-guardian changed-mind block on E1-05 (M16); alerts-honesty rewrite (M23);
-DKIM-rotation failure split (M34).
+Deferred (kept open from the 2026-08-18 attack round): re-read-config-on-resume rules and the stale-draft/setup-changed states (M9); attack-during-triage band (M13); guardian changed-mind block on E1-05 (M16); alerts-honesty rewrite (M23); DKIM-rotation failure split (M34).
 
 ## Decisions log
 
