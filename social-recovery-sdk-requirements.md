@@ -132,6 +132,21 @@ interface RecoveryMethod {
 | **ZK Email** | generate accountCode (CSPRNG Fr — SDK must own backup/custody, see §4), derive accountSalt, register | relayer send → user replies (R1) → upload own-reply `.eml` → parse (browser-safe parser; the Node-only `libs/dkim` parser cannot run under the webpack config) → verify DKIM locally. No proof at setup | same pipeline + local Groth16 proof with onProgress (minutes-scale budget; zkey size pushes toward the Noir option — R4) → `EmailAuthMsg`-shaped claim | DKIM key hash still valid in the registry |
 | **Aadhaar** | QR **image upload** → jsqr decode → test proof against current UIDAI key | same | full proof (~20–51 s measured, ~1.5 GB peak — R2) | on-chain verifier's UIDAI key hash still current |
 
+**Passkey facts the SDK must encode** (verified against WebAuthn L3 + Chromium
+source): synced/device-bound detection (38) = the **BE flag (0x08)** — immutable,
+read once at registration; **BS (0x10)** is the live backed-up state, re-read on
+every assertion (GPM hardcodes BE=1/BS=1, so "syncable but not yet synced" is
+undetectable). Store the AAGUID verbatim at registration — platform and hybrid
+registrations keep the real AAGUID even under `attestation:"none"` (security
+keys get zeroed); the community AAGUID list gives display names only. CXP/CXF
+migration is invisible to us — the recorded provider can go stale silently, so
+copy must never promise "lives in iCloud". Hybrid QR: fresh scan every ceremony
+(Chrome removed paired phones), needs Bluetooth on + one extra click, and the
+timeout is clamped to a 3-minute minimum. **Open risk to test first: whether
+phones accept `chrome-extension://<id>` as the RP ID over hybrid** — unverified;
+fallback is claiming a real domain RP ID via host_permissions + Related Origin
+Requests.
+
 ### 3.5 Recovery session (Flow D) + owner side (D2) + guardian page (E1)
 
 - `startSession(account, newOwner)` → persisted, resumable session; claim
@@ -187,6 +202,13 @@ interface RecoveryMethod {
 7. CALL_TO_SELF exemption done properly for `setAddrPrivilege`.
 8. Sepolia consts currently declare no 4337/paymaster/bundler support —
    align with whatever the funding ruling is.
+9. Passkey ceremonies must run in a **full extension tab** (or options page):
+   the action popup is destroyed on focus loss and `create()` is
+   focus-checked — a QR hand-off kills it. WebAuthn from extension pages
+   works since Chrome 122 (rp.id = the extension id, rewritten to
+   `chrome-extension://<id>`). **Day-one test:** hybrid QR against real
+   iOS/Android with that RP ID; if rejected, fall back to a domain RP ID via
+   host_permissions + Related Origin Requests.
 
 ## 5 · Asks to the kit team (delta vs the existing asks page)
 
