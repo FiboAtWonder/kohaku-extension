@@ -132,6 +132,19 @@ interface RecoveryMethod {
 | **ZK Email** | generate accountCode (CSPRNG Fr — SDK must own backup/custody, see §4), derive accountSalt, register | relayer send → user replies (R1) → upload own-reply `.eml` → parse (browser-safe parser; the Node-only `libs/dkim` parser cannot run under the webpack config) → verify DKIM locally. No proof at setup | same pipeline + local Groth16 proof with onProgress (minutes-scale budget; zkey size pushes toward the Noir option — R4) → `EmailAuthMsg`-shaped claim | DKIM key hash still valid in the registry |
 | **Aadhaar** | QR **image upload** → jsqr decode → test proof against current UIDAI key | same | full proof (~20–51 s measured, ~1.5 GB peak — R2) | on-chain verifier's UIDAI key hash still current |
 
+**On-chain P-256 status (measured 2026-08-19):** the `P256VERIFY` precompile
+(EIP-7951) is **live at `0x100` on Ethereum mainnet AND Sepolia** since Fusaka
+(2025-12) at 6,900 gas — so passkey verification on our demo chain is native
+and cheap. Use OpenZeppelin `P256.sol` ≥5.4 as the dispatch layer (its
+known-vector probe cleanly distinguishes "precompile absent" from "invalid
+signature"; Daimo's own library is NOT progressive — it hardcodes its fallback
+address). The SDK layer must enforce the `s ≤ n/2` malleability guard (the
+precompile does not) and reach the precompile via STATICCALL. Audited prior art
+for credential-bound signers: Safe's passkey module (`SafeWebAuthnSignerFactory`
+`0x1d31…1195`, per-credential CREATE2 proxies, zero storage reads — 4337-clean).
+Gas caveat: 3450-vs-6900 fragmentation across L2s — never hardcode. The Colibri
+`p256verify` gap (kohaku#221) still blocks verified eth_call on one RPC provider.
+
 **Passkey facts the SDK must encode** (verified against WebAuthn L3 + Chromium
 source): synced/device-bound detection (38) = the **BE flag (0x08)** — immutable,
 read once at registration; **BS (0x10)** is the live backed-up state, re-read on
