@@ -3,10 +3,16 @@
 > **Purpose:** the single catch-up document for this workstream. Any agent or
 > teammate resuming the work reads this first. **Rule: update this file at every
 > checkpoint** (wireframe commit, decisions batch, artifact republish, review round).
-> Last update: 2026-08-18, end of the single-path round: wireframes **v12**
-> (`ec834ea8d`, 157 wrappers = 129 active + 28 outdated, incl. the **X-01
-> model-comparison team exhibit**), demo + deck republished, all verifier
-> families F1–F9 resolved per Fibo's rulings. All surfaces synced.
+> Last update: 2026-08-19 — **SDK requirements v1 drafted**
+> (`social-recovery-sdk-requirements.md`): three-front Opus 5 investigation
+> (contracts+kit · extension · proof methods incl. prover benchmarks) merged
+> into a 6-section requirements doc. Pending Fibo: ruling on finding **R1**
+> (decision 77 must become reply-based — zk-email proves the email the user
+> SENDS; spec/wireframes C-05e/D-07e/C-05n need a small amendment) and R2
+> (Aadhaar upstream broken/unmaintained — tag at risk). UX surfaces themselves
+> unchanged since the single-path round: wireframes **v12** (`ec834ea8d`,
+> 157 wrappers incl. the X-01 exhibit), demo + deck republished, verifier
+> families F1–F9 resolved.
 
 ## The surfaces (where everything lives)
 
