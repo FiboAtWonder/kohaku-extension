@@ -28,7 +28,7 @@
     },
     {
      "screen": "C-01-choose-your-recovery-path-presets",
-     "story": "The tab lands on three preset shapes — you pick ONE. Sam wants his hand held instead: “Guide me”.",
+     "story": "The tab lands on the shapes — three ready-made presets plus a blank start. You pick ONE. Sam wants his hand held instead: “Guide me”.",
      "act": "Setup",
      "spec": "Flow C · decisions 3/75 — presets landing (pick one shape) + Guide me / Customize",
      "hitLabel": "Guide me",
@@ -328,7 +328,7 @@
      "hitLabel": "Guardians only",
      "hit": [
       366,
-      535,
+      576,
       107,
       18
      ]
@@ -1530,6 +1530,12 @@
      "spec": "Audit item A5 · decision 47"
     },
     {
+     "screen": "C-04f-build-your-path",
+     "story": "The blank route (decision 82). “Start from scratch” on C-01 opens this editor empty: nothing required, no group yet. Continue unlocks once the path holds at least one method. A preset user lands on the same screen with their shape already loaded — so a power user never has to adopt a preset and edit it down.",
+     "act": "Extras",
+     "spec": "Decision 82 · MVP · the setup editor’s empty state"
+    },
+    {
      "screen": "C-07m-dry-run-all-methods",
      "story": "The all-methods dry-run master: passkey, guardians, email and Aadhaar in one rehearsal, plus the password-recall row. A development reference — no persona has all four methods.",
      "act": "Extras",
@@ -1781,7 +1787,7 @@
   ],
   "C-01-choose-your-recovery-path-presets": [
    1280,
-   800
+   910
   ],
   "C-04b-recommended-path-either-one": [
    1280,
@@ -1854,6 +1860,10 @@
   "X-02-rollout-milestones": [
    1280,
    900
+  ],
+  "C-04f-build-your-path": [
+   1280,
+   800
   ]
  }
 }
