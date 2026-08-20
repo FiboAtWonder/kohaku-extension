@@ -176212,6 +176212,1439 @@
                   ]
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "lutNe",
+              "name": "Page · X-02",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "IT00n",
+                  "name": "Caption",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "D3CeTr",
+                      "name": "Code",
+                      "fill": "$accent",
+                      "content": "X-02",
+                      "fontFamily": "$sans",
+                      "fontSize": 26,
+                      "fontWeight": "800",
+                      "letterSpacing": 0.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "ToYZl",
+                      "name": "Description",
+                      "fill": "$ink",
+                      "content": "Rollout milestones",
+                      "fontFamily": "$sans",
+                      "fontSize": 26,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "XmTR7",
+                  "name": "X-02-rollout-milestones",
+                  "clip": true,
+                  "width": 1280,
+                  "height": 900,
+                  "fill": "$panel",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "m4gVJX",
+                      "name": "Content",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "fill": "$panel",
+                      "layout": "vertical",
+                      "gap": 16,
+                      "padding": [
+                        28,
+                        34
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Y299F",
+                          "name": "Header",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 5,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "CXASe",
+                              "name": "Title",
+                              "fill": "$ink",
+                              "content": "Milestones — MVP, V1, V2 (decision 79)",
+                              "fontFamily": "$sans",
+                              "fontSize": 23,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "haDVB",
+                          "name": "Definition strip",
+                          "width": "fill_container",
+                          "fill": "$wash",
+                          "cornerRadius": 12,
+                          "stroke": "$line",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "gap": 9,
+                          "padding": [
+                            11,
+                            14
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "g54wig",
+                              "name": "Icon",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "milestone",
+                              "library": "lucide",
+                              "fill": "$faint"
+                            },
+                            {
+                              "type": "text",
+                              "id": "WygIn",
+                              "name": "Definitions",
+                              "fill": "$ink2",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "MVP = protect one account and recover it, all 4 methods, preset shapes only · V1 = the guided, confident product · V2 = scale and upkeep.",
+                              "lineHeight": 1.45,
+                              "fontFamily": "$sans",
+                              "fontSize": 12.5,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "jFvJe",
+                          "name": "Columns",
+                          "width": "fill_container",
+                          "height": 500,
+                          "gap": 22,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "V0BsLG",
+                              "name": "Column · MVP",
+                              "width": "fill_container",
+                              "height": "fill_container",
+                              "fill": "$panel",
+                              "cornerRadius": 16,
+                              "stroke": "$line",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "layout": "vertical",
+                              "gap": 11,
+                              "padding": [
+                                15,
+                                16
+                              ],
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "Z2uOn",
+                                  "name": "Column head",
+                                  "width": "fill_container",
+                                  "gap": 9,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "vJoMT",
+                                      "name": "Badge",
+                                      "height": 22,
+                                      "fill": "$ink",
+                                      "cornerRadius": 6,
+                                      "padding": [
+                                        0,
+                                        8
+                                      ],
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "w2YR2",
+                                          "name": "Label",
+                                          "fill": "$panel",
+                                          "content": "MVP",
+                                          "fontFamily": "$sans",
+                                          "fontSize": 11,
+                                          "fontWeight": "800",
+                                          "letterSpacing": 0.4
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "wdZS9",
+                                      "name": "Column title",
+                                      "fill": "$ink",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Protect one account and recover it",
+                                      "lineHeight": 1.35,
+                                      "fontFamily": "$sans",
+                                      "fontSize": 13,
+                                      "fontWeight": "800"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "pcrEm",
+                                      "name": "Chip",
+                                      "fill": "$panel",
+                                      "cornerRadius": 20,
+                                      "stroke": "$line2",
+                                      "strokeWidth": 1,
+                                      "strokeAlignment": "inner",
+                                      "padding": [
+                                        2,
+                                        7
+                                      ],
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "muRIC",
+                                          "name": "Label",
+                                          "fill": "$muted",
+                                          "content": "~72 screens",
+                                          "fontFamily": "$sans",
+                                          "fontSize": 9.5,
+                                          "fontWeight": "700"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "xVIB5",
+                                  "name": "Rule",
+                                  "width": "fill_container",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "rectangle",
+                                      "id": "HeT3B",
+                                      "name": "Rule line",
+                                      "fill": "$line2",
+                                      "width": "fill_container",
+                                      "height": 1
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "vUVh7",
+                                  "name": "Scope",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 11,
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "W4LiQ",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "uvpT5",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "M3BXap",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Fresh-install recovery entry.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "M6oY4N",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "s1F5s",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "E5zbf",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Preset setup — pick ONE shape.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "Yii1l",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "xYUkX",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "irQJS",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Enrollment + mandatory tests, ALL 4 methods (incl. the .eml help sheet).",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "Y1e2kF",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "z58uw9",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "c5YYg",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Waiting period — 24h floor, 48h default.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "iF9zz",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "jWyjF",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "xh0WZ",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Recovery password + hidden values.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "mzL1f",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "DjPQi",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "MIq1r",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Review + save.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "MpGSR",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "YxjEv",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "olWJi",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Recovery Card (card only).",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "KsL0P",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "h8OZJg",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "GmDSB",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Recovery chapters 1–3 — resumable, done-terminal without cleanup.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "x4wpM",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "mivIJ",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "Q86hlm",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Guardian approvals MANUAL: the checklist row shows the exact payload to sign + paste-back — no hosted page.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "uBraO",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "Lknbe",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "wxP2z",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Cancel flow — polling banner, light “cancelled” terminal.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "GvWJ0",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "p899ia",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "DSZdE",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Management incl. path editing.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "JYAL6",
+                              "name": "Column · V1",
+                              "width": "fill_container",
+                              "height": "fill_container",
+                              "fill": "$panel",
+                              "cornerRadius": 16,
+                              "stroke": "$line",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "layout": "vertical",
+                              "gap": 11,
+                              "padding": [
+                                15,
+                                16
+                              ],
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "Kh03O",
+                                  "name": "Column head",
+                                  "width": "fill_container",
+                                  "gap": 9,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "huNVh",
+                                      "name": "Badge",
+                                      "height": 22,
+                                      "fill": "$ink",
+                                      "cornerRadius": 6,
+                                      "padding": [
+                                        0,
+                                        8
+                                      ],
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "BY7QT",
+                                          "name": "Label",
+                                          "fill": "$panel",
+                                          "content": "V1",
+                                          "fontFamily": "$sans",
+                                          "fontSize": 11,
+                                          "fontWeight": "800",
+                                          "letterSpacing": 0.4
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "YIDEq",
+                                      "name": "Column title",
+                                      "fill": "$ink",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "The guided, confident product",
+                                      "lineHeight": 1.35,
+                                      "fontFamily": "$sans",
+                                      "fontSize": 13,
+                                      "fontWeight": "800"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "J9E7m",
+                                      "name": "Chip",
+                                      "fill": "$panel",
+                                      "cornerRadius": 20,
+                                      "stroke": "$line2",
+                                      "strokeWidth": 1,
+                                      "strokeAlignment": "inner",
+                                      "padding": [
+                                        2,
+                                        7
+                                      ],
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "CIK7n",
+                                          "name": "Label",
+                                          "fill": "$muted",
+                                          "content": "~44 screens",
+                                          "fontFamily": "$sans",
+                                          "fontSize": 9.5,
+                                          "fontWeight": "700"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "qeUVK",
+                                  "name": "Rule",
+                                  "width": "fill_container",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "rectangle",
+                                      "id": "GUWtG",
+                                      "name": "Rule line",
+                                      "fill": "$line2",
+                                      "width": "fill_container",
+                                      "height": 1
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "EByWH",
+                                  "name": "Scope",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 11,
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "B2vLeo",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "MNnFi",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "RQEtL",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Hosted guardian page (sync; mobile, decline, offline signing).",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "zbTdV",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "wtJFE",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "hZa6m",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Express wizard education layer.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "NZBNb",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "Zz1h2",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "MgSvN",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Dry run.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "vwm2a",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "lvp8s",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "N7fraz",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Advanced builder.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "O14akn",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "TZUbk",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "wSvl7",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Nudge system + shield badge.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "hUfDj",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "N95hED",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "bENwD",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Alerts / push notifications.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "YjmZ0",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "HK35z",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "MH8y9",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Same-install account list.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "Q9oxs",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "FQqWz",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "bYg5A",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "The deferred attack-round states.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "w2rYgI",
+                              "name": "Column · V2",
+                              "width": "fill_container",
+                              "height": "fill_container",
+                              "fill": "$panel",
+                              "cornerRadius": 16,
+                              "stroke": "$line",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "layout": "vertical",
+                              "gap": 11,
+                              "padding": [
+                                15,
+                                16
+                              ],
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "E6aWb",
+                                  "name": "Column head",
+                                  "width": "fill_container",
+                                  "gap": 9,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "LHWNo",
+                                      "name": "Badge",
+                                      "height": 22,
+                                      "fill": "$ink",
+                                      "cornerRadius": 6,
+                                      "padding": [
+                                        0,
+                                        8
+                                      ],
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "OgWwO",
+                                          "name": "Label",
+                                          "fill": "$panel",
+                                          "content": "V2",
+                                          "fontFamily": "$sans",
+                                          "fontSize": 11,
+                                          "fontWeight": "800",
+                                          "letterSpacing": 0.4
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "Jkedc",
+                                      "name": "Column title",
+                                      "fill": "$ink",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Scale and upkeep",
+                                      "lineHeight": 1.35,
+                                      "fontFamily": "$sans",
+                                      "fontSize": 13,
+                                      "fontWeight": "800"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "Ig47I",
+                                      "name": "Chip",
+                                      "fill": "$panel",
+                                      "cornerRadius": 20,
+                                      "stroke": "$line2",
+                                      "strokeWidth": 1,
+                                      "strokeAlignment": "inner",
+                                      "padding": [
+                                        2,
+                                        7
+                                      ],
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "Wqpur",
+                                          "name": "Label",
+                                          "fill": "$muted",
+                                          "content": "~13 screens",
+                                          "fontFamily": "$sans",
+                                          "fontSize": 9.5,
+                                          "fontWeight": "700"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "P4Zx8",
+                                  "name": "Rule",
+                                  "width": "fill_container",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "rectangle",
+                                      "id": "lOWhO",
+                                      "name": "Rule line",
+                                      "fill": "$line2",
+                                      "width": "fill_container",
+                                      "height": 1
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "EpNSh",
+                                  "name": "Scope",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 11,
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "kaKOh",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "s8Q4HO",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "LyuPl",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Post-recovery cleanup.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "KXZM1",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "DRMVq",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "Bk9in",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Post-cancel triage.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "a4Fp9",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "vHyz6",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "NrtA8",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Apply to other accounts.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "Nv4JQ",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "B4oSRl",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "G4kcG",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Health checks + “Last check” stat.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "b30gr",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "s8l2po",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "R6KL8K",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Async approvals (E2).",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "FlUhK",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "pNQ3S",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "dJzt2",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "IPFS/IPNS page hosting.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "Hzb0H",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "LOt8K",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "De6sr",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Multichain stays out.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "lBRGm",
+                          "name": "Spacer",
+                          "width": "fill_container",
+                          "height": "fill_container"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "i4pfF",
+                          "name": "What the MVP accepts",
+                          "width": "fill_container",
+                          "fill": "$wash",
+                          "cornerRadius": 12,
+                          "stroke": "$line",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "gap": 10,
+                          "padding": [
+                            13,
+                            14
+                          ],
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "hIhz5",
+                              "name": "Icon",
+                              "width": 15,
+                              "height": 15,
+                              "icon": "shield-alert",
+                              "library": "lucide",
+                              "fill": "$faint"
+                            },
+                            {
+                              "type": "text",
+                              "id": "FY8gf",
+                              "name": "Text",
+                              "fill": "$ink2",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "What the MVP accepts, said honestly: no cleanup and no triage yet — lost-device methods stay live after a recovery; a cancelled attacker keeps a working method. Defenses: edit the path, remove recovery, or move funds.",
+                              "lineHeight": 1.45,
+                              "fontFamily": "$sans",
+                              "fontSize": 12.5,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "NPgjQ",
+                          "name": "DESIGN NOTE panel",
+                          "width": "fill_container",
+                          "fill": "$note-bg",
+                          "cornerRadius": 12,
+                          "stroke": "$note-line",
+                          "strokeWidth": 1.5,
+                          "strokeAlignment": "inner",
+                          "layout": "vertical",
+                          "gap": 6,
+                          "padding": [
+                            13,
+                            14
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "zHtsh",
+                              "name": "Design label",
+                              "fill": "$note-ink",
+                              "content": "DESIGN NOTE · NOT USER COPY",
+                              "fontFamily": "$sans",
+                              "fontSize": 10,
+                              "fontWeight": "700",
+                              "letterSpacing": 0.7
+                            },
+                            {
+                              "type": "text",
+                              "id": "Q8OX7",
+                              "name": "Design text",
+                              "fill": "$ink",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Team exhibit — decision 79. Not a product screen.",
+                              "lineHeight": 1.45,
+                              "fontFamily": "$sans",
+                              "fontSize": 12.5,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }
