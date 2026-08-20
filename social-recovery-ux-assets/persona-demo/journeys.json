@@ -1490,6 +1490,24 @@
    ]
   },
   {
+   "id": "rollout",
+   "name": "Rollout",
+   "monogram": "◈",
+   "tag": "MVP · V1 · V2 — what ships when",
+   "bio": "Not a journey: the milestone split (decision 79) laid over the same flows — what the MVP must carry, what V1 adds, and what waits for V2, with the risk the MVP accepts stated plainly.",
+   "flows": [
+    "X"
+   ],
+   "steps": [
+    {
+     "screen": "X-02-rollout-milestones",
+     "story": "The rollout in one picture. MVP = one person can protect one account and recover it, with all four methods and preset shapes only. V1 adds the guided layer and the hosted guardian page. V2 adds scale and upkeep — cleanup, triage, multi-account, health checks. The bottom strip names what the MVP knowingly leaves open.",
+     "act": "Rollout",
+     "spec": "Decision 79 · team exhibit — maps to no persona journey"
+    }
+   ]
+  },
+  {
    "id": "extras",
    "name": "Extras",
    "monogram": "✱",
@@ -1830,6 +1848,10 @@
    640
   ],
   "X-01-policy-models-compared": [
+   1280,
+   900
+  ],
+  "X-02-rollout-milestones": [
    1280,
    900
   ]
