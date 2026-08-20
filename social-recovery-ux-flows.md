@@ -76,7 +76,7 @@ Decisions:
 ## Flow C — Recovery setup
 
 Building blocks:
-- **Methods:** passkey, guardians (people's wallets, EOA or SCW), ZK Email, Anon Aadhaar.
+- **Methods (decision 80, 2026-08-20):** passkey, guardians (people's wallets, EOA or SCW), **zkPassport**, Anon Aadhaar. **ZK Email is dropped**; zkPassport replaces it. Its mechanics (what the user presents, proof budget, enrollment secret) need a research pass before the C-05/D-07 email screens are redrawn — until then every "ZK Email" mention below is historical.
 - **ONE recovery path per account (decision 73, 2026-08-18):** the OR-of-paths level is removed. An account has exactly one path: required method rows and ANY-of groups, all combined with AND. Examples: `passkey AND [2 of 3](G1, G2, zk_email)` · `[2 of 3](G1, passkey, aadhaar)` · `passkey AND zk_email` (both required). The UI keeps calling it the **"recovery path"**; the methods stay **"recovery methods"**.
 - **ANY-of groups are generic (decided 2026-08-13):** a group's members can be ANY method instances — guardians, passkeys, ZK Email, Aadhaar — mixed freely. Guardians are not special: "3 of 5 guardians" is simply a group whose five members happen to be guardians. No guardian-specific threshold concept exists in the UX.
 - **Every group carries an M-of-N threshold** ("Require 2 ▾ of: passkey, Ana, email"), not only 1-of-N.
@@ -98,7 +98,7 @@ Building blocks:
 
 **Starter presets (single-path model, decision 75): three path SHAPES to choose from** — the user picks one, and it becomes the account's single recovery path (48h waiting period, "needs setup" state, deep-links into enrollment):
 1. **"Your device + your guardians"** — `passkey (required) AND [2 of 3](guardians)`.
-2. **Your device + your email** — `passkey AND zk_email`, both required. (Note: violates R9 when the passkey is Google-synced and the email is Gmail — accepted.)
+2. **Your device + your ID** — `passkey AND zkpassport`, both required (was "your device + your email" with `zk_email` before decision 80; the "Deliberately strict" copy stays, the R9/Gmail note dies with the email method). Preset name and copy to be finalized with the zkPassport research.
 3. **"Guardians only"** — `[2 of 3](guardians)`, no device or platform dependency (the Alice/paper-guardian profile; the only preset with no passkey).
 
 Group thresholds adapt to the member count the user actually enrolls; 2-of-3 is the starting suggestion.
@@ -138,7 +138,7 @@ Mandatory for identity methods; a failing test blocks the save. Local only, no c
 | Method | Test |
 |---|---|
 | Passkey | Sign a test challenge right after creation. Instant. |
-| ZK Email | Click **"Send email"** → an external relayer sends an email to the enrolled address → the user **replies** ("Confirm") → the user downloads **their own reply** as raw `.eml` (Sent → "Show original") and uploads it → wallet verifies/proves locally (decision 77 as amended 2026-08-20). A **"How to get the .eml" help sheet** covers Gmail, Outlook (web), Apple Mail, Yahoo, Proton. Progress UI; doubles as dry run. Subject format and prover stack open (Q16). Method may be replaced by zkPassport (team decision pending). |
+| **zkPassport** (replaces ZK Email, decision 80) | Test flow TBD from the research pass — presumably: present the document → local proof → verify against the on-chain verifier. Progress UI; doubles as dry run. *Historical, for reference: the ZK Email test was "Send email" → user replies → user uploads their own reply as `.eml` → local proof (decisions 55/77).* |
 | Anon Aadhaar | Test proof against the current UIDAI key. |
 | Guardians | **Optional, open**: light checks (checksum, ENS resolution, contract detection, same-seed). A real signature test needs the guardian to act — also optional. |
 
@@ -444,7 +444,7 @@ Three releases split the flows. Definitions: **MVP** = one person can protect on
 Consequences carried by the split:
 - **New MVP screen state (queued for the Pen agent):** the D-07 guardian row in manual mode — exact payload (account, new owner, nonce) with a copy button, plus the existing paste-approval field. The "send them the link" copy is V1.
 - **MVP honesty copy:** with cleanup and triage in V2, methods tied to a lost device stay live after recovery, and a cancelled attacker keeps a working method. The MVP "done" and "cancelled" terminals must say this and point to the MVP defenses: edit the path (G-05), remove recovery (G-02), or move funds. Decisions 20/46 stay decided; they ship in V2.
-- **MVP blockers (kit team):** funding/executor (Q7/19) · ZK Email relayer + prover (Q16/77) · group encoding (T10) · 24h revert surface (74) · **value visibility / encryption scope (Q29/53) — promoted to MVP-blocking** by the recovery password's MVP placement.
+- **MVP blockers (kit team):** funding/executor (Q7/19 — reshaped by the bare-bones 4337 substrate: sponsorship becomes the primary path) · **zkPassport integration + prover** (decision 80, replaces the ZK Email relayer/prover blocker) · group encoding (T10) · 24h revert surface (74) · **value visibility / encryption scope (Q29/53) — promoted to MVP-blocking** by the recovery password's MVP placement.
 
 
 
@@ -529,6 +529,7 @@ Consequences carried by the split:
 | 77 | ZK Email receive-and-upload | The user clicks **"Send email"**; an **external relayer** sends an email to the enrolled address. The user downloads the raw `.eml` ("Show original") and uploads it; the proof is created locally. Amends #55. A **"How to get the .eml" help sheet** covers Gmail, Outlook (web), Apple Mail, Yahoo, Proton — linked from the enrollment test and the recovery verify row. **Amended 2026-08-20 (PR #2 review):** the proof runs over the email the user SENDS, so one step joins the flow — the user **replies** to the relayer's email ("Confirm"), then downloads **their own reply** from Sent (same "Show original" mechanic) and uploads that. Assumed to work end to end. Wireframe updates (C-05e, D-07e, C-05n) queued — held while the team decides ZK Email vs zkPassport. |
 | 78 | Account type focus | The initiative focuses on **4337 smart accounts**; 7702 support is deferred. Recorded only — no user-visible copy change now. |
 | 79 | **Milestone split** (2026-08-18) | MVP / V1 / V2 — see the "Milestones" section. Fibo's rulings: all 4 methods MVP; guardian page → V1 with a manual sign-this-payload MVP mechanic; post-recovery cleanup + post-cancel triage → V2 (cancel itself stays MVP); recovery password MVP; path editing MVP ("no remove-and-recreate to change one value"). Q29/53 becomes MVP-blocking. |
+| 80 | **zkPassport replaces ZK Email** (2026-08-20) | The method set becomes passkey · guardians · **zkPassport** · Anon Aadhaar (Aadhaar stays). ZK Email is dropped entirely — with it go the send-only relayer requirement, the `.eml` upload, the "How to get the .eml" help sheet (C-05n), the accountCode custody problem, and decisions 16/55/77 as live rules (they stay in the log as history). **Pending:** a zkPassport research pass (what the user presents, proof budget, verifier deployment, nullifier semantics, whether an enrollment secret joins the backup set), then a Pen round to redraw C-05e/C-05k/C-05n/D-07e and the "your device + your ID" preset. Wireframes and demo still show the email method until that round runs. |
 
 ---
 
@@ -537,9 +538,9 @@ Consequences carried by the split:
 | Item | Blocks | Ref |
 |---|---|---|
 | **Funding & execution**: who pays and who executes `initiate/executeRecovery` (bypass 4337; backend-zero = no relayer) | Flow D entirely; Decision 19 | Q7/19 |
-| ZK Email — remaining after the receive-and-upload direction (decisions 55/77): exact subject/command format; where the per-account `accountCode` lives without a backend; prover stack (circom WASM / halo2 / Noir) and whether ~15–60s in-extension proving is acceptable; DKIM registry choice (ZK Email's ICP-oracle default vs self-maintained ERC-7969); module timelock/expiry defaults vs our waiting period; **who runs the sending relayer** (decision 77 reintroduces a send-only relayer into the backend-zero design) and its availability/failure UX; `.eml` compatibility per email client (incl. Proton) | ZK Email sub-flows + verify-access | Q16/55/77 |
+| **zkPassport integration** (decision 80, replaces the whole ZK Email row): what the user presents (NFC document scan / photo / app hand-off), proof budget in-extension, verifier deployment per chain, nullifier + linkability semantics, and whether an enrollment secret must join the backup set | zkPassport sub-flows + verify-access + C-05/D-07 redraw | 80 |
 | Confirm the encoding for generic ANY-of groups — mixed member types, M-of-N thresholds (T10 `threshold` field) | Builder + presets + recovery checklist | Q22/41 |
-| ZK Email `accountCode` derivation per account (R10 unlinkability requirement) | Multi-account apply | — |
+| Per-account unlinkability for the ZK method (R10) — was ZK Email's `accountCode`; re-ask for zkPassport's nullifier scheme under decision 80 | Multi-account apply | 80/R10 |
 | Exact guardian signed payload (nonce display; add `policyId`?; expiry — define or confirm none) | Flow E1 page | — |
 | Policy value visibility (guardian addresses are natively public today — can values be hidden at all?) + password-encrypted values case. **Promoted to MVP-blocking (decision 79): the recovery password is an MVP feature.** | Flow D entry + path display + C-06e copy | Q29/53 |
 | R5 conflict (atomic vs incremental); E2 needs an approval function + indexing | Flow E2 | — |
