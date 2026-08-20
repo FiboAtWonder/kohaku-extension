@@ -1,6 +1,6 @@
 # Kohaku SDK — Account-recovery requirements
 
-> **Status: v4 (2026-08-20)** — third review round applied on [PR #2](https://github.com/FiboAtWonder/kohaku-extension/pull/2): safety grading moved out of the SDK (A6), account-substrate nuance recorded (A5). Posture: this document states **what the extension needs from `@kohaku-eth/social-recovery`**, assuming the SDK exists and its methods work. Contract internals (encodings, binding hashes, thresholds, verifier wiring) are the SDK's problem — we consume APIs. The SDK is **stateless**: it prepares transactions, payloads and proofs; all state (sessions, drafts) lives in the extension. Extension-side changes live in `social-recovery-extension-work.md`. Milestone tags (MVP/V1/V2) follow spec decision 79.
+> **Status: v5 (2026-08-20)** — third review round applied on [PR #2](https://github.com/FiboAtWonder/kohaku-extension/pull/2): safety grading moved out of the SDK (A6), account-substrate nuance recorded (A5), plus an **interface summary** (§3) and the proving-ownership clarification (A4b). Posture: this document states **what the extension needs from `@kohaku-eth/social-recovery`**, assuming the SDK exists and its methods work. Contract internals (encodings, binding hashes, thresholds, verifier wiring) are the SDK's problem — we consume APIs. The SDK is **stateless**: it prepares transactions, payloads and proofs; all state (sessions, drafts) lives in the extension. Extension-side changes live in `social-recovery-extension-work.md`. Milestone tags (MVP/V1/V2) follow spec decision 79.
 
 ## 1 · Working assumptions
 
@@ -8,7 +8,8 @@
 - **A2 — Anon Aadhaar works.** The SDK exposes the full lifecycle in §2.3; upstream library health is the kit team's to solve, not a UX constraint.
 - **A3 — The SDK owns the on-chain shape.** Path encoding (required rows + M-of-N groups), the recovery binding hash, the 24h waiting-period floor, and owner-only cancel semantics are internal to the SDK/contracts. The extension never sees a preimage or an ABI struct — it sees the path model and prepared transactions.
 - **A4 — Division of labor.** The SDK **prepares** (transactions/userops, payloads, proofs, derived data) and computes (validation, progress math); the extension **signs, broadcasts, stores, and renders**. Every long-running SDK operation is async with progress callbacks and cancellation. The SDK holds no session state.
-- **A5 — Account substrate (decided 2026-08-20):** a **bare-bones 4337 implementation**, not the Ambire account stack — so recovery is validated by the account/module and the submission rides as a UserOperation. The account does not have to be freshly created: **an existing EOA can be set as the signer of the 4337 account** (the demo shows the new-account flow, but reusing a key the user already holds is supported). Funding: **paymaster sponsorship is the intended primary path** for initiate/execute, with a self-pay fallback (a funded EOA broadcasts the prepared tx) — **who operates the paymaster and under what sponsorship policy is still unanswered** (§4.2), so the SDK must ship both rails.
+- **A4b — Proving is the SDK's job, behind one method (clarified 2026-08-20).** The SDK ships the prover — circuits, artifacts, witness generation, verification — and exposes it as a single call (`createClaim`). The extension never implements proving; the work runs inside the extension only because that is where the SDK is loaded. All the extension decides is which JavaScript context hosts the call (see the constraints section).
+- **A5 — Account substrate (decided 2026-08-20):** a **bare-bones 4337 implementation**, not the Ambire account stack — so recovery is validated by the account/module and the submission rides as a UserOperation. The account does not have to be freshly created: **an existing EOA can be set as the signer of the 4337 account** (the demo shows the new-account flow, but reusing a key the user already holds is supported). Funding: **paymaster sponsorship is the intended primary path** for initiate/execute, with a self-pay fallback (a funded EOA broadcasts the prepared tx) — **who operates the paymaster and under what sponsorship policy is still unanswered** (§5.2), so the SDK must ship both rails.
 - **A6 — Safety grading belongs to the wallet, not the SDK (ruled 2026-08-20).** The SDK provides social-recovery *functionality* to any wallet implementation; each wallet holds its own criteria for what counts as a safe-enough configuration. So there is no `FragilityReport` in this surface: the SDK returns the path and the method metadata, and the extension implements its own rules, meter and honesty copy (`social-recovery-extension-work.md`). Structural validity — the rules the contract itself enforces (instance uniqueness, threshold sanity, the 24h floor, one-path shape) — stays in the SDK as `validatePath`, because a save that violates them simply fails on-chain.
 
 ## 2 · SDK surface (what the extension needs)
@@ -47,7 +48,7 @@ interface RecoveryMethod {
 
 | Method | enroll | testAccess | createClaim | healthCheck (V2, unattended) |
 |---|---|---|---|---|
-| **Passkey** | create the credential, report synced vs device-bound (BE flag, decision 38), return credentialId + pubkey | one signed test challenge (user gesture) | sign the recovery intent; output formatted for the on-chain P-256 verifier; cross-device works via the browser's own QR hand-off | environment checks only — no browser API can silently confirm a specific passkey still exists: every real probe opens a system prompt (or, with the Signal API, deletes the credential). Automatic checks test the environment; a true test needs a user click; failures read as "unproven", never "deleted" |
+| **Passkey** | create the credential, report synced vs device-bound (BE flag, decision 38), return credentialId + pubkey | one signed test challenge (user gesture) | sign the recovery intent; output formatted for the on-chain P-256 verifier; cross-device works via the browser's own QR hand-off | **user-gesture test by design** (ruled 2026-08-20): the check asks the user to tap their passkey, which is exactly the interaction we want. Background checks can only confirm the environment, because no browser API silently reports whether one credential still exists — so a background failure means "unproven", never "deleted" |
 | **Guardian** | address validation: checksum, ENS resolve, contract detection, same-seed check (only for wallet-held seeds) | reachability rehearsal only (52) | `buildApprovalPayload(intent)` → the human-readable payload the guardian signs (MVP: shown raw on the D-07 row, decision 79) + `parseApproval(signature)` → the validated claim ready for the submission tx, with three error classes: malformed / wrong recovery / wrong signer; EOA + ERC-1271 guardians | `code.length`, ENS drift, SCW owner-set drift |
 | **Anon Aadhaar** | QR **image upload** → decode → test proof against the current UIDAI key | same as enroll test | full proof with onProgress (tens of seconds, heavy memory — must be cancellable) | on-chain verifier's UIDAI key hash still current |
 | **zkPassport** *(decision 80 — mechanics TBD after the research pass)* | same lifecycle contract; inputs, proof budget, verifier availability and nullifier semantics to be filled in | | | |
@@ -72,14 +73,107 @@ The claim set, resume behavior and wipe rules (decision 70) are **extension stat
 - Recovery-password encryption of config values: encrypt at setup, decrypt on the recoverer side, re-encrypt on guardian edits (56); "wrong password never blocks recovery" (48/56) must hold at the API level (a failed decrypt degrades to hidden values, never to an error that stops the flow).
 - Backup set export/import: every method secret that exists nowhere else (passkey credentialId, the guardian list, zkPassport secrets per the research pass) — one bundle the UX ties to the recovery password and the dry-run recall row.
 
-## 3 · Constraints the SDK package must meet
+## 3 · Interface summary
+
+Signatures only — the reasoning for each lives in §2. Shapes are proposals, names negotiable; what matters is the inputs and outputs each call needs.
+
+```ts
+// ── Client ───────────────────────────────────────────────────────────────
+createRecoveryClient(config: RecoveryClientConfig): RecoveryClient
+
+interface RecoveryClientConfig {
+  chainId: number
+  addressBook: MethodAddressBook            // verifier/module addresses per chain
+  host: {
+    provider: Eip1193Provider               // reads
+    storage: AsyncKeyValueStore             // SDK-internal caches only
+    signer: { signTypedData(keyRef, data), signMessage(keyRef, bytes) }
+  }
+}
+
+// ── Config & management (Flows C, G) ─────────────────────────────────────
+getRecoveryConfig(account: Address): Promise<RecoveryConfig | null>
+getPendingRecovery(account: Address): Promise<PendingRecovery | null>
+prepareSetup(account: Address, path: RecoveryPath, waitingPeriod: Seconds): Promise<PreparedTx[]>
+prepareUpdate(account: Address, next: RecoveryPath): Promise<PreparedTx[]>
+prepareRemove(account: Address): Promise<PreparedTx[]>
+validatePath(path: RecoveryPath): ValidationResult
+
+interface RecoveryPath {
+  required: EnrolledMethod[]
+  groups: Array<{ threshold: number; members: EnrolledMethod[] }>
+}
+interface EnrolledMethod {
+  id: string
+  type: 'passkey' | 'guardian' | 'aadhaar' | 'zkpassport'
+  metadata: MethodMetadata                  // fragility inputs; the wallet grades (A6)
+}
+interface MethodMetadata {
+  passkey?: { synced: boolean; credentialId: string }
+  guardian?: { address: Address; isContract: boolean; ens?: string }
+  // zkpassport / aadhaar: TBD with the research pass
+}
+interface RecoveryConfig { path: RecoveryPath; waitingPeriod: Seconds }
+interface PendingRecovery {
+  newOwner: Address
+  initiatedAt: number
+  executableAt: number
+  satisfiedMethodIds: string[]
+}
+interface ValidationResult {
+  ok: boolean
+  violations: Array<{ code: 'duplicate_instance' | 'bad_threshold' | 'below_min_wait' | 'empty_path'; methodId?: string }>
+}
+type PreparedTx =
+  | { kind: 'tx'; to: Address; data: Hex; value?: bigint }
+  | { kind: 'userop'; userOp: UserOperation; sponsored: boolean }
+
+// ── Methods (all four share this shape) ──────────────────────────────────
+client.method(type).enroll(params: EnrollParams): Promise<EnrolledMethod>
+client.method(type).testAccess(m: EnrolledMethod, opts?: { rehearsal?: boolean }): Promise<TestResult>
+client.method(type).createClaim(m: EnrolledMethod, intent: RecoveryIntent, opts?: ClaimOpts): Promise<Claim>
+client.method(type).healthCheck(m: EnrolledMethod): Promise<HealthResult>
+
+interface RecoveryIntent { account: Address; newOwner: Address; nonce: bigint }
+interface ClaimOpts { onProgress?(e: { phase: string; pct?: number }): void; signal?: AbortSignal }
+interface Claim { methodId: string; data: Hex; createdAt: number }
+interface TestResult { ok: boolean; reason?: string }
+interface HealthResult { status: 'ok' | 'unproven' | 'failing'; checkedAt: number; detail?: string }
+
+// ── Guardian approvals (Flow E1) ─────────────────────────────────────────
+buildApprovalPayload(intent: RecoveryIntent, guardian: EnrolledMethod): ApprovalPayload
+parseApproval(intent: RecoveryIntent, signature: Hex): Claim   // throws ApprovalError
+
+interface ApprovalPayload { human: string; typedData: Eip712TypedData }
+type ApprovalError = { code: 'malformed' | 'wrong_recovery' | 'wrong_signer' }
+
+// ── Recovery (Flow D) — stateless; the extension holds the claims ────────
+evaluateProgress(path: RecoveryPath, claims: Claim[]): ProgressReport
+prepareInitiate(account: Address, newOwner: Address, claims: Claim[]): Promise<PreparedTx[]>
+prepareExecute(account: Address): Promise<PreparedTx[]>
+prepareCancel(account: Address): Promise<PreparedTx[]>
+
+interface ProgressReport {
+  satisfied: boolean
+  required: Array<{ methodId: string; done: boolean }>
+  groups: Array<{ threshold: number; done: number; total: number }>
+}
+
+// ── Secrets (recovery password, backup set) ──────────────────────────────
+encryptConfigValues(path: RecoveryPath, password: string): Promise<EncryptedPath>
+decryptConfigValues(encrypted: EncryptedPath, password: string): Promise<RecoveryPath | 'hidden'>
+exportBackupSet(account: Address): Promise<BackupSet>
+importBackupSet(bundle: BackupSet): Promise<void>
+```
+
+## 4 · Constraints the SDK package must meet
 
 - Runs inside an MV3 extension: no `eval`/dynamic codegen (CSP allows `wasm-unsafe-eval` only), WASM artifacts packaged locally or fetched-and-cached with integrity, single-instance WASM safety (or documented locking), all APIs async.
-- Long operations (proving) expose progress + cancellation and make no assumption about WHERE they run — the extension chooses the execution context.
-- Proof-stack reference points (measured 2026-08-19): Noir/UltraHonk-class proving ≈ 4–17 s in-browser with MB-scale artifacts; circom/Groth16 zk-email-class ≈ minutes + ~1 GB artifacts; Aadhaar circom ≈ 20–50 s + ~600 MB + ~1.5 GB peak memory. zkPassport's budget comes from its research pass; the SDK API must not leak the stack choice.
+- Long operations (proving) expose progress + cancellation and make no assumption about WHICH JavaScript context runs them — the SDK owns the proving itself (A4b), the extension only picks the host context.
+- Proof-stack reference points (the SDK carries these; see A4b) (measured 2026-08-19): Noir/UltraHonk-class proving ≈ 4–17 s in-browser with MB-scale artifacts; circom/Groth16 zk-email-class ≈ minutes + ~1 GB artifacts; Aadhaar circom ≈ 20–50 s + ~600 MB + ~1.5 GB peak memory. zkPassport's budget comes from its research pass; the SDK API must not leak the stack choice.
 - Backend-zero: all chain access through the host `provider`. (The ZK Email send-relayer requirement died with decision 80.)
 
-## 4 · Open questions routed to the kit team
+## 5 · Open questions routed to the kit team
 
 1. **zkPassport integration** (decision 80): SDK surface, proof budget, verifier deployment, nullifier semantics, what the user presents (NFC scan / document photo), and what secret (if any) joins the §2.6 backup set. Research pass to run before its wireframes are drawn.
 2. **Funding on the bare-bones 4337 substrate (A5) — OPEN, unanswered as of 2026-08-20.** Confirm initiate/execute ride as module-validated UserOps so a paymaster can sponsor them; then: who operates the paymaster, and what stops a permissionless sponsored entry point from being drained by failed recovery attempts? Until this is answered the self-pay rail is the only one we can count on for the MVP.
@@ -89,7 +183,7 @@ The claim set, resume behavior and wipe rules (decision 70) are **extension stat
 6. Guardian payload contents (nonce, policyId in/out) — assumed frozen by the kit per A3; the UX only needs it human-readable and chain-bound.
 7. Colibri `p256verify` gap (passkey verification fails verified reads on one RPC provider).
 
-## 5 · Flow → requirement traceability
+## 6 · Flow → requirement traceability
 
 - Flow A/A1: extension-only.
 - Flow B: §2.2 getRecoveryConfig · getPendingRecovery.
