@@ -1,12 +1,12 @@
 # Account recovery UX — status & handoff
 
-> **Purpose:** the single catch-up document for this workstream. Any agent or teammate resuming the work reads this first. **Rule: update this file at every checkpoint** (wireframe commit, decisions batch, artifact republish, review round). Last update: 2026-08-19 — **SDK requirements v1 drafted** (`social-recovery-sdk-requirements.md`): three-front Opus 5 investigation (contracts+kit · extension · proof methods incl. prover benchmarks) merged into a 6-section requirements doc. Pending Fibo: ruling on finding **R1** (decision 77 must become reply-based — zk-email proves the email the user SENDS; spec/wireframes C-05e/D-07e/C-05n need a small amendment) and R2 (Aadhaar upstream broken/unmaintained — tag at risk). UX surfaces themselves unchanged since the single-path round: wireframes **v12** (`ec834ea8d`, 157 wrappers incl. the X-01 exhibit), demo + deck republished, verifier families F1–F9 resolved.
+> **Purpose:** the single catch-up document for this workstream. Any agent or teammate resuming the work reads this first. **Rule: update this file at every checkpoint** (wireframe commit, decisions batch, artifact republish, review round). Last update: 2026-08-19 — **milestone split landed as decision 79**: MVP / V1 / V2 mapped in the spec's new "Milestones" section. Fibo's rulings: all 4 methods MVP · guardian page → V1 with a manual sign-this-payload MVP mechanic on the D-07 row · post-recovery cleanup + post-cancel triage → V2 (cancel itself MVP) · recovery password MVP · path editing MVP. Q29/53 is now MVP-blocking. Queued Pen items (not run): the D-07 guardian manual-sign state; honesty copy on the MVP done/cancelled terminals. Earlier the same day: **SDK requirements v1 drafted** (`social-recovery-sdk-requirements.md`): three-front Opus 5 investigation (contracts+kit · extension · proof methods incl. prover benchmarks) merged into a 6-section requirements doc. Pending Fibo: ruling on finding **R1** (decision 77 must become reply-based — zk-email proves the email the user SENDS; spec/wireframes C-05e/D-07e/C-05n need a small amendment) and R2 (Aadhaar upstream broken/unmaintained — tag at risk). UX surfaces themselves unchanged since the single-path round: wireframes **v12** (`ec834ea8d`, 157 wrappers incl. the X-01 exhibit), demo + deck republished, verifier families F1–F9 resolved.
 
 ## The surfaces (where everything lives)
 
 | Surface | Location | Sync rule |
 |---|---|---|
-| **Spec (source of truth)** | `social-recovery-ux-flows.md` — flows A–G, decisions log **1–78**, display rules, persistence table, tech-deps | Everything else follows it |
+| **Spec (source of truth)** | `social-recovery-ux-flows.md` — flows A–G, decisions log **1–79**, display rules, persistence table, **Milestones section (MVP/V1/V2)**, tech-deps | Everything else follows it |
 | **Wireframes** | `social-wireframes.pen` — **v12, 157 `Page ·` wrappers = 129 active + 28 in `Flow · OUTDATED`** (commit `ec834ea8d`); new since v11: D-04d, D-15d, X-01 exhibit (band `Flow · X`) | Edited ONLY by the Pen design agent via prompts; the driving agent writes prompts, verifies via git-JSON, commits after the user's ⌘S |
 | **Notion replica** | [Social Recovery UX Draft](https://app.notion.com/p/3ba9a4c092c780a492f2d144c148762b) | Sync only on request, targeted `update_content` ops only (inline discussions must survive) |
 | **Review deck** (teammates) | artifact `ca87aff0-…65e3`, source `social-recovery-ux-assets/recovery-ux-review.html` | Edit the repo file, republish with `url` param |
@@ -114,7 +114,7 @@ Verified: **no `OF 9` label remains** anywhere in the document, all 46 active wi
 ## Pending — our side, deliberately deferred
 
 - **Attack-round deferrals** (also listed in the spec's What-persists section): M9 stale-local-state family (re-read on resume, draft-out-of-date states), M13 attack-during-triage band, M16 guardian changed-mind block on E1-05, M23 alerts-honesty rewrite (C-08/D-13), M34 DKIM-rotation failure split.
-- **Milestone split B1/B2/B3** — deferred until the UX is final; then tag every flow/screen and align with Ace 0x.
+- **Milestone split — DONE as decision 79** (2026-08-19, spec "Milestones" section). Remaining follow-ups: align the split with Ace 0x; run the queued Pen items (D-07 manual-sign state, MVP terminal honesty copy) when Fibo asks.
 - **Provisional screens' fate** (C-05i optional guardian test, C-06d recheck strip) — keep or remove after the team reviews the demo's Extras card.
 - **E1-04 mobile variant** — accepted as missing for now.
 - **Demo extras** offered, not requested: Daniel/Aadhaar journey, health-check maintenance act.

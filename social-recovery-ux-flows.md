@@ -431,7 +431,22 @@ Notes:
 
 Deferred (kept open from the 2026-08-18 attack round): re-read-config-on-resume rules and the stale-draft/setup-changed states (M9); attack-during-triage band (M13); guardian changed-mind block on E1-05 (M16); alerts-honesty rewrite (M23); DKIM-rotation failure split (M34).
 
-## Decisions log
+## Milestones (decision 79)
+
+Three releases split the flows. Definitions: **MVP** = one person can protect one account and recover it, with all 4 methods (non-negotiable), preset shapes only. **V1** = the guided, confident product. **V2** = scale and upkeep.
+
+| Milestone | Features (flows / screens) |
+|---|---|
+| **MVP** (~72 screens) | Fresh-install entry (A, A1) · preset setup, pick ONE shape (C-01, C-01b, C-01c, C-04d, C-04e) · enrollment + mandatory tests, all 4 methods (C-05 family + C-05n) · waiting period (C-06, C-06c) · **recovery password + hidden values** (C-06e, D-06e, D-06f) · review + save (C-07, C-07b, C-07e) · Recovery Card, card only (C-08) · recovery chapters 1–3 (D-01…D-05b, D-06 readout, D-07 family, D-08, D-10, D-11…D-14, done-terminal without cleanup à la D-15c) · **guardian approvals, manual**: the D-07 guardian row shows the exact payload to sign + paste-back (no hosted page) · cancel flow (D2-01, D2-01b, light "cancelled" terminal, D2-03, B-03, B-03b; banner via polling, no push) · management incl. **path editing** (G-01, G-02, G-03, G-03b, G-04, G-05, G-05b, G-05c) — no remove-and-recreate to change one value |
+| **V1** (~44 screens) | Hosted guardian page, sync (E1-01…E1-08 incl. mobile, decline, offline signing) · Express wizard education layer (C-02, C-03 family, C-04, C-04b, C-04c) · dry run (C-07h…m) · Advanced builder (C-10 family) · nudge system (B-01, B-02) · alerts / push notifications (C-08 alerts part, D2 push) · same-install account list (part of D-02/D-02b) · deferred attack-round states (M9, M13, M16, M23, M34) |
+| **V2** (~13 screens) | Post-recovery cleanup (D-15 flagged version, D-15d, G-01b) · post-cancel triage (D2-02, G-01c) · apply to other accounts (C-09 family) · health checks (F-01, F-02 + "Last check" stat) · async approvals (E2) · IPFS/IPNS page hosting · multichain stays out of scope |
+
+Consequences carried by the split:
+- **New MVP screen state (queued for the Pen agent):** the D-07 guardian row in manual mode — exact payload (account, new owner, nonce) with a copy button, plus the existing paste-approval field. The "send them the link" copy is V1.
+- **MVP honesty copy:** with cleanup and triage in V2, methods tied to a lost device stay live after recovery, and a cancelled attacker keeps a working method. The MVP "done" and "cancelled" terminals must say this and point to the MVP defenses: edit the path (G-05), remove recovery (G-02), or move funds. Decisions 20/46 stay decided; they ship in V2.
+- **MVP blockers (kit team):** funding/executor (Q7/19) · ZK Email relayer + prover (Q16/77) · group encoding (T10) · 24h revert surface (74) · **value visibility / encryption scope (Q29/53) — promoted to MVP-blocking** by the recovery password's MVP placement.
+
+
 
 | # | Question | Answer |
 |---|---|---|
@@ -443,7 +458,7 @@ Deferred (kept open from the 2026-08-18 attack round): re-read-config-on-resume 
 | 6 | Honest copy for floor cases | Yes — concrete copy in Flow B. 7702 vs 4337 deferred. |
 | 7 | Gas for recovery | ⚠️ **Escalated to blocker**: paymaster can't sponsor direct calls; no relayer exists (backend-zero). |
 | 8 | Identify lost account | Address / ENS / gated same-install list + confirm-identity card. |
-| 9 | Guardian-side UX | Hardened IPFS/IPNS page (E1 default): real payload incl. nonce, no fake expiry, blocking out-of-band step, decline branch, offline signing. |
+| 9 | Guardian-side UX | Hardened IPFS/IPNS page (E1 default): real payload incl. nonce, no fake expiry, blocking out-of-band step, decline branch, offline signing. **Milestone note (79): the hosted page ships in V1; MVP guardians sign the raw payload shown on the recoverer's checklist row.** |
 | 10 | Proof collection state | Local persistence, resumable, switch-path exit; atomic submission. **Amended by #73**: the switch-path exit no longer exists. |
 | 11 | Pending-recovery alert | Banner + notification + alerts opt-in at setup. Polling caveat accepted. |
 | 12 | Waiting period default | 48h flat, changeable. **Confirmed also for single-method paths.** Guardrails: minimum floor + dominated-path warning. **Superseded by #74**: one waiting period per account, 24h contract floor; the dominated-path warning is retired. |
@@ -454,7 +469,7 @@ Deferred (kept open from the 2026-08-18 attack round): re-read-config-on-resume 
 | 17 | Passkey on new device | Platform sync + WebAuthn hybrid. |
 | 18 | Guardian page wallets | Injected + WalletConnect + offline signing path. |
 | 19 | After waiting period | Notify + auto-execute — intended UX; **executor unresolved** (see #7). |
-| 20 | Config survives rotation? | Assume yes → makes the end-of-recovery cleanup checklist REQUIRED. |
+| 20 | Config survives rotation? | Assume yes → makes the end-of-recovery cleanup checklist REQUIRED. **Milestone note (79): the cleanup checklist ships in V2; the MVP done-terminal carries the honesty note instead.** |
 | 21 | Express presets | Owned by ottie's persona research. |
 | 22 | Mixed-method OR-groups | **Decided — assumed valid** (PR #2 review); generalized by #41. Encoding confirmation with kit team (T10). |
 | 23 | Guardian gas (E2) | Needs sponsorship; one of E2's three blockers. |
@@ -480,7 +495,7 @@ Deferred (kept open from the 2026-08-18 attack round): re-read-config-on-resume 
 | 43 | Guardian display | No guardian names anywhere: a guardian **is** an address. UI shows blockie + address (or ENS). The wallet stores no names or contact labels — nothing extra to leak. |
 | 44 | Recovery-in-progress screen | Resuming an unfinished recovery lands on a dedicated "Recovery in progress" screen (account, per-row progress, resume / abandon) — the home-surface pending card is only the entry point. |
 | 45 | Method management | Methods are managed **inside path editing** (edit path → review-changes diff → one owner-signed tx). The management overview shows the path only (the single one since #73) — no separate methods section or top-level "remove method". |
-| 46 | Cleanup deferral | Deferring the post-recovery cleanup is allowed; it surfaces as a flagged banner state on the management overview until resolved — not a separate screen. |
+| 46 | Cleanup deferral | Deferring the post-recovery cleanup is allowed; it surfaces as a flagged banner state on the management overview until resolved — not a separate screen. **Milestone note (79): ships in V2 with the cleanup itself.** |
 | 47 | Dry run at setup | The wizard offers a local recovery rehearsal before the final save (demo-review meeting): complete each method's row as if the key were lost today. Optional, skippable; no chain interaction. |
 | 48 | Recovery password setup | The password that encrypts recovery values is set in an explicit, skippable wizard step between waiting period and review (audit result; wireframe C-06e; same control on the Advanced builder). **The card hint is DROPPED** — audit risk: a hint can leak configuration and cannot be validated. Forget-protection is the dry-run recall row instead. |
 | 49 | Single-method recommendation | Never force a second method. Recommend one — explicitly including "a second passkey from another device". Copy on the single-method wizard states. |
@@ -513,6 +528,7 @@ Deferred (kept open from the 2026-08-18 attack round): re-read-config-on-resume 
 | 76 | Instance uniqueness | One enrolled method instance (specific passkey, guardian address, email) appears once across the whole path — never as a required row and a group member at the same time. Method types may repeat with different values. The builder blocks the duplicate. |
 | 77 | ZK Email receive-and-upload | The user clicks **"Send email"**; an **external relayer** sends an email to the enrolled address. The user downloads the raw `.eml` ("Show original") and uploads it; the proof is created locally. Amends #55. A **"How to get the .eml" help sheet** covers Gmail, Outlook (web), Apple Mail, Yahoo, Proton — linked from the enrollment test and the recovery verify row. |
 | 78 | Account type focus | The initiative focuses on **4337 smart accounts**; 7702 support is deferred. Recorded only — no user-visible copy change now. |
+| 79 | **Milestone split** (2026-08-18) | MVP / V1 / V2 — see the "Milestones" section. Fibo's rulings: all 4 methods MVP; guardian page → V1 with a manual sign-this-payload MVP mechanic; post-recovery cleanup + post-cancel triage → V2 (cancel itself stays MVP); recovery password MVP; path editing MVP ("no remove-and-recreate to change one value"). Q29/53 becomes MVP-blocking. |
 
 ---
 
@@ -525,7 +541,7 @@ Deferred (kept open from the 2026-08-18 attack round): re-read-config-on-resume 
 | Confirm the encoding for generic ANY-of groups — mixed member types, M-of-N thresholds (T10 `threshold` field) | Builder + presets + recovery checklist | Q22/41 |
 | ZK Email `accountCode` derivation per account (R10 unlinkability requirement) | Multi-account apply | — |
 | Exact guardian signed payload (nonce display; add `policyId`?; expiry — define or confirm none) | Flow E1 page | — |
-| Policy value visibility (guardian addresses are natively public today — can values be hidden at all?) + password-encrypted values case | Flow D entry + path display | Q29 |
+| Policy value visibility (guardian addresses are natively public today — can values be hidden at all?) + password-encrypted values case. **Promoted to MVP-blocking (decision 79): the recovery password is an MVP feature.** | Flow D entry + path display + C-06e copy | Q29/53 |
 | R5 conflict (atomic vs incremental); E2 needs an approval function + indexing | Flow E2 | — |
 | Setup batching: write T7's one-UserOp answer into the spec | Wizard step 6 | Q28 |
 | **Concurrency**: can one account hold two pending recoveries? Nothing in the contracts or spec says; the recoverer UI needs a pending-recovery warning band either way | Flow D chapters 1/3, Flow D2 | M10 |
