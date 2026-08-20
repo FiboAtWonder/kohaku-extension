@@ -1,134 +1,106 @@
-# Kohaku SDK — requirements from the Account-recovery UX
+# Kohaku SDK — Account-recovery requirements
 
-> **Status: v1 draft for review** — synthesized 2026-08-19 from the UX spec (`social-recovery-ux-flows.md`, decisions 1–78) and a three-front code investigation (contracts+kit design · extension integration · proof methods). Owner: Fibo. Companion asks live on the kit-team Notion page.
->
-> Scope assumptions: ERC-4337 smart account focus (78; 7702 deferred — note the extension's live smart-EOA path today IS 7702 on Sepolia) · one recovery path per account = required method rows AND any-of M-of-N groups (73) · one waiting period, contract-enforced 24h minimum (74) · backend-zero except ONE send-only email relayer (77) · everything user-side runs in the MV3 extension; proving runs locally.
+> **Status: v2 (2026-08-20)** — restructured per Fibo's review on [PR #2](https://github.com/FiboAtWonder/kohaku-extension/pull/2). Posture: this document states **what the extension needs from `@kohaku-eth/social-recovery`**, assuming the SDK exists and its methods work. Contract internals (encodings, binding hashes, thresholds, verifier wiring) are the SDK's problem — we consume APIs. Extension-side changes live in `social-recovery-extension-work.md`. Milestone tags (MVP/V1/V2) follow spec decision 79. The investigation facts that shaped v1 are compressed into Appendix A.
 
-## 1 · What exists today (investigation digest)
+## 1 · Working assumptions
 
-**The SDK package does not exist.** `packages/social-recovery` is absent from the kohaku monorepo; zero recovery code anywhere in it. What exists: a frozen kit design (Services/Providers/`RecoveryClient` layout, `ValidationService.evaluate() → FragilityReport`, `initiate/execute/cancelRecovery` + `add/update/removePolicy` contract API — 23 unresolved threads) and an undocumented PoC with one dummy method, no timelock, no execute/cancel.
+- **A1 — Method set.** Passkey, guardians, ZK Email, Anon Aadhaar — all four ship in the MVP (decision 79). The team will very probably replace ZK Email with **zkPassport**; §2.3 carries both, with the email rows tagged *(if kept)* and a zkPassport placeholder pending the decision.
+- **A2 — ZK Email mechanic (if kept), assumed working end to end:** the SDK asks the relayer to send the email → the user **replies** to it → the user downloads **their own reply** (`.eml`, e.g. Gmail: Sent → Show original) → uploads it → the SDK proves locally. This is the flow the UX will draw (decision 77 amended accordingly; wireframe updates queued, held while the zkPassport question is open).
+- **A3 — Anon Aadhaar works.** The SDK exposes the full lifecycle in §2.3; upstream library health is the kit team's to solve, not a UX constraint.
+- **A4 — The SDK owns the on-chain shape.** Path encoding (required rows + M-of-N groups), the recovery binding hash, the 24h waiting-period floor, and owner-only cancel semantics are internal to the SDK/contracts. The extension never sees a preimage or an ABI struct — it sees the path model and prepared transactions.
+- **A5 — Division of labor.** The SDK **prepares** (transactions/userops, payloads, proofs, derived data); the extension **signs, broadcasts, stores, and renders**. Every long-running SDK operation is async with progress callbacks and cancellation.
+- **A6 — Funding nuance.** The sponsorship question is substrate-specific: on the current Ambire substrate a recovery submission cannot be paymaster-sponsored (it bypasses `validateUserOp`); on a 7579-style 4337 account that validates recovery inside a module, bundler+paymaster sponsorship **is** possible. The SDK hides this behind prepared-tx outputs plus an execution-rail choice; the MVP-safe default is a transaction broadcastable by a plain funded EOA.
 
-**Two competing substrates.** Today's contracts (`kohaku-commons`) are Ambire-style external signature validators: the policy is a **hash commitment** in `privileges[signerKey]`; config travels as calldata; recovery reaches the account only through `execute()` sig-mode 255 — never through `validateUserOp`, which is the mechanical root of the funding blocker (Q7/19). The kit design wants a 7579-executor singleton with plaintext policies. `executeBySender` (privileged msg.sender, no signature) is the documented bridge. Nothing deployed: `RecoverySigValidator` has no address anywhere; `DKIM_VALIDATOR_ADDR` is the zero address.
+## 2 · SDK surface (what the extension needs)
 
-**Nothing on-chain supports our path model.** No M-of-N threshold primitive exists in either repo (the T10 threshold concession was never written into the frozen `RecoveryPolicy` struct); no required-rows-AND-groups shape; no 24h minimum (zero-second timelocks legal); cancel is wrong-shaped (any single guardian can cancel — or pre-poison a recovery before it is scheduled; the DKIM path has no cancel at all); recovery **grants and never revokes** privileges, and `setAddrPrivilege` is a self-call the wallet's own validation rejects (patched by selector on a fork branch).
+Names are proposals; shapes are requirements. "PreparedTx" = a fully-encoded transaction or UserOperation the extension can sign and broadcast with its own machinery.
 
-**The extension gives us a proven integration pattern.** The Railgun plugin: `createPlugin(host, params)`, background controller + React context per controller, packaged WASM loaded via `browser.runtime.getURL`, single-instance WASM behind a lock, storage bridged async→sync with load-all/flush. Groth16 BN254 proving already runs in the service worker (ark-circom + ark-groth16 + wasmer witness calculator). CSP allows `wasm-unsafe-eval`, not `eval`.
+### 2.1 Client + host adapters
 
-**Missing extension primitives:** no fresh-key direct-tx path (every broadcast needs a registered Account + AccountOp), no WebAuthn/P-256 anywhere, no file-upload/`FileReader` surface (one dropzone precedent), no camera/QR scan (fine: cross-device passkey QR is browser-native; Aadhaar QR arrives as an uploaded image), no generic on-chain event watcher (receipt polling only), no `offscreen` permission.
+- `RecoveryClientFactory.create(config)` → `RecoveryClient`; config = chainId, address book, relayer URL, host adapters.
+- Host adapters the extension provides: `provider` (EIP-1193/viem reads), `storage` (**async** key-value — the Railgun plugin's sync Storage forced an ugly bridge; do not repeat), `signer` (sign EIP-712/raw payloads by keystore key name — no raw-private-key export).
+- The SDK does **not** broadcast. Every write returns PreparedTx(s).
 
-**ZK Email ecosystem is live and deployed** (Sepolia/Base: UniversalEmailRecoveryModule, UserOverrideableDKIMRegistry with oracle+user-override 2-of-N, Groth16 verifier). `accountCode` = random BN254 scalar, generated client-side; **losing it kills the method** — upstream leaves the relayer DB as the de facto backup. The guardian email address never touches the chain.
+### 2.2 Setup & management (Flows C, G) — MVP unless tagged
 
-## 2 · Findings that change our decisions (need rulings)
+| Requirement | Serves |
+|---|---|
+| `getRecoveryConfig(account)` → set up? · the path (rows+groups) · waiting period. This is the SETUP state — "is recovery configured, and what is it" | B-01 gate, C-01, D-04, G-01 |
+| `getPendingRecovery(account)` → none, or: initiated recovery details — who/newOwner, countdown, which methods were satisfied. This is the LIVE-RECOVERY state, distinct from config | D-13, D2-01, G-04, B-03 |
+| `prepareSetup(path, waitingPeriod)` → PreparedTx[] — smart-account enablement + recovery install + config, batched to ONE owner confirmation (Q28). This is the Flow C step-8 SAVE, not recovery submission | C-07/C-07e |
+| `prepareUpdate(currentPath, newPath)` → PreparedTx — diff-aware single tx; supports editing one value in place (79: "no remove-and-recreate") | G-05/b/c |
+| `prepareRemove(account)` → PreparedTx | G-02 |
+| `validatePath(path)` — instance uniqueness (76), threshold sanity, ≥24h (74), one-path shape (73); mirrors the contract rules so the builder can block bad saves client-side | wizard + Advanced |
+| `evaluate(path)` → FragilityReport (green/amber/red) — powers the meter and honesty copy | C-04*, G-01, F |
+| *(V2)* per-account apply helpers: `prepareSetup` re-run per account + fresh per-account method secrets (e.g. accountCode). Iteration/progress UI is extension-side | C-09 family |
 
-| # | Finding | Impact | Proposed route |
-|---|---|---|---|
-| R1 | **Decision 77 is infeasible as written** (confirmed from circuit source). zk-email proves the email the user SENDS; identity binds to the `From` header (`accountSalt = Poseidon(from_addr, accountCode)`). A received, relayer-signed email fails the salt check — and a receive-direction circuit would need a new circuit + trusted-setup ceremony and would let the relayer mint recoveries. The standard flow: relayer sends "[Reply Needed]" with a hidden command div → user replies "Confirm" → the **reply** is proven. | UX: one added user step (reply), and the `.eml` the user downloads is their own reply (Gmail: Sent → Show original). Spec 77 + C-05e/D-07e/C-05n need a small amendment. Open sub-question: do all 5 help-sheet clients store the DKIM-signed copy in Sent? | Fibo rules on the UX amendment; sent-copy question joins the Q16 list for Ace 0x |
-| R2 | **Anon Aadhaar is not shippable today**: the SDK fails against current QRs (UIDAI key rotated, certs expired, fix PR unmerged, repo unmaintained), 584 MB zkey / ~1.5 GB peak memory, testnet-only verifier, nullifier stability across QR regenerations unproven. | Method availability | Keep Aadhaar in the UX as-is but tag it at risk; route viability (incl. the Noir rewrite option) to the kit team |
-| R3 | **The recovery binding hash is unsettled** (with/without `policyId`; four incompatible preimages across design + PoC; only the PoC binds chainId — and zk-email's own layer binds no chainId either). | Everything downstream (contracts, circuits, guardian page payload, SDK) | Kit team must freeze ONE preimage before SDK code exists |
-| R4 | **Proving cannot run in the service worker** as-is (blocking calls, no `navigator.credentials` there either) and the extension lacks the `offscreen` permission. Measured stakes (browser, zk-email-class circuits): circom/snarkjs ≈ **3 min after a ~1 GB chunked-zkey download** (worst measured: 12.6 min, 1.75 GB); Noir/UltraHonk ≈ **4.2 s multithreaded / 16.6 s single-thread** at 222k gates with only MB-scale artifacts and no ceremony — but multithreading needs COOP/COEP manifest keys (extension-compatible), bb.js has a ~2^19–2^20 gate ceiling under WASM-4GB, UltraHonk proofs cost ~1.9M verify gas vs Groth16's 319k, and `@zk-email/sdk` local proving is **circom-only today** (Noir plumbing landing). SP1/zkVM: server-only (128 GB RAM). | SDK API must be async with progress callbacks; extension needs an `offscreen` document (the only MV3 host fit for multi-minute jobs) + COOP/COEP keys | Extension work item; prover-stack choice routes to the kit team with these numbers |
-| R5 | **Passkey health checks cannot be silent** (no API reveals credential existence; every probe is modal or destructive). Flow F for passkeys = environment checks only; a real test needs a user gesture. | Flow F copy already says "offered, not enforced" — compatible; the meter must treat failures as "unproven", never "deleted" | No UX change; encode in SDK semantics |
-| R6 | **Funding is still the blocker, now sharper**: externally-validated recovery cannot go through `validateUserOp`, so no paymaster can sponsor it on the current substrate; the old DKIM+4337 escape hatch survives only in deployed bytecode, deleted from source; extension consts declare no 4337 rails on Sepolia. | D-11 submit | SDK must ship the self-pay fresh-key rail FIRST, with a sponsorship rail behind an interface; the ownership question stays with the kit team (Q7/19) |
-
-## 3 · Proposed SDK surface (what the extension needs)
-
-Aligned with the kit's decided layout (`RecoveryClient` + Services + Providers). Names are proposals; shapes are requirements.
-
-### 3.1 Client + host adapters
-
-```
-RecoveryClientFactory.create(config) → RecoveryClient
-config: { chainId, addressBook, hostAdapters, relayerUrl }
-hostAdapters (provided by the extension):
-  provider        — EIP-1193 / viem-compatible reads
-  storage         — ASYNC key-value (lesson: the Railgun Host's sync Storage
-                    forced a load-all/flush bridge; do not repeat)
-  broadcaster     — TWO rails: (a) accountOp rail for owner-signed writes,
-                    (b) freshKey rail: sign+send a direct tx from an ephemeral
-                    key with gas estimation and self-pay  ← DOES NOT EXIST in
-                    the extension today; must be built alongside the SDK
-  signer          — sign EIP-712 / raw payloads with a named keystore key
-                    (deriveAt-style raw-key export is NOT acceptable here)
-  workerHost      — where proving runs (offscreen document / extension page),
-                    async with onProgress
-```
-
-### 3.2 Account service (Flows B, C, G)
-
-| Method | Serves | Notes vs today |
-|---|---|---|
-| `getRecoveryState(account)` → installed?, path, waitingPeriod, pendingRequest | B-01 gate, C-01, D-04, G-01 | Needs a config-readback story: on the Ambire substrate config is a hash commitment — the SDK must define where the plaintext path lives (see §4 encryption) |
-| `enableRecovery(path, waitingPeriod)` → prepared tx batch | C step 8 | ONE batched owner confirmation (Q28): smart-account enablement (deploy/7702 delegate/4337 as ruled) + validator wiring + config. On Ambire: `setAddrPrivilege` self-call — the CALL_TO_SELF wallet check needs a real fix, not the selector bypass |
-| `updateRecovery(diff)` / `removeRecovery()` | G-05, G-02, D-15 cleanup | Diff-aware; one owner tx (68); removal always legal (unprotected warning is UX) |
-| `applyToAccounts(accounts, path)` | C-09, decision 72 | Per-account re-encode, fresh accountCode per account (R10), per-account progress |
-
-### 3.3 Policy domain (pure, no I/O)
-
-- `validatePath(path)` — instance uniqueness (76), group threshold sanity, ≥24h waiting period (74), one-path shape (73). Mirrors contract rules.
-- `evaluate(path) → FragilityReport` — the kit's decided green/amber/red rules (OrthogonalTrustRoots, NoSameSeedGuardians — decidable only for wallet-held seeds, MinAvailability). Powers the honesty copy and the meter (Flow F).
-- `encodePath/decodePath` — ↔ contract encoding. **Blocked on T10/R3**: the frozen struct has no threshold field; our model needs required-rows + groups.
-
-### 3.4 Method providers (one interface, four implementations)
+### 2.3 Method providers — one lifecycle interface, per-method implementations
 
 ```
 interface RecoveryMethod {
-  enroll(params, opts) → EnrolledMethod
-  testAccess(enrolled, { rehearsal }) → TestResult      // C-05 tests + C-07 dry run
-  createClaim(enrolled, intent, { onProgress }) → Claim  // D-07 rows
-  healthCheck(enrolled) → HealthResult                   // Flow F, unattended half only
+  enroll(params, opts) → EnrolledMethod            // register the instance for the path
+  testAccess(enrolled, { rehearsal }) → TestResult  // setup tests (MVP) + dry run (V1)
+  createClaim(enrolled, intent, { onProgress, signal }) → Claim   // recovery rows
+  healthCheck(enrolled) → HealthResult              // V2, unattended half only
 }
 ```
 
-| Method | enroll | testAccess | createClaim | healthCheck (unattended) |
+| Method | enroll | testAccess | createClaim | healthCheck (V2, unattended) |
 |---|---|---|---|---|
-| **Passkey** | create credential (extension page, not SW), read BE/BS flags for synced/device-bound (38); store credentialId + pubkey (x,y) | `get()` with gesture, verify locally | sign recovery payload; format for on-chain P-256 (OZ `P256.sol` progressive: RIP-7212/EIP-7951 `0x100`, Daimo fallback); `flags & 0x05 == 0x05`; clientDataJSON origin is `chrome-extension://<id>` — verifier must accept it; cross-device = browser-native hybrid QR | environment probes only (R5) |
-| **Guardian** | address checks: checksum, ENS resolve, `code.length`, same-seed (wallet-held seeds only); optional signature test (52) | reachability rehearsal (47/52) | build request link/QR payload; `parseApproval(paste)` → validate via the existing deployless `verifyMessage` (ecrecover + 1271 + 6492) with errors: malformed / wrong recovery / wrong signer | `code.length`, ENS drift, SCW owner-set drift |
-| **ZK Email** | generate accountCode (CSPRNG Fr — SDK must own backup/custody, see §4), derive accountSalt, register | relayer send → user replies (R1) → upload own-reply `.eml` → parse (browser-safe parser; the Node-only `libs/dkim` parser cannot run under the webpack config) → verify DKIM locally. No proof at setup | same pipeline + local Groth16 proof with onProgress (minutes-scale budget; zkey size pushes toward the Noir option — R4) → `EmailAuthMsg`-shaped claim | DKIM key hash still valid in the registry |
-| **Aadhaar** | QR **image upload** → jsqr decode → test proof against current UIDAI key | same | full proof (~20–51 s measured, ~1.5 GB peak — R2) | on-chain verifier's UIDAI key hash still current |
+| **Passkey** | create the credential, report synced vs device-bound (BE flag, decision 38), return credentialId + pubkey | one signed test challenge (user gesture) | sign the recovery intent; output formatted for the on-chain P-256 verifier; cross-device works via the browser's own QR hand-off | environment checks only — no browser API can silently confirm a specific passkey still exists: every real probe opens a system prompt (or, with the Signal API, deletes the credential). So automatic checks can test the environment, and a true test always needs a user click; failures read as "unproven", never "deleted" |
+| **Guardian** | address validation: checksum, ENS resolve, contract detection, same-seed check (only for wallet-held seeds) | reachability rehearsal only (52) | `buildApprovalPayload(intent)` → the human-readable EIP-712 payload (MVP: shown raw on the D-07 row for manual signing, decision 79) + `parseApproval(pasted)` → validated claim with the three error classes: malformed / wrong recovery / wrong signer; EOA + ERC-1271 guardians | `code.length`, ENS drift, SCW owner-set drift |
+| **ZK Email** *(if kept)* | generate + custody the accountCode (its backup is part of §2.6 — losing it kills the method), derive the salt, register | `requestEmail()` (relayer send) → user replies → `parseEml(file)` on the uploaded own-reply → local DKIM verify; no proof at setup | same pipeline + local proof with onProgress (minutes-scale budget) | DKIM key still valid in the registry |
+| **Anon Aadhaar** | QR **image upload** → decode → test proof against the current UIDAI key | same as enroll test | full proof with onProgress (tens of seconds, heavy memory — must be cancellable) | on-chain verifier's UIDAI key hash still current |
+| **zkPassport** *(placeholder — pending the team's ZK Email decision)* | same lifecycle contract as above; concrete inputs (NFC scan? document photo?), proof budget, verifier availability and nullifier semantics need a research pass once the direction is confirmed | | | |
 
-**On-chain P-256 status (measured 2026-08-19):** the `P256VERIFY` precompile (EIP-7951) is **live at `0x100` on Ethereum mainnet AND Sepolia** since Fusaka (2025-12) at 6,900 gas — so passkey verification on our demo chain is native and cheap. Use OpenZeppelin `P256.sol` ≥5.4 as the dispatch layer (its known-vector probe cleanly distinguishes "precompile absent" from "invalid signature"; Daimo's own library is NOT progressive — it hardcodes its fallback address). The SDK layer must enforce the `s ≤ n/2` malleability guard (the precompile does not) and reach the precompile via STATICCALL. Audited prior art for credential-bound signers: Safe's passkey module (`SafeWebAuthnSignerFactory` `0x1d31…1195`, per-credential CREATE2 proxies, zero storage reads — 4337-clean). Gas caveat: 3450-vs-6900 fragmentation across L2s — never hardcode. The Colibri `p256verify` gap (kohaku#221) still blocks verified eth_call on one RPC provider.
+### 2.4 Recovery session (Flow D) — MVP
 
-**Passkey facts the SDK must encode** (verified against WebAuthn L3 + Chromium source): synced/device-bound detection (38) = the **BE flag (0x08)** — immutable, read once at registration; **BS (0x10)** is the live backed-up state, re-read on every assertion (GPM hardcodes BE=1/BS=1, so "syncable but not yet synced" is undetectable). Store the AAGUID verbatim at registration — platform and hybrid registrations keep the real AAGUID even under `attestation:"none"` (security keys get zeroed); the community AAGUID list gives display names only. CXP/CXF migration is invisible to us — the recorded provider can go stale silently, so copy must never promise "lives in iCloud". Hybrid QR: fresh scan every ceremony (Chrome removed paired phones), needs Bluetooth on + one extra click, and the timeout is clamped to a 3-minute minimum. **Open risk to test first: whether phones accept `chrome-extension://<id>` as the RP ID over hybrid** — unverified; fallback is claiming a real domain RP ID via host_permissions + Related Origin Requests.
+- `startSession(account, newOwner)` → session object. The SDK owns the session **logic** (claim set, satisfaction rules, wipe rules per decision 70); the bytes persist through the extension's storage adapter.
+- `session.addClaim(claim)` / `session.progress()` → required rows + per-group M-of-N status (feeds the decision-60 progress grammar).
+- `session.prepareInitiate()` → PreparedTx — the recovery submission. Must be broadcastable by a plain funded EOA (A6); a sponsored rail sits behind the same call for substrates that allow it.
+- `session.prepareExecute()` → PreparedTx — finalize after the countdown (permissionless).
+- `prepareCancel(account)` → PreparedTx — owner cancel (D2, MVP).
+- `session.wipe()` — decision-70 triggers.
+- Watching for initiated/cancelled/executed recoveries: the SDK provides the **read** (`getPendingRecovery`); scheduling/polling/notifying is extension-side.
 
-### 3.5 Recovery session (Flow D) + owner side (D2) + guardian page (E1)
+### 2.5 Guardian approval payloads
 
-- `startSession(account, newOwner)` → persisted, resumable session; claim store with the decision-70 wipe rules (exit/cancel/submit).
-- `session.addClaim / progress()` — required rows + per-group M-of-N satisfaction (feeds the decision-60 grammar).
-- `session.submit()` — assemble claims → initiate. **Self-pay fresh-key rail first** (R6); sponsorship rail behind `IExecutionRail`.
-- `session.status()` / `execute()` — countdown read, cancelled terminal state, permissionless execute after maturity (kit-consistent; ruling still tentative).
-- `watchRecovery(account, cb)` — polling watcher (receipt/log polling; no backend). Powers D2 banner + system notification and B-03. NEW infra.
-- `getPendingRecoveryDetails(account)` — enough for the D2-02 triage (which methods were satisfied).
-- `cancelRecovery(account)` — owner tx. **Contract gap: owner-only cancel with correct semantics exists nowhere today** (guardian-cancel + pre-poisoning in `RecoverySigValidator`; no cancel in the DKIM path).
-- Guardian page kit (extension-served, 51): `parseRequest(url)`, `readOnchainContext` (nonce), `buildApprovalPayload` (EIP-712 — plaintext fields so hardware wallets display the real newOwner; preimage blocked on R3), injected + WalletConnect + offline sign path, `formatApproval`.
+- MVP (79): manual mechanic — `buildApprovalPayload` + `parseApproval` from §2.3 cover it; no hosted page.
+- V1: the guardian **page kit** — parse a request link, read on-chain context (nonce), render-and-sign helpers (injected + WalletConnect + offline copy/paste path), approval formatting. Ships as an SDK sub-package the extension serves at a relative path (51).
 
-### 3.6 Secrets & encryption
+### 2.6 Secrets & encryption — MVP (Q29/53 is MVP-blocking per decision 79)
 
-- Backup set (kit-decided): `accountCode`, passkey `credentialId`, guardian list. The SDK must expose export/import of this set; the UX ties it to the recovery password + dry-run recall row (48/56).
-- Recovery-password encryption of config values: scheme blocked on 53/Q29 — note the substrate tension: Ambire's commitment model hides values but makes the plaintext bytes load-bearing (lose them = path unreachable); the kit design stores plaintext on-chain. Whatever wins, the SDK owns encrypt/decrypt/re-encrypt (guardian edits re-encrypt under the same password, 56) and the "wrong password never blocks recovery" rule.
+- Recovery-password encryption of config values: encrypt at setup, decrypt on the recoverer side, re-encrypt on guardian edits (56); "wrong password never blocks recovery" (48/56) must hold at the API level (a failed decrypt degrades to hidden values, never to an error that stops the flow).
+- Backup set export/import: every method secret that exists nowhere else (e.g. ZK Email accountCode, passkey credentialId, the guardian list) — one bundle the UX ties to the recovery password and the dry-run recall row.
 
-## 4 · Extension work items (not SDK, but required)
+## 3 · Constraints the SDK package must meet
 
-1. Fresh-key broadcast rail (sign+send direct tx, gas estimate, self-pay) — nothing usable exists (`KeystoreSigner.sendTransaction` is uncalled and provider-less).
-2. Offscreen document (or dedicated extension page) for proving and WebAuthn; add the `offscreen` permission. WASM behind a single-instance lock (Railgun lesson).
-3. File-upload surface (`.eml`, Aadhaar QR image) — one `react-dropzone` precedent exists.
-4. Recovery polling watcher wired to banners (`BannerCategory` + `Action` unions need new members; `maxBannerCount = 1` — pending recovery must win), system notifications, and the badge.
-5. `StorageProps` keys + migration for drafts, sessions, backup set; keep-alive interplay for long proofs; auto-lock (1-day default) vs multi-day waiting periods.
-6. Port-messaging targeting fix: `PortMessenger.send` broadcasts to every port — recovery secrets (.eml material, approvals, challenges) must not.
-7. CALL_TO_SELF exemption done properly for `setAddrPrivilege`.
-8. Sepolia consts currently declare no 4337/paymaster/bundler support — align with whatever the funding ruling is.
-9. Passkey ceremonies must run in a **full extension tab** (or options page): the action popup is destroyed on focus loss and `create()` is focus-checked — a QR hand-off kills it. WebAuthn from extension pages works since Chrome 122 (rp.id = the extension id, rewritten to `chrome-extension://<id>`). **Day-one test:** hybrid QR against real iOS/Android with that RP ID; if rejected, fall back to a domain RP ID via host_permissions + Related Origin Requests.
+- Runs inside an MV3 extension: no `eval`/dynamic codegen (CSP allows `wasm-unsafe-eval` only), WASM artifacts packaged locally or fetched-and-cached with integrity, single-instance WASM safety (or documented locking), all APIs async.
+- Long operations (proving) expose progress + cancellation and make no assumption about WHERE they run — the extension chooses the execution context.
+- Proof-stack budgets to design against (measured 2026-08-19): circom/Groth16 zk-email-class proofs ≈ minutes + ~1 GB artifacts; Noir/UltraHonk ≈ 4–17 s + MB-scale artifacts but ~6× verify gas and a browser gate ceiling; Aadhaar circom ≈ 20–50 s + ~600 MB + ~1.5 GB peak memory. The stack choice is the kit team's (§4.3); the SDK API must not leak it.
+- No backend assumptions beyond the send-only email relayer *(if ZK Email is kept)*; all chain access through the host `provider`.
 
-## 5 · Asks to the kit team (delta vs the existing asks page)
+## 4 · Open questions routed to the kit team
 
-1. **Freeze the binding hash** (R3): one preimage, with chainId, policyId in/out decided.
-2. **T10 threshold field + required-rows-AND-groups encoding** — our decision 73/75 model cannot be expressed by the frozen struct.
-3. **24h minimum on-chain** (74) — currently declined (T13); we require it.
-4. **Owner-only cancel semantics** + fix guardian pre-poisoning.
-5. **ZK Email direction** (R1): confirm reply-based flow + who runs the send-only relayer + accountCode custody (loss kills the method; upstream's de facto backup is the relayer DB — collides with backend-zero).
-6. **Aadhaar viability** (R2) incl. the Noir path and nullifier stability.
-7. **Prover stack** (R4), with measured numbers: circom/ark (local Railgun asset; deployed zk-email verifiers; ~1 GB zkey downloads, minutes-scale browser proofs) vs Noir/UltraHonk (4–17 s browser proofs, MB artifacts, no ceremony; but ~6× verify gas, a 2^19–2^20 browser gate ceiling, SDK local proving not yet enabled, and no Aadhaar Solidity verifier).
-8. **Funding/executor** (Q7/19) with the new fact: paymaster sponsorship is structurally impossible through `validateUserOp` on the current substrate.
-9. Colibri `p256verify` gap (passkey paths fail verified eth_call on one of the two RPC providers).
+1. **ZK Email vs zkPassport** — confirm the direction; it gates §2.3, the C-05e/D-07e/C-05n wireframes, and the relayer question entirely.
+2. Funding/executor (Q7/19) with the A6 nuance: pick the substrate/rail that lets the MVP submission be self-paid, and say whether sponsorship comes with it.
+3. Prover stack (with the §3 numbers).
+4. Value visibility / encryption scope (Q29/53) — **MVP-blocking** (79).
+5. Group encoding with thresholds (T10) and the 24h floor's validation/revert surface (74) — assumed solved per A4; listed for traceability.
+6. Guardian payload contents (nonce, policyId in/out) — assumed frozen by the kit per A4; the UX only needs it human-readable and chain-bound.
+7. Colibri `p256verify` gap (passkey verification fails verified reads on one RPC provider).
 
-## 6 · Flow → requirement traceability
+## 5 · Flow → requirement traceability
 
-Flow A/A1: extension-only (key creation) — no SDK surface. Flow B: §3.2 getRecoveryState · §3.5 watchRecovery. Flow C: §3.2 enable/apply · §3.3 all · §3.4 enroll/testAccess (dry run = testAccess rehearsal) · §3.6 backup + password. Flow D: §3.5 session/submit/execute · §3.4 createClaim · §3.2 getRecoveryState. Flow D2: §3.5 watch/details/cancel. Flow E1: §3.5 guardian page kit. Flow F: §3.4 healthCheck (R5 limits) · §3.3 evaluate for the meter. Flow G: §3.2 update/remove · §3.3 validate · §3.5 pending-state reads.
+- Flow A/A1: extension-only.
+- Flow B: §2.2 getRecoveryConfig · getPendingRecovery.
+- Flow C: §2.2 prepareSetup/validate/evaluate · §2.3 enroll/testAccess (dry run = rehearsal, V1) · §2.6.
+- Flow D: §2.4 session · §2.3 createClaim · §2.6 decrypt.
+- Flow D2: §2.2 getPendingRecovery · §2.4 prepareCancel.
+- Flow E1: §2.5 (MVP manual, V1 page kit).
+- Flow F (V2): §2.3 healthCheck · §2.2 evaluate.
+- Flow G: §2.2 update/remove/config reads.
+
+## Appendix A · Investigation baseline (2026-08-19, compressed)
+
+Facts from the three-front investigation, kept for reference; none of them change the requirements above, they explain them. Today's contracts (`kohaku-commons`) are Ambire external-signature validators (policy = hash commitment, recovery only via `execute()` sig-mode 255 — the root of A6); the kit design targets a 7579-executor with a `RecoveryClient` layout this document aligns with; no M-of-N primitive, 24h floor, or owner-only cancel exists on-chain yet (A4 items). The Railgun plugin is the extension's precedent for consuming kohaku SDK packages (background controller, packaged WASM, async-storage bridge) — cited as the integration pattern to follow and improve, not the only integration. ZK Email's ecosystem is deployed on Sepolia/Base (registry, verifier, recovery module); the proven email is always one the user sends, hence A2's reply step; accountCode loss kills the method, hence §2.6. The P-256 precompile is live on mainnet + Sepolia (6,900 gas) with OZ `P256.sol` as the dispatch pattern and Safe's passkey module as audited prior art. Passkey portability facts: BE/BS flags are the only reliable signals; provider identity can change invisibly (CXP/CXF); health checks cannot be silent (§2.3). Full detail lives in the PR #2 history (v1 of this document) and the session transcripts.
