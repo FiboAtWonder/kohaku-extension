@@ -599,6 +599,52 @@ flowchart TD
     <div class="focus"><b>Review focus</b><p>Config changes stay allowed while a recovery is pending (they do not affect it) — should this screen restrict more than it warns?</p></div>
   </div></section>
 
+  <!-- ============ S15b · MILESTONES ============ -->
+  <section class="slide" data-title="Milestones"><div class="inner wide">
+    <p class="eyebrow">Rollout · decision 79</p>
+    <h2>Milestones — MVP, V1, V2</h2>
+    <p class="lede"><b>MVP</b> = one person can protect one account and recover it, with all 4 methods (non-negotiable), preset shapes only. <b>V1</b> = the guided, confident product. <b>V2</b> = scale and upkeep.</p>
+    <div class="cols" style="grid-template-columns:1fr 1fr 1fr">
+      <div class="panel"><b class="hd">MVP (~72 screens)</b>
+        <ul class="tight" style="font-size:13.5px">
+          <li>Fresh-install recovery entry (Flows A/A1)</li>
+          <li>Preset setup — pick ONE shape, minimal edit</li>
+          <li>Enrollment + mandatory tests, <b>all 4 methods</b> (incl. the .eml help sheet)</li>
+          <li>Waiting period (24h floor, 48h default)</li>
+          <li><b>Recovery password + hidden values</b></li>
+          <li>Review + save · Recovery Card (card only)</li>
+          <li>Recovery, chapters 1–3, resumable — done-terminal without cleanup</li>
+          <li><b>Guardian approvals, manual:</b> the checklist row shows the exact payload to sign + paste-back (no hosted page yet)</li>
+          <li>Cancel flow (polling banner; light "cancelled" terminal)</li>
+          <li>Management incl. <b>path editing</b> — no remove-and-recreate to change one value</li>
+        </ul>
+      </div>
+      <div class="panel"><b class="hd">V1 (~44 screens)</b>
+        <ul class="tight" style="font-size:13.5px">
+          <li><b>Hosted guardian page</b> (sync; mobile, decline, offline signing)</li>
+          <li>Express wizard education layer (inventory → recommendation)</li>
+          <li>Dry run (the rehearsal)</li>
+          <li>Advanced builder (multiple groups, untested saves)</li>
+          <li>Nudge system + shield badge</li>
+          <li>Alerts / push notifications</li>
+          <li>Same-install account list (gated)</li>
+          <li>Deferred attack-round states (M9, M13, M16, M23, M34)</li>
+        </ul>
+      </div>
+      <div class="panel"><b class="hd">V2 (~13 screens)</b>
+        <ul class="tight" style="font-size:13.5px">
+          <li>Post-recovery cleanup (flagged methods, deferral banner)</li>
+          <li>Post-cancel triage</li>
+          <li>Apply to other accounts</li>
+          <li>Health checks + "Last check" stat</li>
+          <li>Async guardian approvals (E2) · IPFS/IPNS page hosting</li>
+          <li>Multichain stays out of scope</li>
+        </ul>
+      </div>
+    </div>
+    <div class="focus"><b>What the split accepts, said honestly</b><p>With cleanup and triage in V2, methods tied to a lost device stay live after an MVP recovery, and a cancelled attacker keeps a working method. The MVP "done" and "cancelled" screens say this and point to the MVP defenses: edit the path, remove recovery, or move funds. MVP blockers for the kit team: funding/executor (Q7/19), ZK Email relayer + prover (Q16/77), group encoding (T10), the 24h revert surface (74), and — newly MVP-blocking — value visibility / encryption scope (Q29/53).</p></div>
+  </div></section>
+
   <!-- ============ S16 · OPEN THREADS ============ -->
   <section class="slide" data-title="Open threads"><div class="inner">
     <p class="eyebrow">Decision state</p>
