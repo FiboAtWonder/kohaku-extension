@@ -5725,7 +5725,7 @@
                   "name": "C-01-choose-your-recovery-path-presets",
                   "clip": true,
                   "width": 1280,
-                  "height": 800,
+                  "height": 910,
                   "fill": "$panel",
                   "children": [
                     {
@@ -5997,7 +5997,7 @@
                                       "fill": "$muted",
                                       "textGrowth": "fixed-width",
                                       "width": "fill_container",
-                                      "content": "Guide me: a short guided setup. Customize: build the path yourself in the Advanced builder.",
+                                      "content": "Guide me: a short guided setup. Customize: build the path yourself, from an empty path.",
                                       "lineHeight": 1.45,
                                       "fontFamily": "$sans",
                                       "fontSize": 11.5,
@@ -6378,6 +6378,815 @@
                                 },
                                 {
                                   "type": "frame",
+                                  "id": "IL1cw",
+                                  "name": "Preset · Start from scratch",
+                                  "width": "fill_container",
+                                  "height": 94,
+                                  "fill": "#FFFFFF00",
+                                  "cornerRadius": 14,
+                                  "gap": 12,
+                                  "padding": [
+                                    14,
+                                    16
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "rgTNr",
+                                      "name": "Radio wrap",
+                                      "padding": [
+                                        2,
+                                        0,
+                                        0,
+                                        0
+                                      ],
+                                      "children": [
+                                        {
+                                          "type": "ellipse",
+                                          "id": "DDixY",
+                                          "name": "Radio",
+                                          "fill": "#FFFFFF00",
+                                          "width": 16,
+                                          "height": 16,
+                                          "stroke": "$line2",
+                                          "strokeWidth": 1.5,
+                                          "strokeAlignment": "inner"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "TCNkc",
+                                      "name": "Body",
+                                      "width": "fill_container",
+                                      "layout": "vertical",
+                                      "gap": 7,
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "gBuB2",
+                                          "name": "Preset title",
+                                          "fill": "$ink",
+                                          "content": "Start from scratch",
+                                          "fontFamily": "$sans",
+                                          "fontSize": 14.5,
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "clNgv",
+                                          "name": "Structure placeholder",
+                                          "fill": "$muted",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "You choose the methods and how many must answer.",
+                                          "lineHeight": 1.45,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "SAMZQ",
+                                          "name": "Preset sub",
+                                          "fill": "$muted",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "For people who know the shape they want.",
+                                          "lineHeight": 1.45,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 11.5,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "x81ZOn",
+                                      "layoutPosition": "absolute",
+                                      "x": 0,
+                                      "y": 0,
+                                      "name": "Dashed border",
+                                      "width": 560,
+                                      "height": 94,
+                                      "layout": "none",
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "v9adbC",
+                                          "x": 0,
+                                          "y": 0,
+                                          "name": "Top",
+                                          "clip": true,
+                                          "width": 560,
+                                          "height": 2,
+                                          "gap": 6,
+                                          "children": [
+                                            {
+                                              "type": "rectangle",
+                                              "id": "WFEEa",
+                                              "name": "D0",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "wv5Kp",
+                                              "name": "D1",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "S4OYS",
+                                              "name": "D2",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "N1T7Ko",
+                                              "name": "D3",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "iR3KC",
+                                              "name": "D4",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "uGWFv",
+                                              "name": "D5",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "PGUZz",
+                                              "name": "D6",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "lb70Z",
+                                              "name": "D7",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "bQNPA",
+                                              "name": "D8",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "a3A56",
+                                              "name": "D9",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "BoVm8",
+                                              "name": "D10",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "N5Edv",
+                                              "name": "D11",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "GMAkR",
+                                              "name": "D12",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "DQc9r",
+                                              "name": "D13",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "wf7Oi",
+                                              "name": "D14",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "EnNA2",
+                                              "name": "D15",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "Ya7gG",
+                                              "name": "D16",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "OThxn",
+                                              "name": "D17",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "VYQUc",
+                                              "name": "D18",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "TpiZ5",
+                                              "name": "D19",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "z9ioEP",
+                                              "name": "D20",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "XLzEj",
+                                              "name": "D21",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "GRxS5",
+                                              "name": "D22",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "UiP3t",
+                                              "name": "D23",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "ki67C",
+                                              "name": "D24",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "QJoEc",
+                                              "name": "D25",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "g344Ey",
+                                              "name": "D26",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "jjpRS",
+                                              "name": "D27",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "Maksm",
+                                              "name": "D28",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "K60QoQ",
+                                              "name": "D29",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "hg6Z5",
+                                              "name": "D30",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "tglHk",
+                                              "name": "D31",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "cwUyk",
+                                              "name": "D32",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "ywZ35",
+                                              "name": "D33",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "Pq4xT",
+                                              "name": "D34",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "NsQct",
+                                          "x": 0,
+                                          "y": 92,
+                                          "name": "Bottom",
+                                          "clip": true,
+                                          "width": 560,
+                                          "height": 2,
+                                          "gap": 6,
+                                          "children": [
+                                            {
+                                              "type": "rectangle",
+                                              "id": "ZfJoC",
+                                              "name": "D0",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "Ailvx",
+                                              "name": "D1",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "qnlUF",
+                                              "name": "D2",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "FkjD7",
+                                              "name": "D3",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "yyImj",
+                                              "name": "D4",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "h97aN",
+                                              "name": "D5",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "z03Mwh",
+                                              "name": "D6",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "eo62o",
+                                              "name": "D7",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "FCvoE",
+                                              "name": "D8",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "O7EHRt",
+                                              "name": "D9",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "e1c88Q",
+                                              "name": "D10",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "sudIj",
+                                              "name": "D11",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "n1pWi",
+                                              "name": "D12",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "ZIXlc",
+                                              "name": "D13",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "PMUDo",
+                                              "name": "D14",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "CgLxB",
+                                              "name": "D15",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "FhYsB",
+                                              "name": "D16",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "paFEx",
+                                              "name": "D17",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "Diloh",
+                                              "name": "D18",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "vr86q",
+                                              "name": "D19",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "s93cD8",
+                                              "name": "D20",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "Ak20L",
+                                              "name": "D21",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "BYasf",
+                                              "name": "D22",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "tMDSg",
+                                              "name": "D23",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "hOGNa",
+                                              "name": "D24",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "R74lu",
+                                              "name": "D25",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "ekI9c",
+                                              "name": "D26",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "TS1VE",
+                                              "name": "D27",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "mNUt4",
+                                              "name": "D28",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "vtMyy",
+                                              "name": "D29",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "fcfD3",
+                                              "name": "D30",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "jPZVb",
+                                              "name": "D31",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "DCPvr",
+                                              "name": "D32",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "U6YsCX",
+                                              "name": "D33",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "bAWIX",
+                                              "name": "D34",
+                                              "fill": "$accent",
+                                              "width": 10,
+                                              "height": 2
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "okUi1",
+                                          "x": 0,
+                                          "y": 0,
+                                          "name": "Left",
+                                          "clip": true,
+                                          "width": 2,
+                                          "height": 94,
+                                          "layout": "vertical",
+                                          "gap": 6,
+                                          "children": [
+                                            {
+                                              "type": "rectangle",
+                                              "id": "y5QO3e",
+                                              "name": "D0",
+                                              "fill": "$accent",
+                                              "width": 2,
+                                              "height": 10
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "o8KBv9",
+                                              "name": "D1",
+                                              "fill": "$accent",
+                                              "width": 2,
+                                              "height": 10
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "Yi4Cy",
+                                              "name": "D2",
+                                              "fill": "$accent",
+                                              "width": 2,
+                                              "height": 10
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "WSct4",
+                                              "name": "D3",
+                                              "fill": "$accent",
+                                              "width": 2,
+                                              "height": 10
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "b0ATz1",
+                                              "name": "D4",
+                                              "fill": "$accent",
+                                              "width": 2,
+                                              "height": 10
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "vUo1z",
+                                              "name": "D5",
+                                              "fill": "$accent",
+                                              "width": 2,
+                                              "height": 10
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "jtano",
+                                          "x": 558,
+                                          "y": 0,
+                                          "name": "Right",
+                                          "clip": true,
+                                          "width": 2,
+                                          "height": 94,
+                                          "layout": "vertical",
+                                          "gap": 6,
+                                          "children": [
+                                            {
+                                              "type": "rectangle",
+                                              "id": "uEe7z",
+                                              "name": "D0",
+                                              "fill": "$accent",
+                                              "width": 2,
+                                              "height": 10
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "eWzXM",
+                                              "name": "D1",
+                                              "fill": "$accent",
+                                              "width": 2,
+                                              "height": 10
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "jxVNW",
+                                              "name": "D2",
+                                              "fill": "$accent",
+                                              "width": 2,
+                                              "height": 10
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "drXpi",
+                                              "name": "D3",
+                                              "fill": "$accent",
+                                              "width": 2,
+                                              "height": 10
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "gjIkW",
+                                              "name": "D4",
+                                              "fill": "$accent",
+                                              "width": 2,
+                                              "height": 10
+                                            },
+                                            {
+                                              "type": "rectangle",
+                                              "id": "QSCdo",
+                                              "name": "D5",
+                                              "fill": "$accent",
+                                              "width": 2,
+                                              "height": 10
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
                                   "id": "amcr3",
                                   "name": "Actions",
                                   "width": "fill_container",
@@ -6605,6 +7414,61 @@
                                       "textGrowth": "fixed-width",
                                       "width": "fill_container",
                                       "content": "Picking a preset defines THE path; there is no path list anymore.",
+                                      "lineHeight": 1.45,
+                                      "fontFamily": "$sans",
+                                      "fontSize": 11.5,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "bIR4d",
+                                  "name": "DESIGN NOTE panel · milestone wiring",
+                                  "width": "fill_container",
+                                  "fill": "$note-bg",
+                                  "cornerRadius": 12,
+                                  "stroke": "$note-line",
+                                  "strokeWidth": 1.5,
+                                  "strokeAlignment": "inner",
+                                  "layout": "vertical",
+                                  "gap": 6,
+                                  "padding": [
+                                    13,
+                                    14
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "aghKI",
+                                      "name": "Design label",
+                                      "fill": "$note-ink",
+                                      "content": "DESIGN NOTE · NOT USER COPY",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 10,
+                                      "fontWeight": "700",
+                                      "letterSpacing": 0.7
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "Bl0Ib",
+                                      "name": "Design title",
+                                      "fill": "$ink",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Milestone wiring (decision 82)",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 12.5,
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "eTxOD",
+                                      "name": "Design text",
+                                      "fill": "$ink2",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "In the MVP “Customize” opens the same empty editor as this card. When the Advanced builder ships (V1) “Customize” points there and this card stays as the middle option.",
                                       "lineHeight": 1.45,
                                       "fontFamily": "$sans",
                                       "fontSize": 11.5,
@@ -17740,21 +18604,11 @@
                                           "fill": "$muted",
                                           "textGrowth": "fixed-width",
                                           "width": "fill_container",
-                                          "content": "Need more shapes (several groups)? Use the Advanced builder.",
+                                          "content": "Need more than one group? Add a group here — any M of its members can answer.",
                                           "lineHeight": 1.45,
                                           "fontFamily": "$sans",
                                           "fontSize": 11.5,
                                           "fontWeight": "normal"
-                                        },
-                                        {
-                                          "type": "text",
-                                          "id": "Y53JjZ",
-                                          "name": "Link",
-                                          "fill": "$accent",
-                                          "content": "Open Advanced",
-                                          "fontFamily": "$sans",
-                                          "fontSize": 11.5,
-                                          "fontWeight": "700"
                                         }
                                       ]
                                     }
@@ -17955,6 +18809,38 @@
                                           "fontWeight": "normal"
                                         }
                                       ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "vJILG",
+                                      "name": "Bullet 4",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "oWClV",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "check",
+                                          "library": "lucide",
+                                          "fill": "$accent"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "f90cJ0",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "A path needs at least one method.",
+                                          "lineHeight": 1.45,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 11.5,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
                                     }
                                   ]
                                 },
@@ -18006,6 +18892,845 @@
                                       "textGrowth": "fixed-width",
                                       "width": "fill_container",
                                       "content": "Hand-drawn threshold controls are allowed inside builder controls. Read-only thresholds use Component / Threshold.",
+                                      "lineHeight": 1.45,
+                                      "fontFamily": "$sans",
+                                      "fontSize": 11.5,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "CYLQq",
+                                  "name": "DESIGN NOTE panel · advanced builder",
+                                  "width": "fill_container",
+                                  "fill": "$note-bg",
+                                  "cornerRadius": 12,
+                                  "stroke": "$note-line",
+                                  "strokeWidth": 1.5,
+                                  "strokeAlignment": "inner",
+                                  "layout": "vertical",
+                                  "gap": 6,
+                                  "padding": [
+                                    13,
+                                    14
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "Bdgjr",
+                                      "name": "Design label",
+                                      "fill": "$note-ink",
+                                      "content": "DESIGN NOTE · NOT USER COPY",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 10,
+                                      "fontWeight": "700",
+                                      "letterSpacing": 0.7
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "kdTZe",
+                                      "name": "Design title",
+                                      "fill": "$ink",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "“Open Advanced” returns in V1",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 12.5,
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "mjkGn",
+                                      "name": "Design text",
+                                      "fill": "$ink2",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "“Open Advanced” returns when the Advanced builder ships (V1). In the MVP this editor is the whole builder.",
+                                      "lineHeight": 1.45,
+                                      "fontFamily": "$sans",
+                                      "fontSize": 11.5,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Fs5OO",
+              "name": "Page · C-04f",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "K4srl",
+                  "name": "Caption",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "x5IAOx",
+                      "name": "Code",
+                      "fill": "$accent",
+                      "content": "C-04f",
+                      "fontFamily": "$sans",
+                      "fontSize": 26,
+                      "fontWeight": "800",
+                      "letterSpacing": 0.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "XV9mR",
+                      "name": "Description",
+                      "fill": "$ink",
+                      "content": "Build your path",
+                      "fontFamily": "$sans",
+                      "fontSize": 26,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "eqcFI",
+                  "name": "C-04f-build-your-path",
+                  "clip": true,
+                  "width": 1280,
+                  "height": 800,
+                  "fill": "$panel",
+                  "children": [
+                    {
+                      "id": "N8kW16",
+                      "type": "ref",
+                      "ref": "D7q29K",
+                      "name": "Sidebar",
+                      "height": "fill_container"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "VohZ4",
+                      "name": "Content",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "fill": "$panel",
+                      "layout": "vertical",
+                      "gap": 16,
+                      "padding": [
+                        30,
+                        34
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "HNKAh",
+                          "name": "Breadcrumb",
+                          "fill": "$muted",
+                          "content": "‹ Back · Account recovery · Guided setup",
+                          "fontFamily": "$sans",
+                          "fontSize": 12,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "nEr6I",
+                          "name": "Step indicator",
+                          "width": "fill_container",
+                          "gap": 12,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "A9Wr2",
+                              "name": "Step label",
+                              "fill": "$faint",
+                              "content": "STEP 3 OF 10",
+                              "fontFamily": "$sans",
+                              "fontSize": 11,
+                              "fontWeight": "700",
+                              "letterSpacing": 0.7
+                            },
+                            {
+                              "type": "frame",
+                              "id": "k8ACG",
+                              "name": "Dots",
+                              "gap": 6,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "S4KOJ",
+                                  "name": "Dot 1",
+                                  "fill": "$accent-line",
+                                  "width": 17,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "imuPc",
+                                  "name": "Dot 2",
+                                  "fill": "$accent-line",
+                                  "width": 17,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "FsB7h",
+                                  "name": "Dot 3",
+                                  "fill": "$accent",
+                                  "width": 17,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "V99sY0",
+                                  "name": "Dot 4",
+                                  "fill": "$line2",
+                                  "width": 17,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "NOAuY",
+                                  "name": "Dot 5",
+                                  "fill": "$line2",
+                                  "width": 17,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "jQLZm",
+                                  "name": "Dot 6",
+                                  "fill": "$line2",
+                                  "width": 17,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "H9WDP6",
+                                  "name": "Dot 7",
+                                  "fill": "$line2",
+                                  "width": 17,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "YAyck",
+                                  "name": "Dot 8",
+                                  "fill": "$line2",
+                                  "width": 17,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "Oo7vK",
+                                  "name": "Dot 9",
+                                  "fill": "$line2",
+                                  "width": 17,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "o2TFb",
+                                  "name": "Dot 10",
+                                  "fill": "$line2",
+                                  "width": 17,
+                                  "height": 4
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ijCWW",
+                              "name": "Spacer",
+                              "width": "fill_container",
+                              "height": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "N2jQEp",
+                              "name": "Exit setup",
+                              "layout": "vertical",
+                              "gap": 1,
+                              "alignItems": "end",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "J1VlYU",
+                                  "name": "Exit link",
+                                  "fill": "$accent",
+                                  "content": "Exit setup",
+                                  "fontFamily": "$sans",
+                                  "fontSize": 12.5,
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "I8RSt",
+                                  "name": "Exit caption",
+                                  "fill": "$faint",
+                                  "content": "Your progress is saved on this device.",
+                                  "fontFamily": "$sans",
+                                  "fontSize": 10,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ahqE3",
+                          "name": "Header",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 5,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "C3qr33",
+                              "name": "Title",
+                              "fill": "$ink",
+                              "content": "Build your path",
+                              "fontFamily": "$sans",
+                              "fontSize": 23,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "L8JLhG",
+                              "name": "Lead",
+                              "fill": "$muted",
+                              "textGrowth": "fixed-width",
+                              "width": 600,
+                              "content": "Add the methods you want. Everything here is still a draft on this device.",
+                              "lineHeight": 1.45,
+                              "fontFamily": "$sans",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "x2EsUo",
+                          "name": "Columns",
+                          "width": "fill_container",
+                          "gap": 30,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "kMtu0",
+                              "name": "Left column",
+                              "width": 560,
+                              "layout": "vertical",
+                              "gap": 12,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "S4yfX6",
+                                  "name": "Path editor card",
+                                  "width": "fill_container",
+                                  "fill": "$panel",
+                                  "cornerRadius": 14,
+                                  "stroke": "$line",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "layout": "vertical",
+                                  "gap": 11,
+                                  "padding": [
+                                    16,
+                                    18
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "SIxoC",
+                                      "name": "Section label · REQUIRED",
+                                      "fill": "$faint",
+                                      "content": "REQUIRED",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 11,
+                                      "fontWeight": "700",
+                                      "letterSpacing": 0.7
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "O8Y4W6",
+                                      "name": "Empty state · required",
+                                      "width": "fill_container",
+                                      "fill": "$wash",
+                                      "cornerRadius": 9,
+                                      "stroke": "$line",
+                                      "strokeWidth": 1,
+                                      "strokeAlignment": "inner",
+                                      "gap": 10,
+                                      "padding": [
+                                        10,
+                                        12
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "N0mxH",
+                                          "name": "Text",
+                                          "fill": "$muted",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Nothing required yet",
+                                          "lineHeight": 1.45,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12.5,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "W9wfb",
+                                      "name": "Add a required method ghost",
+                                      "width": "fill_container",
+                                      "fill": "#FFFFFF00",
+                                      "cornerRadius": 9,
+                                      "stroke": "$accent-line",
+                                      "strokeWidth": 1,
+                                      "strokeAlignment": "inner",
+                                      "gap": 6,
+                                      "padding": [
+                                        7,
+                                        11
+                                      ],
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "oY0l2",
+                                          "name": "Icon",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "plus",
+                                          "library": "lucide",
+                                          "fill": "$accent"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "XQcP2",
+                                          "name": "Label",
+                                          "fill": "$accent",
+                                          "content": "Add a required method",
+                                          "fontFamily": "$sans",
+                                          "fontSize": 11.5,
+                                          "fontWeight": "700"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "YnwoR",
+                                      "name": "Section label · GROUPS",
+                                      "fill": "$faint",
+                                      "content": "GROUPS",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 11,
+                                      "fontWeight": "700",
+                                      "letterSpacing": 0.7
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "qYhV7",
+                                      "name": "Empty state · groups",
+                                      "width": "fill_container",
+                                      "fill": "$wash",
+                                      "cornerRadius": 9,
+                                      "stroke": "$line",
+                                      "strokeWidth": 1,
+                                      "strokeAlignment": "inner",
+                                      "gap": 10,
+                                      "padding": [
+                                        10,
+                                        12
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "XXzlV",
+                                          "name": "Text",
+                                          "fill": "$muted",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "No group yet. A group lets any M of its members answer.",
+                                          "lineHeight": 1.45,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12.5,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "fZsRs",
+                                      "name": "Add a group ghost",
+                                      "width": "fill_container",
+                                      "fill": "#FFFFFF00",
+                                      "cornerRadius": 9,
+                                      "stroke": "$accent-line",
+                                      "strokeWidth": 1,
+                                      "strokeAlignment": "inner",
+                                      "gap": 6,
+                                      "padding": [
+                                        7,
+                                        11
+                                      ],
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "Inu29",
+                                          "name": "Icon",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "plus",
+                                          "library": "lucide",
+                                          "fill": "$accent"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "Ruy8G",
+                                          "name": "Label",
+                                          "fill": "$accent",
+                                          "content": "Add a group",
+                                          "fontFamily": "$sans",
+                                          "fontSize": 11.5,
+                                          "fontWeight": "700"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "JUZbW",
+                                  "name": "Actions",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 7,
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "YKIDh",
+                                      "name": "Buttons",
+                                      "gap": 10,
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "d636ke",
+                                          "name": "Primary button (disabled)",
+                                          "fill": "$line2",
+                                          "cornerRadius": 12,
+                                          "gap": 8,
+                                          "padding": [
+                                            11,
+                                            18
+                                          ],
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "nTp9l",
+                                              "name": "Label",
+                                              "fill": "$faint",
+                                              "content": "Continue",
+                                              "fontFamily": "$sans",
+                                              "fontSize": 14,
+                                              "fontWeight": "700"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "kdHvB",
+                                          "name": "Button · Back",
+                                          "fill": "$panel",
+                                          "cornerRadius": 12,
+                                          "stroke": "$line2",
+                                          "strokeWidth": 1,
+                                          "strokeAlignment": "inner",
+                                          "gap": 8,
+                                          "padding": [
+                                            11,
+                                            18
+                                          ],
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "gCdF0",
+                                              "name": "Label",
+                                              "fill": "$ink",
+                                              "content": "Back",
+                                              "fontFamily": "$sans",
+                                              "fontSize": 14,
+                                              "fontWeight": "700"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "BiBUO",
+                                      "name": "Actions note",
+                                      "fill": "$faint",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Continue unlocks when your path has at least one method.",
+                                      "lineHeight": 1.45,
+                                      "fontFamily": "$sans",
+                                      "fontSize": 11.5,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "M1Ccqe",
+                              "name": "Right column",
+                              "width": 320,
+                              "layout": "vertical",
+                              "gap": 12,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "Df75K",
+                                  "name": "Why this shape",
+                                  "width": "fill_container",
+                                  "fill": "$wash",
+                                  "cornerRadius": 14,
+                                  "stroke": "$line",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "layout": "vertical",
+                                  "gap": 9,
+                                  "padding": [
+                                    14,
+                                    15
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "B3ipSR",
+                                      "name": "Panel title",
+                                      "fill": "$ink",
+                                      "content": "Rules while you edit",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 13,
+                                      "fontWeight": "800"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "vYSJJ",
+                                      "name": "Bullet 1",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "fVFmu",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "check",
+                                          "library": "lucide",
+                                          "fill": "$accent"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "wmZsV",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "A required method must always be answered.",
+                                          "lineHeight": 1.45,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 11.5,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "Ir92D",
+                                      "name": "Bullet 2",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "Vrz5B",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "check",
+                                          "library": "lucide",
+                                          "fill": "$accent"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "a7ybD",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "A group needs at least as many members as its threshold.",
+                                          "lineHeight": 1.45,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 11.5,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "h5iV18",
+                                      "name": "Bullet 3",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "UJZbh",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "check",
+                                          "library": "lucide",
+                                          "fill": "$accent"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "CuXpx",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "The same enrolled method cannot sit in two slots.",
+                                          "lineHeight": 1.45,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 11.5,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "h0tNG",
+                                      "name": "Bullet 4",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "isGYr",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "check",
+                                          "library": "lucide",
+                                          "fill": "$accent"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "a4EhV",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "A path needs at least one method.",
+                                          "lineHeight": 1.45,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 11.5,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "GBGqx",
+                                  "name": "DESIGN NOTE panel",
+                                  "width": "fill_container",
+                                  "fill": "$note-bg",
+                                  "cornerRadius": 12,
+                                  "stroke": "$note-line",
+                                  "strokeWidth": 1.5,
+                                  "strokeAlignment": "inner",
+                                  "layout": "vertical",
+                                  "gap": 6,
+                                  "padding": [
+                                    13,
+                                    14
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "UARC4",
+                                      "name": "Design label",
+                                      "fill": "$note-ink",
+                                      "content": "DESIGN NOTE · NOT USER COPY",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 10,
+                                      "fontWeight": "700",
+                                      "letterSpacing": 0.7
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "ZEvTI",
+                                      "name": "Design title",
+                                      "fill": "$ink",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Empty state of the setup editor (decision 82)",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 12.5,
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "CFfLh",
+                                      "name": "Design text",
+                                      "fill": "$ink2",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "The blank route and the preset route converge here — the same screen carries both.",
                                       "lineHeight": 1.45,
                                       "fontFamily": "$sans",
                                       "fontSize": 11.5,
