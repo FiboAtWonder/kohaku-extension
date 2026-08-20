@@ -603,12 +603,13 @@ flowchart TD
   <section class="slide" data-title="Milestones"><div class="inner wide">
     <p class="eyebrow">Rollout · decision 79</p>
     <h2>Milestones — MVP, V1, V2</h2>
-    <p class="lede"><b>MVP</b> = one person can protect one account and recover it, with all 4 methods (non-negotiable), preset shapes only. <b>V1</b> = the guided, confident product. <b>V2</b> = scale and upkeep.</p>
+    <p class="lede"><b>MVP</b> = one person can protect one account and recover it, with all 4 methods (non-negotiable), configured from a preset shape <b>or from a blank start</b> (decision 82) — always on the guided rails. <b>V1</b> = the guided, confident product. <b>V2</b> = scale and upkeep.</p>
     <div class="cols" style="grid-template-columns:1fr 1fr 1fr">
-      <div class="panel"><b class="hd">MVP (~72 screens)</b>
+      <div class="panel"><b class="hd">MVP (~76 screens)</b>
         <ul class="tight" style="font-size:13.5px">
           <li>Fresh-install recovery entry (Flows A/A1)</li>
-          <li>Preset setup — pick ONE shape, minimal edit</li>
+          <li>Preset setup — pick ONE shape, then edit it</li>
+          <li><b>Blank start:</b> a "Start from scratch" card opens the editor empty — a power user never has to adopt a preset and edit it down (decision 82)</li>
           <li>Enrollment + mandatory tests, <b>all 4 methods</b> (incl. the .eml help sheet)</li>
           <li>Waiting period (24h floor, 48h default)</li>
           <li><b>Recovery password + hidden values</b></li>
@@ -617,14 +618,15 @@ flowchart TD
           <li><b>Guardian approvals, manual:</b> the checklist row shows the exact payload to sign + paste-back (no hosted page yet)</li>
           <li>Cancel flow (polling banner; light "cancelled" terminal)</li>
           <li>Management incl. <b>path editing</b> — no remove-and-recreate to change one value</li>
+          <li>Member picker + enroll-a-method sheet (moved from V1 — editing and blank building are unusable without them)</li>
         </ul>
       </div>
-      <div class="panel"><b class="hd">V1 (~44 screens)</b>
+      <div class="panel"><b class="hd">V1 (~42 screens)</b>
         <ul class="tight" style="font-size:13.5px">
           <li><b>Hosted guardian page</b> (sync; mobile, decline, offline signing)</li>
           <li>Express wizard education layer (inventory → recommendation)</li>
           <li>Dry run (the rehearsal)</li>
-          <li>Advanced builder (multiple groups, untested saves)</li>
+          <li>Advanced builder — the free canvas, the method library, the right rail, save-without-review, tests offered not enforced (multi-group itself is already reachable in the MVP editors)</li>
           <li>Nudge system + shield badge</li>
           <li>Alerts / push notifications</li>
           <li>Same-install account list (gated)</li>
