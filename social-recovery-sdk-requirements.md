@@ -1,6 +1,6 @@
 # Kohaku SDK — Account-recovery requirements
 
-> **Status: v6 (2026-08-24)** — third PR review round applied ([PR #2](https://github.com/FiboAtWonder/kohaku-extension/pull/2)): commit-reveal visibility answered (decision 84), timelock floor removed (85), fragility grading → V2 (86), user-funded MVP + gas-deposit screens (87), and the A3/A5 rewrites. Posture: this document states **what the extension needs from `@kohaku-eth/social-recovery`**, assuming the SDK exists and its methods work. Contract internals (encodings, binding hashes, thresholds, verifier wiring) are the SDK's problem — we consume APIs. The SDK is **stateless**: it prepares transactions, payloads and proofs; all state (sessions, drafts) lives in the extension. Extension-side changes live in `social-recovery-extension-work.md`. Milestone tags (MVP/V1/V2) follow spec decision 79.
+> **Status: v6 (2026-08-24)** — fourth PR review round applied ([PR #2](https://github.com/FiboAtWonder/kohaku-extension/pull/2)), decisions 84–89: commit-reveal visibility answered (84), timelock floor removed (85), fragility grading → V2 (86), user-funded MVP + gas-deposit screens (87), smart-account-at-init + two-accounts copy (88), E2 skipped (89). Posture: this document states **what the extension needs from `@kohaku-eth/social-recovery`**, assuming the SDK exists and its methods work. Contract internals (encodings, binding hashes, thresholds, verifier wiring) are the SDK's problem — we consume APIs. The SDK is **stateless**: it prepares transactions, payloads and proofs; all state (sessions, drafts) lives in the extension. Extension-side changes live in `social-recovery-extension-work.md`. Milestone tags (MVP/V1/V2) follow spec decision 79.
 
 ## 1 · Working assumptions
 
@@ -28,7 +28,7 @@ Names are proposals; shapes are requirements. "PreparedTx" = a fully-encoded tra
 |---|---|
 | `getRecoveryConfig(account)` → set up? · the path (rows+groups) · waiting period. The SETUP state — "is recovery configured, and what is it" | B-01 gate, C-01, D-04, G-01 |
 | `getPendingRecovery(account)` → none, or: initiated recovery details — newOwner, countdown, which methods were satisfied. The LIVE-RECOVERY state, distinct from config | D-13, D2-01, G-04, B-03 |
-| `prepareSetup(path, waitingPeriod)` → PreparedTx[] — account deployment/upgrade to the 4337 substrate + recovery install + config, batched to ONE owner confirmation (Q28). The Flow C step-8 SAVE, not recovery submission | C-07/C-07e |
+| `prepareSetup(path, waitingPeriod, visibility)` → PreparedTx[] — account deployment/upgrade to the 4337 substrate + recovery install + config (encrypted per the visibility level, 84), batched to ONE owner confirmation (Q28). The Flow C step-8 SAVE, not recovery submission | C-07/C-07e |
 | `prepareUpdate(currentPath, newPath)` → PreparedTx — diff-aware single tx; supports editing one value in place (79: "no remove-and-recreate") | G-05/b/c |
 | `prepareRemove(account)` → PreparedTx | G-02 |
 | `validatePath(path)` — instance uniqueness (76), threshold sanity, one-path shape (73); mirrors the contract rules so the builder can block bad saves client-side. (No waiting-period floor — 0h is legal, decision 85; the warning is UX) | wizard + Advanced |
@@ -55,7 +55,7 @@ interface RecoveryMethod {
 
 ### 2.4 Recovery operations (Flow D) — MVP, stateless
 
-The claim set, resume behavior and wipe rules (decision 70) are **extension state** (`social-recovery-extension-work.md` item 8). The SDK provides pure computation and prepared transactions over that state:
+The claim set, resume behavior and wipe rules (decision 70) are **extension state** (`social-recovery-extension-work.md` item 7). The SDK provides pure computation and prepared transactions over that state:
 
 - `evaluateProgress(path, claims)` → required rows + per-group M-of-N status (pure function; feeds the decision-60 progress grammar).
 - `prepareInitiate(account, newOwner, claims)` → PreparedTx — the recovery submission, broadcast by the recoverer's funded key (MVP is user-funded, decision 87; the D-09 gas-deposit screen fills the tank first when needed). Paymaster sponsorship arrives in V1 behind the same call.
@@ -68,7 +68,7 @@ The claim set, resume behavior and wipe rules (decision 70) are **extension stat
 - The SDK's whole job here (MVP and V1 alike): `buildApprovalPayload(intent)` — what must be signed — and `parseApproval(signature)` — turning the returned signature into the proof/claim the submission tx needs (§2.3 guardian row). Nothing more.
 - The V1 hosted guardian **page** (rendering, wallet connect, offline copy/paste UX) is extension-built and extension-served (decision 51), consuming those two calls.
 
-### 2.6 Secrets & encryption — MVP (Q29/53 is MVP-blocking per decision 79)
+### 2.6 Secrets & encryption — MVP (Q29/53 answered by decision 84)
 
 - **Commit-reveal config encryption (decision 84):** values live in encrypted logs, decrypted with the recovery password. The SDK accepts the user's **visibility level** at setup — `hide-everything` (methods + metadata) · `hide-details` (metadata only; default) · `public` — encrypts accordingly, decrypts on the recoverer side, and re-encrypts on guardian edits (56). "Wrong password never blocks recovery" (48/56) holds at the API level: a failed decrypt degrades to hidden values, never to an error that stops the flow.
 - Backup set export/import: every method secret that exists nowhere else (passkey credentialId, the guardian list, zkPassport secrets per the research pass) — one bundle the UX ties to the recovery password and the dry-run recall row.
@@ -171,15 +171,15 @@ importBackupSet(bundle: BackupSet): Promise<void>
 - Runs inside an MV3 extension: no `eval`/dynamic codegen (CSP allows `wasm-unsafe-eval` only), WASM artifacts packaged locally or fetched-and-cached with integrity, single-instance WASM safety (or documented locking), all APIs async.
 - Long operations (proving) expose progress + cancellation and make no assumption about WHICH JavaScript context runs them — the SDK owns the proving itself (A4b), the extension only picks the host context.
 - Proof-stack reference points (the SDK carries these; see A4b) (measured 2026-08-19): Noir/UltraHonk-class proving ≈ 4–17 s in-browser with MB-scale artifacts; circom/Groth16 zk-email-class ≈ minutes + ~1 GB artifacts; Aadhaar circom ≈ 20–50 s + ~600 MB + ~1.5 GB peak memory. zkPassport's budget comes from its research pass; the SDK API must not leak the stack choice.
-- Backend-zero: all chain access through the host `provider`. (The ZK Email send-relayer requirement died with decision 80.)
+- Backend-zero: all chain access through the host `provider`.
 
 ## 5 · Open questions routed to the kit team
 
-1. **zkPassport integration** (decision 80): SDK surface, proof budget, verifier deployment, nullifier semantics, what the user presents (NFC scan / document photo), and what secret (if any) joins the §2.6 backup set. Research pass to run before its wireframes are drawn.
+1. **zkPassport integration** (decision 80): SDK surface, proof budget, verifier deployment, nullifier semantics, what the user presents (NFC scan / document photo), and what secret (if any) joins the §2.6 backup set. Research pass DONE (`social-recovery-zkpassport-research.md` — verdict negative for MVP, recommendation V1; team decision pending) — the wireframes wait on that ruling.
 2. Funding remainder (decision 87): confirm the execute-repays-`msg.sender` mechanic (flagged may-change); for V1 sponsorship — who operates the paymaster, and what stops a permissionless sponsored entry point from being drained by failed recovery attempts.
 3. Prover stack (with the §3 numbers).
 4. Commit-reveal remainder (decision 84 answered the scope): the encrypted-log schema and how the recoverer fetches it on a fresh device.
-5. Group encoding with thresholds (T10) and the 24h floor's validation/revert surface (74) — assumed solved per A3; listed for traceability.
+5. Group encoding with thresholds (T10) — assumed solved per A3; listed for traceability. (The 24h-floor question died with decision 85.)
 6. Guardian payload contents (nonce, policyId in/out) — assumed frozen by the kit per A3; the UX only needs it human-readable and chain-bound.
 7. Colibri `p256verify` gap (passkey verification fails verified reads on one RPC provider).
 

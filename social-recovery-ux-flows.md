@@ -86,7 +86,7 @@ Building blocks:
 - **ANY-of groups are generic (decided 2026-08-13):** a group's members can be ANY method instances — guardians, passkeys, zkPassport, Aadhaar — mixed freely. Guardians are not special: "3 of 5 guardians" is simply a group whose five members happen to be guardians. No guardian-specific threshold concept exists in the UX.
 - **Every group carries an M-of-N threshold** ("Require 2 ▾ of: passkey, Ana, ID"), not only 1-of-N.
 - **Wizard vs Advanced shape (decision 75):** the wizard builds required rows plus **at most one** ANY-of group over the methods the user selects. Multiple groups in one path (`passkey AND [2/3 guardians] AND [1/2 IDs]`) exist only in the Advanced builder.
-- **Instance uniqueness (decision 76):** one enrolled method instance (a specific passkey, guardian address, or email) appears **once** across the whole path — never both as a required row and as a group member. Method *types* may repeat with different values (two guardian methods with different addresses is fine).
+- **Instance uniqueness (decision 76):** one enrolled method instance (a specific passkey, guardian address, or passport) appears **once** across the whole path — never both as a required row and as a group member. Method *types* may repeat with different values (two guardian methods with different addresses is fine).
 - **A single method is a valid path** (Sam's floor). The builder must support one-method paths; the honesty note (Flow B copy) doubles as their warning.
 - **Recoverer side:** the recovery checklist renders the path as required rows plus group headers with progress ("any M of N — 1 of 2 done"); the path completes when every required row and every group threshold is met. There is no path choice.
 - Contract encoding for generic M-of-N groups sits with the kit team (tech-dependencies table; T10 `threshold` field).
@@ -113,7 +113,7 @@ Group thresholds adapt to the member count the user actually enrolls; 2-of-3 is 
 ```mermaid
 flowchart TD
     A[Express start] --> B["1 · How recovery works —<br/>one screen, three bullets"]
-    B --> C["2 · Inventory: what do you have?<br/>(four checkboxes — list below)"]
+    B --> C["2 · Inventory: what do you have?<br/>(checkbox list below)"]
     C --> D["3 · Recommended path shown as<br/>ONE card: required rows + one<br/>ANY-of group over the selection<br/>(shapes from ottie's persona research)"]
     D --> E["4 · Enroll each method:<br/>short explainer + 'Learn more' +<br/>mandatory access test (local, no chain)"]
     E --> F["5 · Waiting period — 48h default,<br/>changeable down to INSTANT (0h).<br/>The picker warns that 0h removes<br/>the cancel window (decision 85)"]
@@ -126,7 +126,7 @@ flowchart TD
 Inventory items (step 2):
 - ☐ another device (passkey-capable)
 - ☐ trusted contacts with wallets
-- ☐ long-lived email
+- ☐ a passport (zkPassport — details pending its research pass)
 - ☐ Aadhaar ID (last, badged)
 - ☐ keys you keep yourself — paper or hardware (routes to guardian-address entry)
 
@@ -155,15 +155,15 @@ Explicitly **kept off the card** (decided, with rationale): the method inventory
 
 ### Multi-account "apply this setup" (R10 constraints)
 
-- ZK Email `accountCode` derivation per account: **open question** (moved to the tech-dependencies table).
+- Per-account unlinkability of the ID method (zkPassport nullifier scheme, was ZK Email's `accountCode`): **open question** (tech-dependencies table).
 - ✅ Passkey and guardian reuse across accounts is observable on-chain (per R10). Show a linkability warning and offer "create a fresh passkey for this account".
 - Never applied by default.
 
 Other decisions:
 - ✅ All 4 methods in v1. Aadhaar for everyone, listed last, badged.
-- ✅ Two-method inventories (e.g. passkey + email only) get **one [1 of 2] ANY-of group** recommended, not an AND pair — lockout is the larger risk at that level (Diana's shape; supersedes the old two-single-method-paths rule, decision 75). The waiting period stays the flat 48h default.
+- ✅ Two-method inventories (e.g. passkey + ID only) get **one [1 of 2] ANY-of group** recommended, not an AND pair — lockout is the larger risk at that level (Diana's shape; supersedes the old two-single-method-paths rule, decision 75). The waiting period stays the flat 48h default.
 - ✅ Passkey enrollment detects **synced vs device-bound** (WebAuthn backup-eligibility flag). Warnings and floor copy adapt to the type: device-bound → "losing the device removes this path"; synced → "this path depends on your Apple/Google account".
-- ✅ Waiting period (decision 74): **one per account** — the path's waiting period. 48h default, changeable. Floor: the **contract enforces a 24h minimum**, so the picker offers nothing below 24h. The dominated-path warning is retired — with a single path, path domination cannot exist.
+- ✅ Waiting period (decision 74): **one per account** — the path's waiting period. 48h default, changeable. No enforced floor (decision 85): the picker allows **Instant (0h)** with a warning on the picker only — 0h removes the cancel window. The dominated-path warning is retired — with a single path, path domination cannot exist.
 - ✅ Express presets and their contents come from **ottie's persona research**.
 - ✅ Wizard "any M of your N methods" recommendations generate **one M-of-N group** inside the single path — not pairwise expansions. Required rows plus multiple groups exist only in the Advanced builder (decision 75).
 
@@ -225,7 +225,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     CF["Confirmation screen: the account,<br/>the new key that takes control,<br/>the path, the waiting period.<br/>'The current owner can cancel during<br/>the waiting period.' Explicit consent."] --> I["START RECOVERY — one atomic tx,<br/>user-funded (D-09 gas deposit shows<br/>first if the new key is unfunded —<br/>decision 87)"]
-    I -->|Submit fails| I2["Plain-language error + retry<br/>+ self-pay-gas fallback"]
+    I -->|Submit fails| I2["Plain-language error + retry<br/>+ top-up gas (D-09) if short"]
     I2 --> BK["→ back to the checklist (chapter 2)"]
     I -->|Submitted| J["Waiting period countdown —<br/>persistent, resumable"]
     J -->|Owner cancels| XC["Terminal: 'The account owner<br/>cancelled this recovery.'<br/>Explanation + start again"]
@@ -240,7 +240,7 @@ Decisions:
 - ✅ Confirm-identity card before any proof collection (restored from the demo).
 - ✅ There is no path choice and no "switch path" exit (single-path model, decision 73). If the path cannot be satisfied, the checklist says so honestly; partial progress persists until the flow exits.
 - ✅ Resuming an unfinished recovery lands on a dedicated **"Recovery in progress"** screen — the account being recovered, per-row progress, resume and abandon actions. The home-surface pending card is only the entry point (decision 44).
-- ✅ Submit failures get plain-language errors, retry, and a self-pay-gas fallback.
+- ✅ Submit failures get plain-language errors, retry, and a top-up-gas path (D-09 — user-funded is the MVP norm, decision 87).
 - ✅ The countdown has a **cancelled** terminal state — the recoverer never waits into silence.
 - ✅ End of recovery = **required cleanup checklist**, not a soft nudge: the surviving config still contains the lost device's methods; whoever holds that device can start a new recovery. Flag and walk through their removal. Deferring is allowed, but the deferral surfaces as a flagged banner on the management overview until resolved (decision 46) — it is a state, not a separate screen.
 - ✅ Synced passkeys are flagged too (decision 50): while a lost device stays signed in to the platform account, it can still use the synced passkey. The fix path says so: revoke the device or the passkey from the platform / password manager, add a fresh one first, then remove the flagged method.
@@ -362,7 +362,7 @@ Same machinery as the verify-access tests, run over time. **Optional capability,
 flowchart TD
     A["Trigger: opening the Account recovery tab<br/>+ periodic background check"] --> B[Run per enrolled method]
     B --> C["Passkey: sign a test challenge<br/>(no transaction)"]
-    B --> D["ZK Email: test proof against<br/>live DKIM registry"]
+    B --> D["zkPassport: check TBD from<br/>the research pass (decision 80)"]
     B --> E["Guardians: no on-chain check —<br/>prompt periodic self-audit /<br/>ping guardian reachability"]
     B --> F["Aadhaar: proof against current UIDAI key"]
     C --> G{"All pass?"}
@@ -395,7 +395,7 @@ flowchart TD
     C1 --> E["Remove a member the path still needs"]
     C1 --> C2["Review-changes diff →<br/>Save → owner-signed tx"]
 
-    D --> D2["Always the explicit warning<br/>(it is the only path): account becomes<br/>UNPROTECTED. Meter drops to zero.<br/>Type-to-confirm or equivalent."]
+    D --> D2["Always the explicit warning<br/>(it is the only path): account becomes<br/>UNPROTECTED. Status drops to 'Not set up' (86).<br/>Type-to-confirm or equivalent."]
     D2 --> D4[Remove → owner-signed tx]
 
     E --> E2["Blocked in place: the row explains<br/>the path still needs this member —<br/>lower the group threshold or<br/>add a replacement first"]
@@ -433,7 +433,7 @@ Notes:
 | Recovery claim set (per-row approvals/claims) | this device, across pauses and resumes | flow exit (finished or abandoned) · owner cancel · submit |
 | Pending-recovery countdown state | chain (persistent) | execute · cancel |
 
-Deferred (kept open from the 2026-08-18 attack round): re-read-config-on-resume rules and the stale-draft/setup-changed states (M9); attack-during-triage band (M13); guardian changed-mind block on E1-05 (M16); alerts-honesty rewrite (M23); DKIM-rotation failure split (M34).
+Deferred (kept open from the 2026-08-18 attack round): re-read-config-on-resume rules and the stale-draft/setup-changed states (M9); attack-during-triage band (M13); guardian changed-mind block on E1-05 (M16); alerts-honesty rewrite (M23). (M34, the DKIM-rotation failure split, died with ZK Email — decision 80.)
 
 ## Milestones (decision 79)
 
@@ -442,7 +442,7 @@ Three releases split the flows. Definitions: **MVP** = one person can protect on
 | Milestone | Features (flows / screens) |
 |---|---|
 | **MVP** (~78 screens) | Fresh-install entry (A, A1, incl. the **gas-deposit** step A1-04 — decision 87) · **gas-deposit before submitting** (D-09, auto-skipped when funded) · preset setup, pick ONE shape (C-01, C-01b, C-01c, C-04d, C-04e) · **blank start** — the "Start from scratch" card on C-01 + the empty editor C-04f (decision 82) · **member picker + enroll-a-method sheet** (C-10b, C-10e — moved from V1: editing and blank building are unusable without them) · enrollment + mandatory tests, all 4 methods (C-05 family; the email screens C-05e/k/n swap to zkPassport after its research pass — decision 80) · waiting period (C-06, C-06c) · **recovery password + hidden values** (C-06e, D-06e, D-06f) · review + save (C-07, C-07b, C-07e) · Recovery Card, card only (C-08) · recovery chapters 1–3 (D-01…D-05b, D-06 readout, D-07 family, D-08, D-10, D-11…D-14, done-terminal without cleanup à la D-15c) · **guardian approvals, manual**: the D-07 guardian row shows the exact payload to sign + paste-back (no hosted page) · cancel flow (D2-01, D2-01b, light "cancelled" terminal, D2-03, B-03, B-03b; banner via polling, no push) · management incl. **path editing** (G-01, G-02, G-03, G-03b, G-04, G-05, G-05b, G-05c) — no remove-and-recreate to change one value |
-| **V1** (~42 screens) | Hosted guardian page, sync (E1-01…E1-08 incl. mobile, decline, offline signing) · Express wizard education layer (C-02, C-03 family, C-04, C-04b, C-04c) · dry run (C-07h…m) · Advanced builder — the free canvas, the method-library view, the right-rail layout, save-and-sign without a wizard review, tests offered not enforced (C-10, C-10c, C-10d, C-10f; the picker and enroll sheet ship earlier in MVP) · nudge system (B-01, B-02) · alerts / push notifications (C-08 alerts part, D2 push) · same-install account list (part of D-02/D-02b) · deferred attack-round states (M9, M13, M16, M23, M34) |
+| **V1** (~42 screens) | Hosted guardian page, sync (E1-01…E1-08 incl. mobile, decline, offline signing) · Express wizard education layer (C-02, C-03 family, C-04, C-04b, C-04c) · dry run (C-07h…m) · Advanced builder — the free canvas, the method-library view, the right-rail layout, save-and-sign without a wizard review, tests offered not enforced (C-10, C-10c, C-10d, C-10f; the picker and enroll sheet ship earlier in MVP) · nudge system (B-01, B-02) · alerts / push notifications (C-08 alerts part, D2 push) · same-install account list (part of D-02/D-02b) · deferred attack-round states (M9, M13, M16, M23 — M34 died with ZK Email) |
 | **V2** (~13 screens) | Post-recovery cleanup (D-15 flagged version, D-15d, G-01b) · post-cancel triage (D2-02, G-01c) · apply to other accounts (C-09 family) · health checks (F-01, F-02 + "Last check" stat) · **fragility grading + the graded "Recovery ready" meter** (decision 86 — MVP/V1 show a plain set-up/not-set-up status line) · async approvals (E2 — skipped, decision 89) · IPFS/IPNS page hosting · multichain stays out of scope |
 
 Consequences carried by the split:
@@ -461,7 +461,7 @@ Consequences carried by the split:
 | 4 | Method set v1 | All 4. Aadhaar for everyone, listed last, badged. |
 | 5 | Terminology | "Account recovery" / "recovery path" / "method" / "waiting period" in UI; spec terms in prose only. |
 | 6 | Honest copy for floor cases | Yes — concrete copy in Flow B. 7702 vs 4337 deferred. |
-| 7 | Gas for recovery | ⚠️ **Escalated to blocker**: paymaster can't sponsor direct calls; no relayer exists (backend-zero). |
+| 7 | Gas for recovery | ⚠️ **Escalated to blocker**: paymaster can't sponsor direct calls; no relayer exists (backend-zero). **Narrowed by #87**: MVP is user-funded (gas-deposit screens); paymaster sponsorship V1. |
 | 8 | Identify lost account | Address / ENS / gated same-install list + confirm-identity card. |
 | 9 | Guardian-side UX | Hardened IPFS/IPNS page (E1 default): real payload incl. nonce, no fake expiry, blocking out-of-band step, decline branch, offline signing. **Milestone note (79): the hosted page ships in V1; MVP guardians sign the raw payload shown on the recoverer's checklist row.** |
 | 10 | Proof collection state | Local persistence, resumable, switch-path exit; atomic submission. **Amended by #73**: the switch-path exit no longer exists. |
@@ -482,7 +482,7 @@ Consequences carried by the split:
 | 25 | Fast-track onboarding | Warning screen + password + key + seed backup. Corrected copy (address never changes). |
 | 26 | Express wizard shape | Guided, short, inventory step; draft/resume; alerts opt-in. |
 | 27 | Verify-access | Mandatory for identity methods; guardians optional, open. Mutual guardian approval = under consideration. **Guardian side confirmed optional by #52.** |
-| 28 | Setup gas / batching | User pays if funded, else paymaster. Batching partially answered (thread T7: one batched UserOp — conceded, unwritten). |
+| 28 | Setup gas / batching | User pays if funded, else paymaster. Batching partially answered (thread T7: one batched UserOp — conceded, unwritten). **Narrowed by #87** for recovery submission: user-funded MVP. |
 | 29 | Config visibility | Structure readable; value visibility OPEN (guardian addresses natively public today); password-decrypt case stays. **Answered by #84** (commit-reveal; user-chosen exposure). |
 | 30 | R9 orthogonality gate | **Not now** — invariants/tech design under rework; violations allowed; revisit later. |
 | 31 | Guardian mutual approval | Best-effort stands; mutual approval noted as a considered path. |
@@ -534,8 +534,8 @@ Consequences carried by the split:
 | 77 | ZK Email receive-and-upload | The user clicks **"Send email"**; an **external relayer** sends an email to the enrolled address. The user downloads the raw `.eml` ("Show original") and uploads it; the proof is created locally. Amends #55. A **"How to get the .eml" help sheet** covers Gmail, Outlook (web), Apple Mail, Yahoo, Proton — linked from the enrollment test and the recovery verify row. **Amended 2026-08-20 (PR #2 review):** the proof runs over the email the user SENDS, so one step joins the flow — the user **replies** to the relayer's email ("Confirm"), then downloads **their own reply** from Sent (same "Show original" mechanic) and uploads that. Assumed to work end to end. Wireframe updates (C-05e, D-07e, C-05n) queued — held while the team decides ZK Email vs zkPassport. |
 | 78 | Account type focus | The initiative focuses on **4337 smart accounts**; 7702 support is deferred. Recorded only — no user-visible copy change now. |
 | 79 | **Milestone split** (2026-08-18) | MVP / V1 / V2 — see the "Milestones" section. Fibo's rulings: all 4 methods MVP; guardian page → V1 with a manual sign-this-payload MVP mechanic; post-recovery cleanup + post-cancel triage → V2 (cancel itself stays MVP); recovery password MVP; path editing MVP ("no remove-and-recreate to change one value"). Q29/53 becomes MVP-blocking. |
-| 80 | **zkPassport replaces ZK Email** (2026-08-20) | The method set becomes passkey · guardians · **zkPassport** · Anon Aadhaar (Aadhaar stays). ZK Email is dropped entirely — with it go the send-only relayer requirement, the `.eml` upload, the "How to get the .eml" help sheet (C-05n), the accountCode custody problem, and decisions 16/55/77 as live rules (they stay in the log as history). **Personas:** wherever a persona used ZK Email it maps to zkPassport — Diana `[1 of 2](passkey, zkPassport)`, Bob `[2 of 3](passkey, guardian, zkPassport)`. **Pending:** a zkPassport research pass (what the user presents, proof budget, verifier deployment, nullifier semantics, whether an enrollment secret joins the backup set), then a Pen round to redraw C-05e/C-05k/C-05n/D-07e and the preset, plus the persona/demo remap and the stale ".eml" copy on X-02, the deck's Milestones slide and the Milestones section. Wireframes and demo still show the email method until that round runs. |
-| 81 | **Grading is ours; the 4337 account can reuse an existing key** (2026-08-20) | Two rulings from the PR review. **(a) Safety grading is wallet-side, not SDK-side.** The SDK serves many wallet implementations and each sets its own bar for "safe enough", so it returns path + method metadata and no verdict. The fragility rules, the "Recovery ready" meter (42/71) and the honesty copy that hangs off them are ours to define. Structural validity (instance uniqueness, thresholds, the 24h floor) stays in the SDK — those are contract rules, not opinions. **(b) The 4337 account does not have to be new.** The demo's main flow creates one, but an **existing EOA can be set as its signer**, so a current user keeps their key and skips a second seed ceremony. Flow C does not draw that route yet — new screen state to design. Note the address nuance: onboarding into a 4337 account means a new account address; decision 25's "your account stays at the same address" is about *recovering* an existing 4337 account, and stays true. |
+| 80 | **zkPassport replaces ZK Email** (2026-08-20) | The method set becomes passkey · guardians · **zkPassport** · Anon Aadhaar (Aadhaar stays). ZK Email is dropped entirely — with it go the send-only relayer requirement, the `.eml` upload, the "How to get the .eml" help sheet (C-05n), the accountCode custody problem, and decisions 16/55/77 as live rules (they stay in the log as history). **Personas:** wherever a persona used ZK Email it maps to zkPassport — Diana `[1 of 2](passkey, zkPassport)`, Bob `[2 of 3](passkey, guardian, zkPassport)`. **Update 2026-08-24: the research pass is DONE** (`social-recovery-zkpassport-research.md`; verdict negative for MVP, recommendation V1 — team decision pending), then a Pen round to redraw C-05e/C-05k/C-05n/D-07e and the preset, plus the persona/demo remap and the stale ".eml" copy on X-02, the deck's Milestones slide and the Milestones section. Wireframes and demo still show the email method until that round runs. |
+| 81 | **Grading is ours; the 4337 account can reuse an existing key** (2026-08-20) | Two rulings from the PR review. **(a) Safety grading is wallet-side, not SDK-side.** The SDK serves many wallet implementations and each sets its own bar for "safe enough", so it returns path + method metadata and no verdict. The fragility rules, the "Recovery ready" meter (42/71) and the honesty copy that hangs off them are ours to define. Structural validity (instance uniqueness, thresholds; the 24h floor has since been removed by #85) stays in the SDK — those are contract rules, not opinions. **(b) The 4337 account does not have to be new.** The demo's main flow creates one, but an **existing EOA can be set as its signer**, so a current user keeps their key and skips a second seed ceremony. Flow C does not draw that route yet — new screen state to design. Note the address nuance: onboarding into a 4337 account means a new account address; decision 25's "your account stays at the same address" is about *recovering* an existing 4337 account, and stays true. |
 | 82 | **Blank start; how far MVP configuration goes** (2026-08-20) | A fourth C-01 card **"Start from scratch"** (dashed, no structure line) opens the new empty editor **C-04f** ("Build your path": empty REQUIRED + GROUPS sections, the same rules panel, plus "A path needs at least one method" gating Continue). Consequences: **C-10b + C-10e move into the MVP** (blank building and editing are unusable without a member picker and an enroll sheet); **multi-group is reachable in MVP** through the editors, so #75's "Advanced-only" now covers the free-canvas builder rather than the capability; **C-04e drops its "Open Advanced" pointer** in MVP and explains "Add a group" in place; a path **loses its preset label** when editing changes its shape (#69 amended). Milestone counts move to MVP ~76 / V1 ~42. Option (a) chosen: card in the grid, "Customize" re-points per milestone. |
 | 83 | **Passkey health check is a user-gesture test** (2026-08-20) | Asking the user to tap their passkey is the intended mechanic, not a workaround — no browser API can silently confirm one credential still exists. So Flow F prompts for the tap and records the result; unattended runs cover only the environment, and a background failure renders as "unproven", never "deleted". Affects the F-01/F-02 copy and the "Last check" stat (71). |
 | 84 | **Commit-reveal config visibility — answered** (2026-08-24) | Q29/53 closed by the kit team: config values live in encrypted logs, decrypted with the recovery password; nothing is natively public. The kit offers three hiding levels and **we expose the choice to the user** on the recovery-password step (C-06e): "Hide everything" (methods + metadata) · "Hide the details" (metadata only — the shape stays readable; **default**) · "Public". Un-blocks the MVP. |
