@@ -21,7 +21,7 @@
      "device": "popup",
      "hit": [
       58,
-      383,
+      409.5,
       101,
       16
      ]
@@ -196,7 +196,7 @@
      "hitLabel": "Continue",
      "hit": [
       372,
-      447,
+      451,
       61,
       16
      ]
@@ -222,8 +222,21 @@
      "hitLabel": "Continue to recovery",
      "hit": [
       372,
-      569,
-      139,
+      574,
+      140,
+      16
+     ]
+    },
+    {
+     "screen": "A1-04-gas-deposit",
+     "story": "A little ETH into the new account — submitting the recovery costs gas. The screen watches the balance and moves on when the deposit lands; it auto-skips when the account is already funded.",
+     "act": "Recovery",
+     "spec": "Decision 87 — user-funded MVP · auto-skipped when funded",
+     "hitLabel": "Continue",
+     "hit": [
+      372,
+      563,
+      61,
       16
      ]
     },
@@ -261,9 +274,9 @@
     },
     {
      "screen": "D-11-confirm-start-recovery",
-     "story": "The consent screen: the account, the new key, 48 hours. The owner can cancel — that is the protection. (Bridge: the drawn summary reads the generic passkey + guardians shape; his is the single passkey.)",
+     "story": "The consent screen: the account, the new key, 48 hours. The owner can cancel — that is the protection. (Bridge: the drawn summary reads the generic passkey + guardians shape; his is the single passkey.) (Funded at A1-04, so the pre-submit gas check — D-09 — auto-skips.)",
      "act": "Recovery",
-     "spec": "Flow D chapter 3 · funding/executor still open (Q7/Q19)",
+     "spec": "Flow D chapter 3 · decision 87 — user-funded",
      "hitLabel": "Start recovery",
      "hit": [
       340,
@@ -315,7 +328,7 @@
      "device": "popup",
      "hit": [
       58,
-      383,
+      409.5,
       101,
       16
      ]
@@ -354,21 +367,21 @@
      "hitLabel": "Continue",
      "hit": [
       340,
-      407,
+      374,
       63,
       17
      ]
     },
     {
      "screen": "C-06e-recovery-password",
-     "story": "She hides the values: five addresses behind a password. Anyone can still read her path's shape — not who her people are. Set once; forgetting it never locks her out.",
+     "story": "She picks the middle visibility level — Hide the details: five addresses behind a password, while the path's shape stays readable. Set once; forgetting it never locks her out.",
      "act": "Setup",
-     "spec": "Decisions 48/56 · what exactly gets hidden is open (53)",
+     "spec": "Decisions 48/56/84 · three visibility levels — hers is the default, Hide the details",
      "hitLabel": "Hide the details",
      "hit": [
-      410.25,
-      529,
-      99,
+      409.8,
+      717,
+      100,
       16
      ]
     },
@@ -438,7 +451,7 @@
      "hitLabel": "Continue",
      "hit": [
       372,
-      447,
+      451,
       61,
       16
      ]
@@ -464,8 +477,21 @@
      "hitLabel": "Continue to recovery",
      "hit": [
       372,
-      569,
-      139,
+      574,
+      140,
+      16
+     ]
+    },
+    {
+     "screen": "A1-04-gas-deposit",
+     "story": "A little ETH into the new account — submitting the recovery costs gas. The screen watches the balance and moves on when the deposit lands; it auto-skips when the account is already funded.",
+     "act": "Recovery",
+     "spec": "Decision 87 — user-funded MVP · auto-skipped when funded",
+     "hitLabel": "Continue",
+     "hit": [
+      372,
+      563,
+      61,
       16
      ]
     },
@@ -595,7 +621,7 @@
     },
     {
      "screen": "D-11-confirm-start-recovery",
-     "story": "Consent: the account, the new key, and — for her — 72 hours. (Bridge: the drawn rows read 48h and a passkey path.)",
+     "story": "Consent: the account, the new key, and — for her — 72 hours. (Bridge: the drawn rows read 48h and a passkey path.) (Funded at A1-04, so the pre-submit gas check — D-09 — auto-skips.)",
      "act": "Recovery",
      "spec": "Flow D chapter 3",
      "hitLabel": "Start recovery",
@@ -688,12 +714,12 @@
      "screen": "C-06e-recovery-password",
      "story": "Carl hides Sara's address behind a password. The Recovery Card in the drawer stays a non-map.",
      "act": "Setup",
-     "spec": "Decisions 48/56",
+     "spec": "Decisions 48/56/84",
      "hitLabel": "Hide the details",
      "hit": [
-      410.25,
-      529,
-      99,
+      409.8,
+      717,
+      100,
       16
      ]
     },
@@ -763,7 +789,7 @@
      "hitLabel": "Continue",
      "hit": [
       372,
-      447,
+      451,
       61,
       16
      ]
@@ -789,8 +815,21 @@
      "hitLabel": "Continue to recovery",
      "hit": [
       372,
-      569,
-      139,
+      574,
+      140,
+      16
+     ]
+    },
+    {
+     "screen": "A1-04-gas-deposit",
+     "story": "A little ETH into the new account — submitting the recovery costs gas. The screen watches the balance and moves on when the deposit lands; it auto-skips when the account is already funded.",
+     "act": "Recovery",
+     "spec": "Decision 87 — user-funded MVP · auto-skipped when funded",
+     "hitLabel": "Continue",
+     "hit": [
+      372,
+      563,
+      61,
       16
      ]
     },
@@ -894,7 +933,7 @@
     },
     {
      "screen": "D-11-confirm-start-recovery",
-     "story": "“Both rows complete” — literally his path: one required row, one group. 48 hours start now. (Bridge: the drawn summary reads the generic 2-of-3 shape.)",
+     "story": "“Both rows complete” — literally his path: one required row, one group. 48 hours start now. (Bridge: the drawn summary reads the generic 2-of-3 shape.) (Funded at A1-04, so the pre-submit gas check — D-09 — auto-skips.)",
      "act": "Recovery",
      "spec": "Flow D chapter 3",
      "hitLabel": "Start recovery",
@@ -1012,11 +1051,11 @@
      "screen": "C-06-waiting-period",
      "story": "One waiting period covers the whole path — she keeps 48 hours.",
      "act": "Setup",
-     "spec": "Decision 74 — one per account, 24h floor",
+     "spec": "Decisions 74 · 85 — one per account, no enforced floor",
      "hitLabel": "Continue",
      "hit": [
       340,
-      445,
+      491,
       63,
       17
      ]
@@ -1025,12 +1064,12 @@
      "screen": "C-06e-recovery-password",
      "story": "Her email address gets hidden too. She needs this password only to read her own setup during a recovery — forgetting it never blocks the recovery itself.",
      "act": "Setup",
-     "spec": "Decisions 48/56 · D-06e is the wrong-password state",
+     "spec": "Decisions 48/56/84 · D-06e is the wrong-password state",
      "hitLabel": "Hide the details",
      "hit": [
-      410.25,
-      529,
-      99,
+      409.8,
+      717,
+      100,
       16
      ]
     },
@@ -1093,7 +1132,7 @@
      "hitLabel": "Continue",
      "hit": [
       372,
-      447,
+      451,
       61,
       16
      ]
@@ -1119,8 +1158,21 @@
      "hitLabel": "Continue to recovery",
      "hit": [
       372,
-      569,
-      139,
+      574,
+      140,
+      16
+     ]
+    },
+    {
+     "screen": "A1-04-gas-deposit",
+     "story": "A little ETH into the new account — submitting the recovery costs gas. The screen watches the balance and moves on when the deposit lands; it auto-skips when the account is already funded.",
+     "act": "Recovery",
+     "spec": "Decision 87 — user-funded MVP · auto-skipped when funded",
+     "hitLabel": "Continue",
+     "hit": [
+      372,
+      563,
+      61,
       16
      ]
     },
@@ -1171,7 +1223,7 @@
     },
     {
      "screen": "D-11-confirm-start-recovery",
-     "story": "Consent: the account, the new key, 48 hours. (Bridge: her path row reads Email · 1 row complete.)",
+     "story": "Consent: the account, the new key, 48 hours. (Bridge: her path row reads Email · 1 row complete.) (Funded at A1-04, so the pre-submit gas check — D-09 — auto-skips.)",
      "act": "Recovery",
      "spec": "Flow D chapter 3",
      "hitLabel": "Start recovery",
@@ -1257,9 +1309,9 @@
     },
     {
      "screen": "C-10-advanced-builder-single-path",
-     "story": "Group complete, 48h on the path — the picker starts at the 24-hour floor. Advanced has its own terminal: save as one transaction, no wizard review. The optional password row lives in the right rail — the same component as the wizard step.",
+     "story": "Group complete, 48h on the path — the default; there is no enforced floor. Advanced has its own terminal: save as one transaction, no wizard review. The optional password row lives in the right rail — the same component as the wizard step.",
      "act": "Setup",
-     "spec": "Decision 74 — 24h contract floor · the advanced flow never routes through the wizard"
+     "spec": "Decisions 74 · 85 — no enforced floor · the advanced flow never routes through the wizard"
     },
     {
      "screen": "C-07l-dry-run-mixed-group",
@@ -1294,7 +1346,7 @@
      "hitLabel": "Continue",
      "hit": [
       340,
-      577,
+      656,
       63,
       17
      ]
@@ -1395,6 +1447,12 @@
       63,
       17
      ]
+    },
+    {
+     "screen": "D-09-gas-deposit-before-submit",
+     "story": "Bob entered logged-in and never saw onboarding — nobody funded this account, so the pre-submit check catches it. No button to press: the screen watches the balance and continues on its own when the deposit arrives.",
+     "act": "Recovery",
+     "spec": "Decision 87 — pre-submit gas deposit · auto-skipped when funded"
     },
     {
      "screen": "D-11-confirm-start-recovery",
@@ -1635,7 +1693,7 @@
   ],
   "C-06e-recovery-password": [
    1280,
-   800
+   830
   ],
   "C-07c-review-single-method-path": [
    1280,
@@ -1862,6 +1920,14 @@
    900
   ],
   "C-04f-build-your-path": [
+   1280,
+   800
+  ],
+  "A1-04-gas-deposit": [
+   1280,
+   800
+  ],
+  "D-09-gas-deposit-before-submit": [
    1280,
    800
   ]
