@@ -177,7 +177,7 @@ importBackupSet(bundle: BackupSet): Promise<void>
 
 1. **zkPassport integration** (decision 80): SDK surface, proof budget, verifier deployment, nullifier semantics, what the user presents (NFC scan / document photo), and what secret (if any) joins the §2.6 backup set. Research pass DONE (`social-recovery-zkpassport-research.md` — verdict negative for MVP, recommendation V1; team decision pending) — the wireframes wait on that ruling.
 2. Funding remainder (decision 87): confirm the execute-repays-`msg.sender` mechanic (flagged may-change); for V1 sponsorship — who operates the paymaster, and what stops a permissionless sponsored entry point from being drained by failed recovery attempts.
-3. Prover stack (with the §3 numbers).
+3. Prover stack (with the §4 numbers).
 4. Commit-reveal remainder (decision 84 answered the scope): the encrypted-log schema and how the recoverer fetches it on a fresh device.
 5. Group encoding with thresholds (T10) — assumed solved per A3; listed for traceability. (The 24h-floor question died with decision 85.)
 6. Guardian payload contents (nonce, policyId in/out) — assumed frozen by the kit per A3; the UX only needs it human-readable and chain-bound.
