@@ -146,9 +146,23 @@ Capabilities and constraints that exist on their side with no screen on ours. No
 3. **SDK conformance vs decision 81(a).** Q-8's resolution floats "stating the integrator obligation as a conformance requirement the SDK checks", and Q-7 asks "whether the SDK warns on a rule whose clause rests on secondary credentials alone". Both put a safety verdict back inside the SDK. Hold the line: advisory metadata, never a verdict.
 4. **"All four methods, MVP, non-negotiable" is at risk from both ends.** Aadhaar's shippability is a blocking question on their side (pinned 2021 certificate rejecting current QR codes); zkPassport is secondary in their tiering, needs a closed-source bridge and cloud prover that breaks the backend-zero premise, costs ~1M gas per verification, and our own research recommends V1. Decision 79 needs a contingency.
 
+## 6b · Post-review drift — decisions 84–89 (2026-08-24)
+
+Our docs advanced to SDK v7 while this review was being written. Cross-checking the new decisions against their spec:
+
+| Ours | Their spec | Verdict |
+|---|---|---|
+| **85 — timelock floor removed**: "No contract-enforced minimum waiting period. The picker allows **Instant (0h)**… Supersedes #74's floor" | **I-7**: "At least 24 hours always pass between the acceptance of a complete proof set and the rotation it approves… the contract enforces the floor at the moment the setup is written"; EF-confirmed (ef-call-outcomes:39) | **NEW LIVE CONFLICT — highest priority.** If their contract enforces 24h at the setup write, every save below 24h **reverts**. An "Instant (0h)" option would be an unsaveable choice, and the warning copy would be describing a state the chain refuses to store. Either they drop I-7 or decision 85 is unbuildable. Reconcile before either side freezes |
+| **84 — commit-reveal visibility answered** | I-15, design.md:273–295 | Converges with §3.2 — check the two are the same model |
+| **86 — fragility grading → V2** | Q-7/Q-8 still ask the SDK to warn | Strengthens our A6 line; the §6 row-3 conflict stands |
+| **87 — user-funded MVP + gas-deposit screens** | Q-5: no named payer for the demo | Converges with §1's funding row; their repayment knob (design.md:250) may reduce the deposit burden — worth checking |
+| **88 — smart account at initialization** | design.md:229–235: "does not convert in place… a fresh smart account with assets migrated across" | Compatible; the migrate-assets state is still undrawn |
+| **89 — async approvals (E2) skipped** | I-9 forbids incremental submission | **Resolves finding A16.** Our reason and theirs now agree; no need to contest Q-9 |
+
 ## 7 · Suggested actions, in order
 
 **Today, costs nothing:**
+0. **Reconcile decision 85 against their I-7** (§6b) — an "Instant (0h)" picker option cannot be saved against a contract that enforces a 24h floor at the write. One of the two has to move, and both are recent.
 1. Send them our current `social-recovery-ux-flows.md` + `social-recovery-sdk-requirements.md`, and answer **Q-3** explicitly with decision 73. It is blocking irreversible surface on a disagreement that no longer exists.
 2. Fix the four factual errors in our doc — the multichain header (§2 row 5), the pending-edit note (row 4), the expiry claim (row 3), and the linkability line (row 6). These are wrong today regardless of any decision.
 
