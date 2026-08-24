@@ -989,7 +989,7 @@
                           "id": "Ib5QL",
                           "name": "Step label",
                           "fill": "$faint",
-                          "content": "SET UP THIS DEVICE · STEP 1 OF 3",
+                          "content": "SET UP THIS DEVICE · STEP 1 OF 4",
                           "fontFamily": "$sans",
                           "fontSize": 11,
                           "fontWeight": "700",
@@ -1025,6 +1025,15 @@
                               "cornerRadius": 3,
                               "id": "y7Ps3",
                               "name": "Dot 3",
+                              "fill": "$line2",
+                              "width": 24,
+                              "height": 4
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 3,
+                              "id": "w87Uu",
+                              "name": "Dot 4",
                               "fill": "$line2",
                               "width": 24,
                               "height": 4
@@ -1470,7 +1479,7 @@
                           "id": "Pch8f",
                           "name": "Step label",
                           "fill": "$faint",
-                          "content": "SET UP THIS DEVICE · STEP 2 OF 3",
+                          "content": "SET UP THIS DEVICE · STEP 2 OF 4",
                           "fontFamily": "$sans",
                           "fontSize": 11,
                           "fontWeight": "700",
@@ -1506,6 +1515,15 @@
                               "cornerRadius": 3,
                               "id": "vY0LJ",
                               "name": "Dot 3",
+                              "fill": "$line2",
+                              "width": 24,
+                              "height": 4
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 3,
+                              "id": "uLNop",
+                              "name": "Dot 4",
                               "fill": "$line2",
                               "width": 24,
                               "height": 4
@@ -2059,7 +2077,7 @@
                           "id": "EwyMW",
                           "name": "Step label",
                           "fill": "$faint",
-                          "content": "SET UP THIS DEVICE · STEP 3 OF 3",
+                          "content": "SET UP THIS DEVICE · STEP 3 OF 4",
                           "fontFamily": "$sans",
                           "fontSize": 11,
                           "fontWeight": "700",
@@ -2096,6 +2114,15 @@
                               "id": "oBmpq",
                               "name": "Dot 3",
                               "fill": "$accent",
+                              "width": 24,
+                              "height": 4
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 3,
+                              "id": "Wwc15",
+                              "name": "Dot 4",
+                              "fill": "$line2",
                               "width": 24,
                               "height": 4
                             }
@@ -2943,6 +2970,633 @@
                   ]
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "o4Mv5R",
+              "name": "Page · A1-04",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "TB4dp",
+                  "name": "Caption",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "bq2dE",
+                      "name": "Code",
+                      "fill": "$accent",
+                      "content": "A1-04",
+                      "fontFamily": "$sans",
+                      "fontSize": 26,
+                      "fontWeight": "800",
+                      "letterSpacing": 0.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "m6EFbU",
+                      "name": "Description",
+                      "fill": "$ink",
+                      "content": "Gas deposit · fund your new account",
+                      "fontFamily": "$sans",
+                      "fontSize": 26,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "QbGTk",
+                  "name": "A1-04-gas-deposit",
+                  "clip": true,
+                  "width": 1280,
+                  "height": 800,
+                  "fill": "$side",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Qu9NM",
+                      "name": "Top bar",
+                      "width": "fill_container",
+                      "height": 58,
+                      "fill": "$panel",
+                      "stroke": "$line",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "gap": 12,
+                      "padding": [
+                        0,
+                        26
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "M7EQ5",
+                          "name": "Logo",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "droplet",
+                          "library": "lucide",
+                          "fill": "$accent"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ujhwH",
+                          "name": "Brand",
+                          "fill": "$ink",
+                          "content": "Kohaku",
+                          "fontFamily": "$sans",
+                          "fontSize": 15,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "N39Ja",
+                          "name": "Spacer",
+                          "width": "fill_container",
+                          "height": 1
+                        },
+                        {
+                          "type": "text",
+                          "id": "s7d3R",
+                          "name": "Step label",
+                          "fill": "$faint",
+                          "content": "SET UP THIS DEVICE · STEP 4 OF 4",
+                          "fontFamily": "$sans",
+                          "fontSize": 11,
+                          "fontWeight": "700",
+                          "letterSpacing": 0.7
+                        },
+                        {
+                          "type": "frame",
+                          "id": "XX4Ua",
+                          "name": "Dots",
+                          "gap": 6,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 3,
+                              "id": "v5ZjwO",
+                              "name": "Dot",
+                              "fill": "$accent-line",
+                              "width": 24,
+                              "height": 4
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 3,
+                              "id": "On3MH",
+                              "name": "Dot",
+                              "fill": "$accent-line",
+                              "width": 24,
+                              "height": 4
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 3,
+                              "id": "JYhjm",
+                              "name": "Dot",
+                              "fill": "$accent-line",
+                              "width": 24,
+                              "height": 4
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 3,
+                              "id": "Uj6Ml",
+                              "name": "Dot",
+                              "fill": "$accent",
+                              "width": 24,
+                              "height": 4
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "kTiW5",
+                      "name": "Body",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "padding": [
+                        26,
+                        20
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "AtGnT",
+                          "name": "Card",
+                          "width": 620,
+                          "fill": "$panel",
+                          "cornerRadius": 16,
+                          "stroke": "$line2",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "layout": "vertical",
+                          "gap": 12,
+                          "padding": [
+                            22,
+                            24
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "D5ZL7",
+                              "name": "Title",
+                              "fill": "$ink",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Add a little ETH for fees",
+                              "fontFamily": "$sans",
+                              "fontSize": 20,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "y623T",
+                              "name": "Lead",
+                              "fill": "$muted",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Starting the recovery is a transaction — your new account pays its own fee.",
+                              "lineHeight": 1.45,
+                              "fontFamily": "$sans",
+                              "fontSize": 12.5,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "J50TAT",
+                              "name": "Amount row",
+                              "width": "fill_container",
+                              "fill": "$accent-bg",
+                              "cornerRadius": 11,
+                              "stroke": "$accent-line",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "gap": 11,
+                              "padding": [
+                                12,
+                                13
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "v0DwWH",
+                                  "name": "Icon",
+                                  "width": 16,
+                                  "height": 16,
+                                  "icon": "fuel",
+                                  "library": "lucide",
+                                  "fill": "$accent-ink"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "P3IkE",
+                                  "name": "Text",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 2,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "l5TTbs",
+                                      "name": "Title",
+                                      "fill": "$accent-ink",
+                                      "content": "≈ 0.00X ETH needed",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 12.5,
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "rE4sC",
+                                      "name": "Sub",
+                                      "fill": "$accent-ink",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Placeholder — the exact amount follows the network fee at the time you submit.",
+                                      "lineHeight": 1.45,
+                                      "fontFamily": "$sans",
+                                      "fontSize": 11.5,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Lr2Mi",
+                              "name": "Fund row",
+                              "width": "fill_container",
+                              "gap": 14,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "U7hWTY",
+                                  "name": "Deposit column",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 10,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "PqSYR",
+                                      "name": "Label",
+                                      "fill": "$faint",
+                                      "content": "SEND ETH TO YOUR NEW ACCOUNT",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 10,
+                                      "fontWeight": "700",
+                                      "letterSpacing": 0.7
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "rmGqC",
+                                      "name": "Address box",
+                                      "width": "fill_container",
+                                      "fill": "$wash",
+                                      "cornerRadius": 9,
+                                      "stroke": "$line",
+                                      "strokeWidth": 1,
+                                      "strokeAlignment": "inner",
+                                      "gap": 8,
+                                      "padding": [
+                                        9,
+                                        11
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "p0QNiC",
+                                          "name": "Address",
+                                          "fill": "$ink",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "0x7A19c3F0b41d8E5a90cC77b2E4f8135Aa62Cc204",
+                                          "lineHeight": 1.45,
+                                          "fontFamily": "$mono",
+                                          "fontSize": 11,
+                                          "fontWeight": "normal"
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "tX5Lw",
+                                          "name": "Copy button",
+                                          "fill": "$panel",
+                                          "cornerRadius": 8,
+                                          "stroke": "$line2",
+                                          "strokeWidth": 1,
+                                          "strokeAlignment": "inner",
+                                          "gap": 6,
+                                          "padding": [
+                                            6,
+                                            10
+                                          ],
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "icon",
+                                              "id": "PNMIF",
+                                              "name": "Icon",
+                                              "width": 13,
+                                              "height": 13,
+                                              "icon": "copy",
+                                              "library": "lucide",
+                                              "fill": "$ink"
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "bbmZx",
+                                              "name": "Label",
+                                              "fill": "$ink",
+                                              "content": "Copy",
+                                              "fontFamily": "$sans",
+                                              "fontSize": 11.5,
+                                              "fontWeight": "700"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "cRa9q",
+                                      "name": "Network note",
+                                      "fill": "$muted",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Send on the same network as the account you are recovering.",
+                                      "lineHeight": 1.45,
+                                      "fontFamily": "$sans",
+                                      "fontSize": 11.5,
+                                      "fontWeight": "normal"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "NWTte",
+                                      "name": "Waiting strip",
+                                      "width": "fill_container",
+                                      "fill": "$wash",
+                                      "cornerRadius": 10,
+                                      "stroke": "$line",
+                                      "strokeWidth": 1,
+                                      "strokeAlignment": "inner",
+                                      "gap": 9,
+                                      "padding": [
+                                        11,
+                                        12
+                                      ],
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "loYQh",
+                                          "name": "Spinner",
+                                          "width": 15,
+                                          "height": 15,
+                                          "icon": "loader",
+                                          "library": "lucide",
+                                          "fill": "$accent"
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "QNLBN",
+                                          "name": "Text",
+                                          "width": "fill_container",
+                                          "layout": "vertical",
+                                          "gap": 2,
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "Q5qSX",
+                                              "name": "Title",
+                                              "fill": "$ink",
+                                              "content": "Waiting for funds…",
+                                              "fontFamily": "$sans",
+                                              "fontSize": 12.5,
+                                              "fontWeight": "700"
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "BK4oU",
+                                              "name": "Sub",
+                                              "fill": "$muted",
+                                              "textGrowth": "fixed-width",
+                                              "width": "fill_container",
+                                              "content": "Balance 0 ETH · this screen continues on its own once the deposit arrives.",
+                                              "lineHeight": 1.45,
+                                              "fontFamily": "$sans",
+                                              "fontSize": 11,
+                                              "fontWeight": "normal"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "E5sp4u",
+                                  "name": "QR code",
+                                  "width": 150,
+                                  "height": 150,
+                                  "fill": "$panel",
+                                  "cornerRadius": 12,
+                                  "stroke": "$line2",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "D2MxFC",
+                                      "name": "QR",
+                                      "width": 104,
+                                      "height": 104,
+                                      "icon": "qr-code",
+                                      "library": "lucide",
+                                      "fill": "$ink2"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "PHqFy",
+                              "name": "Auto-skip note",
+                              "width": "fill_container",
+                              "gap": 7,
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "ueZw4",
+                                  "name": "Icon",
+                                  "width": 13,
+                                  "height": 13,
+                                  "icon": "info",
+                                  "library": "lucide",
+                                  "fill": "$faint"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "pulQn",
+                                  "name": "Text",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Already funded? This step skips itself.",
+                                  "lineHeight": 1.45,
+                                  "fontFamily": "$sans",
+                                  "fontSize": 11.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "IPosF",
+                              "name": "DESIGN NOTE panel · Gas deposit",
+                              "width": "fill_container",
+                              "fill": "$note-bg",
+                              "cornerRadius": 12,
+                              "stroke": "$note-line",
+                              "strokeWidth": 1.5,
+                              "strokeAlignment": "inner",
+                              "layout": "vertical",
+                              "gap": 6,
+                              "padding": [
+                                13,
+                                14
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "R6xmKv",
+                                  "name": "Design label",
+                                  "fill": "$note-ink",
+                                  "content": "DESIGN NOTE · NOT USER COPY",
+                                  "fontFamily": "$sans",
+                                  "fontSize": 10,
+                                  "fontWeight": "700",
+                                  "letterSpacing": 0.7
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "gxkzF",
+                                  "name": "Design title",
+                                  "fill": "$ink",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Decision 87 — MVP is user-funded",
+                                  "fontFamily": "$sans",
+                                  "fontSize": 12.5,
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "YMzbh",
+                                  "name": "Design text",
+                                  "fill": "$ink2",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Paymaster sponsorship is V1. Also joins the standard create flow.",
+                                  "lineHeight": 1.45,
+                                  "fontFamily": "$sans",
+                                  "fontSize": 11.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "czDOR",
+                              "name": "Actions",
+                              "width": "fill_container",
+                              "gap": 10,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "J7iKBR",
+                                  "name": "Primary button",
+                                  "fill": "$accent",
+                                  "cornerRadius": 12,
+                                  "gap": 8,
+                                  "padding": [
+                                    11,
+                                    18
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "FsYqr",
+                                      "name": "Label",
+                                      "fill": "$panel",
+                                      "content": "Continue",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 13.5,
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "lwSYO",
+                                  "name": "Secondary button",
+                                  "fill": "$panel",
+                                  "cornerRadius": 12,
+                                  "stroke": "$line2",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "gap": 8,
+                                  "padding": [
+                                    11,
+                                    18
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "I6ynh",
+                                      "name": "Label",
+                                      "fill": "$ink",
+                                      "content": "Back",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 13.5,
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }
@@ -3597,7 +4251,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "W0xigS",
+                              "id": "k9Yj1d",
                               "name": "Honesty note",
                               "width": "fill_container",
                               "fill": "$wash",
@@ -3613,7 +4267,7 @@
                               "children": [
                                 {
                                   "type": "icon",
-                                  "id": "qSzTY",
+                                  "id": "MfN5x",
                                   "name": "Icon",
                                   "width": 14,
                                   "height": 14,
@@ -3622,17 +4276,40 @@
                                   "fill": "$faint"
                                 },
                                 {
-                                  "type": "text",
-                                  "id": "Y95Vc",
-                                  "name": "Text",
-                                  "fill": "$muted",
-                                  "textGrowth": "fixed-width",
+                                  "type": "frame",
+                                  "id": "s3uJ1",
+                                  "name": "Text stack",
                                   "width": "fill_container",
-                                  "content": "Recovery protects you if you lose your key. It cannot stop someone who already has it. And if your only method is a passkey on this device, losing the device also removes this recovery path.",
-                                  "lineHeight": 1.45,
-                                  "fontFamily": "$sans",
-                                  "fontSize": 11.5,
-                                  "fontWeight": "normal"
+                                  "layout": "vertical",
+                                  "gap": 7,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "U73FmI",
+                                      "name": "Text",
+                                      "fill": "$muted",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Recovery protects you if you lose your key. It cannot stop someone who already has it. This passkey lives only on this device — losing the device also removes this recovery path.",
+                                      "lineHeight": 1.45,
+                                      "fontFamily": "$sans",
+                                      "fontSize": 11.5,
+                                      "fontWeight": "normal"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "Mdk0I",
+                                      "name": "Design annotation",
+                                      "fill": "$note-ink",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "DESIGN NOTE · NOT USER COPY — one sentence slot; it adapts to the detected passkey type. Synced variant: “This passkey is synced — it survives losing this device, but it depends on that account.”",
+                                      "lineHeight": 1.45,
+                                      "fontFamily": "$sans",
+                                      "fontSize": 10.5,
+                                      "fontWeight": "700"
+                                    }
+                                  ]
                                 }
                               ]
                             },
@@ -37973,7 +38650,7 @@
                               "fill": "$muted",
                               "textGrowth": "fixed-width",
                               "width": 620,
-                              "content": "A recovery never finishes immediately. While the waiting period runs, the current owner can cancel a recovery they did not start. The minimum waiting period is 24 hours.",
+                              "content": "A recovery never finishes immediately. While the waiting period runs, the current owner can cancel a recovery they did not start.",
                               "lineHeight": 1.45,
                               "fontFamily": "$sans",
                               "fontSize": 14,
@@ -38094,7 +38771,7 @@
                                     },
                                     {
                                       "type": "frame",
-                                      "id": "Bt6FQ",
+                                      "id": "y5HIR3",
                                       "name": "Waiting period chips",
                                       "width": "fill_container",
                                       "gap": 8,
@@ -38102,7 +38779,7 @@
                                       "children": [
                                         {
                                           "type": "text",
-                                          "id": "tHZKE",
+                                          "id": "QSUoP",
                                           "name": "Chips label",
                                           "fill": "$muted",
                                           "content": "Waiting period",
@@ -38113,7 +38790,33 @@
                                         },
                                         {
                                           "type": "frame",
-                                          "id": "wNx9P",
+                                          "id": "s3J2al",
+                                          "name": "Chip · Instant (0h)",
+                                          "fill": "$panel",
+                                          "cornerRadius": 20,
+                                          "stroke": "$line2",
+                                          "strokeWidth": 1,
+                                          "strokeAlignment": "inner",
+                                          "padding": [
+                                            7,
+                                            14
+                                          ],
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "zpEaZ",
+                                              "name": "Label",
+                                              "fill": "$ink",
+                                              "content": "Instant (0h)",
+                                              "fontFamily": "$sans",
+                                              "fontSize": 12.5,
+                                              "fontWeight": "700"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "DsDcV",
                                           "name": "Chip · 24h",
                                           "fill": "$panel",
                                           "cornerRadius": 20,
@@ -38127,7 +38830,7 @@
                                           "children": [
                                             {
                                               "type": "text",
-                                              "id": "LhIrq",
+                                              "id": "cXDrt",
                                               "name": "Label",
                                               "fill": "$ink",
                                               "content": "24h",
@@ -38139,7 +38842,7 @@
                                         },
                                         {
                                           "type": "frame",
-                                          "id": "GPFmd",
+                                          "id": "xg3YK",
                                           "name": "Chip · 48h",
                                           "fill": "$accent-bg",
                                           "cornerRadius": 20,
@@ -38153,7 +38856,7 @@
                                           "children": [
                                             {
                                               "type": "text",
-                                              "id": "V8CTh",
+                                              "id": "s2acA",
                                               "name": "Label",
                                               "fill": "$accent-ink",
                                               "content": "48h",
@@ -38165,7 +38868,7 @@
                                         },
                                         {
                                           "type": "frame",
-                                          "id": "Mqgs9",
+                                          "id": "V2syHu",
                                           "name": "Chip · 72h",
                                           "fill": "$panel",
                                           "cornerRadius": 20,
@@ -38179,7 +38882,7 @@
                                           "children": [
                                             {
                                               "type": "text",
-                                              "id": "u1OcNO",
+                                              "id": "ihcVm",
                                               "name": "Label",
                                               "fill": "$ink",
                                               "content": "72h",
@@ -38191,7 +38894,7 @@
                                         },
                                         {
                                           "type": "frame",
-                                          "id": "dImhC",
+                                          "id": "uPqSE",
                                           "name": "Chip · 7 days",
                                           "fill": "$panel",
                                           "cornerRadius": 20,
@@ -38205,7 +38908,7 @@
                                           "children": [
                                             {
                                               "type": "text",
-                                              "id": "nCCnu",
+                                              "id": "ai1ZZ",
                                               "name": "Label",
                                               "fill": "$ink",
                                               "content": "7 days",
@@ -38219,30 +38922,29 @@
                                     },
                                     {
                                       "type": "frame",
-                                      "id": "PelIw",
-                                      "name": "Minimum line",
+                                      "id": "m48BL",
+                                      "name": "Instant warning line",
                                       "width": "fill_container",
                                       "gap": 7,
-                                      "alignItems": "center",
                                       "children": [
                                         {
                                           "type": "icon",
-                                          "id": "rQnn4",
+                                          "id": "UeXrV",
                                           "name": "Icon",
                                           "width": 13,
                                           "height": 13,
-                                          "icon": "info",
-                                          "library": "lucide",
+                                          "icon": "alert-triangle",
+                                          "library": "feather",
                                           "fill": "$faint"
                                         },
                                         {
                                           "type": "text",
-                                          "id": "WpNAz",
+                                          "id": "S7SxF2",
                                           "name": "Text",
                                           "fill": "$muted",
                                           "textGrowth": "fixed-width",
                                           "width": "fill_container",
-                                          "content": "The minimum waiting period is 24 hours.",
+                                          "content": "Instant removes the waiting period — nobody can cancel a malicious recovery. Unsafe for most people.",
                                           "lineHeight": 1.45,
                                           "fontFamily": "$sans",
                                           "fontSize": 11.5,
@@ -38518,7 +39220,7 @@
                                       "fill": "$ink",
                                       "textGrowth": "fixed-width",
                                       "width": "fill_container",
-                                      "content": "24h floor enforced on-chain — decision 74",
+                                      "content": "No enforced floor — decision 85",
                                       "fontFamily": "$sans",
                                       "fontSize": 12.5,
                                       "fontWeight": "700"
@@ -38530,7 +39232,7 @@
                                       "fill": "$ink2",
                                       "textGrowth": "fixed-width",
                                       "width": "fill_container",
-                                      "content": "One waiting period per account, never per path. Anything below 24 hours is rejected by the contract, so the control offers 24h / 48h / 72h / 7 days only.",
+                                      "content": "Warning lives on the picker only.",
                                       "lineHeight": 1.45,
                                       "fontFamily": "$sans",
                                       "fontSize": 11.5,
@@ -38870,7 +39572,7 @@
                               "fill": "$muted",
                               "textGrowth": "fixed-width",
                               "width": 620,
-                              "content": "A recovery never finishes immediately. While the waiting period runs, the current owner can cancel a recovery they did not start. The minimum waiting period is 24 hours.",
+                              "content": "A recovery never finishes immediately. While the waiting period runs, the current owner can cancel a recovery they did not start.",
                               "lineHeight": 1.45,
                               "fontFamily": "$sans",
                               "fontSize": 14,
@@ -38977,7 +39679,7 @@
                                     },
                                     {
                                       "type": "frame",
-                                      "id": "IHrP7",
+                                      "id": "M6aG3",
                                       "name": "Waiting period chips",
                                       "width": "fill_container",
                                       "gap": 8,
@@ -38985,7 +39687,7 @@
                                       "children": [
                                         {
                                           "type": "text",
-                                          "id": "YS3Du",
+                                          "id": "G4DXvO",
                                           "name": "Chips label",
                                           "fill": "$muted",
                                           "content": "Waiting period",
@@ -38996,7 +39698,33 @@
                                         },
                                         {
                                           "type": "frame",
-                                          "id": "A7mbl",
+                                          "id": "yKOgO",
+                                          "name": "Chip · Instant (0h)",
+                                          "fill": "$panel",
+                                          "cornerRadius": 20,
+                                          "stroke": "$line2",
+                                          "strokeWidth": 1,
+                                          "strokeAlignment": "inner",
+                                          "padding": [
+                                            7,
+                                            14
+                                          ],
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "vYjdO",
+                                              "name": "Label",
+                                              "fill": "$ink",
+                                              "content": "Instant (0h)",
+                                              "fontFamily": "$sans",
+                                              "fontSize": 12.5,
+                                              "fontWeight": "700"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "lcNxS",
                                           "name": "Chip · 24h",
                                           "fill": "$panel",
                                           "cornerRadius": 20,
@@ -39010,7 +39738,7 @@
                                           "children": [
                                             {
                                               "type": "text",
-                                              "id": "W0QeqL",
+                                              "id": "dKjJ1",
                                               "name": "Label",
                                               "fill": "$ink",
                                               "content": "24h",
@@ -39022,34 +39750,8 @@
                                         },
                                         {
                                           "type": "frame",
-                                          "id": "S7KrjE",
+                                          "id": "HTlgw",
                                           "name": "Chip · 48h",
-                                          "fill": "$panel",
-                                          "cornerRadius": 20,
-                                          "stroke": "$line2",
-                                          "strokeWidth": 1,
-                                          "strokeAlignment": "inner",
-                                          "padding": [
-                                            7,
-                                            14
-                                          ],
-                                          "children": [
-                                            {
-                                              "type": "text",
-                                              "id": "wY40J",
-                                              "name": "Label",
-                                              "fill": "$ink",
-                                              "content": "48h",
-                                              "fontFamily": "$sans",
-                                              "fontSize": 12.5,
-                                              "fontWeight": "700"
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "type": "frame",
-                                          "id": "ivOUK",
-                                          "name": "Chip · 72h",
                                           "fill": "$accent-bg",
                                           "cornerRadius": 20,
                                           "stroke": "$accent",
@@ -39062,9 +39764,35 @@
                                           "children": [
                                             {
                                               "type": "text",
-                                              "id": "Nrc2D",
+                                              "id": "tfByN",
                                               "name": "Label",
                                               "fill": "$accent-ink",
+                                              "content": "48h",
+                                              "fontFamily": "$sans",
+                                              "fontSize": 12.5,
+                                              "fontWeight": "700"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "skJ6u",
+                                          "name": "Chip · 72h",
+                                          "fill": "$panel",
+                                          "cornerRadius": 20,
+                                          "stroke": "$line2",
+                                          "strokeWidth": 1,
+                                          "strokeAlignment": "inner",
+                                          "padding": [
+                                            7,
+                                            14
+                                          ],
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "LCCbR",
+                                              "name": "Label",
+                                              "fill": "$ink",
                                               "content": "72h",
                                               "fontFamily": "$sans",
                                               "fontSize": 12.5,
@@ -39074,7 +39802,7 @@
                                         },
                                         {
                                           "type": "frame",
-                                          "id": "tzxwi",
+                                          "id": "Xl8QQ",
                                           "name": "Chip · 7 days",
                                           "fill": "$panel",
                                           "cornerRadius": 20,
@@ -39088,7 +39816,7 @@
                                           "children": [
                                             {
                                               "type": "text",
-                                              "id": "v9rek",
+                                              "id": "FAEq7",
                                               "name": "Label",
                                               "fill": "$ink",
                                               "content": "7 days",
@@ -39102,30 +39830,29 @@
                                     },
                                     {
                                       "type": "frame",
-                                      "id": "fMnf8",
-                                      "name": "Minimum line",
+                                      "id": "s99ij",
+                                      "name": "Instant warning line",
                                       "width": "fill_container",
                                       "gap": 7,
-                                      "alignItems": "center",
                                       "children": [
                                         {
                                           "type": "icon",
-                                          "id": "ICaaM",
+                                          "id": "U8xEo",
                                           "name": "Icon",
                                           "width": 13,
                                           "height": 13,
-                                          "icon": "info",
-                                          "library": "lucide",
+                                          "icon": "alert-triangle",
+                                          "library": "feather",
                                           "fill": "$faint"
                                         },
                                         {
                                           "type": "text",
-                                          "id": "JJqBP",
+                                          "id": "mvhZT",
                                           "name": "Text",
                                           "fill": "$muted",
                                           "textGrowth": "fixed-width",
                                           "width": "fill_container",
-                                          "content": "The minimum waiting period is 24 hours.",
+                                          "content": "Instant removes the waiting period — nobody can cancel a malicious recovery. Unsafe for most people.",
                                           "lineHeight": 1.45,
                                           "fontFamily": "$sans",
                                           "fontSize": 11.5,
@@ -39221,7 +39948,7 @@
                                       "fill": "$ink",
                                       "textGrowth": "fixed-width",
                                       "width": "fill_container",
-                                      "content": "24h floor enforced on-chain — decision 74",
+                                      "content": "No enforced floor — decision 85",
                                       "fontFamily": "$sans",
                                       "fontSize": 12.5,
                                       "fontWeight": "700"
@@ -39233,7 +39960,7 @@
                                       "fill": "$ink2",
                                       "textGrowth": "fixed-width",
                                       "width": "fill_container",
-                                      "content": "One waiting period per account, never per path. Anything below 24 hours is rejected by the contract, so the control offers 24h / 48h / 72h / 7 days only.",
+                                      "content": "Warning lives on the picker only.",
                                       "lineHeight": 1.45,
                                       "fontFamily": "$sans",
                                       "fontSize": 11.5,
@@ -40914,7 +41641,7 @@
                   "name": "C-06e-recovery-password",
                   "clip": true,
                   "width": 1280,
-                  "height": 800,
+                  "height": 830,
                   "fill": "$panel",
                   "children": [
                     {
@@ -41394,6 +42121,185 @@
                                       "fontFamily": "$sans",
                                       "fontSize": 11,
                                       "fontWeight": "normal"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "q1JoXL",
+                                      "name": "Visibility choice",
+                                      "width": "fill_container",
+                                      "layout": "vertical",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "OIWfL",
+                                          "name": "Group title",
+                                          "fill": "$ink",
+                                          "content": "What can others see?",
+                                          "fontFamily": "$sans",
+                                          "fontSize": 13,
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "jn6a4",
+                                          "name": "Option · Hide everything",
+                                          "width": "fill_container",
+                                          "fill": "$panel",
+                                          "cornerRadius": 11,
+                                          "stroke": "$line2",
+                                          "strokeWidth": 1,
+                                          "strokeAlignment": "inner",
+                                          "gap": 10,
+                                          "padding": [
+                                            10,
+                                            13
+                                          ],
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "ellipse",
+                                              "id": "Bgyf4",
+                                              "name": "Radio",
+                                              "fill": "$panel",
+                                              "width": 16,
+                                              "height": 16,
+                                              "stroke": "$line2",
+                                              "strokeWidth": 2,
+                                              "strokeAlignment": "inner"
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "POOIL",
+                                              "name": "Option title",
+                                              "fill": "$ink",
+                                              "textGrowth": "fixed-width",
+                                              "width": "fill_container",
+                                              "content": "Hide everything — methods and details",
+                                              "fontFamily": "$sans",
+                                              "fontSize": 12.5,
+                                              "fontWeight": "700"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "J0OY5",
+                                          "name": "Option · Hide the details",
+                                          "width": "fill_container",
+                                          "fill": "$accent-bg",
+                                          "cornerRadius": 11,
+                                          "stroke": "$accent",
+                                          "strokeWidth": 1.5,
+                                          "strokeAlignment": "inner",
+                                          "gap": 10,
+                                          "padding": [
+                                            10,
+                                            13
+                                          ],
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "ellipse",
+                                              "id": "prCtF",
+                                              "name": "Radio",
+                                              "innerRadius": 0.45,
+                                              "fill": "$accent",
+                                              "width": 16,
+                                              "height": 16,
+                                              "stroke": "$accent",
+                                              "strokeWidth": 2,
+                                              "strokeAlignment": "inner"
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "BwiwW",
+                                              "name": "Option title",
+                                              "fill": "$accent-ink",
+                                              "textGrowth": "fixed-width",
+                                              "width": "fill_container",
+                                              "content": "Hide the details — the shape stays readable (recommended)",
+                                              "fontFamily": "$sans",
+                                              "fontSize": 12.5,
+                                              "fontWeight": "700"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "WEQiv",
+                                          "name": "Option · Public",
+                                          "width": "fill_container",
+                                          "fill": "$panel",
+                                          "cornerRadius": 11,
+                                          "stroke": "$line2",
+                                          "strokeWidth": 1,
+                                          "strokeAlignment": "inner",
+                                          "gap": 10,
+                                          "padding": [
+                                            10,
+                                            13
+                                          ],
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "ellipse",
+                                              "id": "Ru0ax",
+                                              "name": "Radio",
+                                              "fill": "$panel",
+                                              "width": 16,
+                                              "height": 16,
+                                              "stroke": "$line2",
+                                              "strokeWidth": 2,
+                                              "strokeAlignment": "inner"
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "UKQ4c",
+                                              "name": "Option title",
+                                              "fill": "$ink",
+                                              "textGrowth": "fixed-width",
+                                              "width": "fill_container",
+                                              "content": "Public — nothing hidden",
+                                              "fontFamily": "$sans",
+                                              "fontSize": 12.5,
+                                              "fontWeight": "700"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "I2TWTF",
+                                          "name": "Group caption",
+                                          "width": "fill_container",
+                                          "gap": 7,
+                                          "children": [
+                                            {
+                                              "type": "icon",
+                                              "id": "s7PIJn",
+                                              "name": "Icon",
+                                              "width": 13,
+                                              "height": 13,
+                                              "icon": "lock",
+                                              "library": "lucide",
+                                              "fill": "$faint"
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "df74I",
+                                              "name": "Text",
+                                              "fill": "$muted",
+                                              "textGrowth": "fixed-width",
+                                              "width": "fill_container",
+                                              "content": "Hidden values unlock with this recovery password during a recovery.",
+                                              "lineHeight": 1.45,
+                                              "fontFamily": "$sans",
+                                              "fontSize": 11.5,
+                                              "fontWeight": "normal"
+                                            }
+                                          ]
+                                        }
+                                      ]
                                     }
                                   ]
                                 },
@@ -41476,7 +42382,7 @@
                                 {
                                   "type": "frame",
                                   "id": "d32cUw",
-                                  "name": "DESIGN NOTE panel · Open points on this step",
+                                  "name": "DESIGN NOTE panel · Commit-reveal",
                                   "width": "fill_container",
                                   "fill": "$note-bg",
                                   "cornerRadius": 12,
@@ -41508,7 +42414,7 @@
                                       "fill": "$ink",
                                       "textGrowth": "fixed-width",
                                       "width": "fill_container",
-                                      "content": "Open points on this step",
+                                      "content": "Commit-reveal (decision 84)",
                                       "fontFamily": "$sans",
                                       "fontSize": 12.5,
                                       "fontWeight": "700"
@@ -41520,7 +42426,7 @@
                                       "fill": "$ink2",
                                       "textGrowth": "fixed-width",
                                       "width": "fill_container",
-                                      "content": "What exactly gets hidden is open (decision 53 / Q29). The password is set once — there is no change or removal surface (decision pending sync). The recoverer enters it on the recovery-path screen D-06.",
+                                      "content": "Values live in encrypted logs; Q29/53 closed.",
                                       "lineHeight": 1.45,
                                       "fontFamily": "$sans",
                                       "fontSize": 11.5,
@@ -71895,45 +72801,96 @@
                                 },
                                 {
                                   "type": "frame",
-                                  "id": "fyXJ2",
-                                  "name": "Note · With one account this step never appears",
+                                  "id": "S3RRm",
+                                  "name": "Notes stack",
                                   "width": "fill_container",
-                                  "fill": "$wash",
-                                  "cornerRadius": 12,
-                                  "stroke": "$line",
-                                  "strokeWidth": 1,
-                                  "strokeAlignment": "inner",
                                   "layout": "vertical",
-                                  "gap": 4,
-                                  "padding": [
-                                    12,
-                                    13
-                                  ],
+                                  "gap": 12,
                                   "children": [
                                     {
-                                      "type": "text",
-                                      "id": "fSfFj",
-                                      "name": "Note title",
-                                      "fill": "$ink",
-                                      "textGrowth": "fixed-width",
+                                      "type": "frame",
+                                      "id": "Y8cFXL",
+                                      "name": "Info · Two accounts, one key",
                                       "width": "fill_container",
-                                      "content": "With one account this step never appears",
-                                      "fontFamily": "$sans",
-                                      "fontSize": 12.5,
-                                      "fontWeight": "700"
+                                      "fill": "$accent-bg",
+                                      "cornerRadius": 12,
+                                      "stroke": "$accent-line",
+                                      "strokeWidth": 1,
+                                      "strokeAlignment": "inner",
+                                      "gap": 9,
+                                      "padding": [
+                                        12,
+                                        13
+                                      ],
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "BuzNK",
+                                          "name": "Icon",
+                                          "width": 15,
+                                          "height": 15,
+                                          "icon": "info",
+                                          "library": "lucide",
+                                          "fill": "$accent-ink"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "ZgCg5",
+                                          "name": "Text",
+                                          "fill": "$accent-ink",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "After recovery, this account's key controls two accounts. Nothing merges — it simply becomes a signer of the recovered account too.",
+                                          "lineHeight": 1.45,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 11.5,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
                                     },
                                     {
-                                      "type": "text",
-                                      "id": "jaT8b",
-                                      "name": "Note text",
-                                      "fill": "$muted",
-                                      "textGrowth": "fixed-width",
+                                      "type": "frame",
+                                      "id": "ipvZZ",
+                                      "name": "Note · With one account this step never appears",
                                       "width": "fill_container",
-                                      "content": "A wallet that holds a single account skips straight to the next step — there is nothing to choose.",
-                                      "lineHeight": 1.45,
-                                      "fontFamily": "$sans",
-                                      "fontSize": 11.5,
-                                      "fontWeight": "normal"
+                                      "fill": "$wash",
+                                      "cornerRadius": 12,
+                                      "stroke": "$line",
+                                      "strokeWidth": 1,
+                                      "strokeAlignment": "inner",
+                                      "layout": "vertical",
+                                      "gap": 4,
+                                      "padding": [
+                                        12,
+                                        13
+                                      ],
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "SnBDu",
+                                          "name": "Note title",
+                                          "fill": "$ink",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "With one account this step never appears",
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12.5,
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "WwJsP",
+                                          "name": "Note text",
+                                          "fill": "$muted",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "A wallet that holds a single account skips straight to the next step — there is nothing to choose.",
+                                          "lineHeight": 1.45,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 11.5,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
                                     }
                                   ]
                                 }
@@ -72028,6 +72985,61 @@
                                       "textGrowth": "fixed-width",
                                       "width": "fill_container",
                                       "content": "Recovery hands control to a different key. The account keeps its address and everything in it.",
+                                      "lineHeight": 1.45,
+                                      "fontFamily": "$sans",
+                                      "fontSize": 11.5,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "E6ceOW",
+                                  "name": "DESIGN NOTE panel · Two accounts",
+                                  "width": "fill_container",
+                                  "fill": "$note-bg",
+                                  "cornerRadius": 12,
+                                  "stroke": "$note-line",
+                                  "strokeWidth": 1.5,
+                                  "strokeAlignment": "inner",
+                                  "layout": "vertical",
+                                  "gap": 6,
+                                  "padding": [
+                                    13,
+                                    14
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "KWaUJ",
+                                      "name": "Design label",
+                                      "fill": "$note-ink",
+                                      "content": "DESIGN NOTE · NOT USER COPY",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 10,
+                                      "fontWeight": "700",
+                                      "letterSpacing": 0.7
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "PDFz7",
+                                      "name": "Design title",
+                                      "fill": "$ink",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Decision 88",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 12.5,
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "UXQzj",
+                                      "name": "Design text",
+                                      "fill": "$ink2",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Shown when the new owner is an existing account.",
                                       "lineHeight": 1.45,
                                       "fontFamily": "$sans",
                                       "fontSize": 11.5,
@@ -100289,6 +101301,692 @@
             },
             {
               "type": "frame",
+              "id": "tDwbf",
+              "name": "Page · D-09",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "b5pyIO",
+                  "name": "Caption",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "fWenK",
+                      "name": "Code",
+                      "fill": "$accent",
+                      "content": "D-09",
+                      "fontFamily": "$sans",
+                      "fontSize": 26,
+                      "fontWeight": "800",
+                      "letterSpacing": 0.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "p2Tlb",
+                      "name": "Description",
+                      "fill": "$ink",
+                      "content": "Gas deposit · before you submit",
+                      "fontFamily": "$sans",
+                      "fontSize": 26,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "juUo8",
+                  "name": "D-09-gas-deposit-before-submit",
+                  "clip": true,
+                  "width": 1280,
+                  "height": 800,
+                  "fill": "$panel",
+                  "children": [
+                    {
+                      "id": "CGpUZ",
+                      "type": "ref",
+                      "ref": "D7q29K",
+                      "name": "Sidebar",
+                      "height": "fill_container"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "HrQB7",
+                      "name": "Content",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "fill": "$panel",
+                      "layout": "vertical",
+                      "gap": 15,
+                      "padding": [
+                        28,
+                        34
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "K8GtHa",
+                          "name": "Breadcrumb",
+                          "fill": "$muted",
+                          "content": "‹ Back · Settings › Account recovery › Recover an account",
+                          "fontFamily": "$sans",
+                          "fontSize": 12,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "QeX7C",
+                          "name": "Step indicator",
+                          "gap": 12,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ffARl",
+                              "name": "Step label",
+                              "fill": "$faint",
+                              "content": "RECOVERY · STEP 5 OF 5",
+                              "fontFamily": "$sans",
+                              "fontSize": 11,
+                              "fontWeight": "700",
+                              "letterSpacing": 0.7
+                            },
+                            {
+                              "type": "frame",
+                              "id": "eB81B",
+                              "name": "Dots",
+                              "gap": 6,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "sV9m1",
+                                  "name": "Dot",
+                                  "fill": "$accent-line",
+                                  "width": 26,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "b5m7vd",
+                                  "name": "Dot",
+                                  "fill": "$accent-line",
+                                  "width": 26,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "DIP3g",
+                                  "name": "Dot",
+                                  "fill": "$accent-line",
+                                  "width": 26,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "FLLc6",
+                                  "name": "Dot",
+                                  "fill": "$accent-line",
+                                  "width": 26,
+                                  "height": 4
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3,
+                                  "id": "Ytrmk",
+                                  "name": "Dot",
+                                  "fill": "$accent",
+                                  "width": 26,
+                                  "height": 4
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Aw91j",
+                          "name": "Header",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 5,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "iKtWb",
+                              "name": "Title",
+                              "fill": "$ink",
+                              "content": "Top up to submit",
+                              "fontFamily": "$sans",
+                              "fontSize": 23,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "MuqFx",
+                              "name": "Lead",
+                              "fill": "$muted",
+                              "textGrowth": "fixed-width",
+                              "width": 620,
+                              "content": "Submitting the recovery is one transaction. Your new account pays the fee — add a little ETH to cover it.",
+                              "lineHeight": 1.45,
+                              "fontFamily": "$sans",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "zCF4w",
+                          "name": "Columns",
+                          "width": "fill_container",
+                          "gap": 30,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "nQ0Md",
+                              "name": "Main column",
+                              "width": 560,
+                              "layout": "vertical",
+                              "gap": 12,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "r1qak6",
+                                  "name": "Amount row",
+                                  "width": "fill_container",
+                                  "fill": "$accent-bg",
+                                  "cornerRadius": 11,
+                                  "stroke": "$accent-line",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "gap": 11,
+                                  "padding": [
+                                    12,
+                                    13
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "dmeZU",
+                                      "name": "Icon",
+                                      "width": 16,
+                                      "height": 16,
+                                      "icon": "fuel",
+                                      "library": "lucide",
+                                      "fill": "$accent-ink"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "dg0X5",
+                                      "name": "Text",
+                                      "width": "fill_container",
+                                      "layout": "vertical",
+                                      "gap": 2,
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "A42xP",
+                                          "name": "Title",
+                                          "fill": "$accent-ink",
+                                          "content": "≈ 0.00X ETH needed",
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12.5,
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "ATOwR",
+                                          "name": "Sub",
+                                          "fill": "$accent-ink",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Placeholder — the exact amount follows the network fee at the time you submit.",
+                                          "lineHeight": 1.45,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 11.5,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "uLJgj",
+                                  "name": "Fund row",
+                                  "width": "fill_container",
+                                  "gap": 14,
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "FKhZD",
+                                      "name": "Deposit column",
+                                      "width": "fill_container",
+                                      "layout": "vertical",
+                                      "gap": 10,
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "L0fiHI",
+                                          "name": "Label",
+                                          "fill": "$faint",
+                                          "content": "SEND ETH TO YOUR NEW ACCOUNT",
+                                          "fontFamily": "$sans",
+                                          "fontSize": 10,
+                                          "fontWeight": "700",
+                                          "letterSpacing": 0.7
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "S6jZp2",
+                                          "name": "Address box",
+                                          "width": "fill_container",
+                                          "fill": "$wash",
+                                          "cornerRadius": 9,
+                                          "stroke": "$line",
+                                          "strokeWidth": 1,
+                                          "strokeAlignment": "inner",
+                                          "gap": 8,
+                                          "padding": [
+                                            9,
+                                            11
+                                          ],
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "RscDf",
+                                              "name": "Address",
+                                              "fill": "$ink",
+                                              "textGrowth": "fixed-width",
+                                              "width": "fill_container",
+                                              "content": "0x7A19c3F0b41d8E5a90cC77b2E4f8135Aa62Cc204",
+                                              "lineHeight": 1.45,
+                                              "fontFamily": "$mono",
+                                              "fontSize": 11,
+                                              "fontWeight": "normal"
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "pJNLv",
+                                              "name": "Copy button",
+                                              "fill": "$panel",
+                                              "cornerRadius": 8,
+                                              "stroke": "$line2",
+                                              "strokeWidth": 1,
+                                              "strokeAlignment": "inner",
+                                              "gap": 6,
+                                              "padding": [
+                                                6,
+                                                10
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "icon",
+                                                  "id": "DPS3z",
+                                                  "name": "Icon",
+                                                  "width": 13,
+                                                  "height": 13,
+                                                  "icon": "copy",
+                                                  "library": "lucide",
+                                                  "fill": "$ink"
+                                                },
+                                                {
+                                                  "type": "text",
+                                                  "id": "nbwBu",
+                                                  "name": "Label",
+                                                  "fill": "$ink",
+                                                  "content": "Copy",
+                                                  "fontFamily": "$sans",
+                                                  "fontSize": 11.5,
+                                                  "fontWeight": "700"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "yQvNu",
+                                          "name": "Network note",
+                                          "fill": "$muted",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Send on the same network as the account you are recovering. Nothing is submitted until the deposit arrives.",
+                                          "lineHeight": 1.45,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 11.5,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "dovKi",
+                                      "name": "QR code",
+                                      "width": 150,
+                                      "height": 150,
+                                      "fill": "$panel",
+                                      "cornerRadius": 12,
+                                      "stroke": "$line2",
+                                      "strokeWidth": 1,
+                                      "strokeAlignment": "inner",
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "UQtVn",
+                                          "name": "QR",
+                                          "width": 104,
+                                          "height": 104,
+                                          "icon": "qr-code",
+                                          "library": "lucide",
+                                          "fill": "$ink2"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "ebPvU",
+                                  "name": "Waiting strip",
+                                  "width": "fill_container",
+                                  "fill": "$wash",
+                                  "cornerRadius": 10,
+                                  "stroke": "$line",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "gap": 9,
+                                  "padding": [
+                                    11,
+                                    12
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "euux8",
+                                      "name": "Spinner",
+                                      "width": 15,
+                                      "height": 15,
+                                      "icon": "loader",
+                                      "library": "lucide",
+                                      "fill": "$accent"
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "o5Oh1",
+                                      "name": "Text",
+                                      "width": "fill_container",
+                                      "layout": "vertical",
+                                      "gap": 2,
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "KJ9Rg",
+                                          "name": "Title",
+                                          "fill": "$ink",
+                                          "content": "Waiting for funds…",
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12.5,
+                                          "fontWeight": "700"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "QMwX0",
+                                          "name": "Sub",
+                                          "fill": "$muted",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Balance 0 ETH · this screen continues on its own once the deposit arrives.",
+                                          "lineHeight": 1.45,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 11,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "Y7nDl",
+                                  "name": "Auto-skip note",
+                                  "width": "fill_container",
+                                  "gap": 7,
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "XrY36",
+                                      "name": "Icon",
+                                      "width": 13,
+                                      "height": 13,
+                                      "icon": "info",
+                                      "library": "lucide",
+                                      "fill": "$faint"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "fJM2A",
+                                      "name": "Text",
+                                      "fill": "$muted",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Everything you collected stays where it is while you top up.",
+                                      "lineHeight": 1.45,
+                                      "fontFamily": "$sans",
+                                      "fontSize": 11.5,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "vpiGX",
+                              "name": "Side column",
+                              "width": 300,
+                              "layout": "vertical",
+                              "gap": 12,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "b9srk7",
+                                  "name": "Note · Why this appears",
+                                  "width": "fill_container",
+                                  "fill": "$wash",
+                                  "cornerRadius": 12,
+                                  "stroke": "$line",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "layout": "vertical",
+                                  "gap": 4,
+                                  "padding": [
+                                    12,
+                                    13
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "kJ7Ga",
+                                      "name": "Note title",
+                                      "fill": "$ink",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Why this step appears",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 12.5,
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "tPb76",
+                                      "name": "Note text",
+                                      "fill": "$muted",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Your new account has no ETH yet. Once it can cover the fee, the recovery submits and the waiting period begins.",
+                                      "lineHeight": 1.45,
+                                      "fontFamily": "$sans",
+                                      "fontSize": 11.5,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "iTYiN",
+                                  "name": "DESIGN NOTE panel · Gas deposit gate",
+                                  "width": "fill_container",
+                                  "fill": "$note-bg",
+                                  "cornerRadius": 12,
+                                  "stroke": "$note-line",
+                                  "strokeWidth": 1.5,
+                                  "strokeAlignment": "inner",
+                                  "layout": "vertical",
+                                  "gap": 6,
+                                  "padding": [
+                                    13,
+                                    14
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "yhS2s",
+                                      "name": "Design label",
+                                      "fill": "$note-ink",
+                                      "content": "DESIGN NOTE · NOT USER COPY",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 10,
+                                      "fontWeight": "700",
+                                      "letterSpacing": 0.7
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "al6fx",
+                                      "name": "Design title",
+                                      "fill": "$ink",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Shown only when the account can't cover gas",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 12.5,
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "m71Nu",
+                                      "name": "Design text",
+                                      "fill": "$ink2",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Decision 87 — auto-skipped otherwise.",
+                                      "lineHeight": 1.45,
+                                      "fontFamily": "$sans",
+                                      "fontSize": 11.5,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Ge6XD",
+                          "name": "Actions",
+                          "width": "fill_container",
+                          "gap": 10,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "AWAl8",
+                              "name": "Primary button (disabled)",
+                              "fill": "$line2",
+                              "cornerRadius": 12,
+                              "gap": 8,
+                              "padding": [
+                                11,
+                                18
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "h1k3Jr",
+                                  "name": "Label",
+                                  "fill": "$faint",
+                                  "content": "Continue",
+                                  "fontFamily": "$sans",
+                                  "fontSize": 14,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "uueMa",
+                              "name": "Secondary button",
+                              "fill": "$panel",
+                              "cornerRadius": 12,
+                              "stroke": "$line2",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "gap": 8,
+                              "padding": [
+                                11,
+                                18
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "To30C",
+                                  "name": "Label",
+                                  "fill": "$ink",
+                                  "content": "Back",
+                                  "fontFamily": "$sans",
+                                  "fontSize": 14,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "ovTKA",
+                              "name": "Actions note",
+                              "fill": "$muted",
+                              "content": "Continue unlocks when the deposit arrives.",
+                              "fontFamily": "$sans",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
               "id": "U6WGX",
               "name": "Page · D-10",
               "layout": "vertical",
@@ -103000,7 +104698,7 @@
                                       "fill": "$ink2",
                                       "textGrowth": "fixed-width",
                                       "width": "fill_container",
-                                      "content": "The account being recovered has no ETH, so nothing could pay for the transaction. Nothing was submitted and no waiting period has started.",
+                                      "content": "Your new account has no ETH, so nothing could pay for the transaction. Nothing was submitted and no waiting period has started.",
                                       "lineHeight": 1.45,
                                       "fontFamily": "$sans",
                                       "fontSize": 12.5,
@@ -103044,7 +104742,7 @@
                                         {
                                           "type": "frame",
                                           "id": "wfPI6",
-                                          "name": "Button · Pay the fee from another account",
+                                          "name": "Button · Top up gas and retry",
                                           "fill": "$panel",
                                           "cornerRadius": 10,
                                           "stroke": "$line2",
@@ -103062,7 +104760,7 @@
                                               "id": "acqB7",
                                               "name": "Label",
                                               "fill": "$ink",
-                                              "content": "Pay the fee from another account",
+                                              "content": "Top up gas and retry",
                                               "fontFamily": "$sans",
                                               "fontSize": 12.5,
                                               "fontWeight": "700"
@@ -103087,7 +104785,7 @@
                                     {
                                       "type": "frame",
                                       "id": "jTkyN",
-                                      "name": "Note · Paying from another account",
+                                      "name": "Note · Topping up gas",
                                       "width": "fill_container",
                                       "fill": "$wash",
                                       "cornerRadius": 12,
@@ -103108,7 +104806,7 @@
                                           "fill": "$ink",
                                           "textGrowth": "fixed-width",
                                           "width": "fill_container",
-                                          "content": "Paying from another account",
+                                          "content": "Topping up gas",
                                           "fontFamily": "$sans",
                                           "fontSize": 12.5,
                                           "fontWeight": "700"
@@ -103120,7 +104818,7 @@
                                           "fill": "$muted",
                                           "textGrowth": "fixed-width",
                                           "width": "fill_container",
-                                          "content": "The fallback lets you fund the transaction from a different account of yours. It has no effect on who ends up controlling the recovered account.",
+                                          "content": "This takes you back to the gas deposit step (D-09). Add a little ETH to the new account, then submit again. It has no effect on who ends up controlling the recovered account.",
                                           "lineHeight": 1.45,
                                           "fontFamily": "$sans",
                                           "fontSize": 11.5,
@@ -121474,126 +123172,57 @@
                                 },
                                 {
                                   "type": "frame",
-                                  "id": "RT0B0",
-                                  "name": "Protection meter",
+                                  "id": "NUZiW",
+                                  "name": "Recovery status",
                                   "width": "fill_container",
                                   "fill": "$wash",
                                   "cornerRadius": 16,
                                   "stroke": "$line",
                                   "strokeWidth": 1,
                                   "strokeAlignment": "inner",
-                                  "layout": "vertical",
                                   "gap": 10,
                                   "padding": [
-                                    12,
+                                    13,
                                     14
                                   ],
+                                  "alignItems": "center",
                                   "children": [
                                     {
-                                      "type": "frame",
-                                      "id": "P8zTK",
-                                      "name": "Meter top",
-                                      "width": "fill_container",
-                                      "gap": 10,
-                                      "alignItems": "center",
-                                      "children": [
-                                        {
-                                          "type": "text",
-                                          "id": "oMypE",
-                                          "name": "Meter label",
-                                          "fill": "$ink",
-                                          "content": "Recovery ready",
-                                          "fontFamily": "$sans",
-                                          "fontSize": 15,
-                                          "fontWeight": "800"
-                                        },
-                                        {
-                                          "type": "frame",
-                                          "id": "F17mx",
-                                          "name": "Spacer",
-                                          "width": "fill_container",
-                                          "height": 1
-                                        },
-                                        {
-                                          "type": "text",
-                                          "id": "PzGJW",
-                                          "name": "Meter hint",
-                                          "fill": "$muted",
-                                          "content": "One path · all methods answered just now",
-                                          "fontFamily": "$sans",
-                                          "fontSize": 12,
-                                          "fontWeight": "normal"
-                                        }
-                                      ]
+                                      "type": "icon",
+                                      "id": "dGQUu",
+                                      "name": "Icon",
+                                      "width": 16,
+                                      "height": 16,
+                                      "icon": "shield-check",
+                                      "library": "lucide",
+                                      "fill": "$accent"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "Kei5z",
+                                      "name": "Status label",
+                                      "fill": "$ink",
+                                      "content": "Recovery is set up",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 15,
+                                      "fontWeight": "800"
                                     },
                                     {
                                       "type": "frame",
-                                      "id": "P7m8d5",
-                                      "name": "Bars",
+                                      "id": "yv8rw",
+                                      "name": "Spacer",
                                       "width": "fill_container",
-                                      "gap": 7,
-                                      "children": [
-                                        {
-                                          "type": "frame",
-                                          "id": "j8YUH",
-                                          "name": "Segment · path",
-                                          "width": "fill_container",
-                                          "layout": "vertical",
-                                          "gap": 5,
-                                          "children": [
-                                            {
-                                              "type": "rectangle",
-                                              "cornerRadius": 6,
-                                              "id": "D3PPm",
-                                              "name": "Bar",
-                                              "fill": "$accent",
-                                              "width": "fill_container",
-                                              "height": 8
-                                            },
-                                            {
-                                              "type": "text",
-                                              "id": "ENNii",
-                                              "name": "Segment label",
-                                              "fill": "$faint",
-                                              "content": "path",
-                                              "fontFamily": "$sans",
-                                              "fontSize": 9.5,
-                                              "fontWeight": "700",
-                                              "letterSpacing": 0.4
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "type": "frame",
-                                          "id": "lyPyQ",
-                                          "name": "Segment · methods",
-                                          "width": "fill_container",
-                                          "layout": "vertical",
-                                          "gap": 5,
-                                          "children": [
-                                            {
-                                              "type": "rectangle",
-                                              "cornerRadius": 6,
-                                              "id": "LSGyJ",
-                                              "name": "Bar",
-                                              "fill": "$accent",
-                                              "width": "fill_container",
-                                              "height": 8
-                                            },
-                                            {
-                                              "type": "text",
-                                              "id": "SSGJL",
-                                              "name": "Segment label",
-                                              "fill": "$faint",
-                                              "content": "methods",
-                                              "fontFamily": "$sans",
-                                              "fontSize": 9.5,
-                                              "fontWeight": "700",
-                                              "letterSpacing": 0.4
-                                            }
-                                          ]
-                                        }
-                                      ]
+                                      "height": 1
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "fuFvQ",
+                                      "name": "Status hint",
+                                      "fill": "$muted",
+                                      "content": "One path · all methods answered just now",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 12,
+                                      "fontWeight": "normal"
                                     }
                                   ]
                                 },
@@ -122425,6 +124054,61 @@
                                       "fontWeight": "normal"
                                     }
                                   ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "MByYd",
+                                  "name": "DESIGN NOTE panel · Grading V2",
+                                  "width": "fill_container",
+                                  "fill": "$note-bg",
+                                  "cornerRadius": 12,
+                                  "stroke": "$note-line",
+                                  "strokeWidth": 1.5,
+                                  "strokeAlignment": "inner",
+                                  "layout": "vertical",
+                                  "gap": 6,
+                                  "padding": [
+                                    13,
+                                    14
+                                  ],
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "bwtZ4",
+                                      "name": "Design label",
+                                      "fill": "$note-ink",
+                                      "content": "DESIGN NOTE · NOT USER COPY",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 10,
+                                      "fontWeight": "700",
+                                      "letterSpacing": 0.7
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "kv7WY",
+                                      "name": "Design title",
+                                      "fill": "$ink",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Graded meter + fragility report moved to V2",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 12.5,
+                                      "fontWeight": "700"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "hlbjB",
+                                      "name": "Design text",
+                                      "fill": "$ink2",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Decision 86.",
+                                      "lineHeight": 1.45,
+                                      "fontFamily": "$sans",
+                                      "fontSize": 11.5,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
                                 }
                               ]
                             }
@@ -122692,126 +124376,57 @@
                                 },
                                 {
                                   "type": "frame",
-                                  "id": "TWGyu",
-                                  "name": "Protection meter",
+                                  "id": "e0s7in",
+                                  "name": "Recovery status",
                                   "width": "fill_container",
                                   "fill": "$wash",
                                   "cornerRadius": 16,
                                   "stroke": "$line",
                                   "strokeWidth": 1,
                                   "strokeAlignment": "inner",
-                                  "layout": "vertical",
                                   "gap": 10,
                                   "padding": [
-                                    12,
+                                    13,
                                     14
                                   ],
+                                  "alignItems": "center",
                                   "children": [
                                     {
-                                      "type": "frame",
-                                      "id": "K63sV5",
-                                      "name": "Meter top",
-                                      "width": "fill_container",
-                                      "gap": 10,
-                                      "alignItems": "center",
-                                      "children": [
-                                        {
-                                          "type": "text",
-                                          "id": "LQQa8",
-                                          "name": "Meter label",
-                                          "fill": "$ink",
-                                          "content": "Recovery ready",
-                                          "fontFamily": "$sans",
-                                          "fontSize": 15,
-                                          "fontWeight": "800"
-                                        },
-                                        {
-                                          "type": "frame",
-                                          "id": "uVqsF",
-                                          "name": "Spacer",
-                                          "width": "fill_container",
-                                          "height": 1
-                                        },
-                                        {
-                                          "type": "text",
-                                          "id": "ZO08N",
-                                          "name": "Meter hint",
-                                          "fill": "$muted",
-                                          "content": "One path · all methods answered just now",
-                                          "fontFamily": "$sans",
-                                          "fontSize": 12,
-                                          "fontWeight": "normal"
-                                        }
-                                      ]
+                                      "type": "icon",
+                                      "id": "UItVk",
+                                      "name": "Icon",
+                                      "width": 16,
+                                      "height": 16,
+                                      "icon": "shield-check",
+                                      "library": "lucide",
+                                      "fill": "$accent"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "MjCkq",
+                                      "name": "Status label",
+                                      "fill": "$ink",
+                                      "content": "Recovery is set up",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 15,
+                                      "fontWeight": "800"
                                     },
                                     {
                                       "type": "frame",
-                                      "id": "DUpt4",
-                                      "name": "Bars",
+                                      "id": "dFIG4",
+                                      "name": "Spacer",
                                       "width": "fill_container",
-                                      "gap": 7,
-                                      "children": [
-                                        {
-                                          "type": "frame",
-                                          "id": "njqlS",
-                                          "name": "Segment · path",
-                                          "width": "fill_container",
-                                          "layout": "vertical",
-                                          "gap": 5,
-                                          "children": [
-                                            {
-                                              "type": "rectangle",
-                                              "cornerRadius": 6,
-                                              "id": "s69Cc0",
-                                              "name": "Bar",
-                                              "fill": "$accent",
-                                              "width": "fill_container",
-                                              "height": 8
-                                            },
-                                            {
-                                              "type": "text",
-                                              "id": "t4omC",
-                                              "name": "Segment label",
-                                              "fill": "$faint",
-                                              "content": "path",
-                                              "fontFamily": "$sans",
-                                              "fontSize": 9.5,
-                                              "fontWeight": "700",
-                                              "letterSpacing": 0.4
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "type": "frame",
-                                          "id": "GjTtN",
-                                          "name": "Segment · methods",
-                                          "width": "fill_container",
-                                          "layout": "vertical",
-                                          "gap": 5,
-                                          "children": [
-                                            {
-                                              "type": "rectangle",
-                                              "cornerRadius": 6,
-                                              "id": "mAzLC",
-                                              "name": "Bar",
-                                              "fill": "$accent",
-                                              "width": "fill_container",
-                                              "height": 8
-                                            },
-                                            {
-                                              "type": "text",
-                                              "id": "sK9IV",
-                                              "name": "Segment label",
-                                              "fill": "$faint",
-                                              "content": "methods",
-                                              "fontFamily": "$sans",
-                                              "fontSize": 9.5,
-                                              "fontWeight": "700",
-                                              "letterSpacing": 0.4
-                                            }
-                                          ]
-                                        }
-                                      ]
+                                      "height": 1
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "vfSBe",
+                                      "name": "Status hint",
+                                      "fill": "$muted",
+                                      "content": "One path · all methods answered just now",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 12,
+                                      "fontWeight": "normal"
                                     }
                                   ]
                                 },
@@ -123910,126 +125525,57 @@
                                 },
                                 {
                                   "type": "frame",
-                                  "id": "KXGht",
-                                  "name": "Protection meter",
+                                  "id": "mdOVo",
+                                  "name": "Recovery status",
                                   "width": "fill_container",
                                   "fill": "$wash",
                                   "cornerRadius": 16,
                                   "stroke": "$line",
                                   "strokeWidth": 1,
                                   "strokeAlignment": "inner",
-                                  "layout": "vertical",
                                   "gap": 10,
                                   "padding": [
-                                    12,
+                                    13,
                                     14
                                   ],
+                                  "alignItems": "center",
                                   "children": [
                                     {
-                                      "type": "frame",
-                                      "id": "Grama",
-                                      "name": "Meter top",
-                                      "width": "fill_container",
-                                      "gap": 10,
-                                      "alignItems": "center",
-                                      "children": [
-                                        {
-                                          "type": "text",
-                                          "id": "NISgT",
-                                          "name": "Meter label",
-                                          "fill": "$ink",
-                                          "content": "Recovery ready",
-                                          "fontFamily": "$sans",
-                                          "fontSize": 15,
-                                          "fontWeight": "800"
-                                        },
-                                        {
-                                          "type": "frame",
-                                          "id": "Dvu8i",
-                                          "name": "Spacer",
-                                          "width": "fill_container",
-                                          "height": 1
-                                        },
-                                        {
-                                          "type": "text",
-                                          "id": "Q3Wwx",
-                                          "name": "Meter hint",
-                                          "fill": "$muted",
-                                          "content": "One path · all methods answered just now",
-                                          "fontFamily": "$sans",
-                                          "fontSize": 12,
-                                          "fontWeight": "normal"
-                                        }
-                                      ]
+                                      "type": "icon",
+                                      "id": "a8uyd",
+                                      "name": "Icon",
+                                      "width": 16,
+                                      "height": 16,
+                                      "icon": "shield-check",
+                                      "library": "lucide",
+                                      "fill": "$accent"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "YaFgD",
+                                      "name": "Status label",
+                                      "fill": "$ink",
+                                      "content": "Recovery is set up",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 15,
+                                      "fontWeight": "800"
                                     },
                                     {
                                       "type": "frame",
-                                      "id": "W3Yd8t",
-                                      "name": "Bars",
+                                      "id": "P0qbb",
+                                      "name": "Spacer",
                                       "width": "fill_container",
-                                      "gap": 7,
-                                      "children": [
-                                        {
-                                          "type": "frame",
-                                          "id": "mXTFM",
-                                          "name": "Segment · path",
-                                          "width": "fill_container",
-                                          "layout": "vertical",
-                                          "gap": 5,
-                                          "children": [
-                                            {
-                                              "type": "rectangle",
-                                              "cornerRadius": 6,
-                                              "id": "Dw5Up",
-                                              "name": "Bar",
-                                              "fill": "$accent",
-                                              "width": "fill_container",
-                                              "height": 8
-                                            },
-                                            {
-                                              "type": "text",
-                                              "id": "LmUDm",
-                                              "name": "Segment label",
-                                              "fill": "$faint",
-                                              "content": "path",
-                                              "fontFamily": "$sans",
-                                              "fontSize": 9.5,
-                                              "fontWeight": "700",
-                                              "letterSpacing": 0.4
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "type": "frame",
-                                          "id": "hfoW9",
-                                          "name": "Segment · methods",
-                                          "width": "fill_container",
-                                          "layout": "vertical",
-                                          "gap": 5,
-                                          "children": [
-                                            {
-                                              "type": "rectangle",
-                                              "cornerRadius": 6,
-                                              "id": "Hpgrq",
-                                              "name": "Bar",
-                                              "fill": "$accent",
-                                              "width": "fill_container",
-                                              "height": 8
-                                            },
-                                            {
-                                              "type": "text",
-                                              "id": "SUH6I",
-                                              "name": "Segment label",
-                                              "fill": "$faint",
-                                              "content": "methods",
-                                              "fontFamily": "$sans",
-                                              "fontSize": 9.5,
-                                              "fontWeight": "700",
-                                              "letterSpacing": 0.4
-                                            }
-                                          ]
-                                        }
-                                      ]
+                                      "height": 1
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "MhWBQ",
+                                      "name": "Status hint",
+                                      "fill": "$muted",
+                                      "content": "One path · all methods answered just now",
+                                      "fontFamily": "$sans",
+                                      "fontSize": 12,
+                                      "fontWeight": "normal"
                                     }
                                   ]
                                 },
@@ -178153,7 +179699,7 @@
                                           "id": "muRIC",
                                           "name": "Label",
                                           "fill": "$muted",
-                                          "content": "~72 screens",
+                                          "content": "~74 screens",
                                           "fontFamily": "$sans",
                                           "fontSize": 9.5,
                                           "fontWeight": "700"
@@ -178276,7 +179822,7 @@
                                           "fill": "$ink2",
                                           "textGrowth": "fixed-width",
                                           "width": "fill_container",
-                                          "content": "Enrollment + mandatory tests, ALL 4 methods (incl. the .eml help sheet).",
+                                          "content": "Enrollment + mandatory tests for every enabled method.",
                                           "lineHeight": 1.4,
                                           "fontFamily": "$sans",
                                           "fontSize": 12,
@@ -178308,7 +179854,7 @@
                                           "fill": "$ink2",
                                           "textGrowth": "fixed-width",
                                           "width": "fill_container",
-                                          "content": "Waiting period — 24h floor, 48h default.",
+                                          "content": "Waiting period — no floor, 48h default.",
                                           "lineHeight": 1.4,
                                           "fontFamily": "$sans",
                                           "fontSize": 12,
@@ -178340,7 +179886,7 @@
                                           "fill": "$ink2",
                                           "textGrowth": "fixed-width",
                                           "width": "fill_container",
-                                          "content": "Recovery password + hidden values.",
+                                          "content": "Recovery password + visibility choice (C-06e).",
                                           "lineHeight": 1.4,
                                           "fontFamily": "$sans",
                                           "fontSize": 12,
@@ -178533,6 +180079,70 @@
                                           "textGrowth": "fixed-width",
                                           "width": "fill_container",
                                           "content": "Management incl. path editing.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "F4fLz",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "l50L2",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "g1maIC",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Gas deposit (A1-04, D-09) — user-funded.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "Ojwjd",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "d6mCKV",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "EdKGP",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "zkPassport screens — pending research ruling.",
                                           "lineHeight": 1.4,
                                           "fontFamily": "$sans",
                                           "fontSize": 12,
@@ -178919,6 +180529,38 @@
                                           "fontWeight": "normal"
                                         }
                                       ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "xi1po",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "txXHO",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "kfR0T",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Paymaster sponsorship.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
                                     }
                                   ]
                                 }
@@ -179196,7 +180838,7 @@
                                           "fill": "$ink2",
                                           "textGrowth": "fixed-width",
                                           "width": "fill_container",
-                                          "content": "Async approvals (E2).",
+                                          "content": "E2 async approvals — skipped (decision 89).",
                                           "lineHeight": 1.4,
                                           "fontFamily": "$sans",
                                           "fontSize": 12,
@@ -179261,6 +180903,38 @@
                                           "textGrowth": "fixed-width",
                                           "width": "fill_container",
                                           "content": "Multichain stays out.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$sans",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "mwmyZ",
+                                      "name": "Bullet",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "qXNQP",
+                                          "name": "Dot",
+                                          "width": 13,
+                                          "height": 13,
+                                          "icon": "minus",
+                                          "library": "lucide",
+                                          "fill": "$faint"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "f8Yz5",
+                                          "name": "Text",
+                                          "fill": "$ink2",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "Fragility grading + graded meter.",
                                           "lineHeight": 1.4,
                                           "fontFamily": "$sans",
                                           "fontSize": 12,
