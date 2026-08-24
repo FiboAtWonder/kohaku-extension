@@ -218,3 +218,112 @@ Who pays (their Q-5, `blocking:false`) plus a **sponsored-op race we must draw**
 | **Anon Aadhaar** | Yes, secondary, **blocking Q-7** | Shape holds; testAccess may fail for real users today | A2 unsafe. Freshness, four reveal flags and nullifierSeed all undesigned (D18). Decision 4's badge is the weakest of three needed disclosures. |
 | **zkPassport** | Yes, secondary (design.md:62, :191) | On paper only; every specific TBD both sides | Rationale factually wrong (D4); backend-zero breaks (D5); ~1M gas (D20); document-lifetime expiry; our research recommends V1 over MVP. |
 | **ZK Email** | **No — dropped** (design.md:64, :246) | n/a | Convergent with decision 80. No reconciliation debt. |
+
+---
+
+# Re-check pass — 2026-08-24 (raw per-front tables)
+
+> Their head `5e252fbee` (2026-08-24T20:18Z) vs review baseline `4ed2eaaab` (2026-08-20). Our head `a40e7410e`. Two Opus fronts: E (their diff), F (our docs). Old baseline files saved at the session scratchpad `specv1-old/`; R-16/R-17 attack rounds downloaded alongside.
+
+## Front E — their spec changes vs every report item
+
+**Global:** invariants renumbered — new I-13 (proof expiry) inserted; old I-13→I-14, I-14→I-15, I-15→I-16, I-16→I-17, I-17→I-18, I-18→I-19. `invariants.yaml:6-9` adds `sdk` to the module vocabulary ("shipped kit code, so a duty bound to it is a client-side check the contract never sees"). Q-3 and Q-10 deleted (their convention: a resolved question is deleted, later ids keep their numbers).
+
+| REPORT ITEM | STATUS | EVIDENCE (new file:line) | WHAT CHANGES IN OUR FIX |
+|---|---|---|---|
+| §1 privacy dial (Q29/53) | MODIFIED | I-16 (`invariants.yaml:193-195`): commitment reveals "no identity, method, clause structure, threshold **or wait**"; `design.md:292` `event SetupCommitted(setup, metadata, backup)` — the `wait` argument removed | Nothing about a setup is chain-readable any more. Decision 84's model must say "commitment only", not "commitment + wait" |
+| §1 M10 one attempt | UNCHANGED | I-10 `invariants.yaml:127`; state machine `design.md:121-124` now lists four cancel edges | none |
+| §1 dec-74 floor at setup write | OBSOLETE | I-7 (`invariants.yaml:85`): "The kit enforces no minimum, so the period is the holder's own choice committed with the rule, the setup screens defaulting to a safe span" | No floor, no setup-write check, no revert surface at C-07 |
+| §1 Q19 permissionless finalize | UNCHANGED | `design.md:75,127,264` | cite I-18 not I-17 |
+| §1 Q7 repayment | MODIFIED | `design.md:97` `setup_body = (rule, wait, adapter, repayment)`; `design.md:254` repayment is inside the one setup-body hash helpers sign | The wizard field is load-bearing for the guardian payload too |
+| §1 Q16 email dropped | UNCHANGED | `design.md:65`; R-17 records email as "the only reserve" | none |
+| §1 Q20 uninstall never rewinds | UNCHANGED | `design.md:137,147` | none |
+| §1 T10 encoding | MODIFIED | grammar now nests under `setup_body` (`design.md:97-107`) | committed object is the setup body, not the rule alone |
+| §1 dec-81(a) wallet-side grading | MODIFIED — weakened | I-5 (`invariants.yaml:65`) and I-15 (`:190`) list `sdk` as a bound module | the SDK is inside their invariant system with named duties; §6 conflict 3 harder |
+| §1 guardian payload | MODIFIED | `design.md:166` `keccak256(setup_body)` replaces `keccak256(rule)`; still eleven fields; `valid_until` `:170`, `slot` `:172` unchanged | intent must hash the setup body (rule+wait+adapter+repayment) |
+| §2 row 1 structure readable | STILL OPEN — worse | `design.md:277`: "nothing forces the wait into the open" | the two-state D-04/D-06 readout must cover the waiting period too |
+| §2 row 2 dec-56 | STILL OPEN, their side softened | Q-6 resolution (`open-questions.yaml:35`): "The clear-configuration path of the privacy dial is the accepted relaxation of the no-must-lose-secret requirement"; still owed: the backup's default posture + grinding resistance | option (a)/(c) is their own accepted relaxation; the only open thing is the DEFAULT — Fibo's ruling |
+| §2 row 3 dec-9 expiry | STILL OPEN — invariant-backed | NEW I-13 (`invariants.yaml:160-162`): "A stale proof is rejected at the door, so a coalition cannot bank approvals over time"; `design.md:149` | fix unchanged, now non-negotiable |
+| §2 row 4 Flow G pending edits | STILL OPEN — sharpened | `design.md:123` new edge: "waiting —holder edits the setup, or uninstalls the module→ cancelled # cancel as a side effect"; `:135` "two more that fall out of acts aimed at something else" | G-05 + G-02 warnings; D2 should name both routes |
+| §2 row 5 multichain | UNCHANGED THEIRS | Q-15 `open-questions.yaml:79-84`; "fingerprint"→"binding digest" | our copy fix stands |
+| §2 row 6 linkability | MODIFIED | `design.md:279`: two accounts "never publish the same commitment … once the SDK draws fresh salts per account … the salt discipline the SDK owes"; R-16:73 salt-reuse attack (`keccak256(B, R)` matches B's commitment) | rewrite must say: invisible at rest PROVIDED per-account salts; add the salt duty to the SDK doc |
+| §2 row 7 instance uniqueness | UNCHANGED | `design.md:113` | none |
+| §2 row 8 E2 vs I-9 | UNCHANGED | I-9 `invariants.yaml:116`; Q-9 still blocking, EF unconfirmed | window still open; our 89 concedes |
+| §2 row 9 satisfiedMethodIds / event | STILL OPEN — more urgent | R-16:115 deferred: "Whether the attempt-opened event carries the wait and the finalize deadline a watcher needs to count down" | fold the wait+deadline into the same AttemptOpened ask as the handover |
+| §2 row 10 A5 / paymaster | UNCHANGED THEIRS | `design.md:250-262` | none |
+| §2 row 11 RecoveryIntent | MODIFIED | `design.md:166`; `design.md:182` new frozen vector: "the setup commitment preimage, the account and rule the SDK, contract and rebuild client all recompute" | SDK must expose the preimage encoder; intent hash covers wait/adapter/repayment |
+| §2 row 12 A2 Aadhaar | STILL OPEN + escalated | Q-7 resolution gained (`open-questions.yaml:42`): "If the discussion cuts AnonAadhaar, the ask's guardians-beside-three framing goes short by one with email unavailable to backfill" — a replacement or count renegotiation is owed | decision 79's contingency should name the count renegotiation |
+| §2 row 13 tiers vs preset 2 | STILL OPEN — new nuance | `design.md:319`: passkey-only rule "is a first-class supported shape rather than a misconfiguration" | consider a passkey-only preset; preset 2 still the discouraged shape |
+| §2 row 14 wait on the card | **INVERTED** | `design.md:113` wait "revealed with the rest of the rule at recovery"; `:277`; event drops `wait` | do NOT put the wait on the card — it is private now; `:154` was right, only the reason changes |
+| §3.1 password | STILL OPEN — narrowed | `design.md:297` unchanged; `:299` "The privacy dial of I-16 is the escape"; Q-6 resolution above | our reply is "here is the default we want", not "add a level" |
+| §3.2 Flow D premise | STILL OPEN — broader | `design.md:196`: "the cleartext rule reaching it only in a request's calldata at recovery and never stored" | fresh device with no backup renders NOTHING, not even the countdown length |
+| §3.3 digest + expiry | STILL OPEN — strengthened | NEW I-13; `design.md:151`: "a helper's approval screen shows the destination key before they sign … an integrator obligation Q-8 carries" | "what this removes" is now their stated requirement, homed on us |
+| §4 counterproof cancel | UNCHANGED | I-8a `invariants.yaml:105-107` | none |
+| §4 fresh-device discovery | STILL OPEN — worse | `design.md:209`: watcher is "a role rather than a service the kit builds"; Q-13 resolution: "the watcher built by the integrator rather than the kit" | kit-shipped reference watcher is GONE; extension item 7 owns the whole event-reader |
+| §4 already-running / approvals-void / cancel-may-not-land / G-05 warning / rule-too-large | UNCHANGED | I-10; `design.md:149`; `:135`; `:123`; Q-4 `open-questions.yaml:17` | none |
+| §4 what-this-removes | RESOLVED-AS-REQUIREMENT | `design.md:151`; Q-8 `open-questions.yaml:47`: "an integrator that renders a blind hash lets a phisher name their own key … the rendering being nobody's enforced duty" | write the copy, send as the Q-8 answer |
+| §4 helper publication | UNCHANGED | Q-12 `open-questions.yaml:58-63` byte-identical | none |
+| §4 extra doors | RENUMBER | I-17 (was I-16), `design.md:325` | renumber only |
+| §4 seven Q-8 disclosures | MODIFIED — eighth added | Q-8 adds "The helper's approval screen belongs on the same surface"; dependency list DROPS "the wallet push channel" | 7 setup disclosures + 1 approval-screen disclosure |
+| §4 repayment row | MODIFIED | `design.md:254` | must also appear on the guardian payload surface |
+| §4 re-salting | MODIFIED | `design.md:279,281` | also a setup-time SDK duty (per-account salts) |
+| §4 unrecoverable config | STILL OPEN | I-5 modules now include `sdk` | their I-5 formally names the SDK as the gate |
+| §4 single-key ending | UNCHANGED | Q-14 `open-questions.yaml:72-77`, blocking, irreversible | none |
+| §5 row 1 Q-3 | **DELETED — resolved** | absent from `open-questions.yaml`; commit `fe7a13835` | decision 73 answer no longer needed as an unblock |
+| §5 row 2 Q-6 | MODIFIED | statement still stale ("the companion UX flows never mint that password"); resolution accepts the clear relaxation | correct their stale premise; reply = default level + card contents |
+| §5 row 3 Q-4 | MODIFIED — two sub-asks dropped | `open-questions.yaml:17`: "The kit enforces no minimum wait, that decision made … a safe span of days rather than hours, a number the UX discussion and the Ethereum Foundation owe"; the CEILING clause is DELETED; resolution `:21`: cancel-gathering duration reuses the proof validity width | drop the ceiling proposal; still owed: the default (they want days) + zkPassport gas numbers; finalize deadline still open |
+| §5 row 4 Q-8 | MODIFIED — scope grew | adds the approval screen; drops wallet push; resolution still floats "a conformance requirement the SDK checks"; rename: "trust-root declaration" (commit `ef40a23e5`, `design.md:223`) | answer stands; use their new term |
+| §5 row 5 Q-12 | UNCHANGED | byte-identical | still the cheapest blocking close |
+| §5 row 6 Q-14 | UNCHANGED | byte-identical | none |
+| §5 row 7 Q-7 | MODIFIED | count consequence added | answer + a position on the count if Aadhaar is cut |
+| §5 row 8 Q-13 | MODIFIED — argument shifted | `open-questions.yaml:69`: "the holder's chosen wait, with no floor beneath it, rests entirely on whatever alerting the integrator provides"; watcher is integrator-built | honesty line stronger; extension scope grows |
+| §5 row 9 Q-5 | UNCHANGED | byte-identical | none |
+| §5 row 10 Q-19 | UNCHANGED | `design.md:264` still assumes the Ambire fork | premise still stale — tell them |
+| §5 row 11 Q-15 | UNCHANGED | — | we owe the copy fix |
+| §5 row 12 slot | SPLIT | Q-10 deleted ("commit-reveal agreed for V1"); slot comment `design.md:172` unchanged, still ambiguous | still ask: clause index or credential index? |
+| §6 conflict 1 adapter | STILL OPEN — one part settled | `design.md:207` unchanged; Q-2: "The methods and the adapters ship immutable by principle, no proxy, no upgrade admin, a settled rule"; R-16:115 defers stale-adapter-on-upgrade | a generic 7579 adapter must be right first time |
+| §6 conflict 2 guardian page | MODIFIED — moves toward us | `design.md:151` "an integrator obligation"; Q-8 "the rendering being nobody's enforced duty"; formats stay the SDK's (`design.md:127`) | exactly decision 51's split — send it as settled |
+| §6 conflict 3 SDK conformance | STILL OPEN — materially worse | `sdk` in the module vocabulary; I-5/I-15 bind it; R-16:89 "The SDK carries load-bearing checks with no home in the module vocabulary" | distinguish SDK checks on our inputs (fine) from SDK verdicts on rule quality (A6 violation) |
+| §6 conflict 4 four methods | STILL OPEN — sharpened | Q-7 count consequence; `design.md:319` | propose the replacement/renegotiation explicitly |
+| §6b 85 vs I-7 | **RESOLVED-BY-THEM** | I-7 `invariants.yaml:85`; `design.md:113` "no minimum the contract enforces"; R-16:119 "The floor question resolved to no floor anywhere … a floor checked at recovery is still an enforcement" | Instant (0h) saves cleanly. Residual, UI-side: no ceiling anywhere; default "days" vs our 48h; finalize deadline open (would add a second clock to D-13) |
+| §6b 84 same model? | MODIFIED | I-16; wait inside the commitment; event drops `wait` | one field stricter; decision 84's text must not call the wait public |
+| §6b 86/87/88/89 | see report §8 | — | — |
+
+### Front E — NEW items (not in the report)
+
+- **NEW-1 · The wait is private — countdowns have no chain source.** `design.md:277,292`; R-16:115. D-13, the D2 banner, G-01 and any watcher cannot compute "X hours remaining" from chain data at the private level. Ask them to put the wait and the finalize deadline on the attempt-opened event.
+- **NEW-2 · The approval screen must render the destination key — homed on us.** `design.md:151`; Q-8 `open-questions.yaml:47`. Settles appendix D8's blind-signing worry in principle; converts into an E1/D-07 content requirement plus a Q-8 answer we can write today.
+- **NEW-3 · The SDK is a module in their invariant system with named duties**: I-5 well-formedness at setup, per-account/per-credential salt minting, backup emission verifying the ciphertext decrypts to the committed setup, rebuild-time commitment recompute, plus the frozen preimage vector (`design.md:182`). Four requirements our SDK doc does not carry.
+- **NEW-4 · Passkey-only rules are a blessed first-class shape** (`design.md:319`). Our meter/preset grid penalises exactly this shape; consider a passkey-only preset.
+- **NEW-5 · Permanent lockout replaces temporary** in the dead-provider story (`design.md:315`): "the lockout is permanent absent redundancy rather than temporary". Belongs in C-07 redundancy copy.
+- **NEW-6 · Cross-account unlinkability is conditional on salt discipline** (`design.md:279`; R-16:73). C-09 rewrite must not promise unconditional at-rest unlinkability.
+- **NEW-7 · Rename: "method manifest" → "trust-root declaration"** (`design.md:223`; I-4 `invariants.yaml:52`). I-4 re-scoped: a module without a declaration still runs exactly the named code, "the module shown as carrying unknown outside parties at adoption" — C-07 trust-list copy should say "unknown outside parties", not "unpinned code".
+- **NEW-8 · The wallet-push delivery door is gone.** Old design.md:59 push-message sentence deleted; Q-8 drops "the wallet push channel". Helper request delivery is entirely channel-agnostic and entirely ours. D6 (walletless friend with a passkey) survives in principle but the D-2 story no longer demonstrates it.
+- **NEW-9 · Q-3 and Q-10 retired without our input.** Q-10's resolution ("commit-reveal agreed for V1 with fully private policies deferred") now lives only in the old file — cite the baseline if needed.
+
+## Front F — our branch vs every our-side fix
+
+**Fixed by us since the review:** §2 row 1 header claim (decision 84 at `ux-flows.md:184`, commit `ddb4638c4`) — but D-04/D-06 two-state readout and `getRecoveryConfig` chain-read remain; §2 row 10 A5 UserOperation clause (removed; paymaster to V1 per `extension-work.md:8`) — but `PreparedTx` keeps a `userop/sponsored` kind and no third-party-call kind; §2 row 8 via decision 89; the §4 funding gap via decision 87 (A1-04 + D-09 drawn in v14, staged in journeys v10).
+
+**Still open verbatim (all four "fix today" errors included):**
+
+| Item | Current evidence |
+|---|---|
+| §2 row 3 expiry | `ux-flows.md:322` "NO expiry shown — none is enforced"; `:337`; `:466` decision 9 "no fake expiry" |
+| §2 row 4 Flow G | `ux-flows.md:408` "do not affect the pending request" verbatim; no G-05/G-02 warning |
+| §2 row 5 multichain | `ux-flows.md:9` "stays locked", still "(decided)" |
+| §2 row 6 linkability | `ux-flows.md:159` (shifted from :154), text unchanged |
+| §2 row 2 / §3.1 | decision 56 verbatim `:513`; decision 48 "skippable" `:505`; SDK §2.6 `:73` — all three now contradict our own decision 84 (`:541`) at the non-public levels |
+| §2 row 7 | decision 81(a) `:538` still files instance uniqueness under contract rules; decision 76 `:533` unamended |
+| §2 row 9 | SDK `:121` `satisfiedMethodIds`; `:30`; no attemptId/setupNonce |
+| §2 row 11 | SDK `:137` `RecoveryIntent { account, newOwner, nonce }`; `:144-145`; §5 item 6 still "assumed frozen by the kit" |
+| §2 row 12 | SDK `:8` A2 verbatim; no Milestones contingency (`ux-flows.md:440-449`) |
+| §2 row 13 | `ux-flows.md:106` preset 2 verbatim; `:444` decision 79 non-negotiable; partial: `:537` zkPassport verdict recorded, decision pending |
+| §2 row 14 | `ux-flows.md:154` — also still says "enrolled email address" (stale vs decision 80) |
+| §3.2 | no no-backup entry state in Flow D ch.1 (`:192-200`); only trace SDK `:174` §5 item 4 |
+| §3.3 | no purpose/slot/valid_until/attempt_id/handover anywhere in the SDK doc |
+| §4 frictions | ALL still undrawn except funding: counterproof cancel (SDK `:60` owner-only), fresh-device discovery (`:193-195`), already-running, approvals-void, claim expiry (SDK `:139` Claim has no expiresAt; `:296` "survive pauses" unchanged), cancel-may-not-land, G-05/G-02 warnings, rule-too-large (SDK `:124` three violations only), what-this-removes, helper publication, extra doors, Q-8 disclosures, repayment row, re-salting, dry-run recall row (C-07h…m still V1 `:445`), single-key ending (`:234`, cleanup V2 `:446`) |
+| §6 conflicts | 1: SDK `:12` unchanged, nothing sent. 2: decision 51 asserted in three docs, not sent. 3: held (A6 `:14` + decision 86 `:543`), not communicated. 4: partial — zkPassport verdict recorded (`:537`, SDK `:172`), decision 79 unamended, no Aadhaar contingency |
+| §7 outbound | NOTHING sent — no trace in the status doc or git log of any outbound message; actions 1, 4, 6, 7, 8 all open |
+
+**Report-is-stale notes (front F):** row 1's `:179` citation is dead (now `:184`); row 10's "extension item 3 wires a paymaster" superseded (renumbered, V1); §1 decision-74 row and §5 row 3 "Floor agreed" superseded by decision 85; §3.1's level question was answered by decision 84 = option (c) the dial (amended `9c49bf8ae`: public mints no password) — only 56/48 retirement + the default remain; decision-84-vs-their-model divergence: our middle level "Hide the details — the shape stays readable (default)" has NO counterpart in their `encrypt | config | empty` three-way; the 0h chip is drawn in wireframes v14 and demoed in journeys v10 (now moot — they dropped the floor); report file carried two orphan duplicate headings at the end (removed in this pass).
