@@ -1,0 +1,9 @@
+# Account-recovery docs PR: review only social-recovery-ux-flows.md and
+# social-recovery-sdk-requirements.md. Everything below is generated or
+# supporting material — GitHub collapses these diffs in the PR view.
+social-recovery-contracts-spec-review.md linguist-generated=true
+social-recovery-extension-work.md linguist-generated=true
+social-recovery-ux-status.md linguist-generated=true
+social-recovery-zkpassport-research.md linguist-generated=true
+social-recovery-ux-assets/** linguist-generated=true
+social-wireframes.pen linguist-generated=true
