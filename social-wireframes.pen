@@ -39028,6 +39028,32 @@
                                         },
                                         {
                                           "type": "frame",
+                                          "id": "TSjXk",
+                                          "name": "Chip · Instant (0h)",
+                                          "fill": "$panel",
+                                          "cornerRadius": 20,
+                                          "stroke": "$line2",
+                                          "strokeWidth": 1,
+                                          "strokeAlignment": "inner",
+                                          "padding": [
+                                            7,
+                                            14
+                                          ],
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "WFNj8",
+                                              "name": "Label",
+                                              "fill": "$ink",
+                                              "content": "Instant (0h)",
+                                              "fontFamily": "$sans",
+                                              "fontSize": 12.5,
+                                              "fontWeight": "700"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
                                           "id": "NZguN",
                                           "name": "Chip · 24h",
                                           "fill": "$panel",
@@ -39123,7 +39149,7 @@
                                               "id": "M4H2Gn",
                                               "name": "Label",
                                               "fill": "$ink",
-                                              "content": "Custom…",
+                                              "content": "7 days",
                                               "fontFamily": "$sans",
                                               "fontSize": 12.5,
                                               "fontWeight": "700"
@@ -43288,7 +43314,7 @@
                                       "id": "N7UZeV",
                                       "name": "Hint",
                                       "fill": "$muted",
-                                      "content": "The minimum waiting period is 24 hours.",
+                                      "content": "There is no enforced minimum — the default is 48 hours.",
                                       "fontFamily": "$sans",
                                       "fontSize": 11.5,
                                       "fontWeight": "normal"
@@ -44687,7 +44713,7 @@
                                       "id": "AJFU6",
                                       "name": "Hint",
                                       "fill": "$muted",
-                                      "content": "The minimum waiting period is 24 hours.",
+                                      "content": "There is no enforced minimum — the default is 48 hours.",
                                       "fontFamily": "$sans",
                                       "fontSize": 11.5,
                                       "fontWeight": "normal"
@@ -49143,7 +49169,7 @@
                                       "id": "HbwKs",
                                       "name": "Hint",
                                       "fill": "$muted",
-                                      "content": "The minimum waiting period is 24 hours.",
+                                      "content": "There is no enforced minimum — the default is 48 hours.",
                                       "fontFamily": "$sans",
                                       "fontSize": 11.5,
                                       "fontWeight": "normal"
@@ -123508,23 +123534,6 @@
                                           "fontFamily": "$sans",
                                           "fontSize": 11,
                                           "fontWeight": "normal"
-                                        },
-                                        {
-                                          "type": "frame",
-                                          "id": "U3oLn",
-                                          "name": "Spacer",
-                                          "width": "fill_container",
-                                          "height": 1
-                                        },
-                                        {
-                                          "type": "text",
-                                          "id": "z95BsS",
-                                          "name": "Min",
-                                          "fill": "$faint",
-                                          "content": "Minimum 24h",
-                                          "fontFamily": "$sans",
-                                          "fontSize": 11,
-                                          "fontWeight": "normal"
                                         }
                                       ]
                                     }
@@ -124712,23 +124721,6 @@
                                           "fontFamily": "$sans",
                                           "fontSize": 11,
                                           "fontWeight": "normal"
-                                        },
-                                        {
-                                          "type": "frame",
-                                          "id": "WgfXL",
-                                          "name": "Spacer",
-                                          "width": "fill_container",
-                                          "height": 1
-                                        },
-                                        {
-                                          "type": "text",
-                                          "id": "NHKrL",
-                                          "name": "Min",
-                                          "fill": "$faint",
-                                          "content": "Minimum 24h",
-                                          "fontFamily": "$sans",
-                                          "fontSize": 11,
-                                          "fontWeight": "normal"
                                         }
                                       ]
                                     }
@@ -125858,23 +125850,6 @@
                                           "name": "Waiting period",
                                           "fill": "$muted",
                                           "content": "Waiting period 48h",
-                                          "fontFamily": "$sans",
-                                          "fontSize": 11,
-                                          "fontWeight": "normal"
-                                        },
-                                        {
-                                          "type": "frame",
-                                          "id": "iwCyH",
-                                          "name": "Spacer",
-                                          "width": "fill_container",
-                                          "height": 1
-                                        },
-                                        {
-                                          "type": "text",
-                                          "id": "YGWle",
-                                          "name": "Min",
-                                          "fill": "$faint",
-                                          "content": "Minimum 24h",
                                           "fontFamily": "$sans",
                                           "fontSize": 11,
                                           "fontWeight": "normal"
@@ -178884,7 +178859,7 @@
                                           "fill": "$ink2",
                                           "textGrowth": "fixed-width",
                                           "width": "fill_container",
-                                          "content": "One waiting period for the account (24h contract floor).",
+                                          "content": "One waiting period for the account (no enforced floor, 48h default).",
                                           "lineHeight": 1.4,
                                           "fontFamily": "$sans",
                                           "fontSize": 11,
