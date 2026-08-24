@@ -62094,7 +62094,7 @@
                                       "id": "F2NCC",
                                       "name": "Min line",
                                       "fill": "$muted",
-                                      "content": "Minimum: 24 hours",
+                                      "content": "No enforced minimum — default 48 hours.",
                                       "fontFamily": "$sans",
                                       "fontSize": 11.5,
                                       "fontWeight": "normal"
@@ -63264,7 +63264,7 @@
                                       "id": "Aa0d3",
                                       "name": "Min line",
                                       "fill": "$muted",
-                                      "content": "Minimum: 24 hours",
+                                      "content": "No enforced minimum — default 48 hours.",
                                       "fontFamily": "$sans",
                                       "fontSize": 11.5,
                                       "fontWeight": "normal"
@@ -65288,7 +65288,7 @@
                                       "id": "GSVzY",
                                       "name": "Min line",
                                       "fill": "$muted",
-                                      "content": "Minimum: 24 hours",
+                                      "content": "No enforced minimum — default 48 hours.",
                                       "fontFamily": "$sans",
                                       "fontSize": 11.5,
                                       "fontWeight": "normal"
@@ -66529,7 +66529,7 @@
                                       "id": "Vr8FG",
                                       "name": "Min line",
                                       "fill": "$muted",
-                                      "content": "Minimum: 24 hours",
+                                      "content": "No enforced minimum — default 48 hours.",
                                       "fontFamily": "$sans",
                                       "fontSize": 11.5,
                                       "fontWeight": "normal"
@@ -70561,7 +70561,7 @@
                                       "id": "xlGpR",
                                       "name": "Min line",
                                       "fill": "$muted",
-                                      "content": "Minimum: 24 hours",
+                                      "content": "No enforced minimum — default 48 hours.",
                                       "fontFamily": "$sans",
                                       "fontSize": 11.5,
                                       "fontWeight": "normal"
