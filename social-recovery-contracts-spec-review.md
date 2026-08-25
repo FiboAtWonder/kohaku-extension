@@ -1,220 +1,68 @@
-# Contracts spec-v1 — reconciliation against our UX and SDK docs
+# Contracts spec-v1 reconciliation — open items
 
-> **Report only — no spec of ours has been changed.** Reviewed 2026-08-21 against `defi-wonderland/mast-social-recovery` PR #3 "feat: design baseline, spec-v1 idea checkpoint" (branch `design/spec-v1`, updated 2026-08-20 22:47Z): `spec/design.md` (322 lines), `spec/invariants.yaml` (I-1…I-18), `spec/open-questions.yaml` (Q-2…Q-19), plus their `design-context/` notes.
+> **Open items only.** Current as of 2026-08-24, re-checked against their head `5e252fbee` (`defi-wonderland/mast-social-recovery` PR #3, branch `design/spec-v1`: `spec/design.md`, `spec/invariants.yaml` I-1…I-19, `spec/open-questions.yaml`) and our head `688a89450`. The original 2026-08-21 review and the full re-check synthesis live in git history (`a40e7410e`, `688a89450`); the raw per-item evidence tables live in `social-recovery-contracts-spec-review-appendix.md`. Re-download their files with `gh api "repos/defi-wonderland/mast-social-recovery/contents/spec/design.md?ref=design/spec-v1" --jq '.content' | base64 -d` (quote the URL).
 >
-> Our side: `social-recovery-ux-flows.md` (flows A–G, decisions 1–83, Milestones), `social-recovery-sdk-requirements.md` v5, `social-recovery-extension-work.md` v3. Investigated by four parallel Opus 5 fronts; the long-form per-front reports are in the session scratchpad (`report-A-model.md`, `report-B-sdk.md`, `report-C-questions.md`, `report-D-methods.md`).
+> Every item carries a stable **REC-nn** id — cite it in PR comments and commits. An item leaves this file when it is done (git history keeps the record).
 
-## 0 · Read this first — they are working from a two-week-old copy of us
+**Settled context the items below rely on** — do not re-open these: they enforce **no timelock floor anywhere** (I-7: "The kit enforces no minimum"; R-16: "no floor anywhere"), so decision 85's Instant (0h) is buildable and the drawn 0h chip stands · the **wait lives inside the commitment** (I-16) and the `SetupCommitted` event does not carry it, so **nothing about a setup is chain-readable** at the private levels · their new **I-13** rejects any proof past its validity window at the door · guardian approvals bind an **eleven-field digest** whose hash field is `keccak256(setup_body)` with `setup_body = (rule, wait, adapter, repayment)` · the privacy dial is `backup = encrypt(password_key, config) | config | empty`, and their Q-6 accepts the cleartext path as "the accepted relaxation of the no-must-lose-secret requirement" · invariants renumbered (+1 above I-12: old I-13…I-18 are now I-14…I-19) · Q-3 and Q-10 are deleted (resolved) · E2/async approvals are closed on both sides (our decision 89, their I-9) · adapters and methods ship immutable (their Q-2, settled).
 
-Their PR vendors our flows at `.harness/kickoff/prior/design/ux-flows.md`: 573 lines, **35 decisions**, no single-path model. Our live doc carries **83**. Decisions 36–83 are invisible to their spec, and several of them settle questions their spec marks as *blocking irreversible surface*:
+## 1 · Rulings Fibo owes — these block the items marked ⛔ below
 
-| Ours, invisible to them | What it settles on their side |
-|---|---|
-| **73** — ONE recovery path per account (2026-08-18) | **Q-3**, blocking: "the companion UX flows still model OR-ed paths, so the single-rule shape needs one final confirmation" |
-| **48/56 + 79** — recovery password is an explicit MVP wizard step (C-06e) | **Q-6**, blocking: "the UX flows never mint that password at setup" — premise stale, though the deeper problem is real (§3.1) |
-| **74** — 24h contract floor, 48h UI default | **Q-4**: we agree on the floor; they challenge the default |
-| **80** — zkPassport replaces ZK Email | their method set |
-| **81** — grading is wallet-side; an existing EOA may be the 4337 signer | **Q-8**, **Q-19** |
-| **83** — passkey health check is a user-gesture test | — |
-
-**Action 0, today, before anything else in this report: send them the current `social-recovery-ux-flows.md` and `social-recovery-sdk-requirements.md`.** Answering Q-3 alone unblocks irreversible surface for them, and it costs one sentence.
-
-## 1 · What their spec answers for us
-
-| Our pending item | Their answer | Where | Verdict |
-|---|---|---|---|
-| **Q29 / decision 53 — value visibility, MVP-blocking** | A per-holder **privacy dial, private by default**. Storage holds only a salted commitment plus the wait in the clear; any reveal rides the setup event: `backup = encrypt(password_key, config) \| config \| empty` | I-15; design.md:273–295 | **Answered — and it breaks two of our decisions.** See §3.1 and §3.2 |
-| **M10 — two pending recoveries?** | **Exactly one attempt per account, ever** | I-10; design.md:115,126 | Answered. Needs a new screen (§4) |
-| **Decision 74 — where the 24h floor is enforced** | At the **setup write**: the wait sits in the clear beside the commitment so the contract checks it there | I-7; design.md:111 | Answered. Revert surface is C-07's save, already covered by the C-07b anatomy |
-| **Q19 — who executes after the timelock** | Recovery installs as a 7579 **executor**; finalize is **permissionless** — "anyone presses finalize" | design.md:188,246; I-17 | Answered. Closes the `executor: OPEN` node in Flow D chapter 3 |
-| **Q7 — who pays** | Partial: a holder may configure a **bounded repayment inside the setup commitment**, so the helpers approve it, or leave it off and self-relay | design.md:250; I-17 | Partial answer + an undrawn wizard field (§4) |
-| **Q16 — ZK Email** | Dropped independently: "An email proof was weighed for this set and dropped, its available construction working poorly and unsupported" | design.md:64,299 | Confirms our decision 80. Our "Ace 0x / Q16 remainder" pending item can be closed |
-| **Q20 — config survival + `onUninstall` nonce reset** | Uninstalling the module "never rewinds" the setup; uninstall cancels any active attempt | design.md:144,134 | Answered — and it **validates decision 46**: lost-device methods stay live after recovery |
-| **T10 — group encoding with thresholds** | `rule = AND(clause…)`, `clause = ANY_N_OF(n, [cred…])`, with a worked mixed example | design.md:93–108; I-5 | Answered — confirms decisions 41/73/75. A required row is `ANY_N_OF(1,[c])` |
-| **Decision 81(a) — grading is wallet-side** | "the SDK's setup check is the gate … a client-side check the contract never sees"; the disclosure invariant is `check: human-only` | I-5; I-14 | Same split as ours. One collision — their Q-8 floats an SDK-checked conformance (§5) |
-| **Guardian payload contents** | Fully specified, eleven fields | design.md:142–171 | Answered — and it **breaks decision 9** (§3.3) |
-
-## 2 · Inconsistencies that break our documents — ranked
-
-Every row is **ours to fix** unless marked otherwise. The three marked → §3 need a product decision first; the rest are corrections.
-
-| # | Our text today | Their spec | Fix |
-|---|---|---|---|
-| 1 | `ux-flows.md:179` "the policy **structure** is readable on-chain"; Flow D ch.1 renders the path before any proof | Storage reveals "no identity, method, clause structure or threshold" (I-15) | → **§3.2**. Rewrite the config-visibility note to the commit-reveal model; make the D-04/D-06 readout two-state |
-| 2 | Decision 56 "a forgotten password never blocks recovery — it only keeps values hidden"; SDK §2.6 "degrades to hidden values, never an error" | Without the backup a fresh device "cannot even begin a recovery" (design.md:293) | → **§3.1**. Retire or re-scope 56 |
-| 3 | Decision 9 + E1 "**NO expiry shown — none is enforced**" (`:320`, `:335`) | `valid_until` is a digest field and is checked at submission (design.md:164, :120) | → **§3.3**. Invert the rationale; add expiry UI |
-| 4 | Flow G "Config changes are allowed while a recovery is pending and **do not affect the pending request**" (`:404`) | "Editing the setup during the wait **cancels the running attempt in the same act**" (design.md:134; I-12) | Replace the sentence; add the consequence to the G-05 diff and the G-02 warning. **G-05's save is a cancel button in disguise** |
-| 5 | Header: "Multichain out of scope (**decided**) … the same address on other chains **stays locked**" (`:9`) | Recovery disarms the lost key "only on the chain it ran on"; their reviewer calls ours "backwards, the lost key keeps full control there" | **Factual safety error — fix today.** Also relabel "decided" → deferred (their Q-15) |
-| 6 | `:154` "Passkey and guardian reuse across accounts is **observable on-chain**… show a linkability warning" (drives C-09) | The commitment closes over the account, so reuse is **invisible at rest**; the real linkability moment is the recovery submission | Rewrite `:154`; move the warning from C-09 to the submission/approval moment |
-| 7 | Decision 81(a) files instance uniqueness under "contract rules, not opinions" | "A rule **may** name the same person more than once, which the setup screen shows plainly **rather than the contract forbidding**" (design.md:111) | Move instance uniqueness to the wallet-side list in 81(a); amend decision 76 to say the block is our choice |
-| 8 | Flow E2 is "FUTURE", blocked by missing plumbing / "R5 conflict" | I-9: "Proofs are **never** accepted or stored one at a time" — incremental submission is the explicitly rejected alternative (Q-9) | Re-label E2 as incompatible with the one-act invariant. **If we want async approvals, say so into Q-9 before the EF confirms** — that window is open |
-| 9 | SDK `PendingRecovery.satisfiedMethodIds`; D2-01/B-03 name who is recovering | An attempt is born satisfied (I-9), so the field is always "all"; the attempt commits `keccak256(handover)`, so `newOwner` may not be readable | Drop the field; ask them to guarantee an `AttemptOpened` event carrying the handover in the clear, or D2-01 has nothing to name |
-| 10 | SDK A5 "recovery validated by the account/module, the submission rides as a UserOperation"; extension item 3 wires a paymaster | "Proof verification cannot run in the validation phase, so the submission is a plain call or a call inside some funded party's own operation" | Rewrite A5's second clause. A sponsored op's sender is **a third party's account**, never the recovered one — item 3 currently targets the wrong sender |
-| 11 | SDK `RecoveryIntent { account, newOwner, nonce }` | An eleven-field binding digest, with `handover = (new_key, old_authority, install_path)` | → **§3.3**. Replace the intent shape; `newOwner` alone lets the submitter choose what gets removed |
-| 12 | SDK A2 "**Anon Aadhaar works** … not a UX constraint" | Q-7 is **blocking**: pinned 2021 certificate rejects QR codes under the rotated key, fix unmerged — "a liveness failure for exactly the legitimate user a recovery method serves" | Rewrite A2 as conditional; add an MVP contingency to the Milestones section |
-| 13 | Decision 79: all four methods are MVP, non-negotiable, as peers | Wallet and passkey are **primary**; the identity pair is **secondary**, "not meant to carry a rule on their own", and a secondary credential "comes with a raised threshold" | Preset 2 (`passkey AND zkPassport`, both required) violates their guidance. Decide whether we adopt the tier model — under decision 81(a) the weighting rule is **ours** to write |
-| 14 | `:149` the card excludes thresholds **and waiting-period values** | The wait is "the one field of a setup the chain always shows" | Put the waiting period on the card and the chapter-1 readout; hiding a public value buys nothing |
-
-## 3 · The three that need a product decision from Fibo
-
-### 3.1 The recovery password stops being optional — decision 56 cannot survive
-
-**Theirs.** The chain stores a commitment only. The readable configuration "lives with the holder and their backup" (design.md:198), and without that backup a fresh device "cannot even begin a recovery" (design.md:293). Their own read of our flows says the Recovery Card "as specified cannot start a recovery" (ux-flows-discrepancies.md:26).
-
-**Ours.** Decisions 48/56, restated in SDK §2.6: the password is *skippable*, it only hides values, and "a wrong password never blocks recovery" — a failed decrypt "degrades to hidden values, never to an error that stops the flow".
-
-**Why it breaks.** At their encrypted privacy level, no password means no rule, no salts, no cleartext method configs — so no submission is possible at all. The promise is not merely optimistic, it is unimplementable. Our own premise that the card is a deliberate non-map (decision 43 family) also shifts: the card becomes the fresh-device artefact.
-
-**The decision.** One of:
-- **(a) Ship the MVP at the cleartext privacy level.** The configuration rides the setup event in the clear; no password is required to recover; decision 56 survives verbatim; we accept that guardians and method identities are publicly readable, which contradicts our guardian-privacy posture.
-- **(b) Keep the encrypted level and retire decision 56.** Step 6 stops being skippable, C-06e gains "lose this and you lose the ability to recover", D-06e's "you can still recover — the values stay hidden" becomes false and must be rewritten, and the Recovery Card must carry (or point at) the backup.
-- **(c) Offer the dial to the user** — their design supports it — and accept two setup paths plus two recovery-entry paths in the UX.
-
-My recommendation: **(b) for the product, (a) for the demo**, because the demo's job is to show the flow end to end without a lost-password dead end. Either way this is MVP-blocking, exactly as decision 79 already flags Q29/53.
-
-### 3.2 "Structure is readable on-chain" is false — Flow D's entry premise changes
-
-**Theirs.** I-15: storage "only ever holds the salted commitment beside the wait in the clear … revealing no identity, method, clause structure or threshold". The contract "learns the rule only when a request reveals it at recovery" (design.md:273–275).
-
-**Ours.** `social-recovery-ux-flows.md:179`: "the policy **structure** is readable on-chain ('passkey + zk_email')" — with value visibility the only open part. Flow D chapter 1 shows the path on D-04 before any proof is collected, and `getRecoveryConfig` in SDK §2.2 assumes a chain read.
-
-**Why it breaks.** Nothing is readable. Every screen that renders the configuration back — D-04's identity card summary, D-06's path readout, G-01's management card, the G-05 editor — needs a locally held or password-decrypted copy. On a fresh device with no backup, those screens have nothing to draw.
-
-**The decision.** Whether D-04/D-06 keep showing the path at all in the no-backup case, or whether Flow D gains an explicit "we cannot show you the setup, but you can still try" entry. This interacts with 3.1: choosing the cleartext level makes the problem disappear.
-
-### 3.3 Guardian approvals expire, and the payload is eleven fields — decision 9 is wrong
-
-**Theirs.** The digest is `chain_id, account, recovery_contract, version, setup_nonce, keccak256(rule), attempt_id, purpose, valid_until, slot, keccak256(handover)` (design.md:142–171). `valid_until` is enforced, `purpose` separates approve from cancel, `slot` pins which position in which clause the signature fills, and `attempt_id` is **predicted by the client**, not read from chain (design.md:146).
-
-**Ours.** Decision 9 and the E1 copy: "A guardian signature has **no expiry** — it dies only when its nonce is consumed or the request is cancelled. Never display a time limit the contract does not enforce" (ux-flows.md:335), and the E1 page shows "recovery nonce (read on-chain)" with "NO expiry shown — none is enforced" (ux-flows.md:320).
-
-**Why it breaks.** Three separate errors: expiry *is* enforced; there are *two* nonces (setup nonce and attempt id), not one; and the attempt id is a prediction that an intervening attempt can invalidate. Our SDK `RecoveryIntent { account, newOwner, nonce }` carries three of eleven inputs, so any claim built from it fails verification. `newOwner` alone is also unsafe — the handover commits `(new_key, old_authority, install_path)`, and leaving the rest to the submitter is precisely the attack the field exists to prevent (design.md:148).
-
-**The decision.** Mostly mechanical — rewrite decision 9, the E1 payload copy, and the SDK intent shape. The genuine product question: **what does a guardian see about the expiry**, and what does the recoverer see when an approval expires mid-gathering? That is a new state on the D-07 row and on the guardian page.
-
-
-## 4 · Frictions — UX we have not drawn
-
-Capabilities and constraints that exist on their side with no screen on ours. None of these is a contradiction; all are missing work.
-
-**New flows**
-- **Counterproof cancel (I-8a).** A full proof set signed under a CANCEL purpose cancels an attempt — "what protects a holder whose key is already gone". That is a second gathering ceremony: a cancel-side checklist mirroring D-07, a cancel variant of E1 and of the MVP manual row, and a keyless entry point. Flow D2 draws owner-signed cancel only. *Suggest: MVP states it in copy; the flow ships V1.*
-- **Fresh-device account discovery.** Their watcher rebuilds a setup from the event stream; Q-8 lists "the fresh device's account discovery" as unbuilt. Nothing in Flow D tells a recoverer their account address on a blank device — today the Recovery Card is the only answer, and §3.1 puts that card in question.
-
-**New states on existing screens**
-- **"A recovery is already running"** (I-10, one attempt per account) — a chapter-1 band plus a distinct submit-rejected cause, separate from the generic retry.
-- **"Another recovery started — your approvals are void"** — the attempt id is *predicted*; an intervening attempt kills a whole gathering at once.
-- **Per-claim expiry countdown + an expired-claim state** on the D-07 rows, plus an "approval expired, ask again" action. This collides with decision 70's "claims survive pauses and resumes": a resumed recovery may hold dead claims.
-- **"Waiting period ended — cancelling may not land"** on the D2 banner: whoever wants finalization sends it in the first block after the wait, and the owner does not control ordering.
-- **"This will cancel the running recovery"** on G-05's save, and "this also cancels any recovery currently running" on G-02's removal warning.
-- **A "rule too large" state** in the builder — Q-4 owes a maximum rule width and per-method gas bound; zkPassport alone measures ~0.93–1.0M gas, so two of them approach 2M in one submission.
-
-**New content on existing screens**
-- **"What this removes."** The handover commits `(new_key, old_authority, install_path)`. Our D-11 confirmation and both guardian payload surfaces show what is *gained*, never what is *removed* — which is exactly the substitution the field exists to prevent.
-- **Helper publication disclosure.** Submission puts each used credential's cleartext into calldata, publishing an approving guardian's address permanently — "landing on third parties who never consented". Needs a line on E1, on the MVP D-07 manual block, at C-05 guardian enrollment, and on C-07.
-- **Extra-door enumeration at setup.** I-16 leaves authorities outside the recovery contract to the holder to enumerate, and their setup screen asks for it. We have never drawn it, and it also means the post-recovery terminal cannot claim the account is clean.
-- **The seven setup disclosures of Q-8** — single point of failure, shared failure, adopt-at-your-own-risk, identity demonstration, each privacy level's reveal, the backup trade, extra doors. Roughly five are missing from C-07/C-07b/C-07e and the G-05 diff.
-- **The waiting period on the Recovery Card** (it is public anyway).
-- **A repayment row** near C-06 and a line on C-07's trust list for the adapter — both are setup-time commitments the helpers approve.
-- **Post-recovery re-salting.** They recommend reconfiguring with fresh salts after every recovery; that belongs on the D-15 cleanup list.
-
-**Two structural gaps worth naming**
-- **The MVP can save an unrecoverable configuration.** Nothing checks the rule at setup — our `validatePath` is the only gate — yet the dry run (decision 47) ships V1 while the password and hidden values ship MVP. Consider pulling the dry run's password-recall row alone into the MVP.
-- **Recovery ends on a single fresh key with no redundancy** — "the state the recovery just repaired" (their Q-14). We never route back into setup. A guided "set up recovery again" follow-on is the cheap answer; they are deciding now whether the contract seeds it atomically, which would change D-15's shape.
-
-## 5 · What they need from us — ranked
-
-| # | Their question | Our position | Action |
-|---|---|---|---|
-| 1 | **Q-3** single-rule shape, *blocking, irreversible* — "the companion UX flows still model OR-ed paths" | **Already answered: decision 73, 2026-08-18.** Our shape is theirs exactly: required rows are `ANY_N_OF(1,[x])`, groups are clauses, all ANDed | **Send today.** One sentence unblocks irreversible surface. Include decisions 73/74/75/76/82 with dates |
-| 2 | **Q-6** backup/password posture, *blocking* | Their premise is stale (decision 48 does mint a password) but the deeper problem is real — see §3.1 | Needs Fibo's ruling first, then reply with the privacy-level default and what the card carries |
-| 3 | **Q-4** wait default, ceiling, finalize deadline, rule width | Floor agreed (decision 74). Default 48h — they argue 3–7 days. **No position on a ceiling; they say the number is ours to give** | Reply with a ceiling (30 days is defensible), a position on the default, and hand them our zkPassport gas numbers for the width bound |
-| 4 | **Q-8** who carries the disclosures, *blocking* | Decision 81(a) answers half: rendering is ours | Reply: rendering ours, but manifests, trust roots and tier must arrive as SDK **data**. Reject an SDK verdict or rendering-conformance check — that re-enters A6 |
-| 5 | **Q-12** helper identity published in calldata, *blocking* | **No position.** Decision 43 is about names, not this | Cheapest close available: write the disclosure copy for E1 + the D-07 manual row and send it as our answer |
-| 6 | **Q-14** helper consent, resignation, single-key handover, *blocking, irreversible* | Consent is decision 52. The single-key ending is a real hole | Reply: prefer a guided "set up recovery again" follow-on over an atomic contract feature; keep resignation out of MVP but not encoded shut |
-| 7 | **Q-7** secondary-method weight, *blocking* | Decision 4 badges Aadhaar — copy only, which they call out | Under 81(a) the weighting rule is **ours**. Define it, and decide preset 2 (§3 / row 13) |
-| 8 | **Q-13** alerting | Our MVP is a polling banner on one device — the very device whose loss is the scenario | Write the MVP honesty line; scope out-of-band channel enrollment into V1 |
-| 9 | **Q-5** who pays | Mutual and unresolved; they defer it past the showcase | Accept self-pay as the only MVP-countable rail; keep the keyless-user gap visible |
-| 10 | **Q-19** Ambire executor authority | **Their premise is stale** — A5 moved the demo to a bare-bones 4337 account | Tell them, and settle §6 row 1 |
-| 11 | **Q-15** multichain | Settled their side | We owe a copy fix — §2 row 5 |
-| 12 | **Q-10** `slot` semantics | Under decision 76 (unique instances) the slot is derivable | Ask one question: within a clause, is `slot` the clause index or the credential index? Hold the checklist copy until answered |
-
-## 6 · Scope conflicts to escalate before their interfaces freeze
-
-1. **No adapter is scoped for our account.** They owe "the Ambire fork the demo integrates being the one adapter this engagement owes", and Q-19 still assumes an Ambire-fork account. Our A5 chose a bare-bones 4337 account on 2026-08-20. Either they scope a generic 7579 adapter or extension item 1 grows an unplanned Solidity deliverable plus a setup-time adapter-commitment step.
-2. **Guardian page ownership.** Decision 51 makes the page extension-built and extension-served over two SDK calls. Their design has "the SDK defining the gathering flow and its formats as code running on the participants' own devices". Send decision 51 as settled.
-3. **SDK conformance vs decision 81(a).** Q-8's resolution floats "stating the integrator obligation as a conformance requirement the SDK checks", and Q-7 asks "whether the SDK warns on a rule whose clause rests on secondary credentials alone". Both put a safety verdict back inside the SDK. Hold the line: advisory metadata, never a verdict.
-4. **"All four methods, MVP, non-negotiable" is at risk from both ends.** Aadhaar's shippability is a blocking question on their side (pinned 2021 certificate rejecting current QR codes); zkPassport is secondary in their tiering, needs a closed-source bridge and cloud prover that breaks the backend-zero premise, costs ~1M gas per verification, and our own research recommends V1. Decision 79 needs a contingency.
-
-## 6b · Post-review drift — decisions 84–89 (2026-08-24)
-
-Our docs advanced to SDK v7 while this review was being written. Cross-checking the new decisions against their spec:
-
-| Ours | Their spec | Verdict |
+| ID | Decision | Detail |
 |---|---|---|
-| **85 — timelock floor removed**: "No contract-enforced minimum waiting period. The picker allows **Instant (0h)**… Supersedes #74's floor" | **I-7**: "At least 24 hours always pass between the acceptance of a complete proof set and the rotation it approves… the contract enforces the floor at the moment the setup is written"; EF-confirmed (ef-call-outcomes:39) | **NEW LIVE CONFLICT — highest priority.** If their contract enforces 24h at the setup write, every save below 24h **reverts**. An "Instant (0h)" option would be an unsaveable choice, and the warning copy would be describing a state the chain refuses to store. Either they drop I-7 or decision 85 is unbuildable. Reconcile before either side freezes |
-| **84 — commit-reveal visibility answered** | I-15, design.md:273–295 | Converges with §3.2 — check the two are the same model |
-| **86 — fragility grading → V2** | Q-7/Q-8 still ask the SDK to warn | Strengthens our A6 line; the §6 row-3 conflict stands |
-| **87 — user-funded MVP + gas-deposit screens** | Q-5: no named payer for the demo | Converges with §1's funding row; their repayment knob (design.md:250) may reduce the deposit burden — worth checking |
-| **88 — smart account at initialization** | design.md:229–235: "does not convert in place… a fresh smart account with assets migrated across" | Compatible; the migrate-assets state is still undrawn |
-| **89 — async approvals (E2) skipped** | I-9 forbids incremental submission | **Resolves finding A16.** Our reason and theirs now agree; no need to contest Q-9 |
+| **REC-1** | **Default privacy level + what the Recovery Card carries** | The dial is settled (decision 84 = their model); only the default posture is open, and their Q-6 explicitly waits on it. At the encrypted levels a lost password means no recovery at all, so decisions 56 ("a forgotten password never blocks recovery") and 48 ("skippable") cannot survive as written. Related divergence: our middle level "Hide the details — the shape stays readable (default)" has **no counterpart** in their three-way `encrypt \| config \| empty` — either they add a level (REC-24) or our default collapses to Hide-everything vs Public |
+| **REC-2** | **Wait default: keep 48h or move to days** | The one number they still want from us. I-7 and their Q-4 both say the setup screens should default to "a safe span of days rather than hours"; the ceiling ask was deleted, so no ceiling exists anywhere |
+| **REC-3** | **Tiering + presets** | Adopt their primary/secondary weighting or not; preset 2 (`passkey AND zkPassport`, both required) is their discouraged shape; and `design.md:319` now blesses **passkey-only rules as a first-class supported shape** — our preset grid and fragility copy penalise exactly that. Consider a passkey-only preset with the honest security story |
+| **REC-4** | **Decision-79 contingency** | Their Q-7 states the consequence in their words: cutting AnonAadhaar leaves the method count short "with email unavailable to backfill", so "a replacement method or an explicit renegotiation of the count is owed". Decision 79 still says all four, non-negotiable |
 
-## 7 · Suggested actions, in order
+## 2 · Doc fixes on this branch — mechanical, apply on Fibo's word
 
-**Today, costs nothing:**
-0. **Reconcile decision 85 against their I-7** (§6b) — an "Instant (0h)" picker option cannot be saved against a contract that enforces a 24h floor at the write. One of the two has to move, and both are recent.
-1. Send them our current `social-recovery-ux-flows.md` + `social-recovery-sdk-requirements.md`, and answer **Q-3** explicitly with decision 73. It is blocking irreversible surface on a disagreement that no longer exists.
-2. Fix the four factual errors in our doc — the multichain header (§2 row 5), the pending-edit note (row 4), the expiry claim (row 3), and the linkability line (row 6). These are wrong today regardless of any decision.
+| ID | Fix | Where |
+|---|---|---|
+| **REC-5** | **Multichain header is backwards (safety error).** Recovery disarms the lost key only on the chain it ran on; the same address elsewhere is NOT "locked" — the lost key keeps full control there. Also relabel "(decided)" → deferred (their Q-15) | `ux-flows.md:9` |
+| **REC-6** | **Flow G: editing during a pending recovery CANCELS it** (their state machine names edit and uninstall as first-class cancel edges). Replace "do not affect the pending request"; add "this will cancel the running recovery" to G-05's save and G-02's removal warning; name both side-effect routes on D2 | `ux-flows.md:408`, G-05, G-02 |
+| **REC-7** | **Guardian approvals DO expire** — `valid_until` is a digest field and their I-13 fuzz-checks it. Invert decision 9's rationale, fix the E1 copy ("NO expiry shown — none is enforced"), add per-claim expiry UI (REC-28) | `ux-flows.md:322`, `:337`, decision 9 `:466` |
+| **REC-8** | **Linkability line: reuse is invisible at rest only WITH per-account salts.** R-16's attack: under salt reuse, one account's recovery unmasks another's setup via `keccak256(B, R)`. Rewrite as conditional; move the warning from C-09 to the submission/approval moment | `ux-flows.md:159` |
+| **REC-9** | **Instance uniqueness is our choice, not a contract rule** — their contract deliberately allows naming the same person twice (`design.md:113`). Move it to the wallet-side list in decision 81(a); amend decision 76 | `ux-flows.md:533`, `:538`; SDK `validatePath` note |
+| **REC-10** | **SDK payload shapes.** `RecoveryIntent {account, newOwner, nonce}` → the eleven-field digest (incl. `purpose`, `valid_until`, `slot`, predicted `attempt_id`, `keccak256(setup_body)`, `keccak256(handover)` where handover = new_key + old_authority + install_path). Drop `satisfiedMethodIds` (an attempt is born satisfied). `PreparedTx` needs a plain third-party-call kind (proof verification cannot run in the 4337 validation phase); the `userop/sponsored` kind's sender is never the recovered account | SDK `:121`, `:129`, `:137`, `:144-145`, §5 item 6 |
+| **REC-11** | **Four SDK duties their invariants now assign** (the `sdk` is a named module in their invariant vocabulary): per-account/per-credential **salt minting**, the **I-5 well-formedness gate** at setup, **backup emission that verifies the ciphertext decrypts to the committed setup**, and the frozen **setup-commitment preimage encoder** (SDK, contract and rebuild client all recompute it) | SDK doc, new section |
+| **REC-12** | ⛔ REC-1 — **Retire/rewrite decisions 56 + 48's "skippable" + SDK §2.6 + D-06e** to match the ruled default; decision 84's text must stop implying the wait is public | `ux-flows.md:505`, `:513`, `:541`; SDK `:73` |
+| **REC-13** | **Terminology + stale copy sweep**: "method manifest" → **"trust-root declaration"** wherever we quote them; C-07 trust-list says a declaration-less module carries "unknown outside parties" (their I-4 re-scope), not "unpinned code"; `:154` still lists an "enrolled email address" (stale vs decision 80); harden the dead-provider disclosure to **permanent lockout absent redundancy** (`design.md:315`) | `ux-flows.md:154`, C-07 copy, SDK quotes |
+| **REC-14** | **SDK A2 "Anon Aadhaar works" → conditional.** Their Q-7 is blocking on the pinned-2021-certificate liveness failure; add the MVP contingency note (ties to REC-4) | SDK `:8`; Milestones `ux-flows.md:440-449` |
 
-**This week, needs Fibo:**
-3. Rule §3.1 (privacy level and the fate of decision 56), then §3.2 and §3.3 follow from it.
-4. Answer Q-12 with disclosure copy — the cheapest blocking question we can close for them.
-5. Decide the tier question: adopt their primary/secondary weighting, and rework preset 2 if so.
-6. Reply to Q-4 with a wait ceiling and a position on the 48h default.
+## 3 · Outbound to the contracts team — nothing has been sent yet
 
-**Before their interfaces freeze:**
-7. Escalate the four scope conflicts in §6.
-8. Ask the `slot` question (§5 row 12) — the checklist copy and the D-07 payload spec depend on it.
-9. If we want async guardian approvals for UX reasons, contest **Q-9 now** — I-9 rules incremental submission out, and the EF has not confirmed yet.
+| ID | Send | Note |
+|---|---|---|
+| **REC-15** | The current `social-recovery-ux-flows.md` + `social-recovery-sdk-requirements.md` | Their spec still vendors our 35-decision snapshot; their Q-6 statement still claims "the UX flows never mint that password" — correct it |
+| **REC-16** | **Ask: the attempt-opened event must carry the handover, the wait and the finalize deadline in the clear.** With the wait inside the commitment, D-13's countdown, the D2 banner, G-01's card and any watcher have **no chain source** at the private levels; their own R-16 defers exactly this | Blocks every timer surface we drew |
+| **REC-17** | **Q-12 answer: the helper-publication disclosure copy** (submission puts each used credential's cleartext into calldata — an approving guardian's address is published permanently). Copy lands on E1, the D-07 manual row, C-05 enrollment, C-07 | Cheapest blocking question we can close |
+| **REC-18** | **Q-8 answer**: rendering is ours; trust-root declarations, tier and method metadata must arrive as SDK **data**; plus the destination-key copy (REC-33). Hold the line on "a conformance requirement the SDK checks" — distinguish SDK checks on our inputs (fine) from SDK verdicts on the holder's rule quality (violates our A6). Note their side hardened: the `sdk` is now a bound module in I-5/I-16 | Their term is now "trust-root declaration" |
+| **REC-19** | **The `slot` question**: within a clause, is `slot` the clause index or the credential index? (`design.md:172` is still ambiguous; old Q-10 died but this survives.) Hold the D-07 checklist copy until answered | One sentence |
+| **REC-20** | **Q-19's premise is stale**: our A5 moved the demo to a bare-bones 4337 account (decision 80), not an Ambire fork — and the one adapter they owe is the Ambire fork's, with adapters now immutable (Q-2). Either they scope a generic 7579 adapter or we grow a Solidity deliverable | Scope conflict, escalate before interfaces freeze |
+| **REC-21** | **Decision 51 as settled**: guardian page extension-built and extension-served over `buildApprovalPayload`/`parseApproval`. Their Q-8 edits moved the page to the integrator explicitly, so this should land without a fight | |
+| **REC-22** | ⛔ REC-2 — the wait-default position, plus our zkPassport gas numbers (~0.93–1.0M per verification) for their Q-4 rule-width bound | The finalize deadline is still open on their side — if it lands, D-13 gains a second clock |
+| **REC-23** | ⛔ REC-4 — the method-count position if Aadhaar is cut | |
+| **REC-24** | ⛔ REC-1 — the middle-level question: our default "Hide the details" (shape readable, values hidden) has no counterpart in their `encrypt \| config \| empty`; ask them to add the level or re-scope our default | |
 
-**Do not act on yet:**
-10. The zkPassport and Aadhaar screen redraws stay queued — their mechanics are TBD on both sides, and Aadhaar may not ship at all.
+## 4 · Undrawn UX — states and content their contract implies, no screen on ours
 
-## 8 · Re-check pass — 2026-08-24
-
-> Re-verified against their head `5e252fbee` (2026-08-24, nine commits past the review baseline `4ed2eaaab`: R-14…R-17 attack rounds closed plus a PR-review sweep) and our head `a40e7410e` (decisions 84–89, wireframes v14, journeys v10). Raw per-item tables: appendix, "Re-check pass" section. **Renumbering alert:** they inserted a new I-13 (proof expiry), shifting old I-13…I-18 up by one — every invariant citation above I-12 in §§1–6 is off by one now. Q-3 and Q-10 were deleted (their convention for resolved questions).
-
-### 8.1 Resolved or obsolete since the review
-
-| Item | Outcome |
-|---|---|
-| **Action 0 — decision 85 vs I-7** | **Resolved by them.** New I-7: "The kit enforces no minimum, so the period is the holder's own choice committed with the rule" — R-16: "The floor question resolved to no floor anywhere… a floor checked at recovery is still an enforcement". **Instant (0h) saves cleanly**; decision 85 is buildable as written, and the drawn 0h chip stands. Residual, none blocking: no ceiling exists anywhere (Q-4's ceiling ask was deleted), the setup default is the one number still contested (they want "a safe span of days", we say 48h — §8.3 item 9), and the finalize deadline is still open (a second clock on D-13 if it lands) |
-| §5 row 1 — Q-3 single-rule shape | Deleted from their file — resolved without needing our decision-73 answer. Sending our current docs is still worth doing, but it no longer unblocks anything |
-| §2 row 8 + action 9 — E2 vs I-9/Q-9 | Closed by our decision 89; Q-9 unchanged on their side and we no longer want to contest it |
-| §2 row 1 — "structure is readable on-chain" | The header claim is fixed by decision 84 (`ux-flows.md:184`). Still open: the two-state D-04/D-06 readout and SDK `getRecoveryConfig` as a chain read — and the second state must now cover the waiting period too (§8.2) |
-| §2 row 10 — SDK A5 UserOperation clause | The clause is gone from A5 and the paymaster moved to V1 (extension item 2). Still open: `PreparedTx` keeps a `userop/sponsored` kind and lacks a plain third-party-call kind |
-| §1 decision-74 row | Obsolete — no floor, no setup-write check, no revert surface on C-07's save |
-| §4 funding/gas UX | Fixed by decision 87: A1-04 + D-09 drawn (v14) and demoed (journeys v10) |
-
-### 8.2 Inverted — one of our suggested fixes must be dropped
-
-**§2 row 14 and §4 "waiting period on the Recovery Card": do the opposite.** The wait moved *inside* the commitment — new I-16 hides "identity, method, clause structure, threshold **or wait**", and the `SetupCommitted` event dropped its `wait` argument. The wait is no longer "the one field the chain always shows"; `ux-flows.md:154` keeping it off the card was right all along. Knock-on (**NEW-1**, the biggest new item): **no countdown surface has a chain source any more** — D-13's timer, the D2 banner, G-01's card and any watcher alert cannot compute "X hours remaining" at the private level without the backup. Their own R-16 defers exactly this ("whether the attempt-opened event carries the wait and the finalize deadline a watcher needs to count down"). Fold into the §2-row-9 ask: **the attempt-opened event must carry the handover, the wait and the finalize deadline in the clear.**
-
-### 8.3 Still open on this branch — the fix list, ranked
-
-1. **The four factual errors — all verbatim, untouched** (action 2 never ran): the multichain header (`ux-flows.md:9` "stays locked", still labelled decided), the Flow G pending-edit note (`:408` — their state machine now names edit-during-wait as a first-class cancel edge), the no-expiry claim (`:322`, `:337`, decision 9 at `:466` — now backed by their fuzz-checked invariant I-13, which rejects stale proofs at the door), and the linkability line (`:159` — the rewrite must now say "invisible at rest *provided the SDK mints fresh per-account salts*"; R-16 shows salt reuse lets one recovery unmask a second account's setup).
-2. **Decisions 56 + 48 contradict our own decision 84.** 56 ("a forgotten password never blocks recovery") and 48's "skippable" survive verbatim beside 84's encrypted levels, and SDK §2.6 still promises a never-blocking decrypt. §3.1 has narrowed: their Q-6 now accepts the cleartext path as "the accepted relaxation of the no-must-lose-secret requirement", so the dial (option c) is settled ground — **the only ruling left for Fibo is the default level and what the card carries**, then 56/48/SDK §2.6 get rewritten to match. Their Q-6 statement still carries the stale "the UX flows never mint that password" premise — correct it when we reply.
-3. **SDK shape drift, now wider** (§2 rows 9/11 + NEW-3): `RecoveryIntent {account,newOwner,nonce}` must become the eleven-field digest — and the hash field changed meaning to `keccak256(setup_body)` where `setup_body = (rule, wait, adapter, repayment)`; `satisfiedMethodIds` is still born-satisfied-always-all; no `valid_until`/`purpose`/`slot`/`attempt_id`/handover anywhere. Plus four duties their invariants now assign to the SDK that our doc does not carry: per-account salt minting, the I-5 well-formedness gate, backup emission that verifies the ciphertext decrypts to the committed setup, and the frozen setup-commitment preimage encoder.
-4. **NEW-2 — the approval screen must show the destination key**, their words: "an integrator obligation Q-8 carries… an integrator that renders a blind hash lets a phisher name their own key". This converts §4's "what this removes" from our proposal into their requirement — write the E1/D-07 copy and it doubles as the Q-8 answer.
-5. **Watcher scope grew** (§4 + Q-13): the kit ships no reference watcher any more — "built by the integrator rather than the kit". Extension item 6 owns the whole event-reader. And with no floor under the wait, their Q-13 sharpened: a short-wait user "rests entirely on whatever alerting the integrator provides" — the MVP honesty line is now load-bearing.
-6. **All other §4 frictions stand undrawn** (funding excepted): counterproof cancel, fresh-device discovery, already-running state, approvals-void state, per-claim expiry (Claim has no `expiresAt`; "claims survive pauses" now collides with invariant I-13), cancel-may-not-land, G-05/G-02 cancel warnings, rule-too-large, helper publication disclosure, extra-door enumeration, the Q-8 disclosures (now 7 setup + 1 approval-screen; the wallet-push channel was dropped — helper delivery is entirely ours, NEW-8), the repayment row (now inside the hash guardians sign, so it must appear on the guardian payload surface too), re-salting, the dry-run recall row, the single-key ending (Q-14, still blocking + irreversible).
-7. **Methods** (§2 rows 12/13, §6 conflict 4): A2 "Anon Aadhaar works" verbatim; Q-7 now states the consequence in their words — cutting Aadhaar leaves the method count short with no email backfill, "a replacement method or an explicit renegotiation of the count is owed". Decision 79 still says non-negotiable. New: `design.md:319` blesses **passkey-only rules as a first-class supported shape** — our preset grid and fragility copy penalise exactly that; consider a passkey-only preset. Preset 2 (`passkey AND zkPassport`) remains their discouraged shape.
-8. **Terminology + small copy**: "method manifest" → **"trust-root declaration"** everywhere we quote them; C-07 trust-list copy should say a declaration-less module carries "unknown outside parties" (I-4 re-scope); the dead-provider disclosure hardened to **permanent** lockout absent redundancy (NEW-5); `ux-flows.md:154` still lists an "enrolled email address" (stale vs decision 80); decision 84's text must stop calling the wait public, and its middle level ("Hide the details — the shape stays readable, default") **has no counterpart in their `encrypt | config | empty` model** — either they add a level or our default collapses to Hide-everything vs Public.
-9. **Outbound — still nothing sent.** The status doc has no record the contracts review exists. Updated outbound list: (a) send the current docs; (b) the wait default — the one number they still want from us, and they want days, not 48h; (c) Q-12 disclosure copy (cheapest blocking close, unchanged); (d) the Q-8 answer — rendering ours, trust-root declarations/tier as SDK *data*, plus the NEW-2 copy; hold the line on conformance, which got harder: the SDK is now a named module inside their invariant system (I-5, I-16) — distinguish SDK checks on our inputs (fine) from SDK verdicts on rule quality (A6 violation); (e) the slot question (Q-10 died but the `slot` ambiguity survives at `design.md:172`); (f) Q-19's Ambire premise is still stale — tell them A5 moved to a bare-bones 4337 account, which keeps §6 conflict 1 (the one adapter they owe is the Ambire fork's, and Q-2 now makes adapters immutable — a generic 7579 adapter must be right first time); (g) decision 51 as settled — their Q-8 edits moved the guardian page to the integrator explicitly, so §6 conflict 2 should land without a fight.
-
-### 8.4 What Fibo still has to rule
-
-1. **§3.1, narrowed**: the default privacy level + what the Recovery Card carries; then retire/rewrite 56, 48's "skippable", SDK §2.6, D-06e — and pick a stance on the missing middle level (item 8 above).
-2. **The wait default**: keep 48h against their "days" recommendation, or move.
-3. **Tiering**: adopt primary/secondary, rework preset 2, add the passkey-only preset.
-4. **Decision 79 contingency**: what replaces Aadhaar if it is cut, or renegotiate the count.
+| ID | Item | Suggested milestone |
+|---|---|---|
+| **REC-25** | ⛔ REC-1 — **two-state D-04/D-06 readout** (with-backup vs without), now covering the waiting period too; an explicit "we cannot show you the setup, but you can still try" Flow D entry; `getRecoveryConfig` cannot be a bare chain read | MVP (copy at least) |
+| **REC-26** | **"A recovery is already running"** — chapter-1 band + a distinct submit-rejected cause (their I-10: one attempt per account, ever) | MVP |
+| **REC-27** | **"Another recovery started — your approvals are void"** — the attempt id is client-predicted; an intervening attempt kills a whole gathering | MVP copy |
+| **REC-28** | **Per-claim expiry countdown + expired-claim state** on D-07 rows + "ask again" action; `Claim` needs `expiresAt`. Collides with decision 70's "claims survive pauses and resumes" — a resumed recovery may hold dead claims | MVP |
+| **REC-29** | **"Waiting period ended — cancelling may not land"** on the D2 banner | MVP copy |
+| **REC-30** | **Counterproof cancel** (their I-8a): a CANCEL-purpose proof set cancels an attempt — a second gathering ceremony with a keyless entry point; `prepareCancel` is owner-only today | Copy MVP, flow V1 |
+| **REC-31** | **Fresh-device account discovery** — nothing tells a recoverer their account address on a blank device; the Recovery Card is the only answer and REC-1 puts its contents in question | MVP |
+| **REC-32** | **"Rule too large" builder state** — blocked on their Q-4 width/gas bound (feed them REC-22's numbers) | V1 |
+| **REC-33** | **"What this removes" / destination-key rendering** on D-11, E1 and the D-07 manual row — their stated integrator obligation: "an integrator that renders a blind hash lets a phisher name their own key". Doubles as part of the Q-8 answer (REC-18) | MVP |
+| **REC-34** | **Extra-door enumeration at setup** (their I-17) + the post-recovery terminal cannot claim the account is clean | V1 |
+| **REC-35** | **The Q-8 disclosures: seven at setup + one on the approval screen** (single point of failure, shared failure, adopt-at-your-own-risk, identity demonstration, per-level reveal, backup trade, extra doors; destination key on approval). ~Five missing from C-07/C-07b/C-07e and the G-05 diff | MVP/V1 split |
+| **REC-36** | **Repayment row** near C-06 + a line on C-07's trust list — now inside `setup_body`, so it is hashed into what guardians sign and must appear on the guardian payload surface too | V1 |
+| **REC-37** | **Post-recovery re-salting** on the D-15 cleanup list (their recommendation after every recovery) | V2 with D-15 |
+| **REC-38** | **Pull the dry-run password-recall row alone into MVP** — the MVP can save an unrecoverable configuration; the full dry run stays V1 | Decide |
+| **REC-39** | **Single-key ending**: recovery ends on one fresh key with no redundancy (their Q-14, blocking + irreversible). Prefer a guided "set up recovery again" follow-on over an atomic contract feature — tell them so | V1 |
+| **REC-40** | **Migrate-assets state** for the existing-account route (decision 88 / their "fresh smart account with assets migrated across") | V1 |
+| **REC-41** | **Watcher reality**: the kit ships NO reference watcher ("built by the integrator rather than the kit") — extension item 6 owns the whole event-reader; and with no floor under the wait, the MVP alerting honesty line is load-bearing (their Q-13: a short-wait user "rests entirely on whatever alerting the integrator provides") | MVP honesty line; watcher scope in extension doc |
