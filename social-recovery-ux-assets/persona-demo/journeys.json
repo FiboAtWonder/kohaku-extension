@@ -164,9 +164,9 @@
     },
     {
      "screen": "C-08-recovery-card-and-alerts",
-     "story": "The Recovery Card holds the address and instructions — nothing else. He turns alerts on: they are his cancel-window tripwire.",
+     "story": "The Recovery Card holds the address and the instructions. He turns alerts on: they are his cancel-window tripwire. (Bridge: the drawn card also prints a recovery password row — Sam never set a level that needs one, so his card would print no password.)",
      "act": "Setup",
-     "spec": "Step 9 of 10 · card contents decided · decision 11",
+     "spec": "Step 9 of 10 · decision 11 · decision 90 — the password row is absent at “Public”",
      "hitLabel": "Enable notifications",
      "hit": [
       928.75,
@@ -248,7 +248,7 @@
      "hitLabel": "Look up this account",
      "hit": [
       52,
-      669,
+      608,
       142,
       17
      ]
@@ -280,7 +280,7 @@
      "hitLabel": "Start recovery",
      "hit": [
       340,
-      718,
+      800,
       99,
       17
      ]
@@ -374,15 +374,15 @@
     },
     {
      "screen": "C-06e-recovery-password",
-     "story": "She picks the middle visibility level — Hide the details: five addresses behind a password, while the path's shape stays readable. Set once; forgetting it never locks her out.",
+     "story": "She picks the middle visibility level — Hide the details: five addresses behind a password, while the path’s shape stays readable. Each level now states in one line what it leaves readable. At this level the password is required, typed twice into Password and Confirm password — and it prints on her Recovery Card.",
      "act": "Setup",
-     "spec": "Decisions 48/56/84 · three visibility levels — hers is the default, Hide the details",
-     "hitLabel": "Hide the details",
+     "spec": "Decisions 48/84/97 · 95 — Confirm field, required at the hidden levels · 98 — one reveal line per level · 90 — the card carries it",
+     "hitLabel": "Hide the details — the shape stays readable",
      "hit": [
-      409.8,
-      717,
-      100,
-      16
+      379,
+      643,
+      404,
+      15
      ]
     },
     {
@@ -426,9 +426,9 @@
     },
     {
      "screen": "C-08-recovery-card-and-alerts",
-     "story": "She prints the card and files it with her paper keys. It deliberately omits her guardians — the configuration is the secret, the address is not.",
+     "story": "She prints the card and files it with her paper keys. It deliberately omits her guardians — the configuration is the secret, the address is not. What it does print is her recovery password, masked on screen as ••••-••••-••••: the card is now the thing that remembers it for her.",
      "act": "Setup",
-     "spec": "Card exclusion list · guardian addresses stay off the card"
+     "spec": "Card exclusion list · guardian addresses stay off the card · decision 90 — the password goes on it"
     },
     {
      "screen": "A-00-welcome",
@@ -503,7 +503,7 @@
      "hitLabel": "Look up this account",
      "hit": [
       52,
-      669,
+      608,
       142,
       17
      ]
@@ -627,7 +627,7 @@
      "hitLabel": "Start recovery",
      "hit": [
       340,
-      718,
+      800,
       99,
       17
      ]
@@ -705,22 +705,22 @@
      "hitLabel": "Save and continue",
      "hit": [
       340,
-      618,
+      684,
       127,
       17
      ]
     },
     {
      "screen": "C-06e-recovery-password",
-     "story": "Carl hides Sara's address behind a password. The Recovery Card in the drawer stays a non-map.",
+     "story": "Carl hides Sara’s address behind a password — required at this level, and typed twice. The card in the drawer still names no guardian; what it now carries is the password itself.",
      "act": "Setup",
-     "spec": "Decisions 48/56/84",
-     "hitLabel": "Hide the details",
+     "spec": "Decisions 48/84 · 95 — Confirm field, no Skip · 90 — the Recovery Card prints the password",
+     "hitLabel": "Hide the details — the shape stays readable",
      "hit": [
-      409.8,
-      717,
-      100,
-      16
+      379,
+      643,
+      404,
+      15
      ]
     },
     {
@@ -764,9 +764,9 @@
     },
     {
      "screen": "C-08-recovery-card-and-alerts",
-     "story": "The card goes in a drawer. It will matter.",
+     "story": "The card goes in a drawer. It carries Sara’s password, not Sara’s name. It will matter.",
      "act": "Setup",
-     "spec": "Card contents decided"
+     "spec": "Card contents decided · decision 90 — the card prints the recovery password, masked"
     },
     {
      "screen": "A-00-welcome",
@@ -841,7 +841,7 @@
      "hitLabel": "Look up this account",
      "hit": [
       52,
-      669,
+      608,
       142,
       17
      ]
@@ -867,7 +867,7 @@
      "hitLabel": "Start collecting approvals",
      "hit": [
       340,
-      720,
+      741,
       176,
       17
      ]
@@ -939,7 +939,7 @@
      "hitLabel": "Start recovery",
      "hit": [
       340,
-      718,
+      800,
       99,
       17
      ]
@@ -1055,22 +1055,22 @@
      "hitLabel": "Continue",
      "hit": [
       340,
-      491,
+      474,
       63,
       17
      ]
     },
     {
      "screen": "C-06e-recovery-password",
-     "story": "Her email address gets hidden too. She needs this password only to read her own setup during a recovery — forgetting it never blocks the recovery itself.",
+     "story": "Her email address gets hidden too. The password is required here and typed twice. She needs it only to read her own setup during a recovery — forgetting it never blocks the recovery itself, it only leaves the values hidden.",
      "act": "Setup",
-     "spec": "Decisions 48/56/84 · D-06e is the wrong-password state",
-     "hitLabel": "Hide the details",
+     "spec": "Decisions 48/84 · 95 — Confirm field, required · D-06e is the wrong-password state",
+     "hitLabel": "Hide the details — the shape stays readable",
      "hit": [
-      409.8,
-      717,
-      100,
-      16
+      379,
+      643,
+      404,
+      15
      ]
     },
     {
@@ -1107,9 +1107,9 @@
     },
     {
      "screen": "C-08-recovery-card-and-alerts",
-     "story": "Recovery Card into a drawer; alerts on.",
+     "story": "Recovery Card into a drawer — with her password printed on it; alerts on.",
      "act": "Setup",
-     "spec": "Step 7"
+     "spec": "Step 7 · decision 90"
     },
     {
      "screen": "A-00-welcome",
@@ -1184,7 +1184,7 @@
      "hitLabel": "Look up this account",
      "hit": [
       52,
-      669,
+      608,
       142,
       17
      ]
@@ -1229,7 +1229,7 @@
      "hitLabel": "Start recovery",
      "hit": [
       340,
-      718,
+      800,
       99,
       17
      ]
@@ -1359,7 +1359,7 @@
      "hitLabel": "Look up this account",
      "hit": [
       340,
-      669,
+      696,
       142,
       17
      ]
@@ -1462,7 +1462,7 @@
      "hitLabel": "Start recovery",
      "hit": [
       340,
-      718,
+      800,
       99,
       17
      ]
@@ -1488,7 +1488,7 @@
      "hitLabel": "Do this later",
      "hit": [
       588,
-      637,
+      759,
       79,
       16
      ]
@@ -1501,14 +1501,14 @@
     },
     {
      "screen": "D2-01-pending-recovery-banner-and-alert",
-     "story": "Days later: somebody started recovering his account. The thief has the flagged passkey AND the laptop's logged-in inbox — two of three members. Banner + notification; Bob knows it wasn't him.",
+     "story": "Days later: somebody started recovering his account. The thief has the flagged passkey AND the laptop’s logged-in inbox — two of three members. Banner + notification; Bob knows it wasn’t him. The screen also draws the banner’s second state — once the waiting period ends, a cancel may no longer land — the line that editing the setup or uninstalling the module cancels a recovery too, and a V1 route where his recovery contacts cancel with a counter-proof.",
      "act": "Attack",
-     "spec": "Flow D2 · decision 11 · a 2-of-3 attack needs two members — both lived on the stolen laptop",
+     "spec": "Flow D2 · decision 11 · a 2-of-3 attack needs two members — both lived on the stolen laptop · decision 96 — REC-29 cancel-may-not-land, REC-30 counter-proof cancel (V1)",
      "hitLabel": "It wasn't me — cancel it",
      "device": "popup",
      "hit": [
       176,
-      260.5,
+      221,
       145,
       15
      ]
@@ -1569,10 +1569,12 @@
    "id": "extras",
    "name": "Extras",
    "monogram": "✱",
-   "tag": "Provisional & developer states",
-   "bio": "Not part of any persona story: the provisional wizard states (drawn dashed — they will probably be removed) and the all-methods dry-run master for development.",
+   "tag": "Provisional, reconciliation & developer states",
+   "bio": "Not part of any persona story: the provisional wizard states (drawn dashed — they will probably be removed), the all-methods dry-run master for development, the team exhibits, and the reconciliation states no single journey passes through.",
    "flows": [
-    "C"
+    "C",
+    "D",
+    "X"
    ],
    "steps": [
     {
@@ -1610,6 +1612,30 @@
      "story": "Three policy grammars side by side: the old OR-of-paths, today’s required-AND-groups model (decision 73), and the lone ANY-of group — which is today’s model with nothing required. Built to share with the team; it maps to no persona journey.",
      "act": "Extras",
      "spec": "Decisions 73/75 · team exhibit"
+    },
+    {
+     "screen": "D-04e-recovery-already-running",
+     "story": "A recovery is already running on this account, so a second one cannot be opened — and the screen names that as the cause, so the recoverer does not retry a transaction that can never land. The only move is to watch the attempt already there.",
+     "act": "Extras",
+     "spec": "Decision 96 · MVP · REC-26 — the rejected-submit cause is a contract rule, not a network error"
+    },
+    {
+     "screen": "D-07m-approvals-void",
+     "story": "Approvals void — another recovery attempt was opened while the recoverer was gathering, so every approval collected is tied to an attempt that no longer applies. Nothing was submitted and nothing was lost; the same guardians just have to sign again.",
+     "act": "Extras",
+     "spec": "Decision 96 · MVP · REC-27 — one event voids the whole collection, unlike D-07n"
+    },
+    {
+     "screen": "D-07n-approval-expired",
+     "story": "The checklist with per-claim expiry: each complete row carries an “expires in 23h” chip, one guardian approval has already expired, and its row offers “Ask again” rather than failing the path.",
+     "act": "Extras",
+     "spec": "Decisions 91/96 · MVP · REC-28 — approvals die at expiry, at nonce consumption or at cancellation"
+    },
+    {
+     "screen": "D-01b-move-your-assets",
+     "story": "V1 — migrate assets. A recovered account is a fresh smart account with its own address, so nothing follows the key: the old account still works, and each move is a transaction signed from it. Nothing expires, and “Later” is a real answer.",
+     "act": "Extras",
+     "spec": "Decisions 88/96 · V1 · REC-40 · existing-account route only — a fresh-install recovery keeps its address"
     }
    ]
   }
@@ -1693,7 +1719,7 @@
   ],
   "C-06e-recovery-password": [
    1280,
-   830
+   900
   ],
   "C-07c-review-single-method-path": [
    1280,
@@ -1797,7 +1823,7 @@
   ],
   "D-11-confirm-start-recovery": [
    1280,
-   800
+   860
   ],
   "D-13-waiting-period-countdown": [
    1280,
@@ -1805,7 +1831,7 @@
   ],
   "D-15-recovery-done-cleanup": [
    1280,
-   925
+   990
   ],
   "D-15c-recovered-nothing-flagged": [
    1280,
@@ -1813,7 +1839,7 @@
   ],
   "D2-01-pending-recovery-banner-and-alert": [
    1280,
-   800
+   1000
   ],
   "D2-02-post-cancel-triage": [
    1280,
@@ -1928,6 +1954,22 @@
    800
   ],
   "D-09-gas-deposit-before-submit": [
+   1280,
+   800
+  ],
+  "D-04e-recovery-already-running": [
+   1280,
+   800
+  ],
+  "D-07m-approvals-void": [
+   1280,
+   800
+  ],
+  "D-07n-approval-expired": [
+   1280,
+   800
+  ],
+  "D-01b-move-your-assets": [
    1280,
    800
   ]
