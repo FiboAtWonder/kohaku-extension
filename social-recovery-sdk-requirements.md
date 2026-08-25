@@ -156,10 +156,13 @@ type PreparedTx =
   | { kind: 'userop'; userOp: UserOperation; sponsored: boolean }   // sponsored: V1 (decision 87); sender is the SUBMITTER's account, never the recovered one
 
 // ── Methods (all four share this shape) ──────────────────────────────────
-client.method(type).enroll(params: EnrollParams): Promise<EnrolledMethod>
-client.method(type).testAccess(m: EnrolledMethod, opts?: { rehearsal?: boolean }): Promise<TestResult>
-client.method(type).createClaim(m: EnrolledMethod, intent: RecoveryIntent, opts?: ClaimOpts): Promise<Claim>
-client.method(type).healthCheck(m: EnrolledMethod): Promise<HealthResult>
+const method = new PassKeyMethod(client, enrolledMethod)
+
+method.testAccess(m: EnrolledMethod, opts?: { rehearsal?: boolean }): Promise<TestResult>
+method.createClaim(m: EnrolledMethod, intent: RecoveryIntent, opts?: ClaimOpts): Promise<Claim>
+method.healthCheck(m: EnrolledMethod): Promise<HealthResult>
+
+PassKeyMethod.enroll(params: EnrollParams): Promise<EnrolledMethod>
 
 // RecoveryIntent — the ELEVEN-FIELD BINDING DIGEST their spec freezes (REC-10). The old
 // `{account, newOwner, nonce}` is retired: `newOwner` alone is UNSAFE, because it names only what is ADDED.
