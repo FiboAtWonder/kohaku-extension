@@ -78346,7 +78346,7 @@
                                 {
                                   "type": "frame",
                                   "id": "Qprrg",
-                                  "name": "What you'll need panel",
+                                  "name": "Good to know panel",
                                   "width": "fill_container",
                                   "fill": "$wash",
                                   "cornerRadius": 14,
@@ -78365,7 +78365,7 @@
                                       "id": "FwTBF",
                                       "name": "Panel title",
                                       "fill": "$ink",
-                                      "content": "What you'll need",
+                                      "content": "Good to know",
                                       "fontFamily": "$sans",
                                       "fontSize": 13,
                                       "fontWeight": "800"
@@ -79983,7 +79983,7 @@
                                 {
                                   "type": "frame",
                                   "id": "DbrbK",
-                                  "name": "What you'll need panel",
+                                  "name": "Good to know panel",
                                   "width": "fill_container",
                                   "fill": "$wash",
                                   "cornerRadius": 14,
@@ -80002,7 +80002,7 @@
                                       "id": "DVpp2",
                                       "name": "Panel title",
                                       "fill": "$ink",
-                                      "content": "What you'll need",
+                                      "content": "Good to know",
                                       "fontFamily": "$sans",
                                       "fontSize": 13,
                                       "fontWeight": "800"
@@ -129783,10 +129783,10 @@
                 {
                   "type": "frame",
                   "id": "g8Gh5",
-                  "name": "G-02-remove-last-path-warning",
+                  "name": "G-02-remove-recovery-warning",
                   "clip": true,
                   "width": 1280,
-                  "height": 955,
+                  "height": 800,
                   "fill": "$panel",
                   "children": [
                     {
@@ -129937,8 +129937,8 @@
                                 },
                                 {
                                   "type": "frame",
-                                  "id": "l0933z",
-                                  "name": "Path · Your device + your people",
+                                  "id": "eTSlb",
+                                  "name": "Path card · your recovery path",
                                   "width": "fill_container",
                                   "fill": "$panel",
                                   "cornerRadius": 14,
@@ -129954,7 +129954,7 @@
                                   "children": [
                                     {
                                       "type": "frame",
-                                      "id": "knLYz",
+                                      "id": "CdND2",
                                       "name": "Head",
                                       "width": "fill_container",
                                       "gap": 10,
@@ -129962,7 +129962,7 @@
                                       "children": [
                                         {
                                           "type": "text",
-                                          "id": "NmDGA",
+                                          "id": "QGSa0",
                                           "name": "Path title",
                                           "fill": "$ink",
                                           "content": "Your device + your guardians",
@@ -129972,125 +129972,143 @@
                                         },
                                         {
                                           "type": "frame",
-                                          "id": "skocF",
+                                          "id": "gzGCQ",
                                           "name": "Spacer",
                                           "width": "fill_container",
                                           "height": 1
                                         },
                                         {
+                                          "type": "frame",
+                                          "id": "JIsQ6",
+                                          "name": "Chip · Live",
+                                          "fill": "$accent-bg",
+                                          "cornerRadius": 20,
+                                          "stroke": "$accent-line",
+                                          "strokeWidth": 1,
+                                          "strokeAlignment": "inner",
+                                          "padding": [
+                                            3,
+                                            9
+                                          ],
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "SovQN",
+                                              "name": "Label",
+                                              "fill": "$accent-ink",
+                                              "content": "Live",
+                                              "fontFamily": "$sans",
+                                              "fontSize": 10.5,
+                                              "fontWeight": "700"
+                                            }
+                                          ]
+                                        },
+                                        {
                                           "type": "text",
-                                          "id": "e088dy",
+                                          "id": "V3Mne",
                                           "name": "Edit link",
                                           "fill": "$accent",
                                           "content": "Edit",
                                           "fontFamily": "$sans",
                                           "fontSize": 12,
                                           "fontWeight": "700"
-                                        },
-                                        {
-                                          "type": "frame",
-                                          "id": "n7yKVN",
-                                          "name": "Remove path button",
-                                          "fill": "$panel",
-                                          "cornerRadius": 9,
-                                          "stroke": "$line2",
-                                          "strokeWidth": 1,
-                                          "strokeAlignment": "inner",
-                                          "gap": 6,
-                                          "padding": [
-                                            4,
-                                            9
-                                          ],
-                                          "alignItems": "center",
-                                          "children": [
-                                            {
-                                              "type": "icon",
-                                              "id": "pGlg9",
-                                              "name": "Icon",
-                                              "width": 12,
-                                              "height": 12,
-                                              "icon": "trash-2",
-                                              "library": "lucide",
-                                              "fill": "$muted"
-                                            },
-                                            {
-                                              "type": "text",
-                                              "id": "n6dZg",
-                                              "name": "Label",
-                                              "fill": "$ink2",
-                                              "content": "Remove recovery",
-                                              "fontFamily": "$sans",
-                                              "fontSize": 11,
-                                              "fontWeight": "700"
-                                            }
-                                          ]
                                         }
                                       ]
                                     },
                                     {
                                       "type": "frame",
-                                      "id": "Vl8IH",
-                                      "name": "Methods",
+                                      "id": "EoNM6",
+                                      "name": "Structure",
                                       "width": "fill_container",
+                                      "layout": "vertical",
                                       "gap": 7,
-                                      "alignItems": "center",
                                       "children": [
                                         {
                                           "type": "frame",
-                                          "id": "Ysu2A",
-                                          "name": "Method · Passkey — this device",
-                                          "fill": "#FFFFFF00",
-                                          "stroke": "$line",
-                                          "strokeAlignment": "inner",
-                                          "gap": 6,
-                                          "padding": [
-                                            2,
-                                            0
-                                          ],
+                                          "id": "psRHg",
+                                          "name": "Required row",
+                                          "gap": 7,
                                           "alignItems": "center",
                                           "children": [
                                             {
                                               "type": "text",
-                                              "id": "mCCUs",
-                                              "name": "Label",
-                                              "fill": "$ink",
-                                              "content": "Passkey — this device",
+                                              "id": "A6Qh5H",
+                                              "name": "Required label",
+                                              "fill": "$accent",
+                                              "content": "REQUIRED",
                                               "fontFamily": "$sans",
-                                              "fontSize": 11.5,
-                                              "fontWeight": "normal"
+                                              "fontSize": 10.5,
+                                              "fontWeight": "700",
+                                              "letterSpacing": 0.5
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "r1yrkj",
+                                              "name": "Member · Passkey",
+                                              "gap": 6,
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "icon",
+                                                  "id": "xFVxv",
+                                                  "name": "Icon",
+                                                  "width": 13,
+                                                  "height": 13,
+                                                  "icon": "key-round",
+                                                  "library": "lucide",
+                                                  "fill": "$muted"
+                                                },
+                                                {
+                                                  "type": "text",
+                                                  "id": "F3fuCr",
+                                                  "name": "Label",
+                                                  "fill": "$ink",
+                                                  "content": "Passkey — this device",
+                                                  "fontFamily": "$sans",
+                                                  "fontSize": 11.5,
+                                                  "fontWeight": "normal"
+                                                }
+                                              ]
                                             }
                                           ]
                                         },
                                         {
                                           "type": "text",
-                                          "id": "ZDK0O",
-                                          "name": "AND",
+                                          "id": "IiT3o",
+                                          "name": "And label",
                                           "fill": "$accent",
                                           "content": "AND",
                                           "fontFamily": "$sans",
                                           "fontSize": 10.5,
-                                          "fontWeight": "800"
+                                          "fontWeight": "800",
+                                          "letterSpacing": 0.5
                                         },
                                         {
                                           "type": "frame",
-                                          "id": "o0cCc",
-                                          "name": "Method · Guardians — any 2 of 3",
-                                          "fill": "#FFFFFF00",
-                                          "stroke": "$line",
-                                          "strokeAlignment": "inner",
-                                          "gap": 6,
-                                          "padding": [
-                                            2,
-                                            0
-                                          ],
+                                          "id": "ocCNE",
+                                          "name": "Group row",
+                                          "gap": 7,
                                           "alignItems": "center",
                                           "children": [
                                             {
-                                              "id": "V9sy5",
+                                              "type": "icon",
+                                              "id": "G567V",
+                                              "name": "Icon",
+                                              "width": 13,
+                                              "height": 13,
+                                              "icon": "layers",
+                                              "library": "lucide",
+                                              "fill": "$muted"
+                                            },
+                                            {
+                                              "id": "m8GLwK",
                                               "type": "ref",
                                               "ref": "egaib",
                                               "name": "Threshold · 2 of 3",
                                               "descendants": {
+                                                "frHcA": {
+                                                  "content": "any"
+                                                },
                                                 "tBtwH": {
                                                   "content": "2"
                                                 },
@@ -130103,12 +130121,123 @@
                                               }
                                             }
                                           ]
+                                        },
+                                        {
+                                          "type": "frame",
+                                          "id": "xO06K",
+                                          "name": "Members",
+                                          "width": "fill_container",
+                                          "gap": 9,
+                                          "alignItems": "center",
+                                          "children": [
+                                            {
+                                              "type": "frame",
+                                              "id": "RPGAf",
+                                              "name": "Member · 0x8a5D…dc41",
+                                              "gap": 6,
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "ellipse",
+                                                  "id": "YhlgN",
+                                                  "name": "Blockie",
+                                                  "fill": "$line2",
+                                                  "width": 15,
+                                                  "height": 15
+                                                },
+                                                {
+                                                  "type": "text",
+                                                  "id": "oPX2R",
+                                                  "name": "Address",
+                                                  "fill": "$ink",
+                                                  "content": "0x8a5D…dc41",
+                                                  "fontFamily": "$mono",
+                                                  "fontSize": 11,
+                                                  "fontWeight": "normal"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "S7AM53",
+                                              "name": "Sep",
+                                              "fill": "$faint",
+                                              "content": "·",
+                                              "fontFamily": "$sans",
+                                              "fontSize": 11.5,
+                                              "fontWeight": "700"
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "VyWhL",
+                                              "name": "Member · 0x3c7B…fa9d",
+                                              "gap": 6,
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "ellipse",
+                                                  "id": "zeMJO",
+                                                  "name": "Blockie",
+                                                  "fill": "$line2",
+                                                  "width": 15,
+                                                  "height": 15
+                                                },
+                                                {
+                                                  "type": "text",
+                                                  "id": "GgzdZ",
+                                                  "name": "Address",
+                                                  "fill": "$ink",
+                                                  "content": "0x3c7B…fa9d",
+                                                  "fontFamily": "$mono",
+                                                  "fontSize": 11,
+                                                  "fontWeight": "normal"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "vEdat",
+                                              "name": "Sep",
+                                              "fill": "$faint",
+                                              "content": "·",
+                                              "fontFamily": "$sans",
+                                              "fontSize": 11.5,
+                                              "fontWeight": "700"
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "ygdke",
+                                              "name": "Member · 0x77E4…c1e2",
+                                              "gap": 6,
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "ellipse",
+                                                  "id": "HbiCu",
+                                                  "name": "Blockie",
+                                                  "fill": "$line2",
+                                                  "width": 15,
+                                                  "height": 15
+                                                },
+                                                {
+                                                  "type": "text",
+                                                  "id": "j0jC5",
+                                                  "name": "Address",
+                                                  "fill": "$ink",
+                                                  "content": "0x77E4…c1e2",
+                                                  "fontFamily": "$mono",
+                                                  "fontSize": 11,
+                                                  "fontWeight": "normal"
+                                                }
+                                              ]
+                                            }
+                                          ]
                                         }
                                       ]
                                     },
                                     {
                                       "type": "frame",
-                                      "id": "phQYi",
+                                      "id": "e98Ef",
                                       "name": "Foot",
                                       "width": "fill_container",
                                       "gap": 6,
@@ -130116,7 +130245,7 @@
                                       "children": [
                                         {
                                           "type": "icon",
-                                          "id": "XXAbo",
+                                          "id": "J0tUso",
                                           "name": "Clock",
                                           "width": 12,
                                           "height": 12,
@@ -130126,7 +130255,7 @@
                                         },
                                         {
                                           "type": "text",
-                                          "id": "j5uI4",
+                                          "id": "FavOM",
                                           "name": "Waiting period",
                                           "fill": "$muted",
                                           "content": "Waiting period 48h",
@@ -130140,285 +130269,63 @@
                                   ]
                                 },
                                 {
+                                  "type": "text",
+                                  "id": "uUC4F",
+                                  "name": "Consequences line",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Removing recovery uninstalls the module. Your key keeps working — but if you lose it afterwards, nothing can bring the account back.",
+                                  "lineHeight": 1.45,
+                                  "fontFamily": "$sans",
+                                  "fontSize": 11.5,
+                                  "fontWeight": "normal"
+                                },
+                                {
                                   "type": "frame",
-                                  "id": "U7Q1Qb",
-                                  "x": 0,
-                                  "y": 218,
-                                  "name": "OR divider",
-                                  "enabled": false,
-                                  "width": "fill_container(560)",
+                                  "id": "FQFBa",
+                                  "name": "Actions",
+                                  "width": "fill_container",
                                   "gap": 10,
                                   "alignItems": "center",
                                   "children": [
                                     {
-                                      "type": "rectangle",
-                                      "id": "YEAC4",
-                                      "name": "Rule left",
-                                      "fill": "$line",
-                                      "width": "fill_container",
-                                      "height": 1
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "w43MI",
-                                      "name": "OR",
-                                      "fill": "$faint",
-                                      "content": "OR",
-                                      "fontFamily": "$sans",
-                                      "fontSize": 10.5,
-                                      "fontWeight": "800",
-                                      "letterSpacing": 2
-                                    },
-                                    {
-                                      "type": "rectangle",
-                                      "id": "aRpq1",
-                                      "name": "Rule right",
-                                      "fill": "$line",
-                                      "width": "fill_container",
-                                      "height": 1
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "N9MpQ",
-                                  "x": 0,
-                                  "y": 240,
-                                  "name": "Path · Your device + your email",
-                                  "enabled": false,
-                                  "width": "fill_container(560)",
-                                  "fill": "$panel",
-                                  "cornerRadius": 14,
-                                  "stroke": "$line",
-                                  "strokeWidth": 1,
-                                  "strokeAlignment": "inner",
-                                  "layout": "vertical",
-                                  "gap": 9,
-                                  "padding": [
-                                    13,
-                                    15
-                                  ],
-                                  "children": [
-                                    {
                                       "type": "frame",
-                                      "id": "zmJTS",
-                                      "name": "Head",
-                                      "width": "fill_container",
-                                      "gap": 10,
-                                      "alignItems": "center",
-                                      "children": [
-                                        {
-                                          "type": "text",
-                                          "id": "Rue7H",
-                                          "name": "Path title",
-                                          "fill": "$ink",
-                                          "content": "Your device + your email",
-                                          "fontFamily": "$sans",
-                                          "fontSize": 13.5,
-                                          "fontWeight": "700"
-                                        },
-                                        {
-                                          "type": "frame",
-                                          "id": "KTZQG",
-                                          "name": "Spacer",
-                                          "width": "fill_container",
-                                          "height": 1
-                                        },
-                                        {
-                                          "type": "text",
-                                          "id": "COXB9",
-                                          "name": "Edit link",
-                                          "fill": "$accent",
-                                          "content": "Edit",
-                                          "fontFamily": "$sans",
-                                          "fontSize": 12,
-                                          "fontWeight": "700"
-                                        },
-                                        {
-                                          "type": "frame",
-                                          "id": "FoQNZ",
-                                          "name": "Remove path button",
-                                          "fill": "$panel",
-                                          "cornerRadius": 9,
-                                          "stroke": "$line2",
-                                          "strokeWidth": 1,
-                                          "strokeAlignment": "inner",
-                                          "gap": 6,
-                                          "padding": [
-                                            4,
-                                            9
-                                          ],
-                                          "alignItems": "center",
-                                          "children": [
-                                            {
-                                              "type": "icon",
-                                              "id": "X87ll",
-                                              "name": "Icon",
-                                              "width": 12,
-                                              "height": 12,
-                                              "icon": "trash-2",
-                                              "library": "lucide",
-                                              "fill": "$muted"
-                                            },
-                                            {
-                                              "type": "text",
-                                              "id": "n0vzgS",
-                                              "name": "Label",
-                                              "fill": "$ink2",
-                                              "content": "Remove path",
-                                              "fontFamily": "$sans",
-                                              "fontSize": 11,
-                                              "fontWeight": "700"
-                                            }
-                                          ]
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "frame",
-                                      "id": "Oyqbe",
-                                      "name": "Methods",
-                                      "width": "fill_container",
-                                      "gap": 7,
-                                      "alignItems": "center",
-                                      "children": [
-                                        {
-                                          "type": "frame",
-                                          "id": "w5Cvv",
-                                          "name": "Method · Passkey — this device",
-                                          "fill": "#FFFFFF00",
-                                          "stroke": "$line",
-                                          "strokeAlignment": "inner",
-                                          "gap": 6,
-                                          "padding": [
-                                            2,
-                                            0
-                                          ],
-                                          "alignItems": "center",
-                                          "children": [
-                                            {
-                                              "type": "text",
-                                              "id": "LbC4k",
-                                              "name": "Label",
-                                              "fill": "$ink",
-                                              "content": "Passkey — this device",
-                                              "fontFamily": "$sans",
-                                              "fontSize": 11.5,
-                                              "fontWeight": "normal"
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "type": "text",
-                                          "id": "pKdCP",
-                                          "name": "AND",
-                                          "fill": "$accent",
-                                          "content": "AND",
-                                          "fontFamily": "$sans",
-                                          "fontSize": 10.5,
-                                          "fontWeight": "800"
-                                        },
-                                        {
-                                          "type": "frame",
-                                          "id": "zlAx6",
-                                          "name": "Method · Email (ZK Email)",
-                                          "fill": "#FFFFFF00",
-                                          "stroke": "$line",
-                                          "strokeAlignment": "inner",
-                                          "gap": 6,
-                                          "padding": [
-                                            2,
-                                            0
-                                          ],
-                                          "alignItems": "center",
-                                          "children": [
-                                            {
-                                              "type": "text",
-                                              "id": "hlUOQ",
-                                              "name": "Label",
-                                              "fill": "$ink",
-                                              "content": "Email (ZK Email)",
-                                              "fontFamily": "$sans",
-                                              "fontSize": 11.5,
-                                              "fontWeight": "normal"
-                                            }
-                                          ]
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "frame",
-                                      "id": "u1sree",
-                                      "name": "Foot",
-                                      "width": "fill_container",
-                                      "gap": 6,
+                                      "id": "nlCmM",
+                                      "name": "Button · Remove recovery",
+                                      "fill": "$panel",
+                                      "cornerRadius": 12,
+                                      "stroke": "$line2",
+                                      "strokeWidth": 1,
+                                      "strokeAlignment": "inner",
+                                      "gap": 8,
+                                      "padding": [
+                                        11,
+                                        18
+                                      ],
                                       "alignItems": "center",
                                       "children": [
                                         {
                                           "type": "icon",
-                                          "id": "rwlqj",
-                                          "name": "Clock",
-                                          "width": 12,
-                                          "height": 12,
-                                          "icon": "clock",
-                                          "library": "feather",
-                                          "fill": "$faint"
+                                          "id": "XTAiC",
+                                          "name": "Icon",
+                                          "width": 14,
+                                          "height": 14,
+                                          "icon": "trash-2",
+                                          "library": "lucide",
+                                          "fill": "$muted"
                                         },
                                         {
                                           "type": "text",
-                                          "id": "fYb6M",
-                                          "name": "Waiting period",
-                                          "fill": "$muted",
-                                          "content": "Waiting period 48h",
-                                          "lineHeight": 1.45,
+                                          "id": "XgHT9",
+                                          "name": "Label",
+                                          "fill": "$ink",
+                                          "content": "Remove recovery",
                                           "fontFamily": "$sans",
-                                          "fontSize": 11,
-                                          "fontWeight": "normal"
+                                          "fontSize": 14,
+                                          "fontWeight": "700"
                                         }
                                       ]
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "frame",
-                                  "id": "c4SPm",
-                                  "x": 0,
-                                  "y": 348,
-                                  "name": "Add path button",
-                                  "enabled": false,
-                                  "width": "fill_container(560)",
-                                  "fill": "$wash",
-                                  "cornerRadius": 12,
-                                  "stroke": "$line2",
-                                  "strokeWidth": 1,
-                                  "strokeAlignment": "inner",
-                                  "gap": 8,
-                                  "padding": [
-                                    8,
-                                    14
-                                  ],
-                                  "justifyContent": "center",
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "id": "XCg18",
-                                      "name": "Icon",
-                                      "width": 14,
-                                      "height": 14,
-                                      "icon": "plus",
-                                      "library": "lucide",
-                                      "fill": "$accent"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "g2Oyin",
-                                      "name": "Label",
-                                      "fill": "$accent",
-                                      "content": "Add a recovery path",
-                                      "fontFamily": "$sans",
-                                      "fontSize": 12.5,
-                                      "fontWeight": "700"
                                     }
                                   ]
                                 },
@@ -131073,7 +130980,7 @@
                         {
                           "type": "frame",
                           "id": "Zl7eB",
-                          "name": "Last path warning modal",
+                          "name": "Remove recovery modal",
                           "width": 470,
                           "fill": "$panel",
                           "cornerRadius": 16,
