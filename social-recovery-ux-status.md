@@ -128,6 +128,18 @@ Scope respected: `Flow · OUTDATED` untouched, `Flow · X` touched only in the t
 
 Clipping scan after the micro-round: baseline holds, 5 enabled issues (D2-01 plus the four dash-rule items) and 15 disabled leftovers.
 
+### Pen round — G-02 single-path rebuild + D-04 retitle (2026-08-27, after v16) — APPLIED IN EDITOR, AWAITING ⌘S
+
+**G-02 body rebuilt to decision 73.** Deleted: both path cards (`Path · Your device + your people`, `Path · Your device + your email`, each carrying its own `Remove path button`), the `OR divider`, and the `Add path button`. Built in their place one read-only `Path card · your recovery path` (`eTSlb`) that mirrors G-05's fixture and shape: head "Your device + your guardians" + `Live` chip + `Edit` link, then `REQUIRED` Passkey — this device, `AND`, a `Component / Threshold` ref reading "any 2 of 3 members", the three guardian addresses masked as `0x8a5D…dc41 · 0x3c7B…fa9d · 0x77E4…c1e2`, and a foot "Waiting period 48h". Under it: the consequences line "Removing recovery uninstalls the module. Your key keeps working — but if you lose it afterwards, nothing can bring the account back.", then ONE destructive action, `Remove recovery` (outline + `trash-2`, matching G-01's button; accent fill stays reserved for positive primaries). The v16 "Recovery is set up" status row and the Recovery Card & alerts row are untouched. No ZK Email string remains anywhere on the screen.
+
+**The modal was KEPT, not deleted.** The prompt listed `Last path warning modal` for deletion but the next bullet requires "the existing remove-confirm modal" to stay with its current copy — and that node IS the only confirm modal on the screen (G-02's caption is "Remove recovery warning"). So the multi-path FRAMING went and the modal stayed: renamed `Remove recovery modal`, copy untouched, including "Removing recovery cancels the recovery currently in progress. Uninstalling the module does the same." and the type-REMOVE field. Same reasoning for two names: the screen frame is now `G-02-remove-recovery-warning` (was `…-remove-last-path-warning`). **If the intent really was to drop the modal, say so and it goes in one call.**
+
+**Screen height 955 → 800.** The shorter body allowed it, and it fixes a pre-existing mismatch: the `Modal overlay` is a fixed 1280×800, so on the 955-tall frame the bottom 155px of the screen sat outside the dimmed layer.
+
+**D-04 + D-04d — panel retitled** "What you'll need" → "Good to know" (frame names too). D-04 holds the single line "Nothing is signed on this step."; D-04d carries two lines ("One method answers this path — your passkey." + the same one), and both read as good-to-know facts, so it was retitled as well.
+
+**Clipping scan:** baseline holds — 5 enabled issues (D2-01 "Action · Receive" + the four dash-rule items in C-07k and D-07e), 15 `enabled:false` leftovers.
+
 ## Key decisions (themes; the log rows 1–78 in the spec are authoritative)
 
 - **Vocabulary:** Account recovery / recovery path / method / waiting period (5); forbidden in UI: policy, proof, relayer, atomic (5, 24-sweep); guardian = role, member = group slot, approval = the artefact (61); "extension password" vs the separate "recovery password" (57, 48); presets: "Your device + your guardians", "Guardians only" (61).
