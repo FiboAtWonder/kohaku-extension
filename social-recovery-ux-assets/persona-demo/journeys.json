@@ -21,7 +21,7 @@
      "device": "popup",
      "hit": [
       58,
-      409.5,
+      409,
       101,
       16
      ]
@@ -196,7 +196,7 @@
      "hitLabel": "Continue",
      "hit": [
       372,
-      451,
+      447,
       61,
       16
      ]
@@ -222,8 +222,8 @@
      "hitLabel": "Continue to recovery",
      "hit": [
       372,
-      574,
-      140,
+      569,
+      139,
       16
      ]
     },
@@ -235,7 +235,7 @@
      "hitLabel": "Continue",
      "hit": [
       372,
-      563,
+      562,
       61,
       16
      ]
@@ -255,13 +255,13 @@
     },
     {
      "screen": "D-04d-confirm-identity-single-method",
-     "story": "Identity confirmed before anything is collected. The summary shows THE path: Passkey · 48h.",
+     "story": "Identity confirmed before anything is collected. The path summary is gone from this step — it confirms the address and nothing else. The “Good to know” panel only qualifies it: one method answers this path, his passkey.",
      "act": "Recovery",
-     "spec": "Confirming starts nothing · one path per account (decision 73) · single-method variant",
+     "spec": "Confirming starts nothing · decision 102 — the D-06 readout owns the path · single-method variant",
      "hitLabel": "This is my account",
      "hit": [
       340,
-      543,
+      304,
       128,
       17
      ]
@@ -328,7 +328,7 @@
      "device": "popup",
      "hit": [
       58,
-      409.5,
+      409,
       101,
       16
      ]
@@ -367,20 +367,20 @@
      "hitLabel": "Continue",
      "hit": [
       340,
-      374,
+      371,
       63,
       17
      ]
     },
     {
      "screen": "C-06e-recovery-password",
-     "story": "She picks the middle visibility level — Hide the details: five addresses behind a password, while the path’s shape stays readable. Each level now states in one line what it leaves readable. At this level the password is required, typed twice into Password and Confirm password — and it prints on her Recovery Card.",
+     "story": "She takes the default — Private: the shape of her path and its five addresses are both encrypted, so nobody can read her setup. What no level hides is that a setup exists at all. The password is required here, typed twice into Password and Confirm password — and it prints on her Recovery Card.",
      "act": "Setup",
-     "spec": "Decisions 48/84/97 · 95 — Confirm field, required at the hidden levels · 98 — one reveal line per level · 90 — the card carries it",
-     "hitLabel": "Hide the details — the shape stays readable",
+     "spec": "Decision 99 — Private is the default, shape AND values encrypted · 90 — the card carries the password · 95 — Confirm field, required at the encrypted levels",
+     "hitLabel": "Private",
      "hit": [
       379,
-      643,
+      539,
       404,
       15
      ]
@@ -451,7 +451,7 @@
      "hitLabel": "Continue",
      "hit": [
       372,
-      451,
+      447,
       61,
       16
      ]
@@ -477,8 +477,8 @@
      "hitLabel": "Continue to recovery",
      "hit": [
       372,
-      574,
-      140,
+      569,
+      139,
       16
      ]
     },
@@ -490,7 +490,7 @@
      "hitLabel": "Continue",
      "hit": [
       372,
-      563,
+      562,
       61,
       16
      ]
@@ -529,7 +529,7 @@
      "hitLabel": "Start collecting approvals",
      "hit": [
       340,
-      763,
+      762,
       176,
       17
      ]
@@ -614,7 +614,7 @@
      "hitLabel": "Continue",
      "hit": [
       340,
-      714,
+      624,
       63,
       17
      ]
@@ -712,13 +712,13 @@
     },
     {
      "screen": "C-06e-recovery-password",
-     "story": "Carl hides Sara’s address behind a password — required at this level, and typed twice. The card in the drawer still names no guardian; what it now carries is the password itself.",
+     "story": "Carl takes the default — Private: Sara’s address and the shape of the path are both encrypted. The password is required at this level, and typed twice. The card in the drawer still names no guardian; what it now carries is the password itself.",
      "act": "Setup",
-     "spec": "Decisions 48/84 · 95 — Confirm field, no Skip · 90 — the Recovery Card prints the password",
-     "hitLabel": "Hide the details — the shape stays readable",
+     "spec": "Decisions 99/90 · 95 — Confirm field, no Skip",
+     "hitLabel": "Private",
      "hit": [
       379,
-      643,
+      539,
       404,
       15
      ]
@@ -744,7 +744,7 @@
      "hitLabel": "Confirm and save",
      "hit": [
       340,
-      558,
+      575,
       121,
       17
      ]
@@ -789,7 +789,7 @@
      "hitLabel": "Continue",
      "hit": [
       372,
-      451,
+      447,
       61,
       16
      ]
@@ -815,8 +815,8 @@
      "hitLabel": "Continue to recovery",
      "hit": [
       372,
-      574,
-      140,
+      569,
+      139,
       16
      ]
     },
@@ -828,7 +828,7 @@
      "hitLabel": "Continue",
      "hit": [
       372,
-      563,
+      562,
       61,
       16
      ]
@@ -848,13 +848,13 @@
     },
     {
      "screen": "D-04-confirm-identity-single-path",
-     "story": "Right account, before anything is collected. (Bridge: the drawn summary shows the generic 2-of-3 group; his group is Sara alone.)",
+     "story": "Right account, before anything is collected. Nothing about his path is shown here any more — the step confirms the address, and “Good to know” says only that nothing is signed yet.",
      "act": "Recovery",
-     "spec": "Decision 73 — one path per account",
+     "spec": "Decision 102 — the path summary moved out of D-04; only D-06 shows the shape and the values",
      "hitLabel": "This is my account",
      "hit": [
       340,
-      726,
+      304,
       128,
       17
      ]
@@ -922,7 +922,7 @@
      "screen": "D-08-checklist-verify-in-place",
      "story": "Sara’s first approval does not take: she opened an old link, so it was made for a different recovery request. The paste is rejected on the spot, with the reason. She opens the fresh link, signs again — the new approval lands. (Bridge: the drawn group reads 2 of 3; his needs only Sara.)",
      "act": "Recovery",
-     "spec": "Paste-time validation (decision 35) · error preserves base (63)",
+     "spec": "Paste-time validation (decision 35) · error preserves base (63) · decision 91 — “this approval has expired” is now one of the four paste errors",
      "hitLabel": "Add approval",
      "hit": [
       768,
@@ -1049,26 +1049,26 @@
     },
     {
      "screen": "C-06-waiting-period",
-     "story": "One waiting period covers the whole path — she keeps 48 hours.",
+     "story": "One waiting period covers the whole path — she keeps the 48-hour default. The picker now floors at 24 hours, and says so: a wallet rule, not a chain rule.",
      "act": "Setup",
-     "spec": "Decisions 74 · 85 — one per account, no enforced floor",
+     "spec": "Decision 74 · decision 100 — minimum 24h (wallet rule), default 48h; the chain enforces no floor",
      "hitLabel": "Continue",
      "hit": [
       340,
-      474,
+      430,
       63,
       17
      ]
     },
     {
      "screen": "C-06e-recovery-password",
-     "story": "Her email address gets hidden too. The password is required here and typed twice. She needs it only to read her own setup during a recovery — forgetting it never blocks the recovery itself, it only leaves the values hidden.",
+     "story": "Her email address gets hidden too — she keeps the Private default, so the shape is encrypted alongside the values. The password is required here and typed twice. She needs it only to read her own setup during a recovery — forgetting it never blocks the recovery itself, it only leaves the values unreadable.",
      "act": "Setup",
-     "spec": "Decisions 48/84 · 95 — Confirm field, required · D-06e is the wrong-password state",
-     "hitLabel": "Hide the details — the shape stays readable",
+     "spec": "Decisions 99/90 · 95 — Confirm field, required · D-06e is the wrong-password state",
+     "hitLabel": "Private",
      "hit": [
       379,
-      643,
+      539,
       404,
       15
      ]
@@ -1132,7 +1132,7 @@
      "hitLabel": "Continue",
      "hit": [
       372,
-      451,
+      447,
       61,
       16
      ]
@@ -1158,8 +1158,8 @@
      "hitLabel": "Continue to recovery",
      "hit": [
       372,
-      574,
-      140,
+      569,
+      139,
       16
      ]
     },
@@ -1171,7 +1171,7 @@
      "hitLabel": "Continue",
      "hit": [
       372,
-      563,
+      562,
       61,
       16
      ]
@@ -1191,13 +1191,13 @@
     },
     {
      "screen": "D-04-confirm-identity-single-path",
-     "story": "The chain answers with her path: any 1 of 2 — passkey or email. The email is her way back. (Bridge: the drawn summary is the generic passkey + guardians shape; hers is any 1 of 2 — passkey or email.)",
+     "story": "Right account — and that is all this step claims now. The path summary has moved out: she reads “any 1 of 2 — passkey or email” on D-06, not here.",
      "act": "Recovery",
-     "spec": "Structure is always readable · decision 73",
+     "spec": "Decision 102 — D-04 confirms the address, the D-06 readout owns the path",
      "hitLabel": "This is my account",
      "hit": [
       340,
-      726,
+      304,
       128,
       17
      ]
@@ -1301,17 +1301,17 @@
      "spec": "Decisions 43/76 — by address, no names · instance uniqueness",
      "hitLabel": "Enroll something new",
      "hit": [
-      587,
-      586,
+      586.5,
+      585.5,
       126,
       15
      ]
     },
     {
      "screen": "C-10-advanced-builder-single-path",
-     "story": "Group complete, 48h on the path — the default; there is no enforced floor. Advanced has its own terminal: save as one transaction, no wizard review. The optional password row lives in the right rail — the same component as the wizard step.",
+     "story": "Group complete, 48h on the path — the default, with the picker’s “Minimum 24 hours (wallet rule)” line under it; the chain itself enforces no floor. Advanced has its own terminal: save as one transaction, no wizard review. The optional password row lives in the right rail — the same component as the wizard step.",
      "act": "Setup",
-     "spec": "Decisions 74 · 85 — no enforced floor · the advanced flow never routes through the wizard"
+     "spec": "Decision 74 · decision 100 — the 24h floor is the wallet’s, not the contract’s · the advanced flow never routes through the wizard"
     },
     {
      "screen": "C-07l-dry-run-mixed-group",
@@ -1346,7 +1346,7 @@
      "hitLabel": "Continue",
      "hit": [
       340,
-      656,
+      652,
       63,
       17
      ]
@@ -1372,7 +1372,7 @@
      "hitLabel": "Yes, this is the account",
      "hit": [
       340,
-      426,
+      424,
       158,
       17
      ]
@@ -1385,7 +1385,7 @@
      "hitLabel": "Start collecting approvals",
      "hit": [
       340,
-      763,
+      762,
       176,
       17
      ]
@@ -1443,7 +1443,7 @@
      "hitLabel": "Continue",
      "hit": [
       340,
-      694,
+      605,
       63,
       17
      ]
@@ -1501,9 +1501,9 @@
     },
     {
      "screen": "D2-01-pending-recovery-banner-and-alert",
-     "story": "Days later: somebody started recovering his account. The thief has the flagged passkey AND the laptop’s logged-in inbox — two of three members. Banner + notification; Bob knows it wasn’t him. The screen also draws the banner’s second state — once the waiting period ends, a cancel may no longer land — the line that editing the setup or uninstalling the module cancels a recovery too, and a V1 route where his recovery contacts cancel with a counter-proof.",
+     "story": "Days later: somebody started recovering his account. The thief has the flagged passkey AND the laptop’s logged-in inbox — two of three members. Banner + notification; Bob knows it wasn’t him. The banner also carries the line that editing the setup or uninstalling the module cancels a recovery too, and a V1 route where his recovery contacts cancel with a counter-proof.",
      "act": "Attack",
-     "spec": "Flow D2 · decision 11 · a 2-of-3 attack needs two members — both lived on the stolen laptop · decision 96 — REC-29 cancel-may-not-land, REC-30 counter-proof cancel (V1)",
+     "spec": "Flow D2 · decision 11 · a 2-of-3 attack needs two members — both lived on the stolen laptop · decision 101 — the second banner state is rolled back · REC-30 counter-proof cancel (V1)",
      "hitLabel": "It wasn't me — cancel it",
      "device": "popup",
      "hit": [
@@ -1819,7 +1819,7 @@
   ],
   "D-08-checklist-verify-in-place": [
    1280,
-   975
+   1004
   ],
   "D-11-confirm-start-recovery": [
    1280,
@@ -1839,7 +1839,7 @@
   ],
   "D2-01-pending-recovery-banner-and-alert": [
    1280,
-   1000
+   800
   ],
   "D2-02-post-cancel-triage": [
    1280,
