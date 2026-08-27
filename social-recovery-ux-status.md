@@ -99,7 +99,7 @@ Decision 58 stands: the wizard map is **ten steps**, and nothing in the single-p
 
 Verified: **no `OF 9` label remains** anywhere in the document, all 46 active wizard indicators carry ten dots, and the clipping baseline still reports exactly one enabled issue (D2-01 "Action · Receive").
 
-### Pen round — fifth review sweep (2026-08-27, decisions 99–102 + defects 31–35) — APPLIED IN EDITOR, AWAITING ⌘S
+### Pen round — fifth review sweep (2026-08-27, decisions 99–102 + defects 31–35) — APPLIED; SAVED EXCEPT THE MICRO-ROUND BELOW
 
 Scope respected: `Flow · OUTDATED` untouched, `Flow · X` touched only in the two named strings, no zkPassport/ZK Email screen edited (C-05e, C-05k, C-05n, D-07e).
 
@@ -118,6 +118,15 @@ Scope respected: `Flow · OUTDATED` untouched, `Flow · X` touched only in the t
 **Clipping scan: baseline holds exactly.** Full-depth scan reports 5 enabled issues — D2-01 "Action · Receive" plus the four decorative dash-rule overflows in C-07k (D29 ×2) and D-07e (D4 ×2) — and 15 `enabled:false` multi-path leftovers to ignore. Note for future scans: a `depth`-capped `Get` visitor misses the four dash-rule items, so run the scan with no depth option.
 
 **Left deliberately out of scope (flag for the next round).** (a) The same two contradictions fixed on D-08 still live on other screens the prompt did not name: "An approval has no time limit" notes on D-07f, D-07g, D-07i, D-07j, D-07k, the "checks three things" note on D-07f/D-07g/D-07k, and E1-06's "There is no time limit." (b) Live G-02 still draws the pre-decision-73 multi-path main column (two paths, OR divider, "Add a recovery path"). (c) After the D-04/D-04d path block deletion, D-04's "What you'll need" panel is down to a single item ("Nothing is signed on this step."); its design note was retitled "The readout owns the path (decision 102)" on both screens.
+
+**Micro-round (same day, after Fibo's review of the saved file).** One defect and the decision-91 leftovers, applied in the editor and still awaiting ⌘S:
+
+- **D-08** — the new `Variant · This approval has expired` frame had kept the copied text. Cause: a `Copy` call with `descendants` keyed by descendant NAMES ("Title", "Body") silently applied nothing. Fixed with plain `Update` calls on the copy's own text ids (`YnnzJ`, `hTuvH`). Lesson: after `Copy`, read the copy back and override by id — do not trust name-keyed `descendants`.
+- **D-07f, D-07g, D-07i, D-07j, D-07k** — the `Note · An approval has no time limit` side note is deleted on all five (frame, title and text).
+- **D-07f, D-07g, D-07k** — paste-checks line now names four checks, matching D-08.
+- **E1-06** — "There is no time limit…" → "Mind the expiry on the request — an approval is only valid until its “valid until” moment. Open this link again once you have checked with the owner."
+
+Clipping scan after the micro-round: baseline holds, 5 enabled issues (D2-01 plus the four dash-rule items) and 15 disabled leftovers.
 
 ## Key decisions (themes; the log rows 1–78 in the spec are authoritative)
 
